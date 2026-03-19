@@ -1,12 +1,11 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
      * CORE PHILOSOPHY
-     * This ruleset enforces a strict user-ownership model where all data is private to the
-     * authenticated user who created it.
+     * This ruleset enforces a strict user-ownership model. All data under a user's
+     * path is accessible only by that specific authenticated user.
      */
 
     // --- Helper Functions ---
@@ -15,47 +14,32 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
     }
 
     // --- Collection Rules ---
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId);
-      allow update, delete: if isExistingOwner(userId);
+      // Allow a user to read/write their own user document
+      allow get, create, update, delete: if isUser(userId);
+      allow list: if false; // Users cannot list other users
 
-      match /companyProfiles/{companyProfileId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.id == companyProfileId;
-        allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-        allow delete: if isExistingOwner(userId);
+      // All company-related data is nested under the user
+      match /companyProfiles/{companyId} {
+        allow read, write: if isUser(userId);
 
         match /fundingRounds/{roundId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
-          allow update: if isExistingOwner(userId) && request.resource.data.companyId == resource.data.companyId;
-          allow delete: if isExistingOwner(userId);
+          allow read, write: if isUser(userId);
         }
 
         match /shareholders/{shareholderId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
-          allow update: if isExistingOwner(userId) && request.resource.data.companyId == resource.data.companyId;
-          allow delete: if isExistingOwner(userId);
+          allow read, write: if isUser(userId);
         }
 
         match /strategicReports/{reportId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
-          allow delete: if isExistingOwner(userId);
-          // Reports are generally immutable once generated
+          allow read, create, delete: if isUser(userId);
+          // Strategic reports are historically immutable
           allow update: if false;
         }
       }
