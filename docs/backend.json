@@ -5,361 +5,76 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CompanyProfile",
       "type": "object",
-      "description": "Represents a startup company's core information, financial inputs for valuation, and current deal terms.",
+      "description": "Represents a startup company's core information and share-based cap table summary.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the CompanyProfile entity."
-        },
-        "companyName": {
-          "type": "string",
-          "description": "The official registered name of the company."
-        },
-        "stage": {
-          "type": "string",
-          "description": "The current stage of the company, influencing valuation metrics.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "industry": {
-          "type": "string",
-          "description": "The industry in which the company operates, affecting revenue multiples.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "monthlyRevenue": {
-          "type": "number",
-          "description": "The company's current monthly revenue in INR."
-        },
-        "monthlyGrowthRatePct": {
-          "type": "number",
-          "description": "The month-over-month revenue growth rate percentage."
-        },
-        "monthlyBurnRate": {
-          "type": "number",
-          "description": "The amount of cash the company spends each month beyond its revenue in INR."
-        },
-        "cashInBank": {
-          "type": "number",
-          "description": "The total cash reserves currently held by the company in INR."
-        },
-        "totalCustomers": {
-          "type": "number",
-          "description": "The total number of paying customers."
-        },
-        "avgCustomerLTV": {
-          "type": "number",
-          "description": "The average Lifetime Value of a customer in INR."
-        },
-        "customerAcquisitionCost": {
-          "type": "number",
-          "description": "The average cost to acquire a new customer in INR."
-        },
-        "currentInvestmentAmount": {
-          "type": "number",
-          "description": "The amount of investment being considered in the current funding round in INR."
-        },
-        "currentEquityOfferedPct": {
-          "type": "number",
-          "description": "The percentage of equity being offered to the investor in the current funding round."
-        },
-        "esopPoolPct": {
-          "type": "number",
-          "description": "The percentage of equity reserved for the Employee Stock Option Pool."
-        },
-        "advisorEquityPct": {
-          "type": "number",
-          "description": "The percentage of equity allocated to advisors."
-        },
-        "coFounderEquityPct": {
-          "type": "number",
-          "description": "The percentage of equity held by co-founders, excluding the primary founder/user."
-        },
-        "liquidationExitPrice": {
-          "type": "number",
-          "description": "The simulated exit or acquisition price for liquidation preference calculation in INR."
-        },
-        "liquidationInvestorCapital": {
-          "type": "number",
-          "description": "The total capital invested by investors for liquidation preference calculation in INR."
-        },
-        "liquidationPreferenceMultiple": {
-          "type": "string",
-          "description": "The multiple applied to investor capital for liquidation preference.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "liquidationPreferenceType": {
-          "type": "string",
-          "description": "The type of liquidation preference (non-participating or participating).",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the company profile was first created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the company profile was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "companyName": { "type": "string" },
+        "totalSharesOutstanding": { "type": "number", "description": "Total count of all issued shares." },
+        "latestValuation": { "type": "number", "description": "Post-money valuation of the most recent round in INR." },
+        "stage": { "type": "string" },
+        "industry": { "type": "string" },
+        "monthlyRevenue": { "type": "number" },
+        "monthlyBurnRate": { "type": "number" },
+        "cashInBank": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "companyName",
-        "stage",
-        "industry",
-        "monthlyRevenue",
-        "monthlyGrowthRatePct",
-        "monthlyBurnRate",
-        "cashInBank",
-        "totalCustomers",
-        "avgCustomerLTV",
-        "customerAcquisitionCost",
-        "currentInvestmentAmount",
-        "currentEquityOfferedPct",
-        "esopPoolPct",
-        "advisorEquityPct",
-        "coFounderEquityPct",
-        "liquidationExitPrice",
-        "liquidationInvestorCapital",
-        "liquidationPreferenceMultiple",
-        "liquidationPreferenceType",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "companyName", "totalSharesOutstanding", "latestValuation"]
     },
-    "BerkusScore": {
+    "FundingRound": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "BerkusScore",
+      "title": "FundingRound",
       "type": "object",
-      "description": "Represents the five factors used in the Berkus Method valuation for a company.",
+      "description": "History of an investment round.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the BerkusScore entry."
-        },
-        "companyId": {
-          "type": "string",
-          "description": "Reference to the CompanyProfile. (Relationship: CompanyProfile 1:N BerkusScore)"
-        },
-        "soundIdeaScore": {
-          "type": "number",
-          "description": "Score for the 'Sound/Proven Idea' factor (1-5)."
-        },
-        "prototypeMvpScore": {
-          "type": "number",
-          "description": "Score for the 'Prototype / MVP' factor (1-5)."
-        },
-        "qualityTeamScore": {
-          "type": "number",
-          "description": "Score for the 'Quality Team' factor (1-5)."
-        },
-        "strategicRelationshipsScore": {
-          "type": "number",
-          "description": "Score for the 'Strategic Relationships' factor (1-5)."
-        },
-        "earlySalesTractionScore": {
-          "type": "number",
-          "description": "Score for the 'Early Sales / Traction' factor (1-5)."
-        }
+        "id": { "type": "string" },
+        "companyId": { "type": "string" },
+        "roundName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "amountRaised": { "type": "number" },
+        "preMoneyValuation": { "type": "number" },
+        "postMoneyValuation": { "type": "number" },
+        "sharesIssued": { "type": "number" },
+        "pricePerShare": { "type": "number" }
       },
-      "required": [
-        "id",
-        "companyId",
-        "soundIdeaScore",
-        "prototypeMvpScore",
-        "qualityTeamScore",
-        "strategicRelationshipsScore",
-        "earlySalesTractionScore"
-      ]
-    },
-    "SimulatedFundingRound": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "SimulatedFundingRound",
-      "type": "object",
-      "description": "Represents a simulated future funding round for dilution analysis.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the SimulatedFundingRound entity."
-        },
-        "companyId": {
-          "type": "string",
-          "description": "Reference to the CompanyProfile. (Relationship: CompanyProfile 1:N SimulatedFundingRound)"
-        },
-        "roundName": {
-          "type": "string",
-          "description": "The name of the simulated round (e.g., 'Series A', 'Series B')."
-        },
-        "investmentAmount": {
-          "type": "number",
-          "description": "The simulated investment amount for this round in INR."
-        },
-        "equityOfferedPct": {
-          "type": "number",
-          "description": "The simulated percentage of equity offered in this round."
-        },
-        "order": {
-          "type": "number",
-          "description": "The display order of this simulated funding round."
-        }
-      },
-      "required": [
-        "id",
-        "companyId",
-        "roundName",
-        "investmentAmount",
-        "equityOfferedPct",
-        "order"
-      ]
+      "required": ["id", "companyId", "roundName", "amountRaised", "preMoneyValuation"]
     },
     "Shareholder": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Shareholder",
       "type": "object",
-      "description": "Represents an individual or entity holding a percentage stake in the company.",
+      "description": "Represents an owner of company shares.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Shareholder entity."
-        },
-        "companyId": {
-          "type": "string",
-          "description": "Reference to the CompanyProfile. (Relationship: CompanyProfile 1:N Shareholder)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The name or entity name of the shareholder."
-        },
-        "shareType": {
-          "type": "string",
-          "description": "The type of ownership interest (e.g., common, preference, ESOP, DVR).",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ownershipPercentage": {
-          "type": "number",
-          "description": "The percentage of the company owned by the shareholder."
-        }
+        "id": { "type": "string" },
+        "companyId": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["Founder", "Investor", "ESOP", "Advisor"] },
+        "shareClass": { "type": "string", "enum": ["Common", "Preferred", "SAFE"] },
+        "sharesOwned": { "type": "number" },
+        "amountInvested": { "type": "number" },
+        "investmentDate": { "type": "string", "format": "date" },
+        "vestingStart": { "type": "string", "format": "date" },
+        "vestingCliffMonths": { "type": "number" },
+        "vestingDurationMonths": { "type": "number" }
       },
-      "required": [
-        "id",
-        "companyId",
-        "name",
-        "shareType",
-        "ownershipPercentage"
-      ]
+      "required": ["id", "companyId", "name", "role", "shareClass", "sharesOwned"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}/companyProfiles/{companyProfileId}",
-        "definition": {
-          "entityName": "CompanyProfile",
-          "schema": {
-            "$ref": "#/backend/entities/CompanyProfile"
-          },
-          "description": "Stores core company profiles and financial inputs, each owned by a specific user. Includes denormalized 'ownerId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this company profile."
-            },
-            {
-              "name": "companyProfileId",
-              "description": "The unique identifier for the company profile document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/companyProfiles/{companyProfileId}/berkusScores/{berkusScoreId}",
-        "definition": {
-          "entityName": "BerkusScore",
-          "schema": {
-            "$ref": "#/backend/entities/BerkusScore"
-          },
-          "description": "Stores Berkus Method valuation scores for a specific company profile. Includes denormalized 'ownerId' and 'companyId' for authorization independence and data integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns the parent company profile."
-            },
-            {
-              "name": "companyProfileId",
-              "description": "The unique identifier for the parent company profile document."
-            },
-            {
-              "name": "berkusScoreId",
-              "description": "The unique identifier for the Berkus score entry."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/companyProfiles/{companyProfileId}/simulatedFundingRounds/{roundId}",
-        "definition": {
-          "entityName": "SimulatedFundingRound",
-          "schema": {
-            "$ref": "#/backend/entities/SimulatedFundingRound"
-          },
-          "description": "Stores simulated future funding rounds for dilution analysis for a specific company profile. Includes denormalized 'ownerId' and 'companyId' for authorization independence and data integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns the parent company profile."
-            },
-            {
-              "name": "companyProfileId",
-              "description": "The unique identifier for the parent company profile document."
-            },
-            {
-              "name": "roundId",
-              "description": "The unique identifier for the simulated funding round document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/companyProfiles/{companyProfileId}/shareholders/{shareholderId}",
-        "definition": {
-          "entityName": "Shareholder",
-          "schema": {
-            "$ref": "#/backend/entities/Shareholder"
-          },
-          "description": "Stores cap table shareholder details for a specific company profile. Includes denormalized 'ownerId' and 'companyId' for authorization independence and data integrity.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns the parent company profile."
-            },
-            {
-              "name": "companyProfileId",
-              "description": "The unique identifier for the parent company profile document."
-            },
-            {
-              "name": "shareholderId",
-              "description": "The unique identifier for the shareholder document."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The recommended Firestore data structure adopts a hierarchical, user-centric model, ensuring robust security, scalability, and debuggability in line with the core design principles and mandates. All application data for a founder (user) is nested under their unique user ID, starting with a top-level `users` collection."
+    "/users/{userId}/companyProfiles/{companyId}": {
+      "schema": "#/backend/entities/CompanyProfile",
+      "description": "Core company data."
+    },
+    "/users/{userId}/companyProfiles/{companyId}/fundingRounds/{roundId}": {
+      "schema": "#/backend/entities/FundingRound",
+      "description": "Historical funding events."
+    },
+    "/users/{userId}/companyProfiles/{companyId}/shareholders/{shareholderId}": {
+      "schema": "#/backend/entities/Shareholder",
+      "description": "Cap table registry."
+    }
   }
 }
