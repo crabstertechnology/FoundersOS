@@ -7,13 +7,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
-import { TrendingUp, Zap, Loader2, Coins, Scale, Info, ShieldAlert, CheckCircle2, Target, HeartPulse, Sparkles } from 'lucide-react';
+import { TrendingUp, Zap, Loader2, Coins, Scale, Info, ShieldAlert, CheckCircle2, Target, HeartPulse, Sparkles, ChevronDown } from 'lucide-react';
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, collection } from 'firebase/firestore';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import { cn } from "@/lib/utils";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
 
 interface ValuationCalculatorProps {
   userId: string;
@@ -74,7 +76,14 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     return doc(firestore, 'users', userId, 'companyProfiles', companyProfileId);
   }, [firestore, userId, companyProfileId]);
 
+  const shareholdersRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'shareholders');
+  }, [firestore, userId, companyProfileId]);
+
   const { data: profileDoc, isLoading: isDocLoading } = useDoc(profileRef);
+  const { data: stakeholders } = useCollection(shareholdersRef);
+  
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
 
   useEffect(() => {
@@ -90,7 +99,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     const newData = { ...formData, [field]: val };
     setFormData(newData);
 
-    // Calculate derived Post-Money Valuation to sync with Cap Table
     const investment = newData.investment || 0;
     const equityOffered = newData.equityOffered || 0;
     const postMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
@@ -98,7 +106,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     if (profileRef) {
       setDocumentNonBlocking(profileRef, {
         ...newData,
-        latestValuation: postMoney, // Synchronize calculated post-money
+        latestValuation: postMoney,
         id: companyProfileId,
         updatedAt: serverTimestamp(),
       }, { merge: true });
@@ -107,8 +115,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
 
   const results = useMemo(() => {
     const { 
-      investment, equityOffered, esopPool, advisorEquity, coFounderEq, 
-      mRevenue, burnRate, cashBank, cac, profitPerOrder, ordersPerCustomer 
+      investment, equityOffered, mRevenue, burnRate, cashBank, cac, profitPerOrder, ordersPerCustomer 
     } = formData;
     
     const postMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
@@ -121,14 +128,18 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     const profitPerCustomer = ltv - cac;
     const breakEvenCac = ltv;
     
-    const totalEquityTaken = (equityOffered || 0) + (esopPool || 0) + (advisorEquity || 0) + (coFounderEq || 0);
-    const founderEq = Math.max(0, 100 - totalEquityTaken);
+    // Sync logic: Sasitharan's stake is 100% minus everyone in the registry
+    const totalAllocatedToOthers = (stakeholders || [])
+      .filter(s => s.name?.toLowerCase() !== 'sasitharan')
+      .reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0);
+    
+    const founderEq = Math.max(0, 100 - totalAllocatedToOthers);
 
     return { 
       preMoney, postMoney, arr, runway, ltvCac, founderEq, 
       ltv, profitPerCustomer, breakEvenCac 
     };
-  }, [formData]);
+  }, [formData, stakeholders]);
 
   const industryData = INDUSTRIES.find(i => i.value === formData.industry);
   const revValuation = results.arr * (industryData?.multiple || 0);
@@ -263,6 +274,37 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
       </div>
 
       <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Founder Stake</div>
+            <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
+              {fmtPct(results.founderEq)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Sasitharan</div>
+          </Card>
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
+            <div className={`text-xl font-code font-bold ${results.runway > 0 && results.runway < 6 ? 'text-destructive' : 'text-primary'}`}>
+              {results.runway === 999 ? '∞' : Math.round(results.runway)} mo
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Until cash zero</div>
+          </Card>
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
+            <div className="text-xl font-code font-bold text-primary">
+              {fmtINR(results.arr)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Annual Run Rate</div>
+          </Card>
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Burn Rate</div>
+            <div className="text-xl font-code font-bold text-destructive">
+              {fmtINR(formData.burnRate)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Net Monthly spend</div>
+          </Card>
+        </div>
+
         <Card className="border-2 border-primary/20 bg-primary/5 shadow-xl overflow-hidden">
           <CardHeader className="bg-primary text-primary-foreground py-4">
             <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
@@ -354,37 +396,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 Based on {industryData?.label} market average
               </p>
             </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Founder Stake</div>
-            <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
-              {fmtPct(results.founderEq)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Sasitharan</div>
-          </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
-            <div className={`text-xl font-code font-bold ${results.runway > 0 && results.runway < 6 ? 'text-destructive' : 'text-primary'}`}>
-              {results.runway === 999 ? '∞' : Math.round(results.runway)} mo
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Until cash zero</div>
-          </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
-            <div className="text-xl font-code font-bold text-primary">
-              {fmtINR(results.arr)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Annual Run Rate</div>
-          </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Burn Rate</div>
-            <div className="text-xl font-code font-bold text-destructive">
-              {fmtINR(formData.burnRate)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Net Monthly spend</div>
           </Card>
         </div>
 
@@ -501,10 +512,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     </div>
   );
 }
-
-// Minimal Accordion pieces for the Snapshot
-import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { cn } from "@/lib/utils";
 
 const Accordion = AccordionPrimitive.Root;
 const AccordionItem = AccordionPrimitive.Item;
