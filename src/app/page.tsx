@@ -2,11 +2,10 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight, Briefcase } from 'lucide-react';
+import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
-import { BusinessModelGuide } from '@/components/strategy/BusinessModelGuide';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import { useUser, useAuth, initiateSignOut } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -53,10 +52,6 @@ export default function FounderOSPage() {
                 <TabsTrigger value="tracker" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden sm:inline">Cap Table</span>
-                </TabsTrigger>
-                <TabsTrigger value="strategy" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
-                  <Briefcase className="w-4 h-4" />
-                  <span className="hidden sm:inline">Strategy</span>
                 </TabsTrigger>
                 <TabsTrigger value="glossary" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <BookOpen className="w-4 h-4" />
@@ -178,18 +173,6 @@ export default function FounderOSPage() {
                   </p>
                 </div>
                 <CapTableTracker userId={userId!} companyProfileId={companyProfileId} />
-              </TabsContent>
-
-              <TabsContent value="strategy" className="mt-0 focus-visible:outline-none">
-                <div className="mb-12 text-center space-y-4">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-                    Business <span className="text-primary">Model</span> & Strategy
-                  </h1>
-                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                    Design your revenue engine and map your path to profitability.
-                  </p>
-                </div>
-                <BusinessModelGuide />
               </TabsContent>
 
               <TabsContent value="glossary" className="mt-0 focus-visible:outline-none">
