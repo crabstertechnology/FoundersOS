@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { fmtPct } from '@/lib/utils/formatters';
-import { Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, Info, Scale } from 'lucide-react';
+import { Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, Info, Scale, User } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -28,7 +28,8 @@ interface Shareholder {
   companyId: string;
 }
 
-const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444'];
+const COLORS = ['#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444', '#1f4fad'];
+const FOUNDER_COLOR = '#1f4fad'; // Deep Primary Blue
 
 function HeaderWithInfo({ label, info }: { label: string; info: string }) {
   return (
@@ -56,18 +57,21 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'shareholders');
   }, [firestore, userId, companyProfileId]);
 
-  const { data: shareholders, isLoading } = useCollection<Shareholder>(shareholdersRef);
+  const { data: stakeholders, isLoading } = useCollection<Shareholder>(shareholdersRef);
 
-  const totalAllocated = useMemo(() => (shareholders || []).reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0), [shareholders]);
-  const unallocated = useMemo(() => Math.max(0, 100 - totalAllocated), [totalAllocated]);
+  // Calculate total given to others
+  const totalPartnerEquity = useMemo(() => (stakeholders || []).reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0), [stakeholders]);
+  
+  // Sasitharan's share is the remainder of 100%
+  const founderShare = useMemo(() => Math.max(0, 100 - totalPartnerEquity), [totalPartnerEquity]);
 
-  const updateShareholder = (id: string, field: string, value: any) => {
+  const updateStakeholder = (id: string, field: string, value: any) => {
     if (!shareholdersRef) return;
-    const shareholderDoc = doc(shareholdersRef, id);
-    updateDocumentNonBlocking(shareholderDoc, { [field]: value });
+    const stakeholderDoc = doc(shareholdersRef, id);
+    updateDocumentNonBlocking(stakeholderDoc, { [field]: value });
   };
 
-  const addShareholder = () => {
+  const addStakeholder = () => {
     if (!shareholdersRef) return;
     addDocumentNonBlocking(shareholdersRef, {
       name: '',
@@ -77,63 +81,66 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     });
   };
 
-  const removeShareholder = (id: string) => {
+  const removeStakeholder = (id: string) => {
     if (!shareholdersRef) return;
-    const shareholderDoc = doc(shareholdersRef, id);
-    deleteDocumentNonBlocking(shareholderDoc);
+    const stakeholderDoc = doc(shareholdersRef, id);
+    deleteDocumentNonBlocking(stakeholderDoc);
   };
 
   const chartData = useMemo(() => {
-    const allocated = (shareholders || []).map((s, i) => ({
-      name: s.name || 'Unnamed',
-      value: s.ownershipPercentage || 0,
-      color: COLORS[i % COLORS.length]
-    })).filter(d => d.value > 0);
+    const data = [];
+    
+    // Always include Sasitharan
+    data.push({
+      name: 'Sasitharan (Founder)',
+      value: founderShare,
+      color: FOUNDER_COLOR
+    });
 
-    if (unallocated > 0) {
-      allocated.push({
-        name: 'Unallocated',
-        value: unallocated,
-        color: '#e2e8f0' // Slate-200
+    // Add other stakeholders
+    if (stakeholders) {
+      stakeholders.forEach((s, i) => {
+        if ((s.ownershipPercentage || 0) > 0) {
+          data.push({
+            name: s.name || 'Unnamed Partner',
+            value: s.ownershipPercentage || 0,
+            color: COLORS[i % COLORS.length]
+          });
+        }
       });
     }
 
-    return allocated;
-  }, [shareholders, unallocated]);
+    return data;
+  }, [stakeholders, founderShare]);
 
   const authorityChecks = useMemo(() => {
-    const list = shareholders || [];
-    const founderPct = list.filter(s => s.type === 'common' || s.type === 'dvr').reduce((a, b) => a + (b.ownershipPercentage || 0), 0);
-    const prefPct = list.filter(s => s.type === 'preference').reduce((a, b) => a + (b.ownershipPercentage || 0), 0);
-    const esopPct = list.filter(s => s.type === 'esop').reduce((a, b) => a + (b.ownershipPercentage || 0), 0);
-
     return [
       { 
-        label: 'Founders hold majority (>50%)', 
-        pass: founderPct > 50, 
-        val: fmtPct(founderPct), 
-        tip: 'Essential for operational control in a proprietorship or partnership.' 
+        label: 'Founder Majority (>50%)', 
+        pass: founderShare > 50, 
+        val: fmtPct(founderShare), 
+        tip: 'Critical for maintaining absolute control over your proprietorship.' 
       },
       { 
-        label: 'Balanced allocation (Total 100%)', 
-        pass: Math.abs(totalAllocated - 100) < 0.01, 
-        val: fmtPct(totalAllocated), 
-        tip: 'Ownership must sum to exactly 100% for legal and tax clarity.' 
+        label: 'Total Distribution (100%)', 
+        pass: Math.abs((founderShare + totalPartnerEquity) - 100) < 0.01, 
+        val: fmtPct(founderShare + totalPartnerEquity), 
+        tip: 'Proprietorship equity must sum to exactly 100%.' 
       },
       { 
-        label: 'ESOP / Future Pool (5-15%)', 
-        pass: esopPct >= 5 && esopPct <= 15, 
-        val: fmtPct(esopPct), 
-        tip: 'Reserving stake for future partners or key team members.' 
+        label: 'Partner Allocation (<40%)', 
+        pass: totalPartnerEquity < 40, 
+        val: fmtPct(totalPartnerEquity), 
+        tip: 'High dilution at early stages can impact future fundraising leverage.' 
       },
     ];
-  }, [shareholders, totalAllocated]);
+  }, [founderShare, totalPartnerEquity]);
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground font-code text-xs">Syncing Stakeholders...</p>
+        <p className="text-muted-foreground font-code text-xs">Loading Cap Table Registry...</p>
       </div>
     );
   }
@@ -144,22 +151,27 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="bg-primary text-primary-foreground border-none shadow-lg overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] uppercase tracking-[0.2em] opacity-70">Total Allocated Equity</CardTitle>
+              <CardTitle className="text-[10px] uppercase tracking-[0.2em] opacity-70 flex items-center gap-2">
+                <User className="w-3 h-3" />
+                Sasitharan (Founder Share)
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-black font-headline">{fmtPct(totalAllocated)}</div>
-              <Progress value={totalAllocated} className="h-1.5 mt-4 bg-white/20" />
+              <div className="text-4xl font-black font-headline">{fmtPct(founderShare)}</div>
+              <p className="text-[10px] mt-2 opacity-80 font-medium">Primary ownership after partner deduction</p>
+              <Progress value={founderShare} className="h-1.5 mt-4 bg-white/20" />
             </CardContent>
           </Card>
-          <Card className={`border-none shadow-lg overflow-hidden ${unallocated > 0 ? 'bg-accent text-accent-foreground' : 'bg-green-600 text-white'}`}>
+          <Card className={`border-none shadow-lg overflow-hidden ${totalPartnerEquity > 0 ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] uppercase tracking-[0.2em] opacity-70">Remaining (Unallocated)</CardTitle>
+              <CardTitle className="text-[10px] uppercase tracking-[0.2em] opacity-70">Allocated to Partners</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-black font-headline">{fmtPct(unallocated)}</div>
-              <p className="text-[10px] mt-4 opacity-80 font-medium italic">
-                {unallocated > 0 ? 'Assign this to partners or ESOP' : 'Cap table fully balanced'}
+              <div className="text-4xl font-black font-headline">{fmtPct(totalPartnerEquity)}</div>
+              <p className="text-[10px] mt-2 opacity-80 font-medium italic">
+                {totalPartnerEquity > 0 ? 'Equity shared with stakeholders' : 'No partners added yet'}
               </p>
+              <Progress value={totalPartnerEquity} className="h-1.5 mt-4 bg-black/10" />
             </CardContent>
           </Card>
         </div>
@@ -169,38 +181,38 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
             <div className="space-y-1">
               <CardTitle className="text-xl font-bold flex items-center gap-2">
                 <Scale className="w-5 h-5 text-primary" />
-                Ownership Registry
+                Partner & Stakeholder Registry
               </CardTitle>
-              <p className="text-xs text-muted-foreground font-medium">Manage stakeholder percentages for your proprietorship.</p>
+              <p className="text-xs text-muted-foreground font-medium">Distribute equity from the Founder's 100% stake.</p>
             </div>
-            <Button onClick={addShareholder} variant="outline" className="gap-2 font-body font-bold" suppressHydrationWarning>
+            <Button onClick={addStakeholder} variant="outline" className="gap-2 font-body font-bold" suppressHydrationWarning>
               <UserPlus className="w-4 h-4" />
-              Add Stakeholder
+              Add Partner
             </Button>
           </CardHeader>
           <CardContent>
-            {(!shareholders || shareholders.length === 0) ? (
+            {(!stakeholders || stakeholders.length === 0) ? (
               <div className="text-center py-12 border-2 border-dashed rounded-xl border-muted bg-muted/5">
-                <p className="text-muted-foreground italic mb-4">No stakeholders listed yet. Your company is currently 100% unallocated.</p>
-                <Button onClick={addShareholder} variant="outline" size="sm" className="gap-2" suppressHydrationWarning>
+                <p className="text-muted-foreground italic mb-4">Your company is currently 100% owned by Sasitharan.</p>
+                <Button onClick={addStakeholder} variant="outline" size="sm" className="gap-2" suppressHydrationWarning>
                   <UserPlus className="w-3 h-3" />
-                  Add First Stakeholder
+                  Add First Partner
                 </Button>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent uppercase text-[10px] font-bold tracking-widest text-muted-foreground">
-                    <TableHead>Entity/Partner Name</TableHead>
+                    <TableHead>Partner/Entity Name</TableHead>
                     <TableHead>
-                      <HeaderWithInfo label="Interest Type" info="Common (standard), Preference, ESOP, or DVR (Super-voting)." />
+                      <HeaderWithInfo label="Interest Type" info="Common, Preference, ESOP, or DVR (Super-voting)." />
                     </TableHead>
                     <TableHead>Ownership %</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {shareholders.map((s) => {
+                  {stakeholders.map((s) => {
                     return (
                       <TableRow key={s.id} className="group">
                         <TableCell>
@@ -208,12 +220,12 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                             value={s.name || ''} 
                             placeholder="Full name or entity..."
                             className="h-9 border-none bg-transparent focus-visible:ring-1 font-medium" 
-                            onChange={e => updateShareholder(s.id, 'name', e.target.value)}
+                            onChange={e => updateStakeholder(s.id, 'name', e.target.value)}
                             suppressHydrationWarning
                           />
                         </TableCell>
                         <TableCell>
-                          <Select value={s.type} onValueChange={v => updateShareholder(s.id, 'type', v)}>
+                          <Select value={s.type} onValueChange={v => updateStakeholder(s.id, 'type', v)}>
                             <SelectTrigger className="h-9 w-36 font-code text-xs bg-muted/30" suppressHydrationWarning><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="common">Common Equity</SelectItem>
@@ -230,7 +242,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                                 type="number" 
                                 value={s.ownershipPercentage || ''} 
                                 className="h-9 font-code pr-8 text-right font-bold" 
-                                onChange={e => updateShareholder(s.id, 'ownershipPercentage', Number(e.target.value))}
+                                onChange={e => updateStakeholder(s.id, 'ownershipPercentage', Number(e.target.value))}
                                 suppressHydrationWarning
                               />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">%</span>
@@ -241,7 +253,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors" onClick={() => removeShareholder(s.id)} suppressHydrationWarning>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors" onClick={() => removeStakeholder(s.id)} suppressHydrationWarning>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </TableCell>
@@ -251,12 +263,12 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                 </TableBody>
               </Table>
             )}
-            {totalAllocated > 100 && (
+            {totalPartnerEquity > 100 && (
               <Alert variant="destructive" className="mt-6 border-destructive/50 bg-destructive/5 animate-in slide-in-from-top-2">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle className="font-bold">Over-allocation Alert</AlertTitle>
                 <AlertDescription className="text-xs">
-                  Your total ownership exceeds 100% ({totalAllocated.toFixed(2)}%). Proprietorship equity cannot exceed 100% of the company value. Please reduce individual percentages.
+                  Partner equity exceeds 100% ({totalPartnerEquity.toFixed(2)}%). Sasitharan's share is currently 0%. Please adjust partner percentages.
                 </AlertDescription>
               </Alert>
             )}
@@ -267,44 +279,40 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
       <div className="lg:col-span-1 space-y-6">
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Ownership Distribution</CardTitle>
+            <CardTitle className="text-lg font-bold">Ownership Split</CardTitle>
           </CardHeader>
           <CardContent>
-            {chartData.length > 0 ? (
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip 
-                      formatter={(val: number) => [`${val.toFixed(1)}%`, 'Ownership']}
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="h-64 flex items-center justify-center border rounded-lg bg-muted/10 italic text-muted-foreground text-sm">
-                Add partners to see distribution
-              </div>
-            )}
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip 
+                    formatter={(val: number) => [`${val.toFixed(1)}%`, 'Ownership']}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
             <div className="mt-4 space-y-2">
               {chartData.map((d, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="font-medium truncate max-w-[120px]">{d.name}</span>
+                    <span className={`font-medium truncate max-w-[120px] ${d.name.includes('Sasitharan') ? 'font-bold text-primary' : ''}`}>
+                      {d.name}
+                    </span>
                   </div>
                   <span className="font-code font-bold">{d.value.toFixed(1)}%</span>
                 </div>
