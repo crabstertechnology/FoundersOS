@@ -172,6 +172,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
             </div>
             <div className="text-3xl font-black text-primary">{fmtINR(stats.latestVal)}</div>
             <p className="text-[10px] mt-2 text-muted-foreground">Market Estimate</p>
+            <p className="text-[9px] text-muted-foreground/60 font-mono mt-1">Formula: Investment ÷ Equity %</p>
           </CardContent>
         </Card>
         <Card className="bg-white border-2 border-primary/10 shadow-lg">
