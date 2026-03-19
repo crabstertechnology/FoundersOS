@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState } from 'react';
@@ -7,10 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fmtINR, fmtPct } from '@/lib/utils/formatters';
 import { 
   Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, 
-  User, TrendingUp, History, Sparkles, PieChart as PieIcon,
+  User, TrendingUp, History, PieChart as PieIcon,
   ShieldAlert, ArrowRightLeft, Target, Percent
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
@@ -19,8 +21,6 @@ import {
   addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking 
 } from '@/firebase';
 import { collection, doc, query, orderBy } from 'firebase/firestore';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CapTableTrackerProps {
   userId: string;
@@ -56,8 +56,8 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
   // Logic: Sasitharan (Founder) starts with 100%. Everyone else is deducted from him.
   const stats = useMemo(() => {
-    const nonFounderStakeholders = (stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan');
-    const totalAllocatedToOthers = nonFounderStakeholders.reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0);
+    const others = (stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan');
+    const totalAllocatedToOthers = others.reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0);
     const founderPct = Math.max(0, 100 - totalAllocatedToOthers);
 
     const investorPct = (stakeholders || []).filter(s => s.role === 'Investor').reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0);
@@ -74,22 +74,19 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
   const chartData = useMemo(() => {
     const data = (stakeholders || [])
-      .filter(s => (s.ownershipPercentage || 0) > 0)
+      .filter(s => s.name.toLowerCase() !== 'sasitharan' && (s.ownershipPercentage || 0) > 0)
       .map((s, i) => ({
         name: s.name || 'Unnamed',
         value: s.ownershipPercentage || 0,
-        color: COLORS[i % COLORS.length]
+        color: COLORS[(i + 1) % COLORS.length]
       }));
 
-    // If Sasitharan isn't in the list explicitly, we show the remaining founder stake
-    const hasFounderInList = (stakeholders || []).some(s => s.name.toLowerCase() === 'sasitharan');
-    if (!hasFounderInList && stats.founderPct > 0) {
-      data.unshift({
-        name: 'Sasitharan (Founder)',
-        value: stats.founderPct,
-        color: COLORS[0]
-      });
-    }
+    // Add Founder stake
+    data.unshift({
+      name: 'Sasitharan (Founder)',
+      value: stats.founderPct,
+      color: COLORS[0]
+    });
 
     return data;
   }, [stakeholders, stats.founderPct]);
@@ -226,7 +223,9 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                           </TableCell>
                           <TableCell>
                             <Select value={s.role} onValueChange={v => updateStakeholder(s.id, 'role', v)}>
-                              <SelectTrigger className="h-8 w-24 border-none bg-muted/50 text-[10px] font-bold uppercase"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="h-8 w-24 border-none bg-muted/50 text-[10px] font-bold uppercase">
+                                <SelectValue />
+                              </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="Partner">Partner</SelectItem>
                                 <SelectItem value="Investor">Investor</SelectItem>
