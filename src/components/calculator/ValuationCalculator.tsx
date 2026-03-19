@@ -9,9 +9,9 @@ import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { TrendingUp, Zap, Loader2, Coins, Scale, Info, ShieldAlert, CheckCircle2, Target, HeartPulse, Sparkles, ChevronDown } from 'lucide-react';
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc, serverTimestamp, collection } from 'firebase/firestore';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -76,13 +76,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     return doc(firestore, 'users', userId, 'companyProfiles', companyProfileId);
   }, [firestore, userId, companyProfileId]);
 
-  const shareholdersRef = useMemoFirebase(() => {
-    if (!firestore || !userId || !companyProfileId) return null;
-    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'shareholders');
-  }, [firestore, userId, companyProfileId]);
-
   const { data: profileDoc, isLoading: isDocLoading } = useDoc(profileRef);
-  const { data: stakeholders } = useCollection(shareholdersRef);
   
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
 
@@ -115,7 +109,8 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
 
   const results = useMemo(() => {
     const { 
-      investment, equityOffered, mRevenue, burnRate, cashBank, cac, profitPerOrder, ordersPerCustomer 
+      investment, equityOffered, mRevenue, burnRate, cashBank, cac, 
+      profitPerOrder, ordersPerCustomer, esopPool, advisorEquity, coFounderEq 
     } = formData;
     
     const postMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
@@ -128,18 +123,14 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     const profitPerCustomer = ltv - cac;
     const breakEvenCac = ltv;
     
-    // Sync logic: Sasitharan's stake is 100% minus everyone in the registry
-    const totalAllocatedToOthers = (stakeholders || [])
-      .filter(s => s.name?.toLowerCase() !== 'sasitharan')
-      .reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0);
-    
-    const founderEq = Math.max(0, 100 - totalAllocatedToOthers);
+    // Internal calculation (Independent of Cap Table collection)
+    const founderEq = Math.max(0, 100 - (equityOffered + esopPool + advisorEquity + coFounderEq));
 
     return { 
       preMoney, postMoney, arr, runway, ltvCac, founderEq, 
       ltv, profitPerCustomer, breakEvenCac 
     };
-  }, [formData, stakeholders]);
+  }, [formData]);
 
   const industryData = INDUSTRIES.find(i => i.value === formData.industry);
   const revValuation = results.arr * (industryData?.multiple || 0);
@@ -280,7 +271,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
               {fmtPct(results.founderEq)}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Sasitharan</div>
+            <div className="text-[10px] text-muted-foreground mt-1">Simulated Stake</div>
           </Card>
           <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
