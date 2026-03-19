@@ -1,11 +1,11 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for providing strategic advice and warnings
+ * @fileOverview A Genkit flow for providing strategic advice and warnings 
  *               to founders negotiating term sheets.
  *
- * - termSheetNegotiationAssistant - A function that analyzes company data and
- *                                   proposed term sheet clauses to offer
- *                                   founder-friendly recommendations,
+ * - termSheetNegotiationAssistant - A function that analyzes company data and 
+ *                                   proposed term sheet clauses to offer 
+ *                                   founder-friendly recommendations, 
  *                                   negotiation talking points, and red flags.
  * - TermSheetNegotiationAssistantInput - The input type for the assistant.
  * - TermSheetNegotiationAssistantOutput - The return type for the assistant.
@@ -95,7 +95,7 @@ Based on this information, provide:
     -   ESOP Pool Creation
 3.  "generalWarnings" for term sheet negotiations.
 
-Focus on practical, actionable advice relevant to the Indian startup ecosystem. Ensure all numerical examples in your response use INR. When calculating ratios like LTV:CAC, use the provided LTV and CAC. When discussing founder equity, consider the `currentFounderEquityPercentage` and the `equityOfferedToInvestorPercentage` to project dilution.
+Focus on practical, actionable advice relevant to the Indian startup ecosystem. Ensure all numerical examples in your response use INR. When calculating ratios like LTV:CAC, use the provided LTV and CAC. When discussing founder equity, consider the 'currentFounderEquityPercentage' and the 'equityOfferedToInvestorPercentage' to project dilution.
 
 Example LTV:CAC Calculation: Average Customer LTV ({{{avgCustomerLTV}}}) / Customer Acquisition Cost ({{{customerAcquisitionCost}}})
 Example Runway Calculation: Cash in Bank ({{{cashInBank}}}) / Monthly Burn Rate ({{{monthlyBurnRate}}})

@@ -7,14 +7,19 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Search, Lightbulb, AlertTriangle, BookOpen, 
   Sparkles, ShieldAlert, Zap, Globe, Info, 
-  ChevronRight, Filter
+  ChevronRight, Filter, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { explainStartupTerm } from '@/ai/flows/dynamic-glossary-explainer';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 export function GlossarySection() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [explainingId, setExplainingId] = useState<string | null>(null);
+  const [aiExplanation, setAiExplanation] = useState<any>(null);
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(GLOSSARY_ITEMS.map(i => i.label)));
@@ -29,6 +34,18 @@ export function GlossarySection() {
       const matchesCategory = activeCategory === 'All' || item.label === activeCategory;
       return matchesSearch && matchesCategory;
     }), [search, activeCategory]);
+
+  const handleAskAI = async (term: string) => {
+    setExplainingId(term);
+    try {
+      const result = await explainStartupTerm({ termOrClause: term });
+      setAiExplanation(result);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setExplainingId(null);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-12">
@@ -174,11 +191,51 @@ export function GlossarySection() {
                     </p>
                   </div>
                 </div>
+
+                <Button 
+                  variant="outline" 
+                  className="w-full gap-2 font-bold text-xs rounded-full border-primary/20 hover:bg-primary/5 h-10"
+                  onClick={() => handleAskAI(item.title)}
+                  disabled={explainingId !== null}
+                >
+                  {explainingId === item.title ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-primary" />}
+                  Ask AI to Simplify & Contextualize
+                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <Dialog open={!!aiExplanation} onOpenChange={() => setAiExplanation(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              AI Jargon Explainer
+            </DialogTitle>
+            <DialogDescription>
+              A deep-dive analysis of this startup term localized for your context.
+            </DialogDescription>
+          </DialogHeader>
+          {aiExplanation && (
+            <div className="space-y-6 pt-4">
+              <div className="space-y-2">
+                <div className="text-[10px] uppercase font-black tracking-widest text-primary">Simplified Logic</div>
+                <p className="text-sm leading-relaxed font-medium">{aiExplanation.explanation}</p>
+              </div>
+              <div className="space-y-2 bg-muted/30 p-4 rounded-xl border">
+                <div className="text-[10px] uppercase font-black tracking-widest text-green-700">Indian Market Example</div>
+                <p className="text-sm leading-relaxed italic">{aiExplanation.indianContextExample}</p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-[10px] uppercase font-black tracking-widest text-amber-700">Practical Implications</div>
+                <p className="text-sm leading-relaxed font-bold">{aiExplanation.practicalImplications}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {filteredItems.length === 0 && (
         <div className="text-center py-32 space-y-4 bg-muted/20 rounded-3xl border-2 border-dashed">

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight, Gavel } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
@@ -10,6 +10,7 @@ import { AuthDialog } from '@/components/auth/AuthDialog';
 import { useUser, useAuth, initiateSignOut } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { QuickCalculator } from '@/components/calculator/QuickCalculator';
+import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
 
 export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('calc');
@@ -52,6 +53,10 @@ export default function FounderOSPage() {
                 <TabsTrigger value="tracker" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden sm:inline">Cap Table</span>
+                </TabsTrigger>
+                <TabsTrigger value="negotiate" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
+                  <Gavel className="w-4 h-4" />
+                  <span className="hidden sm:inline">Negotiate</span>
                 </TabsTrigger>
                 <TabsTrigger value="glossary" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <BookOpen className="w-4 h-4" />
@@ -170,6 +175,18 @@ export default function FounderOSPage() {
                   </p>
                 </div>
                 <CapTableTracker userId={userId!} companyProfileId={companyProfileId} />
+              </TabsContent>
+
+              <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none">
+                <div className="mb-12 text-center space-y-4">
+                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
+                    Term Sheet <span className="text-primary">Assistant</span>
+                  </h1>
+                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
+                    Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
+                  </p>
+                </div>
+                <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} />
               </TabsContent>
 
               <TabsContent value="glossary" className="mt-0 focus-visible:outline-none">
