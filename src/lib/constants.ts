@@ -62,8 +62,8 @@ export const GLOSSARY_ITEMS = [
     tag: 'equity',
     label: 'Equity',
     title: 'Cap Table (Capitalization Table)',
-    desc: 'A structured list of every shareholder, their share type, exact share count, and ownership percentage. It is the single source of truth for ownership.',
-    example: 'Crabster cap table: Sasitharan 50%, Co-founder 15%, Angel Investor 15%, ESOP Pool 12%, Advisor 2%, Antony Dinu 2%, Unallocated 4%. Total = 100%.',
+    desc: 'A cap table is a structured list of every shareholder, their share type, exact share count, and ownership percentage. It is the single source of truth for ownership.',
+    example: 'Crabster cap table: Sasitharan 55%, Co-founder 15%, Angel Investor 15%, ESOP Pool 12%, Advisor 3%. Total = 100%.',
     tipType: 'good',
     tip: 'Use a dedicated CA-maintained spreadsheet or tool like Carta from Day 1. Retroactively fixing a messy cap table costs lakhs in legal fees.',
     color: '#1d4ed8'
