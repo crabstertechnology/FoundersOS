@@ -7,8 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, TrendingUp, Zap, Loader2, Coins, Scale, Info } from 'lucide-react';
+import { TrendingUp, Zap, Loader2, Coins, Scale, Info } from 'lucide-react';
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
 import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -28,16 +27,14 @@ const DEFAULT_FORM_DATA = {
   burnRate: 0,
   cashBank: 0,
   customers: 0,
-  ltv: 0,
+  profitPerOrder: 0,
+  ordersPerCustomer: 1,
   cac: 0,
   investment: 0,
   equityOffered: 0,
   esopPool: 10,
   advisorEquity: 0,
   coFounderEq: 0,
-  // Liquidation Preference Fields
-  exitPrice: 0,
-  investorCapital: 0,
   prefMultiple: '1',
   prefType: 'nonparticipating'
 };
@@ -94,18 +91,24 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
   };
 
   const results = useMemo(() => {
-    const { investment, equityOffered, esopPool, advisorEquity, coFounderEq, mRevenue, burnRate, cashBank, cac, ltv } = formData;
+    const { 
+      investment, equityOffered, esopPool, advisorEquity, coFounderEq, 
+      mRevenue, burnRate, cashBank, cac, profitPerOrder, ordersPerCustomer 
+    } = formData;
     
     const preMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) - investment : 0;
     const postMoney = preMoney + investment;
     const arr = mRevenue * 12;
     const runway = burnRate > 0 ? cashBank / burnRate : (cashBank > 0 ? 999 : 0);
-    const ltvCac = cac > 0 ? ltv / cac : 0;
+    
+    // Correct LTV Logic: Profit per Purchase * Number of Purchases
+    const calculatedLtv = profitPerOrder * ordersPerCustomer;
+    const ltvCac = cac > 0 ? calculatedLtv / cac : 0;
     
     const totalEquityTaken = equityOffered + esopPool + advisorEquity + coFounderEq;
     const founderEq = Math.max(0, 100 - totalEquityTaken);
 
-    return { preMoney, postMoney, arr, runway, ltvCac, founderEq };
+    return { preMoney, postMoney, arr, runway, ltvCac, founderEq, ltv: calculatedLtv };
   }, [formData]);
 
   const industryData = INDUSTRIES.find(i => i.value === formData.industry);
@@ -137,14 +140,13 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 placeholder="Enter startup name..."
                 value={formData.companyName} 
                 onChange={e => handleChange('companyName', e.target.value)}
-                suppressHydrationWarning
               />
             </div>
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <LabelWithInfo label="Stage" info="Idea (Pre-revenue), MVP (Early traction), or Seed." />
                 <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
-                  <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                   </SelectContent>
@@ -153,7 +155,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               <div className="space-y-2">
                 <LabelWithInfo label="Industry" info="SaaS usually gets higher multiples than E-commerce." />
                 <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
-                  <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {INDUSTRIES.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
                   </SelectContent>
@@ -171,22 +173,33 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <LabelWithInfo label="Avg LTV" info="Lifetime Value: Total revenue expected per customer." />
+                <LabelWithInfo label="Profit per Order" info="Gross Profit per transaction (Revenue - Cost of Goods Sold)." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
                     type="number" 
                     className="pl-7"
-                    value={formData.ltv || ''} 
-                    onChange={e => handleChange('ltv', Number(e.target.value))}
-                    suppressHydrationWarning
+                    value={formData.profitPerOrder || ''} 
+                    onChange={e => handleChange('profitPerOrder', Number(e.target.value))}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Avg CAC" info="Customer Acquisition Cost: Sales + Marketing per user." />
+                <LabelWithInfo label="Orders per Customer" info="Average number of times a customer purchases in their lifetime." />
+                <Input 
+                  type="number" 
+                  value={formData.ordersPerCustomer || ''} 
+                  onChange={e => handleChange('ordersPerCustomer', Number(e.target.value))}
+                />
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg border border-dashed text-center">
+                <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Calculated LTV</div>
+                <div className="text-lg font-code font-bold text-primary">{fmtINR(results.ltv)}</div>
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Avg CAC" info="Customer Acquisition Cost: Sales + Marketing per new user." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -194,7 +207,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                     className="pl-7"
                     value={formData.cac || ''} 
                     onChange={e => handleChange('cac', Number(e.target.value))}
-                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -213,7 +225,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <div className="space-y-2">
               <LabelWithInfo label="Pref Multiple" info="1x is standard. 2x means investors get double capital back first." />
               <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
-                <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">1x</SelectItem>
                   <SelectItem value="1.5">1.5x</SelectItem>
@@ -224,7 +236,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <div className="space-y-2">
               <LabelWithInfo label="Type" info="Non-participating is founder-friendly; Participating is 'double dip'." />
               <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
-                <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="nonparticipating">Non-Participating</SelectItem>
                   <SelectItem value="participating">Participating</SelectItem>
@@ -270,11 +282,11 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Your Equity</div>
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Founder Stake</div>
             <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
               {fmtPct(results.founderEq)}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Primary Founder</div>
+            <div className="text-[10px] text-muted-foreground mt-1">Sasitharan</div>
           </Card>
           <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
@@ -288,7 +300,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <div className={`text-xl font-code font-bold ${results.ltvCac > 0 && results.ltvCac < 3 ? 'text-amber-600' : 'text-green-600'}`}>
               {fmtMult(results.ltvCac)}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Target ≥ 3x</div>
+            <div className="text-[10px] text-muted-foreground mt-1">Target ≥ 3x (Profit-based)</div>
           </Card>
           <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
@@ -314,7 +326,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                     className="pl-7"
                     value={formData.mRevenue || ''} 
                     onChange={e => handleChange('mRevenue', Number(e.target.value))}
-                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -327,7 +338,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                     className="pl-7"
                     value={formData.burnRate || ''} 
                     onChange={e => handleChange('burnRate', Number(e.target.value))}
-                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -340,7 +350,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                     className="pl-7"
                     value={formData.cashBank || ''} 
                     onChange={e => handleChange('cashBank', Number(e.target.value))}
-                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -363,7 +372,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                     className="pl-7"
                     value={formData.investment || ''} 
                     onChange={e => handleChange('investment', Number(e.target.value))}
-                    suppressHydrationWarning
                   />
                 </div>
               </div>
@@ -373,7 +381,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   type="number" 
                   value={formData.equityOffered || ''} 
                   onChange={e => handleChange('equityOffered', Number(e.target.value))}
-                  suppressHydrationWarning
                 />
               </div>
               <div className="space-y-2">
@@ -382,7 +389,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   type="number" 
                   value={formData.esopPool || ''} 
                   onChange={e => handleChange('esopPool', Number(e.target.value))}
-                  suppressHydrationWarning
                 />
               </div>
               <div className="space-y-2">
@@ -391,7 +397,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   type="number" 
                   value={formData.advisorEquity || ''} 
                   onChange={e => handleChange('advisorEquity', Number(e.target.value))}
-                  suppressHydrationWarning
                 />
               </div>
               <div className="space-y-2">
@@ -400,7 +405,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   type="number" 
                   value={formData.coFounderEq || ''} 
                   onChange={e => handleChange('coFounderEq', Number(e.target.value))}
-                  suppressHydrationWarning
                 />
               </div>
             </div>
