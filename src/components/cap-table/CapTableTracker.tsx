@@ -9,11 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { fmtINR, fmtPct } from '@/lib/utils/formatters';
 import { 
   Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, 
   User, TrendingUp, History, PieChart as PieIcon,
-  ShieldAlert, ArrowRightLeft, Target, Percent
+  ShieldAlert, ArrowRightLeft, Target, Percent, Plus
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { 
@@ -31,6 +33,14 @@ const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444'
 
 export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerProps) {
   const [activeView, setActiveView] = useState('registry');
+  const [isAddingRound, setIsAddingRound] = useState(false);
+  const [newRoundData, setNewRoundData] = useState({
+    roundName: '',
+    date: new Date().toISOString().split('T')[0],
+    amountRaised: 0,
+    equityOffered: 0
+  });
+
   const firestore = useFirestore();
 
   // Refs
@@ -44,7 +54,12 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'shareholders');
   }, [firestore, userId, companyProfileId]);
 
-  const roundsRef = useMemoFirebase(() => {
+  const roundsCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'fundingRounds');
+  }, [firestore, userId, companyProfileId]);
+
+  const roundsQueryRef = useMemoFirebase(() => {
     if (!firestore || !userId || !companyProfileId) return null;
     return query(collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'fundingRounds'), orderBy('date', 'desc'));
   }, [firestore, userId, companyProfileId]);
@@ -52,7 +67,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
   // Data
   const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
   const { data: stakeholders, isLoading: isStakeholdersLoading } = useCollection(shareholdersRef);
-  const { data: rounds, isLoading: isRoundsLoading } = useCollection(roundsRef);
+  const { data: rounds, isLoading: isRoundsLoading } = useCollection(roundsQueryRef);
 
   // Logic: Sasitharan (Founder) starts with 100%. Everyone else is deducted from him.
   const stats = useMemo(() => {
@@ -106,6 +121,24 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     if (!shareholdersRef) return;
     const stakeholderDoc = doc(shareholdersRef, id);
     updateDocumentNonBlocking(stakeholderDoc, { [field]: value });
+  };
+
+  const handleRecordRound = () => {
+    if (!roundsCollectionRef || !newRoundData.roundName) return;
+    
+    addDocumentNonBlocking(roundsCollectionRef, {
+      ...newRoundData,
+      companyId: companyProfileId,
+      createdAt: new Date().toISOString()
+    });
+
+    setIsAddingRound(false);
+    setNewRoundData({
+      roundName: '',
+      date: new Date().toISOString().split('T')[0],
+      amountRaised: 0,
+      equityOffered: 0
+    });
   };
 
   if (isProfileLoading || isStakeholdersLoading) {
@@ -165,7 +198,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-6">
-          <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
+          <Tabs value={activeView} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-muted/50 p-1 rounded-xl mb-6">
               <TabsTrigger value="registry" className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <User className="w-4 h-4" /> Partner Registry
@@ -270,15 +303,77 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
             <TabsContent value="rounds">
               <Card className="shadow-md border-none">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Funding History</CardTitle>
-                  <CardDescription>Track key milestones where equity was exchanged for capital.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between pb-6">
+                  <div>
+                    <CardTitle className="text-xl font-bold">Funding History</CardTitle>
+                    <CardDescription>Track key milestones where equity was exchanged for capital.</CardDescription>
+                  </div>
+                  <Dialog open={isAddingRound} onOpenChange={setIsAddingRound}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="gap-2 font-bold rounded-full">
+                        <Plus className="w-4 h-4" /> Record Round
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Record New Funding Round</DialogTitle>
+                        <DialogDescription>
+                          Document a milestone where you raised capital in exchange for equity.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">Round Name</Label>
+                          <Input 
+                            id="name" 
+                            placeholder="Seed, Series A..." 
+                            className="col-span-3"
+                            value={newRoundData.roundName}
+                            onChange={e => setNewRoundData({...newRoundData, roundName: e.target.value})}
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="date" className="text-right">Date</Label>
+                          <Input 
+                            id="date" 
+                            type="date" 
+                            className="col-span-3"
+                            value={newRoundData.date}
+                            onChange={e => setNewRoundData({...newRoundData, date: e.target.value})}
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="amount" className="text-right">Amount (₹)</Label>
+                          <Input 
+                            id="amount" 
+                            type="number" 
+                            className="col-span-3"
+                            value={newRoundData.amountRaised || ''}
+                            onChange={e => setNewRoundData({...newRoundData, amountRaised: Number(e.target.value)})}
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="equity" className="text-right">Equity %</Label>
+                          <Input 
+                            id="equity" 
+                            type="number" 
+                            className="col-span-3"
+                            value={newRoundData.equityOffered || ''}
+                            onChange={e => setNewRoundData({...newRoundData, equityOffered: Number(e.target.value)})}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" onClick={handleRecordRound} className="w-full">Save Milestone</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </CardHeader>
                 <CardContent>
                   {(!rounds || rounds.length === 0) ? (
                     <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/5">
                       <History className="w-10 h-10 text-muted-foreground mx-auto mb-4 opacity-30" />
-                      <p className="text-muted-foreground text-sm">No recorded rounds.</p>
+                      <p className="text-muted-foreground text-sm">No recorded rounds. Use "Record Round" to start your history.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -293,9 +388,18 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                               <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{new Date(r.date).toLocaleDateString()}</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-[10px] text-muted-foreground uppercase font-bold">Equity Granted</div>
-                            <div className="font-bold text-primary">{fmtPct(r.equityOffered)}</div>
+                          <div className="flex items-center gap-12">
+                            <div className="text-right">
+                              <div className="text-[10px] text-muted-foreground uppercase font-bold">Capital Raised</div>
+                              <div className="font-bold text-foreground">{fmtINR(r.amountRaised)}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-[10px] text-muted-foreground uppercase font-bold">Equity Granted</div>
+                              <div className="font-bold text-primary">{fmtPct(r.equityOffered)}</div>
+                            </div>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(roundsCollectionRef!, r.id))}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
