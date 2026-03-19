@@ -83,9 +83,16 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     const newData = { ...formData, [field]: val };
     setFormData(newData);
 
+    // Calculate derived Post-Money Valuation to sync with Cap Table
+    const investment = newData.investment || 0;
+    const equityOffered = newData.equityOffered || 0;
+    const preMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) - investment : 0;
+    const postMoney = preMoney + investment;
+
     if (profileRef) {
       setDocumentNonBlocking(profileRef, {
         ...newData,
+        latestValuation: postMoney, // Synchronize calculated post-money
         id: companyProfileId,
         updatedAt: serverTimestamp(),
       }, { merge: true });
@@ -103,12 +110,12 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     const arr = mRevenue * 12;
     const runway = burnRate > 0 ? cashBank / burnRate : (cashBank > 0 ? 999 : 0);
     
-    const ltv = profitPerOrder * ordersPerCustomer;
+    const ltv = (profitPerOrder || 0) * (ordersPerCustomer || 1);
     const ltvCac = cac > 0 ? ltv / cac : 0;
     const profitPerCustomer = ltv - cac;
     const breakEvenCac = ltv;
     
-    const totalEquityTaken = equityOffered + esopPool + advisorEquity + coFounderEq;
+    const totalEquityTaken = (equityOffered || 0) + (esopPool || 0) + (advisorEquity || 0) + (coFounderEq || 0);
     const founderEq = Math.max(0, 100 - totalEquityTaken);
 
     return { 
