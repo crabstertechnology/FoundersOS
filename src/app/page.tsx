@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
@@ -15,6 +15,11 @@ export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('calc');
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const glossaryRef = useRef<HTMLDivElement>(null);
+
+  const scrollToGlossary = () => {
+    glossaryRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // If we are checking auth state, show a minimal loader
   if (isUserLoading) {
@@ -61,7 +66,7 @@ export default function FounderOSPage() {
             </Tabs>
           ) : (
             <div className="hidden md:flex items-center gap-8">
-              <Button variant="ghost" onClick={() => setActiveTab('glossary')} className="text-sm font-semibold hover:text-primary transition-colors">Resources</Button>
+              <Button variant="ghost" onClick={scrollToGlossary} className="text-sm font-semibold hover:text-primary transition-colors">Resources</Button>
               <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Pricing</Button>
               <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Contact</Button>
             </div>
@@ -95,9 +100,9 @@ export default function FounderOSPage() {
 
       <main className="flex-1 w-full">
         {!isAuthenticated ? (
-          <div className="max-w-6xl mx-auto px-6 py-20 md:py-32 space-y-16 text-center">
-            <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-sm font-bold tracking-tight">
+          <div className="max-w-6xl mx-auto px-6 py-20 md:py-32 space-y-24">
+            <div className="text-center space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-sm font-bold tracking-tight mx-auto">
                 <Sparkles className="w-4 h-4" />
                 The Complete Operating System for Indian Founders
               </div>
@@ -107,18 +112,18 @@ export default function FounderOSPage() {
               <p className="text-muted-foreground text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-medium opacity-90">
                 Professional valuation calculators, cap table management, and AI-driven strategic advice. Built specifically for the Indian startup ecosystem.
               </p>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
+                <AuthDialog trigger={<Button size="lg" className="h-16 px-10 text-xl font-bold gap-3 rounded-full shadow-2xl hover:scale-105 transition-all bg-primary hover:shadow-primary/20">
+                  Get Started for Free <ArrowRight className="w-6 h-6" />
+                </Button>} />
+                <Button variant="ghost" size="lg" onClick={scrollToGlossary} className="h-16 px-10 text-xl font-semibold gap-3 rounded-full hover:bg-muted/50">
+                  Explore the Glossary <BookOpen className="w-6 h-6" />
+                </Button>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-              <AuthDialog trigger={<Button size="lg" className="h-16 px-10 text-xl font-bold gap-3 rounded-full shadow-2xl hover:scale-105 transition-all bg-primary hover:shadow-primary/20">
-                Get Started for Free <ArrowRight className="w-6 h-6" />
-              </Button>} />
-              <Button variant="ghost" size="lg" onClick={() => setActiveTab('glossary')} className="h-16 px-10 text-xl font-semibold gap-3 rounded-full hover:bg-muted/50">
-                Explore the Glossary <BookOpen className="w-6 h-6" />
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-24">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="p-8 rounded-3xl border bg-white/50 backdrop-blur-sm shadow-sm space-y-5 text-left transition-all hover:shadow-md hover:-translate-y-1">
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                   <Calculator className="w-8 h-8" />
@@ -146,6 +151,18 @@ export default function FounderOSPage() {
                   <p className="text-muted-foreground leading-relaxed">Get personalized recommendations based on your unique cap table and unit economics.</p>
                 </div>
               </div>
+            </div>
+
+            <div ref={glossaryRef} className="pt-20 border-t border-dashed scroll-mt-24">
+              <div className="mb-12 text-center space-y-4">
+                <h2 className="text-4xl md:text-6xl font-black tracking-tight">
+                  Free <span className="text-primary">Resource</span> Center
+                </h2>
+                <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
+                  We've open-sourced our entire startup glossary to help founders navigate complex VC jargon.
+                </p>
+              </div>
+              <GlossarySection />
             </div>
           </div>
         ) : (
