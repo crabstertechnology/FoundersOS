@@ -48,7 +48,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
   const addShareholder = () => {
     if (!shareholdersRef) return;
     addDocumentNonBlocking(shareholdersRef, {
-      name: 'New Shareholder',
+      name: '',
       type: 'common',
       shares: 0,
       companyId: companyProfileId,
@@ -87,7 +87,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground font-code text-xs">Loading cap table...</p>
+        <p className="text-muted-foreground font-code text-xs">Syncing Shareholders...</p>
       </div>
     );
   }
@@ -98,8 +98,8 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
         <Card className="shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-6">
             <div className="space-y-1">
-              <CardTitle className="text-xl font-bold">Shareholders</CardTitle>
-              <p className="text-sm text-muted-foreground font-code">Total Pool: {totalShares.toLocaleString()} shares</p>
+              <CardTitle className="text-xl font-bold">Cap Table</CardTitle>
+              <p className="text-sm text-muted-foreground font-code">Total Issued: {totalShares.toLocaleString()} shares</p>
             </div>
             <Button onClick={addShareholder} variant="outline" className="gap-2 font-body font-bold" suppressHydrationWarning>
               <UserPlus className="w-4 h-4" />
@@ -109,7 +109,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
           <CardContent>
             {(!shareholders || shareholders.length === 0) ? (
               <div className="text-center py-12 border-2 border-dashed rounded-xl border-muted">
-                <p className="text-muted-foreground italic mb-4">No shareholders found. Start by adding yourself or your co-founders.</p>
+                <p className="text-muted-foreground italic mb-4">Cap table is currently empty.</p>
                 <Button onClick={addShareholder} variant="outline" size="sm" className="gap-2" suppressHydrationWarning>
                   <UserPlus className="w-3 h-3" />
                   Add First Shareholder
@@ -208,17 +208,6 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                       <RechartsTooltip />
                     </PieChart>
                   </ResponsiveContainer>
-                </div>
-                <div className="space-y-2 mt-4">
-                  {chartData.map((entry, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                        <span className="text-muted-foreground truncate w-24">{entry.name}</span>
-                      </div>
-                      <span className="font-code font-bold">{fmtPct(totalShares > 0 ? (entry.value / totalShares) * 100 : 0)}</span>
-                    </div>
-                  ))}
                 </div>
               </>
             ) : (

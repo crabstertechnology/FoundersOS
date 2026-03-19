@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, TrendingUp, Zap, Loader2 } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Zap, Loader2, Coins, Scale } from 'lucide-react';
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
 import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
@@ -34,6 +34,11 @@ const DEFAULT_FORM_DATA = {
   esopPool: 10,
   advisorEquity: 0,
   coFounderEq: 0,
+  // Liquidation Preference Fields
+  exitPrice: 0,
+  investorCapital: 0,
+  prefMultiple: '1',
+  prefType: 'nonparticipating'
 };
 
 export function ValuationCalculator({ userId, companyProfileId }: ValuationCalculatorProps) {
@@ -46,13 +51,12 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
   const { data: profileDoc, isLoading: isDocLoading } = useDoc(profileRef);
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
 
-  // Sync Firestore data to local state on initial load
   useEffect(() => {
     if (profileDoc) {
-      setFormData({
-        ...DEFAULT_FORM_DATA,
+      setFormData(prev => ({
+        ...prev,
         ...profileDoc,
-      });
+      }));
     }
   }, [profileDoc]);
 
@@ -91,7 +95,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground font-code text-xs">Loading startup profile...</p>
+        <p className="text-muted-foreground font-code text-xs">Connecting to FounderOS Database...</p>
       </div>
     );
   }
@@ -103,7 +107,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              Core Inputs
+              Startup Profile
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -112,7 +116,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               <Input 
                 placeholder="Enter startup name..."
                 value={formData.companyName} 
-                onChange={e => handleChange('companyName', e.target.value)} 
+                onChange={e => handleChange('companyName', e.target.value)}
                 suppressHydrationWarning
               />
             </div>
@@ -142,56 +146,34 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
         <Card className="shadow-sm border-border">
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              Financials
+              <Coins className="w-3.5 h-3.5" />
+              Unit Economics
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Monthly Revenue</Label>
+                <Label>Avg LTV</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
                     type="number" 
                     className="pl-7"
-                    value={formData.mRevenue || ''} 
-                    onChange={e => handleChange('mRevenue', Number(e.target.value))} 
+                    value={formData.ltv || ''} 
+                    onChange={e => handleChange('ltv', Number(e.target.value))}
                     suppressHydrationWarning
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Growth MoM (%)</Label>
-                <Input 
-                  type="number" 
-                  value={formData.growthRate || ''} 
-                  onChange={e => handleChange('growthRate', Number(e.target.value))} 
-                  suppressHydrationWarning
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Monthly Burn</Label>
+                <Label>Avg CAC</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
                     type="number" 
                     className="pl-7"
-                    value={formData.burnRate || ''} 
-                    onChange={e => handleChange('burnRate', Number(e.target.value))} 
-                    suppressHydrationWarning
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Cash in Bank</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.cashBank || ''} 
-                    onChange={e => handleChange('cashBank', Number(e.target.value))} 
+                    value={formData.cac || ''} 
+                    onChange={e => handleChange('cac', Number(e.target.value))}
                     suppressHydrationWarning
                   />
                 </div>
@@ -203,34 +185,31 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
         <Card className="shadow-sm border-border">
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              Investment Round
+              <Scale className="w-3.5 h-3.5" />
+              Liquidation Terms
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Amount Seeking</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.investment || ''} 
-                    onChange={e => handleChange('investment', Number(e.target.value))} 
-                    suppressHydrationWarning
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Equity Offered (%)</Label>
-                <Input 
-                  type="number" 
-                  value={formData.equityOffered || ''} 
-                  onChange={e => handleChange('equityOffered', Number(e.target.value))} 
-                  suppressHydrationWarning
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Pref Multiple</Label>
+              <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
+                <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1x</SelectItem>
+                  <SelectItem value="1.5">1.5x</SelectItem>
+                  <SelectItem value="2">2x</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
+                <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nonparticipating">Non-Participating</SelectItem>
+                  <SelectItem value="participating">Participating</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -300,26 +279,54 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           </Card>
         </div>
 
-        <div className="space-y-4">
-          {results.runway > 0 && results.runway < 6 && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Critical Runway Alert</AlertTitle>
-              <AlertDescription>
-                You have less than 6 months of cash left. Start fundraising or cut burn immediately.
-              </AlertDescription>
-            </Alert>
-          )}
-          {formData.equityOffered > 25 && (
-            <Alert className="bg-amber-50 border-amber-200 text-amber-900">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertTitle>High Dilution Warning</AlertTitle>
-              <AlertDescription>
-                Giving away {formData.equityOffered}% in one round is high. Indian seed standards are typically 10-20%.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
+        <Card className="shadow-sm border-border">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Financial Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label>Monthly Revenue</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7"
+                    value={formData.mRevenue || ''} 
+                    onChange={e => handleChange('mRevenue', Number(e.target.value))}
+                    suppressHydrationWarning
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Monthly Burn</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7"
+                    value={formData.burnRate || ''} 
+                    onChange={e => handleChange('burnRate', Number(e.target.value))}
+                    suppressHydrationWarning
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Cash in Bank</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7"
+                    value={formData.cashBank || ''} 
+                    onChange={e => handleChange('cashBank', Number(e.target.value))}
+                    suppressHydrationWarning
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <AIStrategicAdvisor data={formData} results={results} industryData={industryData} />
       </div>
