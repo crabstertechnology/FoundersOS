@@ -51,6 +51,28 @@
         "investmentDate": { "type": "string", "format": "date" }
       },
       "required": ["id", "companyId", "name", "role", "ownershipPercentage"]
+    },
+    "StrategicReport": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StrategicReport",
+      "type": "object",
+      "description": "An AI-generated strategic advice report.",
+      "properties": {
+        "id": { "type": "string" },
+        "companyId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "inputSnapshot": { "type": "object", "description": "The data used to generate this report." },
+        "advice": { 
+          "type": "object",
+          "properties": {
+            "summary": { "type": "string" },
+            "strengths": { "type": "array", "items": { "type": "string" } },
+            "warnings": { "type": "array", "items": { "type": "string" } },
+            "recommendations": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "required": ["id", "companyId", "createdAt", "advice"]
     }
   },
   "auth": {
@@ -68,6 +90,10 @@
     "/users/{userId}/companyProfiles/{companyId}/shareholders/{shareholderId}": {
       "schema": "#/backend/entities/Shareholder",
       "description": "Cap table registry."
+    },
+    "/users/{userId}/companyProfiles/{companyId}/strategicReports/{reportId}": {
+      "schema": "#/backend/entities/StrategicReport",
+      "description": "Historical strategic reports."
     }
   }
 }

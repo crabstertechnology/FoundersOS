@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -279,7 +280,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   LTV / CAC <Target className="w-3 h-3 opacity-50" />
                 </div>
                 <div className={`text-xl font-code font-bold ${results.ltvCac >= 3 ? 'text-green-700' : 'text-amber-700'}`}>{fmtMult(results.ltvCac)}</div>
-                <div className="text-[9px] text-muted-foreground leading-tight">Efficiency (Target {'\u003e'}3x)</div>
+                <div className="text-[9px] text-muted-foreground leading-tight">Efficiency (Target {'>'}3x)</div>
               </div>
 
               <div className={`p-4 rounded-xl border shadow-sm space-y-1 ${results.profitPerCustomer > 0 ? 'bg-white' : 'bg-red-50 border-red-200'}`}>
@@ -464,7 +465,13 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           </CardContent>
         </Card>
 
-        <AIStrategicAdvisor data={formData} results={results} industryData={industryData} />
+        <AIStrategicAdvisor 
+          userId={userId}
+          companyProfileId={companyProfileId}
+          data={formData} 
+          results={results} 
+          industryData={industryData} 
+        />
       </div>
     </div>
   );

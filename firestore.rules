@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -5,84 +6,37 @@ service cloud.firestore {
     /**
      * CORE PHILOSOPHY
      * This ruleset enforces a strict user-ownership model where all data is private to the
-     * authenticated user who created it. It prioritizes path-based authorization to minimize 
-     * document reads and maximize performance.
-     *
-     * DATA STRUCTURE
-     * The database follows a hierarchical structure: /users/{userId}/companyProfiles/{companyProfileId}/...
-     * This nesting ensures that data is naturally partitioned by user, supporting efficient 
-     * querying and simple, robust security logic.
-     *
-     * KEY SECURITY DECISIONS
-     * - Ownership via Path: Authorization is primarily determined by the {userId} in the document path.
-     * - Relational Integrity: On creation, rules verify that internal fields (like companyId or ownerId) 
-     *   match the path parameters to prevent data corruption or cross-user leaks.
-     * - Immutability: Critical relational fields are made immutable during updates to maintain the 
-     *   integrity of the user's data tree.
-     * - Denormalization: Documents contain denormalized IDs (ownerId, companyId) to allow for 
-     *   authorization independence and atomic operations without parent document lookups.
-     *
-     * PROTOTYPING MODE
-     * These rules enforce "Who" can access data but are flexible on "What" the data looks like. 
-     * Type checking and schema validation for non-relational fields are omitted to allow for 
-     * rapid schema iteration during development.
+     * authenticated user who created it.
      */
 
     // --- Helper Functions ---
 
-    /** 
-     * @description Checks if the request is from an authenticated user.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** 
-     * @description Checks if the authenticated user's UID matches the provided userId.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** 
-     * @description Verifies ownership and ensures the document exists for state-changing operations.
-     */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
     // --- Collection Rules ---
 
-    /**
-     * @description Rules for the root user document.
-     * @path /users/{userId}
-     * @allow (get) If the user is the owner.
-     * @deny (list) Prevent listing the entire users collection for privacy.
-     * @principle Pattern 4: Self-Creation.
-     */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false; // User listing is disallowed.
+      allow list: if false;
       allow create: if isOwner(userId);
       allow update, delete: if isExistingOwner(userId);
 
-      /**
-       * @description Rules for company profiles owned by a user.
-       * @path /users/{userId}/companyProfiles/{companyProfileId}
-       * @allow (create) If user owns the path and sets 'id' to match 'companyProfileId'.
-       * @deny (update) If the user attempts to change the document 'id'.
-       * @principle Pattern 1 & 5: Ownership and Relational Integrity.
-       */
       match /companyProfiles/{companyProfileId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && request.resource.data.id == companyProfileId;
         allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
         allow delete: if isExistingOwner(userId);
 
-        /**
-         * @description Rules for historical funding rounds.
-         * @path /users/{userId}/companyProfiles/{companyProfileId}/fundingRounds/{roundId}
-         */
         match /fundingRounds/{roundId} {
           allow get, list: if isOwner(userId);
           allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
@@ -90,37 +44,19 @@ service cloud.firestore {
           allow delete: if isExistingOwner(userId);
         }
 
-        /**
-         * @description Rules for Berkus valuation scores linked to a company.
-         * @path /users/{userId}/companyProfiles/{companyProfileId}/berkusScores/{berkusScoreId}
-         */
-        match /berkusScores/{berkusScoreId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
-          allow update: if isExistingOwner(userId) && request.resource.data.companyId == resource.data.companyId;
-          allow delete: if isExistingOwner(userId);
-        }
-
-        /**
-         * @description Rules for simulated funding rounds used for dilution analysis.
-         * @path /users/{userId}/companyProfiles/{companyProfileId}/simulatedFundingRounds/{roundId}
-         */
-        match /simulatedFundingRounds/{roundId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
-          allow update: if isExistingOwner(userId) && request.resource.data.companyId == resource.data.companyId;
-          allow delete: if isExistingOwner(userId);
-        }
-
-        /**
-         * @description Rules for shareholder data in the company cap table.
-         * @path /users/{userId}/companyProfiles/{companyProfileId}/shareholders/{shareholderId}
-         */
         match /shareholders/{shareholderId} {
           allow get, list: if isOwner(userId);
           allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
           allow update: if isExistingOwner(userId) && request.resource.data.companyId == resource.data.companyId;
           allow delete: if isExistingOwner(userId);
+        }
+
+        match /strategicReports/{reportId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
+          allow delete: if isExistingOwner(userId);
+          // Reports are generally immutable once generated
+          allow update: if false;
         }
       }
     }
