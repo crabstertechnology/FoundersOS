@@ -198,7 +198,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-6">
-          <Tabs value={activeView} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
             <TabsList className="bg-muted/50 p-1 rounded-xl mb-6">
               <TabsTrigger value="registry" className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <User className="w-4 h-4" /> Partner Registry
@@ -279,7 +279,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(shareholdersRef, s.id))}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(shareholdersRef!, s.id))}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </TableCell>
