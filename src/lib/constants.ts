@@ -31,11 +31,31 @@ export const GLOSSARY_ITEMS = [
   {
     tag: 'equity',
     label: 'Equity',
+    title: 'Advisor Equity %',
+    desc: 'Equity stakes allocated to strategic mentors or advisors who provide specialized expertise, industry connections, or high-level guidance. These are typically small percentages (0.1% to 1%).',
+    example: 'Crabster grants a senior IoT expert 0.5% equity for attending monthly strategy sessions and introducing them to 3 major school distributors.',
+    tipType: 'good',
+    tip: 'Always subject advisor equity to a 2-year vesting schedule to ensure long-term commitment.',
+    color: '#1d4ed8'
+  },
+  {
+    tag: 'equity',
+    label: 'Equity',
+    title: 'Co-Founder Equity %',
+    desc: 'The percentage of ownership held by individuals who started the company alongside the primary founder. These stakes should be split based on contribution, risk, and roles.',
+    example: 'Two co-founders split equity 60/40 based on one leading sales and the other leading product development from Day 1.',
+    tipType: 'warn',
+    tip: 'Ensure all co-founders have a 4-year vesting schedule with a 1-year cliff to protect the company from early departures.',
+    color: '#1d4ed8'
+  },
+  {
+    tag: 'equity',
+    label: 'Equity',
     title: 'Dilution',
     desc: 'When new shares are created and issued—to investors, ESOP pool, or advisors—the total share count grows. Your existing share count stays fixed, but your percentage of the total shrinks.',
-    example: 'You own 600 of 1,000 shares (60%). You raise seed funding and issue 200 new shares. Now you own 600 of 1,200 (50%). Your shares never changed—the denominator grew.',
+    example: 'You own 60% of a company. You raise seed funding and issue new shares to an investor. Your 60% might become 50% even though you didn\'t sell any of your own shares.',
     tipType: 'warn',
-    tip: 'Anti-dilution protection for investors compensates them in a down round by issuing more shares—diluting YOU further. Always model your equity trail.',
+    tip: 'Anti-dilution protection for investors compensates them in a down round—diluting YOU further. Always model your equity trail.',
     color: '#1d4ed8'
   },
   {
@@ -43,209 +63,85 @@ export const GLOSSARY_ITEMS = [
     label: 'Equity',
     title: 'Vesting Schedule',
     desc: 'Vesting means you earn your own shares over time rather than owning them all on Day 1. Standard: 4-year vesting with a 1-year cliff.',
-    example: 'Co-founder holds 15% equity on a 4-year vest with 1-year cliff. Exits at month 10 → receives 0 shares. Exits at month 18 → earned 6 months post-cliff = 25,000 shares.',
+    example: 'Co-founder holds 15% on a 4-year vest. Exits at month 10 → receives 0 shares. Exits at month 18 → earned 25% of their total stake.',
     tipType: 'good',
     tip: 'Always negotiate double-trigger acceleration: if the company is acquired, all unvested shares vest immediately.',
     color: '#1d4ed8'
   },
+
+  // SECTION 2: SHARES & LIQUIDATION
   {
-    tag: 'equity',
-    label: 'Equity',
-    title: 'ESOP Pool (Employee Stock Options)',
-    desc: 'A pool of shares reserved for future employees. Investors usually require this pool be created BEFORE they invest—which dilutes only the founders.',
-    example: 'Crabster creates a 10% ESOP pool pre-investment. Sasi\'s 60% becomes 54.5% before the investor even puts in a rupee. This is "pre-money ESOP".',
+    tag: 'termsheet',
+    label: 'Term Sheet',
+    title: 'Preference Multiple',
+    desc: 'The multiplier applied to an investor\'s capital in an exit. 1x is standard; 2x means investors get double their capital back before founders get anything.',
+    example: 'Investor puts in ₹50L with a 2x multiple. Company sells for ₹80L. Investor takes all ₹80L (they were owed ₹1Cr). Founders receive ₹0.',
     tipType: 'warn',
-    tip: 'Push for post-money ESOP creation—create the pool AFTER the investment valuation is set to protect 3-5% of your personal equity.',
-    color: '#1d4ed8'
+    tip: 'Avoid multiples higher than 1x. Higher multiples can wipe out founders in mediocre exits.',
+    color: '#b91c1c'
   },
   {
-    tag: 'equity',
-    label: 'Equity',
-    title: 'Cap Table (Capitalization Table)',
-    desc: 'A cap table is a structured list of every shareholder, their share type, exact share count, and ownership percentage. It is the single source of truth for ownership.',
-    example: 'Crabster cap table: Sasitharan 55%, Co-founder 15%, Angel Investor 15%, ESOP Pool 12%, Advisor 3%. Total = 100%.',
-    tipType: 'good',
-    tip: 'Use a dedicated CA-maintained spreadsheet or tool like Carta from Day 1. Retroactively fixing a messy cap table costs lakhs in legal fees.',
-    color: '#1d4ed8'
+    tag: 'termsheet',
+    label: 'Term Sheet',
+    title: 'Liquidation Type (Participating vs Non-Participating)',
+    desc: 'Non-participating is founder-friendly (investor picks capital back OR their % share). Participating is a "double dip" (investor takes capital back AND their % share).',
+    example: 'In a ₹10Cr exit, a participating clause could transfer an extra ₹1.5Cr+ from your pocket directly to the investor.',
+    tipType: 'dark',
+    tip: 'Always push for "Non-Participating". Most Indian VCs try to slip in participation; smart founders strike it out.',
+    color: '#b91c1c'
   },
 
-  // SECTION 2: SHARES
+  // SECTION 3: VALUATION & ECONOMICS
   {
-    tag: 'shares',
-    label: 'Shares',
-    title: 'Preference Shares',
-    desc: 'Shares held by investors that carry special rights like liquidation preference and anti-dilution protection. They are paid before common shareholders.',
-    example: 'Seed investor holds 15% with 1x liquidation preference on ₹50L. Exit at ₹40L: investor takes all ₹40L. Founders receive ₹0.',
+    tag: 'valuation',
+    label: 'Valuation',
+    title: 'Monthly Burn Rate',
+    desc: 'The net amount of money your startup loses each month. Calculated as: Total Monthly Expenses - Total Monthly Revenue.',
+    example: 'Crabster spends ₹2.5L and earns ₹1L. Monthly Burn = ₹1.5L. If they have ₹15L in bank, their runway is 10 months.',
     tipType: 'warn',
-    tip: 'Avoid participating preferred (double-dip) where the investor gets capital back AND their equity share. Stick to 1x non-participating.',
-    color: '#16a34a'
+    tip: 'Start fundraising with 12+ months of runway. Desperation is visible to investors and it costs you equity.',
+    color: '#92400e'
   },
   {
-    tag: 'shares',
-    label: 'Shares',
-    title: 'Common vs Preference',
-    desc: 'Common shares are held by founders/employees. Preference shares are held by investors. The distinction is critical in small or mediocre exits.',
-    example: 'Company sells for ₹3 Cr. Investor has ₹5 Cr in 1x liquidation preference. The entire ₹3 Cr goes to the investor. Founders receive ₹0.',
-    tipType: 'warn',
-    tip: 'Always negotiate the conversion threshold—the price above which the investor automatically converts to common shares.',
-    color: '#16a34a'
-  },
-  {
-    tag: 'shares',
-    label: 'Shares',
-    title: 'DVR Shares (Voting Rights)',
-    desc: 'Differential Voting Rights allow founders to retain majority control (e.g., 10 votes per share) even if their economic ownership is low.',
-    example: 'Sasi holds 25% equity but all his shares have 10x DVR. He controls 77% of votes despite having only 25% economic ownership.',
+    tag: 'valuation',
+    label: 'Valuation',
+    title: 'Average LTV (Lifetime Value)',
+    desc: 'Lifetime Value: The total revenue expected per customer over their entire relationship with your company.',
+    example: 'A student buys a ₹2,500 kit and then ₹5,000 in expansion packs over 2 years. The LTV is ₹7,500.',
     tipType: 'good',
-    tip: 'DVR structure must be set up early. Reference Companies Act 2013 Section 43 when discussing with your CA.',
-    color: '#16a34a'
+    tip: 'High LTV justifies higher customer acquisition costs. Track your customer churn to improve this metric.',
+    color: '#92400e'
   },
-
-  // SECTION 3: VALUATION & TRACTION
+  {
+    tag: 'valuation',
+    label: 'Valuation',
+    title: 'Average CAC (Customer Acquisition Cost)',
+    desc: 'Customer Acquisition Cost: The total sales and marketing spend required to acquire one new customer.',
+    example: 'You spend ₹10,000 on social ads and get 20 new customers. Your CAC is ₹500.',
+    tipType: 'good',
+    tip: 'Target an LTV:CAC ratio of 3x or higher. If CAC is ₹1,000, LTV should be at least ₹3,000 for a sustainable business.',
+    color: '#92400e'
+  },
   {
     tag: 'valuation',
     label: 'Valuation',
     title: 'Pre-Money vs Post-Money',
     desc: 'Pre-money is valuation before investment. Post-money is after. Post-money = Pre-money + Investment.',
-    example: 'Pre-money: ₹4 Cr. Investment: ₹1 Cr. Post-money = ₹5 Cr. Investor owns 20% (1/5), not 25% (1/4).',
+    example: 'Pre-money: ₹4 Cr. Investment: ₹1 Cr. Post-money = ₹5 Cr. Investor owns 20% (1/5).',
     tipType: 'warn',
     tip: 'Investor ownership is always calculated on post-money. Don\'t give away an extra 5% by mistake.',
     color: '#92400e'
   },
-  {
-    tag: 'valuation',
-    label: 'Valuation',
-    title: 'Revenue Multiple',
-    desc: 'Company value = ARR × Industry Multiple. ARR is monthly revenue × 12. Multiples vary by growth and sector (SaaS: 8-15x, AI: 10-20x).',
-    example: 'Crabster MRR = ₹1.5L. ARR = ₹18L. IoT multiple 3x → ₹54L valuation. High growth justifications can double this.',
-    tipType: 'good',
-    tip: 'Know your sector multiple. At 15% MoM growth, you can justify a forward-revenue premium over current metrics.',
-    color: '#92400e'
-  },
-  {
-    tag: 'valuation',
-    label: 'Valuation',
-    title: 'Traction',
-    desc: 'Measurable evidence that your business works. It converts subjective opinion into objective data for investors.',
-    example: '"45 paying schools, ₹1.5L MRR, 15% MoM growth" vs "We believe the market is huge". The former gets a 50% higher valuation.',
-    tipType: 'good',
-    tip: 'For EZCirkit: track repeat purchases and referral rates obsessively. Data is your strongest negotiating lever.',
-    color: '#92400e'
-  },
-  {
-    tag: 'valuation',
-    label: 'Valuation',
-    title: 'TAM / SAM / SOM',
-    desc: 'TAM is the total market. SAM is the portion you can reach. SOM is what you can capture in 3-5 years.',
-    example: 'TAM: India STEM (₹2000 Cr). SAM: TN Schools (₹150 Cr). SOM: TN Govt/Private schools via partners (₹18 Cr).',
-    tipType: 'good',
-    tip: 'TN Founders: Cite TANSIM and TIDE grants as tailwinds. It signals deep understanding of the local ecosystem.',
-    color: '#92400e'
-  },
-  {
-    tag: 'valuation',
-    label: 'Valuation',
-    title: 'Unit Economics (CAC & LTV)',
-    desc: 'CAC is cost to acquire a customer. LTV is their lifetime value. Target LTV:CAC > 3x and Payback < 12 months.',
-    example: 'CAC ₹1,200. Customer buys ₹2,500 kit + ₹5,500 upgrades. LTV ₹8,000. Ratio = 6.7x. Outstanding metrics.',
-    tipType: 'good',
-    tip: 'LTV compounds with accessories and bulk school licenses. Track cohort revenue at 6 and 12 months.',
-    color: '#92400e'
-  },
-  {
-    tag: 'valuation',
-    label: 'Valuation',
-    title: 'Burn Rate & Runway',
-    desc: 'Burn is net monthly spend. Runway = Cash / Burn. This determines your fundraising urgency and leverage.',
-    example: 'Bank: ₹5L. Net Burn: ₹1L. Runway: 5 months. At 5 months, you MUST start closing a round now.',
-    tipType: 'warn',
-    tip: 'Start fundraising with 12+ months of runway. Desperation is visible to investors and it costs equity.',
-    color: '#92400e'
-  },
 
-  // SECTION 4: TERM SHEET
-  {
-    tag: 'termsheet',
-    label: 'Term Sheet',
-    title: 'Liquidation Preference (Non-Participating)',
-    desc: 'In an exit, investors get their capital back first. 1x non-participating means they take their money back OR their % share, not both.',
-    example: '₹2 Cr invested at 1x. Exit at ₹8 Cr. Investor takes ₹2 Cr preference. Remaining ₹6 Cr goes to founders.',
-    tipType: 'good',
-    tip: '1x non-participating preferred is the global standard. Any serious VC should accept this without major pushback.',
-    color: '#b91c1c'
-  },
-  {
-    tag: 'termsheet',
-    label: 'Term Sheet',
-    title: 'Board Composition',
-    desc: 'The board controls major decisions like hiring/firing the CEO. Control is more powerful than share ownership.',
-    example: 'Red flag: Investor asks for 2 of 3 board seats at seed. They can fire you as CEO at any meeting.',
-    tipType: 'warn',
-    tip: 'Never give investors board majority pre-Series A. Aim for founder majority or a founder-leaning independent seat.',
-    color: '#b91c1c'
-  },
-  {
-    tag: 'termsheet',
-    label: 'Term Sheet',
-    title: 'Drag-Along Rights',
-    desc: 'Allows majority shareholders to force minority shareholders to sell their shares if a sale is approved.',
-    example: 'Investors hold 51% and approved a low-ball sale. Drag-along forces Sasi to sell his 49% even if he objects.',
-    tipType: 'warn',
-    tip: 'Require drag-along to trigger ONLY if both majority investors AND majority founders approve the sale.',
-    color: '#b91c1c'
-  },
-  {
-    tag: 'termsheet',
-    label: 'Term Sheet',
-    title: 'No-Shop / Exclusivity',
-    desc: 'Prohibits approaching other investors for a period (usually 30 days) after signing a term sheet.',
-    example: '60-day exclusivity wastes time. If the investor drops the valuation on day 59, you have zero leverage.',
-    tipType: 'warn',
-    tip: 'Cap exclusivity at 30 days. Add a clause that exclusivity voids if material economic terms are changed.',
-    color: '#b91c1c'
-  },
-
-  // SECTION 5: PROTECTION
-  {
-    tag: 'protection',
-    label: 'Protection',
-    title: 'Anti-Dilution (Weighted Average)',
-    desc: 'Protects investors in a "down round". Broad-based weighted average is the fair, standard way to calculate this.',
-    example: 'Weighted average dilution in a down round might cost you 2% extra equity. Full ratchet would cost 15%.',
-    tipType: 'good',
-    tip: 'Never accept "Full Ratchet". Weighted average is the only institutional standard you should sign.',
-    color: '#7c3aed'
-  },
-  {
-    tag: 'protection',
-    label: 'Protection',
-    title: 'Founder Authority Levers',
-    desc: 'Levers like DVR shares, reserved matters, and super-majority requirements to keep control of your vision.',
-    example: 'Requiring 75% board vote to remove the CEO gives the founder an effective veto over their own firing.',
-    tipType: 'good',
-    tip: 'TN Founders: Register a personal holding company to hold your stake. It provides LTCG tax flexibility later.',
-    color: '#7c3aed'
-  },
-
-  // SECTION 6: DARK PATTERNS
+  // SECTION 4: DARK PATTERNS
   {
     tag: 'darkpattern',
     label: 'Dark Pattern',
     title: 'Full Ratchet Anti-Dilution',
-    desc: 'The most predatory anti-dilution clause. It wipes out founders in a valuation reset.',
+    desc: 'The most predatory anti-dilution clause. It wipes out founders in a valuation reset (down round).',
     example: 'In a 50% down round, full ratchet can double the investor\'s share count at YOUR direct expense.',
     tipType: 'dark',
     tip: 'This is a deal-breaker. Walk away if an investor insists on Full Ratchet. It destroys founder motivation.',
-    color: '#000000'
-  },
-  {
-    tag: 'darkpattern',
-    label: 'Dark Pattern',
-    title: 'Participating Preferred',
-    desc: 'The "Double-Dip". Investor gets their money back AND their % share of the remainder.',
-    example: 'In a ₹10 Cr exit, this clause can transfer ₹1 Cr+ from your pocket directly to the investor.',
-    tipType: 'dark',
-    tip: 'Push for non-participating. Most Indian VCs try to slip this in; smart founders always strike it out.',
     color: '#000000'
   }
 ];
