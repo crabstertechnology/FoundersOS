@@ -11,7 +11,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['DM Sans', 'sans-serif'],
-        headline: ['Syne', 'sans-serif'],
+        headline: ['Plus Jakarta Sans', 'sans-serif'],
         code: ['DM Mono', 'monospace'],
       },
       colors: {
