@@ -16,9 +16,8 @@ interface AuthDialogProps {
 export function AuthDialog({ trigger }: AuthDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // Pre-filled credentials for authorized founder access
-  const [email, setEmail] = useState('crabstertechnology@gmail.com');
-  const [password, setPassword] = useState('Sasipriya2118&');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const auth = useAuth();
   const { toast } = useToast();
 
@@ -35,12 +34,11 @@ export function AuthDialog({ trigger }: AuthDialogProps) {
         setIsLoading(false);
       })
       .catch((signInErr: any) => {
-        // If sign-in fails due to user not found (or invalid-credential in new SDKs),
-        // we attempt to create the account for the founder automatically.
+        // Fallback to auto-signup for authorized founder email
         const isUserNotFound = signInErr.code === 'auth/user-not-found' || 
                              signInErr.code === 'auth/invalid-credential';
 
-        if (isUserNotFound) {
+        if (isUserNotFound && email === 'crabstertechnology@gmail.com') {
           initiateEmailSignUp(auth, email, password)
             .then(() => {
               setIsOpen(false);
@@ -105,6 +103,7 @@ export function AuthDialog({ trigger }: AuthDialogProps) {
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
                   disabled={isLoading}
+                  suppressHydrationWarning
                 />
               </div>
             </div>
@@ -120,10 +119,11 @@ export function AuthDialog({ trigger }: AuthDialogProps) {
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
                   disabled={isLoading}
+                  suppressHydrationWarning
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full gap-2 font-bold h-12" disabled={isLoading}>
+            <Button type="submit" className="w-full gap-2 font-bold h-12" disabled={isLoading} suppressHydrationWarning>
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
