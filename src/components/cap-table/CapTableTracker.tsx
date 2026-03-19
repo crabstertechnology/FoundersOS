@@ -12,7 +12,7 @@ import { Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, Info } from 'lucid
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CapTableTrackerProps {
   userId: string;
@@ -31,18 +31,19 @@ const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444'
 
 function HeaderWithInfo({ label, info }: { label: string; info: string }) {
   return (
-    <div className="flex items-center gap-1">
-      {label}
-      <TooltipProvider>
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center gap-1">
+        {label}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Info className="w-3 h-3 text-muted-foreground cursor-help" />
+            <Info className="w-3 h-3 text-primary cursor-help" />
           </TooltipTrigger>
-          <TooltipContent className="max-w-[150px] text-[10px]">
+          <TooltipContent className="max-w-[150px] text-[10px] font-medium">
             {info}
           </TooltipContent>
         </Tooltip>
-      </TooltipProvider>
+      </div>
+      <p className="text-[8px] normal-case font-normal text-muted-foreground italic leading-none">{info}</p>
     </div>
   );
 }
@@ -88,7 +89,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
   const authorityChecks = useMemo(() => {
     const list = shareholders || [];
-    const founderShares = list.filter(s => s.type === 'common').reduce((a, b) => a + (b.shares || 0), 0);
+    const founderShares = list.filter(s => s.type === 'common' || s.type === 'dvr').reduce((a, b) => a + (b.shares || 0), 0);
     const founderPct = totalShares > 0 ? (founderShares / totalShares) * 100 : 0;
     const prefShares = list.filter(s => s.type === 'preference').reduce((a, b) => a + (b.shares || 0), 0);
     const prefPct = totalShares > 0 ? (prefShares / totalShares) * 100 : 0;
@@ -140,7 +141,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                   <TableRow className="hover:bg-transparent uppercase text-[10px] font-bold tracking-widest text-muted-foreground">
                     <TableHead>Entity</TableHead>
                     <TableHead>
-                      <HeaderWithInfo label="Type" info="Common: Founder/Employee shares. Preference: Investor shares with special rights. ESOP: Reserved for hires. DVR: Super-voting rights." />
+                      <HeaderWithInfo label="Type" info="Common, Preference, ESOP, or DVR (Super-voting)." />
                     </TableHead>
                     <TableHead>Shares Held</TableHead>
                     <TableHead>% Ownership</TableHead>

@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const metadata: Metadata = {
   title: 'FounderOS — Startup Toolkit for Indian Founders',
@@ -21,7 +22,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background text-foreground" suppressHydrationWarning>
         <FirebaseClientProvider>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </FirebaseClientProvider>
       </body>
     </html>

@@ -12,7 +12,7 @@ import { AlertTriangle, TrendingUp, Zap, Loader2, Coins, Scale, Info } from 'luc
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
 import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ValuationCalculatorProps {
   userId: string;
@@ -44,18 +44,19 @@ const DEFAULT_FORM_DATA = {
 
 function LabelWithInfo({ label, info }: { label: string; info: string }) {
   return (
-    <div className="flex items-center gap-1.5 mb-2">
-      <Label className="mb-0">{label}</Label>
-      <TooltipProvider>
+    <div className="space-y-1 mb-2">
+      <div className="flex items-center gap-1.5">
+        <Label className="mb-0 font-bold">{label}</Label>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+            <Info className="w-3.5 h-3.5 text-primary cursor-help" />
           </TooltipTrigger>
-          <TooltipContent className="max-w-[200px] text-xs">
+          <TooltipContent className="max-w-[200px] text-xs font-medium">
             {info}
           </TooltipContent>
         </Tooltip>
-      </TooltipProvider>
+      </div>
+      <p className="text-[10px] text-muted-foreground leading-tight italic">{info}</p>
     </div>
   );
 }
@@ -139,9 +140,9 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 suppressHydrationWarning
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <LabelWithInfo label="Stage" info="Influences valuation multiples. Idea: Pre-revenue. MVP: Early traction. Seed: Institutional capital." />
+                <LabelWithInfo label="Stage" info="Idea (Pre-revenue), MVP (Early traction), or Seed." />
                 <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
                   <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -150,7 +151,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </Select>
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Industry" info="Sectors like AI or SaaS command higher revenue multiples than Hardware or E-commerce." />
+                <LabelWithInfo label="Industry" info="SaaS usually gets higher multiples than E-commerce." />
                 <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
                   <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -170,9 +171,9 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <LabelWithInfo label="Avg LTV" info="Lifetime Value: Total revenue expected from a customer over their entire relationship with you." />
+                <LabelWithInfo label="Avg LTV" info="Lifetime Value: Total revenue expected per customer." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -185,7 +186,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Avg CAC" info="Customer Acquisition Cost: The total cost (sales + marketing) to acquire one new customer." />
+                <LabelWithInfo label="Avg CAC" info="Customer Acquisition Cost: Sales + Marketing per user." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -210,7 +211,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <LabelWithInfo label="Pref Multiple" info="Capital multiplier investors get back first. 1x is standard. 2x is considered a dark pattern." />
+              <LabelWithInfo label="Pref Multiple" info="1x is standard. 2x means investors get double capital back first." />
               <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
                 <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -221,7 +222,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               </Select>
             </div>
             <div className="space-y-2">
-              <LabelWithInfo label="Type" info="Participating allows investors to 'double dip' (capital back + equity %). Non-participating is founder-friendly." />
+              <LabelWithInfo label="Type" info="Non-participating is founder-friendly; Participating is 'double dip'." />
               <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
                 <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -246,7 +247,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <CardContent>
               <div className="text-4xl font-code font-bold">{fmtINR(results.preMoney)}</div>
               <p className="text-xs mt-2 opacity-80 font-mono">
-                Formula: {fmtINR(formData.investment || 0)} ÷ {formData.equityOffered || 0}% - {fmtINR(formData.investment || 0)}
+                Formula: Investment ÷ Equity % - Investment
               </p>
             </CardContent>
           </Card>
@@ -268,28 +269,28 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 border shadow-sm">
+          <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Your Equity</div>
             <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
               {fmtPct(results.founderEq)}
             </div>
             <div className="text-[10px] text-muted-foreground mt-1">Primary Founder</div>
           </Card>
-          <Card className="p-4 border shadow-sm">
+          <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
             <div className={`text-xl font-code font-bold ${results.runway > 0 && results.runway < 6 ? 'text-destructive' : 'text-primary'}`}>
               {results.runway === 999 ? '∞' : Math.round(results.runway)} mo
             </div>
             <div className="text-[10px] text-muted-foreground mt-1">Until cash zero</div>
           </Card>
-          <Card className="p-4 border shadow-sm">
+          <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">LTV:CAC</div>
             <div className={`text-xl font-code font-bold ${results.ltvCac > 0 && results.ltvCac < 3 ? 'text-amber-600' : 'text-green-600'}`}>
               {fmtMult(results.ltvCac)}
             </div>
             <div className="text-[10px] text-muted-foreground mt-1">Target ≥ 3x</div>
           </Card>
-          <Card className="p-4 border shadow-sm">
+          <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
             <div className="text-xl font-code font-bold text-primary">
               {fmtINR(results.arr)}
@@ -305,7 +306,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <LabelWithInfo label="Monthly Revenue" info="Total income generated this month. Used to calculate ARR." />
+                <LabelWithInfo label="Monthly Revenue" info="Total income this month. Used for ARR." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -318,7 +319,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Monthly Burn" info="Net monthly spend. Runway = Cash / Net Burn." />
+                <LabelWithInfo label="Monthly Burn" info="Net monthly spend. Runway = Cash / Burn." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -331,7 +332,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Cash in Bank" info="Current total liquid cash reserves." />
+                <LabelWithInfo label="Cash in Bank" info="Current liquid cash reserves." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -354,7 +355,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <LabelWithInfo label="Investment Amount" info="The total capital you are looking to raise in this round." />
+                <LabelWithInfo label="Investment Amount" info="The total capital being raised in this round." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -367,7 +368,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Equity Offered %" info="Percentage of the company given to investors in this round." />
+                <LabelWithInfo label="Equity Offered %" info="Percentage of the company given to investors." />
                 <Input 
                   type="number" 
                   value={formData.equityOffered || ''} 
@@ -376,7 +377,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 />
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="ESOP Pool %" info="Shares reserved for future employees. Usually 8-12%." />
+                <LabelWithInfo label="ESOP Pool %" info="Shares reserved for future hires. Usually 10%." />
                 <Input 
                   type="number" 
                   value={formData.esopPool || ''} 
@@ -385,7 +386,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 />
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Advisor Equity %" info="Stakes allocated to mentors or strategic advisors." />
+                <LabelWithInfo label="Advisor Equity %" info="Stakes allocated to strategic mentors." />
                 <Input 
                   type="number" 
                   value={formData.advisorEquity || ''} 
