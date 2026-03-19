@@ -40,8 +40,8 @@ export default function FounderOSPage() {
           <span className="font-headline font-extrabold text-2xl tracking-tighter hidden md:inline">FOUNDER<span className="text-primary">OS</span></span>
         </div>
         
-        {isAuthenticated && (
-          <div className="flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center">
+          {isAuthenticated ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mx-auto">
               <TabsList className="bg-transparent border-none gap-1">
                 <TabsTrigger value="calc" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
@@ -58,8 +58,14 @@ export default function FounderOSPage() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-          </div>
-        )}
+          ) : (
+            <div className="hidden md:flex items-center gap-8">
+              <Button variant="ghost" onClick={() => setActiveTab('glossary')} className="text-sm font-semibold hover:text-primary transition-colors">Resources</Button>
+              <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Pricing</Button>
+              <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Contact</Button>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-4 ml-auto shrink-0">
           {isAuthenticated ? (
@@ -104,7 +110,7 @@ export default function FounderOSPage() {
               <AuthDialog trigger={<Button size="lg" className="h-16 px-10 text-xl font-bold gap-3 rounded-full shadow-2xl hover:scale-105 transition-all bg-primary hover:shadow-primary/20">
                 Get Started for Free <ArrowRight className="w-6 h-6" />
               </Button>} />
-              <Button variant="ghost" size="lg" className="h-16 px-10 text-xl font-semibold gap-3 rounded-full hover:bg-muted/50">
+              <Button variant="ghost" size="lg" onClick={() => setActiveTab('glossary')} className="h-16 px-10 text-xl font-semibold gap-3 rounded-full hover:bg-muted/50">
                 Explore the Glossary <BookOpen className="w-6 h-6" />
               </Button>
             </div>
