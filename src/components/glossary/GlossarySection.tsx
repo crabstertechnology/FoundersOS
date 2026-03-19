@@ -7,21 +7,28 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Search, Lightbulb, AlertTriangle, BookOpen, 
   Sparkles, ShieldAlert, Zap, Globe, Info, 
-  ChevronRight
+  ChevronRight, Filter
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export function GlossarySection() {
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(GLOSSARY_ITEMS.map(i => i.label)));
+    return ['All', ...cats];
+  }, []);
 
   const filteredItems = useMemo(() => 
-    GLOSSARY_ITEMS.filter(item => 
-      item.title.toLowerCase().includes(search.toLowerCase()) || 
-      item.desc.toLowerCase().includes(search.toLowerCase()) ||
-      item.tag.toLowerCase().includes(search.toLowerCase())
-    ), [search]);
-
-  const categories = useMemo(() => Array.from(new Set(GLOSSARY_ITEMS.map(i => i.label))), []);
+    GLOSSARY_ITEMS.filter(item => {
+      const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) || 
+                            item.desc.toLowerCase().includes(search.toLowerCase()) ||
+                            item.tag.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = activeCategory === 'All' || item.label === activeCategory;
+      return matchesSearch && matchesCategory;
+    }), [search, activeCategory]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-12">
@@ -35,7 +42,7 @@ export function GlossarySection() {
         </Card>
         <Card className="bg-primary/5 border-primary/10 shadow-none">
           <CardContent className="p-6 flex flex-col items-center text-center gap-1">
-            <span className="text-3xl font-black text-primary">{categories.length}</span>
+            <span className="text-3xl font-black text-primary">{categories.length - 1}</span>
             <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Categories</span>
           </CardContent>
         </Card>
@@ -53,7 +60,7 @@ export function GlossarySection() {
         </Card>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
             <BookOpen className="w-3 h-3" />
@@ -65,14 +72,37 @@ export function GlossarySection() {
           </p>
         </div>
 
-        <div className="relative max-w-2xl mx-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
-          <Input 
-            placeholder="Search terms (e.g. 'Dilution', 'LTV', 'ROFR')..." 
-            className="pl-12 h-16 bg-white shadow-2xl rounded-2xl border-primary/10 text-lg"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+        <div className="space-y-6">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input 
+              placeholder="Search terms (e.g. 'Dilution', 'LTV', 'ROFR')..." 
+              className="pl-12 h-16 bg-white shadow-xl rounded-2xl border-primary/10 text-lg"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex items-center gap-2 mr-2 text-muted-foreground">
+              <Filter className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Filter:</span>
+            </div>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-xs font-bold transition-all border",
+                  activeCategory === cat 
+                    ? "bg-primary text-white border-primary shadow-md scale-105" 
+                    : "bg-white text-muted-foreground border-border hover:border-primary/50 hover:text-primary"
+                )}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
