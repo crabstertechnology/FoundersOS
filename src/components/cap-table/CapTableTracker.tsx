@@ -8,10 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { fmtPct } from '@/lib/utils/formatters';
-import { Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, Info } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CapTableTrackerProps {
   userId: string;
@@ -27,6 +28,24 @@ interface Shareholder {
 }
 
 const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444'];
+
+function HeaderWithInfo({ label, info }: { label: string; info: string }) {
+  return (
+    <div className="flex items-center gap-1">
+      {label}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="w-3 h-3 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[150px] text-[10px]">
+            {info}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
 
 export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerProps) {
   const firestore = useFirestore();
@@ -77,9 +96,9 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     const esopPct = totalShares > 0 ? (esopShares / totalShares) * 100 : 0;
 
     return [
-      { label: 'Founders hold majority (>50%)', pass: founderPct > 50, val: fmtPct(founderPct), tip: 'Essential for operational control.' },
-      { label: 'Preference shares below 40%', pass: prefPct < 40, val: fmtPct(prefPct), tip: 'Protects from excessive investor leverage.' },
-      { label: 'ESOP pool healthy (5-15%)', pass: esopPct >= 5 && esopPct <= 15, val: fmtPct(esopPct), tip: 'Critical for future hiring rounds.' },
+      { label: 'Founders hold majority (>50%)', pass: founderPct > 50, val: fmtPct(founderPct), tip: 'Essential for operational control and blocking hostile takeovers.' },
+      { label: 'Preference shares below 40%', pass: prefPct < 40, val: fmtPct(prefPct), tip: 'Protects founders from excessive investor leverage in small exits.' },
+      { label: 'ESOP pool healthy (5-15%)', pass: esopPct >= 5 && esopPct <= 15, val: fmtPct(esopPct), tip: 'Critical for future hiring and talent retention.' },
     ];
   }, [shareholders, totalShares]);
 
@@ -120,7 +139,9 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                 <TableHeader>
                   <TableRow className="hover:bg-transparent uppercase text-[10px] font-bold tracking-widest text-muted-foreground">
                     <TableHead>Entity</TableHead>
-                    <TableHead>Type</TableHead>
+                    <TableHead>
+                      <HeaderWithInfo label="Type" info="Common: Founder/Employee shares. Preference: Investor shares with special rights. ESOP: Reserved for hires. DVR: Super-voting rights." />
+                    </TableHead>
                     <TableHead>Shares Held</TableHead>
                     <TableHead>% Ownership</TableHead>
                     <TableHead className="w-10"></TableHead>

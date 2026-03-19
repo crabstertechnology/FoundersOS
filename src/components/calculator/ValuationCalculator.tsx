@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, TrendingUp, Zap, Loader2, Coins, Scale } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Zap, Loader2, Coins, Scale, Info } from 'lucide-react';
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
 import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc, serverTimestamp } from 'firebase/firestore';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ValuationCalculatorProps {
   userId: string;
@@ -40,6 +41,24 @@ const DEFAULT_FORM_DATA = {
   prefMultiple: '1',
   prefType: 'nonparticipating'
 };
+
+function LabelWithInfo({ label, info }: { label: string; info: string }) {
+  return (
+    <div className="flex items-center gap-1.5 mb-2">
+      <Label className="mb-0">{label}</Label>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[200px] text-xs">
+            {info}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
 
 export function ValuationCalculator({ userId, companyProfileId }: ValuationCalculatorProps) {
   const firestore = useFirestore();
@@ -112,7 +131,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Company Name</Label>
+              <LabelWithInfo label="Company Name" info="The official registered name of your company." />
               <Input 
                 placeholder="Enter startup name..."
                 value={formData.companyName} 
@@ -122,7 +141,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Stage</Label>
+                <LabelWithInfo label="Stage" info="Influences valuation multiples. Idea: Pre-revenue. MVP: Early traction. Seed: Institutional capital." />
                 <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
                   <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -131,7 +150,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Industry</Label>
+                <LabelWithInfo label="Industry" info="Sectors like AI or SaaS command higher revenue multiples than Hardware or E-commerce." />
                 <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
                   <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -153,7 +172,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Avg LTV</Label>
+                <LabelWithInfo label="Avg LTV" info="Lifetime Value: Total revenue expected from a customer over their entire relationship with you." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -166,7 +185,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Avg CAC</Label>
+                <LabelWithInfo label="Avg CAC" info="Customer Acquisition Cost: The total cost (sales + marketing) to acquire one new customer." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -191,7 +210,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Pref Multiple</Label>
+              <LabelWithInfo label="Pref Multiple" info="Capital multiplier investors get back first. 1x is standard. 2x is considered a dark pattern." />
               <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
                 <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -202,7 +221,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <LabelWithInfo label="Type" info="Participating allows investors to 'double dip' (capital back + equity %). Non-participating is founder-friendly." />
               <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
                 <SelectTrigger suppressHydrationWarning><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -286,7 +305,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <Label>Monthly Revenue</Label>
+                <LabelWithInfo label="Monthly Revenue" info="Total income generated this month. Used to calculate ARR." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -299,7 +318,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Monthly Burn</Label>
+                <LabelWithInfo label="Monthly Burn" info="Net monthly spend. Runway = Cash / Net Burn." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -312,7 +331,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Cash in Bank</Label>
+                <LabelWithInfo label="Cash in Bank" info="Current total liquid cash reserves." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -323,6 +342,65 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                     suppressHydrationWarning
                   />
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border-border">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Deal Terms</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <LabelWithInfo label="Investment Amount" info="The total capital you are looking to raise in this round." />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7"
+                    value={formData.investment || ''} 
+                    onChange={e => handleChange('investment', Number(e.target.value))}
+                    suppressHydrationWarning
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Equity Offered %" info="Percentage of the company given to investors in this round." />
+                <Input 
+                  type="number" 
+                  value={formData.equityOffered || ''} 
+                  onChange={e => handleChange('equityOffered', Number(e.target.value))}
+                  suppressHydrationWarning
+                />
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="ESOP Pool %" info="Shares reserved for future employees. Usually 8-12%." />
+                <Input 
+                  type="number" 
+                  value={formData.esopPool || ''} 
+                  onChange={e => handleChange('esopPool', Number(e.target.value))}
+                  suppressHydrationWarning
+                />
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Advisor Equity %" info="Stakes allocated to mentors or strategic advisors." />
+                <Input 
+                  type="number" 
+                  value={formData.advisorEquity || ''} 
+                  onChange={e => handleChange('advisorEquity', Number(e.target.value))}
+                  suppressHydrationWarning
+                />
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Co-Founder Equity %" info="Equity held by other co-founders." />
+                <Input 
+                  type="number" 
+                  value={formData.coFounderEq || ''} 
+                  onChange={e => handleChange('coFounderEq', Number(e.target.value))}
+                  suppressHydrationWarning
+                />
               </div>
             </div>
           </CardContent>
