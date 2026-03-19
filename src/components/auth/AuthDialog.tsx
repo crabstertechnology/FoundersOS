@@ -9,7 +9,11 @@ import { Label } from '@/components/ui/label';
 import { LogIn, UserPlus, Mail, Lock } from 'lucide-react';
 import { useAuth, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
 
-export function AuthDialog() {
+interface AuthDialogProps {
+  trigger?: React.ReactNode;
+}
+
+export function AuthDialog({ trigger }: AuthDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,10 +34,12 @@ export function AuthDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2 font-bold hover:bg-primary hover:text-white transition-colors">
-          <LogIn className="w-4 h-4" />
-          Sign In
-        </Button>
+        {trigger || (
+          <Button variant="outline" className="gap-2 font-bold hover:bg-primary hover:text-white transition-colors">
+            <LogIn className="w-4 h-4" />
+            Sign In
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
