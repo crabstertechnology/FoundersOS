@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, LayoutDashboard, BookOpen, Loader2 } from 'lucide-react';
+import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, User as UserIcon } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
-import { useUser, useAuth, initiateAnonymousSignIn } from '@/firebase';
+import { AuthDialog } from '@/components/auth/AuthDialog';
+import { useUser, useAuth, initiateAnonymousSignIn, initiateSignOut } from '@/firebase';
+import { Button } from '@/components/ui/button';
 
 export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('calc');
@@ -35,28 +37,52 @@ export default function FounderOSPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-border h-16 flex items-center px-6">
-        <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-border h-20 flex items-center px-6">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="bg-primary text-white font-headline font-bold text-xl px-2 py-0.5 rounded italic">F</div>
-          <span className="font-headline font-extrabold text-xl tracking-tight">FOUNDER<span className="text-primary">OS</span></span>
+          <span className="font-headline font-extrabold text-xl tracking-tight hidden md:inline">FOUNDER<span className="text-primary">OS</span></span>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="ml-auto">
-          <TabsList className="bg-transparent border-none">
-            <TabsTrigger value="calc" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2">
-              <Calculator className="w-4 h-4" />
-              <span className="hidden sm:inline">Calculator</span>
-            </TabsTrigger>
-            <TabsTrigger value="tracker" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2">
-              <LayoutDashboard className="w-4 h-4" />
-              <span className="hidden sm:inline">Cap Table</span>
-            </TabsTrigger>
-            <TabsTrigger value="glossary" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Glossary</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex-1 flex justify-center">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mx-auto">
+            <TabsList className="bg-transparent border-none gap-1">
+              <TabsTrigger value="calc" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4">
+                <Calculator className="w-4 h-4" />
+                <span className="hidden sm:inline">Calculator</span>
+              </TabsTrigger>
+              <TabsTrigger value="tracker" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4">
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="hidden sm:inline">Cap Table</span>
+              </TabsTrigger>
+              <TabsTrigger value="glossary" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4">
+                <BookOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">Glossary</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="flex items-center gap-4 shrink-0">
+          {user && !user.isAnonymous ? (
+            <div className="flex items-center gap-3">
+              <div className="hidden lg:flex flex-col items-end text-right">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Founder Account</span>
+                <span className="text-xs font-medium truncate max-w-[150px]">{user.email}</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => initiateSignOut(auth)} 
+                title="Sign Out"
+                className="hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <AuthDialog />
+          )}
+        </div>
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8">
