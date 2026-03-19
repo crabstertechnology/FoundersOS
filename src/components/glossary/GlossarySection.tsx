@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { explainStartupTerm } from '@/ai/flows/dynamic-glossary-explainer';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function GlossarySection() {
   const [search, setSearch] = useState('');
@@ -208,32 +209,43 @@ export function GlossarySection() {
       </div>
 
       <Dialog open={!!aiExplanation} onOpenChange={() => setAiExplanation(null)}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              AI Jargon Explainer
-            </DialogTitle>
-            <DialogDescription>
-              A deep-dive analysis of this startup term localized for your context.
-            </DialogDescription>
-          </DialogHeader>
-          {aiExplanation && (
-            <div className="space-y-6 pt-4">
-              <div className="space-y-2">
-                <div className="text-[10px] uppercase font-black tracking-widest text-primary">Simplified Logic</div>
-                <p className="text-sm leading-relaxed font-medium">{aiExplanation.explanation}</p>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <div className="p-6 border-b bg-white">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                AI Jargon Explainer
+              </DialogTitle>
+              <DialogDescription>
+                A deep-dive analysis of this startup term localized for your context.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          
+          <ScrollArea className="flex-1 p-6">
+            {aiExplanation && (
+              <div className="space-y-6 pb-4">
+                <div className="space-y-2">
+                  <div className="text-[10px] uppercase font-black tracking-widest text-primary">Simplified Logic</div>
+                  <p className="text-sm leading-relaxed font-medium">{aiExplanation.explanation}</p>
+                </div>
+                <div className="space-y-3 bg-muted/30 p-5 rounded-xl border border-muted-foreground/10">
+                  <div className="text-[10px] uppercase font-black tracking-widest text-green-700 flex items-center gap-1.5">
+                    <Globe className="w-3 h-3" />
+                    Indian Market Example
+                  </div>
+                  <p className="text-sm leading-relaxed italic text-foreground/90">{aiExplanation.indianContextExample}</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-[10px] uppercase font-black tracking-widest text-amber-700 flex items-center gap-1.5">
+                    <Lightbulb className="w-3 h-3" />
+                    Practical Implications
+                  </div>
+                  <p className="text-sm leading-relaxed font-bold">{aiExplanation.practicalImplications}</p>
+                </div>
               </div>
-              <div className="space-y-2 bg-muted/30 p-4 rounded-xl border">
-                <div className="text-[10px] uppercase font-black tracking-widest text-green-700">Indian Market Example</div>
-                <p className="text-sm leading-relaxed italic">{aiExplanation.indianContextExample}</p>
-              </div>
-              <div className="space-y-2">
-                <div className="text-[10px] uppercase font-black tracking-widest text-amber-700">Practical Implications</div>
-                <p className="text-sm leading-relaxed font-bold">{aiExplanation.practicalImplications}</p>
-              </div>
-            </div>
-          )}
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
