@@ -80,11 +80,19 @@ service cloud.firestore {
         allow delete: if isExistingOwner(userId);
 
         /**
+         * @description Rules for historical funding rounds.
+         * @path /users/{userId}/companyProfiles/{companyProfileId}/fundingRounds/{roundId}
+         */
+        match /fundingRounds/{roundId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.companyId == companyProfileId;
+          allow update: if isExistingOwner(userId) && request.resource.data.companyId == resource.data.companyId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
          * @description Rules for Berkus valuation scores linked to a company.
          * @path /users/{userId}/companyProfiles/{companyProfileId}/berkusScores/{berkusScoreId}
-         * @allow (create) If ownerId matches auth and companyId matches path.
-         * @deny (create) If companyId in data does not match the parent companyProfileId.
-         * @principle Pattern 1 & 5: Ownership and Relational Integrity.
          */
         match /berkusScores/{berkusScoreId} {
           allow get, list: if isOwner(userId);
@@ -96,9 +104,6 @@ service cloud.firestore {
         /**
          * @description Rules for simulated funding rounds used for dilution analysis.
          * @path /users/{userId}/companyProfiles/{companyProfileId}/simulatedFundingRounds/{roundId}
-         * @allow (update) If owner changes non-relational fields like investmentAmount.
-         * @deny (update) If user attempts to reassign the round to a different companyId.
-         * @principle Pattern 1 & 5: Ownership and Relational Integrity.
          */
         match /simulatedFundingRounds/{roundId} {
           allow get, list: if isOwner(userId);
@@ -110,9 +115,6 @@ service cloud.firestore {
         /**
          * @description Rules for shareholder data in the company cap table.
          * @path /users/{userId}/companyProfiles/{companyProfileId}/shareholders/{shareholderId}
-         * @allow (list) If the owner queries their own shareholders collection.
-         * @deny (create) If the shareholder's parent company link is broken.
-         * @principle Pattern 1 & 5: Ownership and Relational Integrity.
          */
         match /shareholders/{shareholderId} {
           allow get, list: if isOwner(userId);
