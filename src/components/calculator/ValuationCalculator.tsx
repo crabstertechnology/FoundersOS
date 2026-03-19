@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -358,6 +357,37 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           </Card>
         </div>
 
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Founder Stake</div>
+            <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
+              {fmtPct(results.founderEq)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Sasitharan</div>
+          </Card>
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
+            <div className={`text-xl font-code font-bold ${results.runway > 0 && results.runway < 6 ? 'text-destructive' : 'text-primary'}`}>
+              {results.runway === 999 ? '∞' : Math.round(results.runway)} mo
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Until cash zero</div>
+          </Card>
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
+            <div className="text-xl font-code font-bold text-primary">
+              {fmtINR(results.arr)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Annual Run Rate</div>
+          </Card>
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Burn Rate</div>
+            <div className="text-xl font-code font-bold text-destructive">
+              {fmtINR(formData.burnRate)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Net Monthly spend</div>
+          </Card>
+        </div>
+
         <Card className="shadow-sm border-2 border-primary/10 overflow-hidden">
           <CardHeader className="bg-muted/50 pb-4">
             <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
@@ -460,37 +490,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Founder Stake</div>
-            <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
-              {fmtPct(results.founderEq)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Sasitharan</div>
-          </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
-            <div className={`text-xl font-code font-bold ${results.runway > 0 && results.runway < 6 ? 'text-destructive' : 'text-primary'}`}>
-              {results.runway === 999 ? '∞' : Math.round(results.runway)} mo
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Until cash zero</div>
-          </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
-            <div className="text-xl font-code font-bold text-primary">
-              {fmtINR(results.arr)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Annual Run Rate</div>
-          </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Burn Rate</div>
-            <div className="text-xl font-code font-bold text-destructive">
-              {fmtINR(formData.burnRate)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Net Monthly spend</div>
-          </Card>
-        </div>
-
         <AIStrategicAdvisor 
           userId={userId}
           companyProfileId={companyProfileId}
@@ -502,3 +501,40 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     </div>
   );
 }
+
+// Minimal Accordion pieces for the Snapshot
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
+import { cn } from "@/lib/utils";
+
+const Accordion = AccordionPrimitive.Root;
+const AccordionItem = AccordionPrimitive.Item;
+const AccordionTrigger = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Header className="flex">
+    <AccordionPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        "flex flex-1 items-center justify-between py-4 font-medium transition-all [&[data-state=open]>svg]:rotate-180",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+    </AccordionPrimitive.Trigger>
+  </AccordionPrimitive.Header>
+));
+const AccordionContent = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Content
+    ref={ref}
+    className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+    {...props}
+  >
+    <div className={cn("pb-4 pt-0", className)}>{children}</div>
+  </AccordionPrimitive.Content>
+));
