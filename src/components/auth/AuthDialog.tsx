@@ -5,8 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogIn, Mail, Lock } from 'lucide-react';
-import { useAuth, initiateEmailSignIn } from '@/firebase';
+import { LogIn, Mail, Lock, Loader2, ShieldCheck } from 'lucide-react';
+import { useAuth, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthDialogProps {
   trigger?: React.ReactNode;
@@ -14,17 +15,58 @@ interface AuthDialogProps {
 
 export function AuthDialog({ trigger }: AuthDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // Pre-filling the credentials as requested for the prototype
+  const [isLoading, setIsLoading] = useState(false);
+  // Pre-filled credentials for authorized founder access
   const [email, setEmail] = useState('crabstertechnology@gmail.com');
   const [password, setPassword] = useState('Sasipriya2118&');
   const auth = useAuth();
+  const { toast } = useToast();
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    if (auth) {
-      initiateEmailSignIn(auth, email, password);
-    }
-    setIsOpen(false);
+    if (!auth) return;
+
+    setIsLoading(true);
+
+    // First attempt a standard sign-in
+    initiateEmailSignIn(auth, email, password)
+      .then(() => {
+        setIsOpen(false);
+        setIsLoading(false);
+      })
+      .catch((signInErr: any) => {
+        // If sign-in fails due to user not found (or invalid-credential in new SDKs),
+        // we attempt to create the account for the founder automatically.
+        const isUserNotFound = signInErr.code === 'auth/user-not-found' || 
+                             signInErr.code === 'auth/invalid-credential';
+
+        if (isUserNotFound) {
+          initiateEmailSignUp(auth, email, password)
+            .then(() => {
+              setIsOpen(false);
+              setIsLoading(false);
+              toast({
+                title: "Welcome, Founder",
+                description: "Your authorized account has been initialized successfully.",
+              });
+            })
+            .catch((signUpErr: any) => {
+              setIsLoading(false);
+              toast({
+                variant: "destructive",
+                title: "Access Denied",
+                description: signUpErr.message || "Failed to initialize authorized account.",
+              });
+            });
+        } else {
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Sign In Error",
+            description: signInErr.message || "Please check your credentials and try again.",
+          });
+        }
+      });
   };
 
   return (
@@ -39,9 +81,12 @@ export function AuthDialog({ trigger }: AuthDialogProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle className="font-headline text-2xl font-bold">Founder Access</DialogTitle>
+          <DialogTitle className="font-headline text-2xl font-bold flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-primary" />
+            Founder Access
+          </DialogTitle>
           <DialogDescription>
-            Enter your credentials to access the FounderOS dashboard.
+            Enter your authorized credentials to access the FounderOS dashboard.
           </DialogDescription>
         </DialogHeader>
         
@@ -59,6 +104,7 @@ export function AuthDialog({ trigger }: AuthDialogProps) {
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -73,19 +119,29 @@ export function AuthDialog({ trigger }: AuthDialogProps) {
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
+                  disabled={isLoading}
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full gap-2 font-bold">
-              <LogIn className="w-4 h-4" />
-              Sign In to Dashboard
+            <Button type="submit" className="w-full gap-2 font-bold h-12" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  Sign In to Dashboard
+                </>
+              )}
             </Button>
           </form>
           
           <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-dashed border-muted-foreground/20">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 text-center">Security Notice</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 text-center">Access Restricted</p>
             <p className="text-xs text-muted-foreground text-center leading-relaxed">
-              New account registration is currently restricted to authorized founders only.
+              FounderOS access is limited to pre-authorized startup accounts only.
             </p>
           </div>
         </div>
