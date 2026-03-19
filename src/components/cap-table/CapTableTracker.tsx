@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -23,7 +24,7 @@ interface Shareholder {
   id: string;
   name: string;
   type: 'common' | 'preference' | 'esop' | 'dvr';
-  shares: number;
+  ownershipPercentage: number;
   companyId: string;
 }
 
@@ -57,7 +58,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
   const { data: shareholders, isLoading } = useCollection<Shareholder>(shareholdersRef);
 
-  const totalShares = useMemo(() => (shareholders || []).reduce((acc, s) => acc + (s.shares || 0), 0), [shareholders]);
+  const totalAllocated = useMemo(() => (shareholders || []).reduce((acc, s) => acc + (s.ownershipPercentage || 0), 0), [shareholders]);
 
   const updateShareholder = (id: string, field: string, value: any) => {
     if (!shareholdersRef) return;
@@ -70,7 +71,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     addDocumentNonBlocking(shareholdersRef, {
       name: '',
       type: 'common',
-      shares: 0,
+      ownershipPercentage: 0,
       companyId: companyProfileId,
     });
   };
@@ -83,31 +84,43 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
   const chartData = useMemo(() => (shareholders || []).map((s, i) => ({
     name: s.name || 'Unnamed',
-    value: s.shares || 0,
+    value: s.ownershipPercentage || 0,
     color: COLORS[i % COLORS.length]
-  })), [shareholders]);
+  })).filter(d => d.value > 0), [shareholders]);
 
   const authorityChecks = useMemo(() => {
     const list = shareholders || [];
-    const founderShares = list.filter(s => s.type === 'common' || s.type === 'dvr').reduce((a, b) => a + (b.shares || 0), 0);
-    const founderPct = totalShares > 0 ? (founderShares / totalShares) * 100 : 0;
-    const prefShares = list.filter(s => s.type === 'preference').reduce((a, b) => a + (b.shares || 0), 0);
-    const prefPct = totalShares > 0 ? (prefShares / totalShares) * 100 : 0;
-    const esopShares = list.filter(s => s.type === 'esop').reduce((a, b) => a + (b.shares || 0), 0);
-    const esopPct = totalShares > 0 ? (esopShares / totalShares) * 100 : 0;
+    const founderPct = list.filter(s => s.type === 'common' || s.type === 'dvr').reduce((a, b) => a + (b.ownershipPercentage || 0), 0);
+    const prefPct = list.filter(s => s.type === 'preference').reduce((a, b) => a + (b.ownershipPercentage || 0), 0);
+    const esopPct = list.filter(s => s.type === 'esop').reduce((a, b) => a + (b.ownershipPercentage || 0), 0);
 
     return [
-      { label: 'Founders hold majority (>50%)', pass: founderPct > 50, val: fmtPct(founderPct), tip: 'Essential for operational control and blocking hostile takeovers.' },
-      { label: 'Preference shares below 40%', pass: prefPct < 40, val: fmtPct(prefPct), tip: 'Protects founders from excessive investor leverage in small exits.' },
-      { label: 'ESOP pool healthy (5-15%)', pass: esopPct >= 5 && esopPct <= 15, val: fmtPct(esopPct), tip: 'Critical for future hiring and talent retention.' },
+      { 
+        label: 'Founders hold majority (>50%)', 
+        pass: founderPct > 50, 
+        val: fmtPct(founderPct), 
+        tip: 'Essential for operational control and blocking hostile takeovers.' 
+      },
+      { 
+        label: 'Preference stakes below 40%', 
+        pass: prefPct < 40, 
+        val: fmtPct(prefPct), 
+        tip: 'Protects founders from excessive investor leverage in small exits.' 
+      },
+      { 
+        label: 'ESOP pool healthy (5-15%)', 
+        pass: esopPct >= 5 && esopPct <= 15, 
+        val: fmtPct(esopPct), 
+        tip: 'Critical for future hiring and talent retention.' 
+      },
     ];
-  }, [shareholders, totalShares]);
+  }, [shareholders]);
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground font-code text-xs">Syncing Shareholders...</p>
+        <p className="text-muted-foreground font-code text-xs">Syncing Stakeholders...</p>
       </div>
     );
   }
@@ -118,45 +131,43 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
         <Card className="shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-6">
             <div className="space-y-1">
-              <CardTitle className="text-xl font-bold">Cap Table</CardTitle>
-              <p className="text-sm text-muted-foreground font-code">Total Issued: {totalShares.toLocaleString()} shares</p>
+              <CardTitle className="text-xl font-bold">Ownership Structure</CardTitle>
+              <p className="text-sm text-muted-foreground font-code">Total Allocated: {totalAllocated.toFixed(2)}%</p>
             </div>
             <Button onClick={addShareholder} variant="outline" className="gap-2 font-body font-bold" suppressHydrationWarning>
               <UserPlus className="w-4 h-4" />
-              Add Shareholder
+              Add Stakeholder
             </Button>
           </CardHeader>
           <CardContent>
             {(!shareholders || shareholders.length === 0) ? (
               <div className="text-center py-12 border-2 border-dashed rounded-xl border-muted">
-                <p className="text-muted-foreground italic mb-4">Cap table is currently empty.</p>
+                <p className="text-muted-foreground italic mb-4">No stakeholders listed yet.</p>
                 <Button onClick={addShareholder} variant="outline" size="sm" className="gap-2" suppressHydrationWarning>
                   <UserPlus className="w-3 h-3" />
-                  Add First Shareholder
+                  Add First Stakeholder
                 </Button>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent uppercase text-[10px] font-bold tracking-widest text-muted-foreground">
-                    <TableHead>Entity</TableHead>
+                    <TableHead>Entity/Partner Name</TableHead>
                     <TableHead>
-                      <HeaderWithInfo label="Type" info="Common, Preference, ESOP, or DVR (Super-voting)." />
+                      <HeaderWithInfo label="Interest Type" info="Common, Preference, ESOP, or DVR (Super-voting)." />
                     </TableHead>
-                    <TableHead>Shares Held</TableHead>
-                    <TableHead>% Ownership</TableHead>
+                    <TableHead>Ownership %</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {shareholders.map((s) => {
-                    const pct = totalShares > 0 ? ((s.shares || 0) / totalShares) * 100 : 0;
                     return (
                       <TableRow key={s.id}>
                         <TableCell>
                           <Input 
                             value={s.name || ''} 
-                            placeholder="Name..."
+                            placeholder="Full name or entity..."
                             className="h-8 border-none bg-transparent focus-visible:ring-1" 
                             onChange={e => updateShareholder(s.id, 'name', e.target.value)}
                             suppressHydrationWarning
@@ -166,26 +177,28 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                           <Select value={s.type} onValueChange={v => updateShareholder(s.id, 'type', v)}>
                             <SelectTrigger className="h-8 w-32 font-code text-xs" suppressHydrationWarning><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="common">Common</SelectItem>
-                              <SelectItem value="preference">Preference</SelectItem>
-                              <SelectItem value="esop">ESOP Pool</SelectItem>
-                              <SelectItem value="dvr">DVR Shares</SelectItem>
+                              <SelectItem value="common">Common Equity</SelectItem>
+                              <SelectItem value="preference">Preference Stakes</SelectItem>
+                              <SelectItem value="esop">ESOP Reserved</SelectItem>
+                              <SelectItem value="dvr">DVR (Super Voting)</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
                         <TableCell>
-                          <Input 
-                            type="number" 
-                            value={s.shares || ''} 
-                            className="h-8 font-code w-32" 
-                            onChange={e => updateShareholder(s.id, 'shares', Number(e.target.value))}
-                            suppressHydrationWarning
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-code font-bold text-xs">{fmtPct(pct)}</div>
-                            <Progress value={pct} className="h-1.5" />
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-32">
+                              <Input 
+                                type="number" 
+                                value={s.ownershipPercentage || ''} 
+                                className="h-8 font-code pr-8" 
+                                onChange={e => updateShareholder(s.id, 'ownershipPercentage', Number(e.target.value))}
+                                suppressHydrationWarning
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">%</span>
+                            </div>
+                            <div className="flex-1 min-w-[60px]">
+                              <Progress value={s.ownershipPercentage} className="h-1.5" />
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -199,6 +212,15 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                 </TableBody>
               </Table>
             )}
+            {totalAllocated > 100 && (
+              <Alert variant="destructive" className="mt-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Over-allocation Alert</AlertTitle>
+                <AlertDescription>
+                  Your total ownership exceeds 100% ({totalAllocated.toFixed(2)}%). Please adjust your stakeholder percentages.
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -209,32 +231,30 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
             <CardTitle className="text-lg font-bold">Ownership Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            {chartData.length > 0 && totalShares > 0 ? (
-              <>
-                <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
+            {chartData.length > 0 ? (
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip formatter={(val: number) => [`${val.toFixed(1)}%`, 'Ownership']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
               <div className="h-64 flex items-center justify-center border rounded-lg bg-muted/10 italic text-muted-foreground text-sm">
-                Distribution data will appear here
+                Add stakeholders to see distribution
               </div>
             )}
           </CardContent>

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "CompanyProfile": {
@@ -223,7 +224,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Shareholder",
       "type": "object",
-      "description": "Represents an individual or entity holding shares in the company's cap table.",
+      "description": "Represents an individual or entity holding a percentage stake in the company.",
       "properties": {
         "id": {
           "type": "string",
@@ -239,14 +240,14 @@
         },
         "shareType": {
           "type": "string",
-          "description": "The type of shares held by the shareholder (e.g., common, preference, ESOP, DVR).",
+          "description": "The type of ownership interest (e.g., common, preference, ESOP, DVR).",
           "items": {
             "type": "string"
           }
         },
-        "sharesHeld": {
+        "ownershipPercentage": {
           "type": "number",
-          "description": "The number of shares held by the shareholder."
+          "description": "The percentage of the company owned by the shareholder."
         }
       },
       "required": [
@@ -254,7 +255,7 @@
         "companyId",
         "name",
         "shareType",
-        "sharesHeld"
+        "ownershipPercentage"
       ]
     }
   },
@@ -359,6 +360,6 @@
         }
       }
     ],
-    "reasoning": "The recommended Firestore data structure adopts a hierarchical, user-centric model, ensuring robust security, scalability, and debuggability in line with the core design principles and mandates. All application data for a founder (user) is nested under their unique user ID, starting with a top-level `users` collection.\n\n**Authorization Independence (CRITICAL):** This structure achieves authorization independence primarily through path-based ownership. For any document within a user's `/users/{userId}` hierarchy, security rules can verify `request.auth.uid == userId` directly from the path, eliminating the need for expensive `get()` calls to parent documents to ascertain ownership. To further bolster this, every document (including those in subcollections like `berkusScores`, `simulatedFundingRounds`, and `shareholders`) will include denormalized `ownerId` and `companyId` fields. This means a rule on a `shareholder` document can simply check `request.auth.uid == resource.data.ownerId` and `resource.data.companyId == companyProfileId` (where `companyProfileId` is also a path parameter) without accessing its parent `CompanyProfile` document, fully supporting atomic operations and significantly simplifying rule writing and debugging.\n\n**QAPs (Rules are not Filters):** The design ensures Query-as-Permission (QAP) by maintaining a homogeneous security posture within each collection. All documents under `/users/{userId}/companyProfiles` (and its subcollections) are strictly owned by that `userId`. Therefore, a `list` operation performed by an authenticated user on their own data (e.g., querying `/users/myUserId/companyProfiles`) is inherently secure. Security rules can permit `read` access if `request.auth.uid == userId` because the structural segregation guarantees that any data retrieved belongs to the authenticated user, preventing accidental exposure of other users' data. This avoids the pitfalls of attempting to filter sensitive data with rules, which is insecure and inefficient.\n\n**Structural Segregation:** All data is inherently private to the user who created it. There are no 'public' profiles or collaborative features across users in this current app description, thus all collections implicitly maintain a single, private security posture, simplifying security rules immensely.\n\n**Access Modeling & Data Clarity:** The structure consistently uses hierarchical paths for user-owned and nested data, standardizing access patterns. Wildcards are descriptive (`{userId}`, `{companyProfileId}`, etc.), and schemas are predictable. The inclusion of `createdAt` and `updatedAt` (from the schema) supports invariants for data integrity. No custom claims or complex role-based access is required as authorization is solely based on direct user ownership."
+    "reasoning": "The recommended Firestore data structure adopts a hierarchical, user-centric model, ensuring robust security, scalability, and debuggability in line with the core design principles and mandates. All application data for a founder (user) is nested under their unique user ID, starting with a top-level `users` collection."
   }
 }
