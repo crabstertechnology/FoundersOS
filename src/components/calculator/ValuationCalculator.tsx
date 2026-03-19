@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
-import { TrendingUp, Zap, Loader2, Coins, Scale, Info } from 'lucide-react';
+import { TrendingUp, Zap, Loader2, Coins, Scale, Info, ShieldAlert, CheckCircle2, Target, HeartPulse } from 'lucide-react';
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
-import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -101,14 +102,18 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     const arr = mRevenue * 12;
     const runway = burnRate > 0 ? cashBank / burnRate : (cashBank > 0 ? 999 : 0);
     
-    // Correct LTV Logic: Profit per Purchase * Number of Purchases
-    const calculatedLtv = profitPerOrder * ordersPerCustomer;
-    const ltvCac = cac > 0 ? calculatedLtv / cac : 0;
+    const ltv = profitPerOrder * ordersPerCustomer;
+    const ltvCac = cac > 0 ? ltv / cac : 0;
+    const profitPerCustomer = ltv - cac;
+    const breakEvenCac = ltv;
     
     const totalEquityTaken = equityOffered + esopPool + advisorEquity + coFounderEq;
     const founderEq = Math.max(0, 100 - totalEquityTaken);
 
-    return { preMoney, postMoney, arr, runway, ltvCac, founderEq, ltv: calculatedLtv };
+    return { 
+      preMoney, postMoney, arr, runway, ltvCac, founderEq, 
+      ltv, profitPerCustomer, breakEvenCac 
+    };
   }, [formData]);
 
   const industryData = INDUSTRIES.find(i => i.value === formData.industry);
@@ -169,7 +174,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Coins className="w-3.5 h-3.5" />
-              Unit Economics
+              Input Variables
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -193,10 +198,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   value={formData.ordersPerCustomer || ''} 
                   onChange={e => handleChange('ordersPerCustomer', Number(e.target.value))}
                 />
-              </div>
-              <div className="p-3 bg-muted/50 rounded-lg border border-dashed text-center">
-                <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Calculated LTV</div>
-                <div className="text-lg font-code font-bold text-primary">{fmtINR(results.ltv)}</div>
               </div>
               <div className="space-y-2">
                 <LabelWithInfo label="Avg CAC" info="Customer Acquisition Cost: Sales + Marketing per new user." />
@@ -248,6 +249,68 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
       </div>
 
       <div className="lg:col-span-2 space-y-6">
+        <Card className="border-2 border-primary/20 bg-primary/5 shadow-xl overflow-hidden">
+          <CardHeader className="bg-primary text-primary-foreground py-4">
+            <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+              <HeartPulse className="w-4 h-4" />
+              Survival Dashboard: Unit Economics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="p-4 bg-white rounded-xl border shadow-sm space-y-1">
+                <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                  LTV <Info className="w-3 h-3 opacity-50" />
+                </div>
+                <div className="text-xl font-code font-bold text-primary">{fmtINR(results.ltv)}</div>
+                <div className="text-[9px] text-muted-foreground leading-tight">Lifetime Value</div>
+              </div>
+              
+              <div className="p-4 bg-white rounded-xl border shadow-sm space-y-1">
+                <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                  CAC <Info className="w-3 h-3 opacity-50" />
+                </div>
+                <div className="text-xl font-code font-bold text-primary">{fmtINR(formData.cac)}</div>
+                <div className="text-[9px] text-muted-foreground leading-tight">Acquisition Cost</div>
+              </div>
+
+              <div className={`p-4 rounded-xl border shadow-sm space-y-1 ${results.ltvCac >= 3 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                  LTV / CAC <Target className="w-3 h-3 opacity-50" />
+                </div>
+                <div className={`text-xl font-code font-bold ${results.ltvCac >= 3 ? 'text-green-700' : 'text-amber-700'}`}>{fmtMult(results.ltvCac)}</div>
+                <div className="text-[9px] text-muted-foreground leading-tight">Efficiency (Target {'\u003e'}3x)</div>
+              </div>
+
+              <div className={`p-4 rounded-xl border shadow-sm space-y-1 ${results.profitPerCustomer > 0 ? 'bg-white' : 'bg-red-50 border-red-200'}`}>
+                <div className="text-[10px] uppercase font-bold text-muted-foreground">Profit / Customer</div>
+                <div className={`text-xl font-code font-bold ${results.profitPerCustomer > 0 ? 'text-primary' : 'text-destructive'}`}>{fmtINR(results.profitPerCustomer)}</div>
+                <div className="text-[9px] text-muted-foreground leading-tight">LTV - CAC</div>
+              </div>
+
+              <div className="p-4 bg-slate-900 text-white rounded-xl border shadow-sm space-y-1">
+                <div className="text-[10px] uppercase font-bold text-slate-400">Break-even CAC</div>
+                <div className="text-xl font-code font-bold text-accent">{fmtINR(results.breakEvenCac)}</div>
+                <div className="text-[9px] text-slate-400 leading-tight">Max spend allowed</div>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-dashed">
+              {results.ltvCac >= 3 ? (
+                <>
+                  <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                  <p className="text-xs font-medium text-green-800">Your unit economics are healthy. You are making Rs. {fmtINR(results.profitPerCustomer)} net profit for every customer acquired.</p>
+                </>
+              ) : (
+                <>
+                  <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+                  <p className="text-xs font-medium text-amber-800 leading-relaxed">Warning: Efficiency is below 3x. You are only earning {fmtMult(results.ltvCac)} back for every rupee spent on acquisition. Reduce CAC or increase retention.</p>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="bg-primary text-primary-foreground shadow-xl">
             <CardHeader className="pb-2">
@@ -296,27 +359,27 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <div className="text-[10px] text-muted-foreground mt-1">Until cash zero</div>
           </Card>
           <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">LTV:CAC</div>
-            <div className={`text-xl font-code font-bold ${results.ltvCac > 0 && results.ltvCac < 3 ? 'text-amber-600' : 'text-green-600'}`}>
-              {fmtMult(results.ltvCac)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Target ≥ 3x (Profit-based)</div>
-          </Card>
-          <Card className="p-4 border shadow-sm bg-white">
             <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
             <div className="text-xl font-code font-bold text-primary">
               {fmtINR(results.arr)}
             </div>
             <div className="text-[10px] text-muted-foreground mt-1">Annual Run Rate</div>
           </Card>
+          <Card className="p-4 border shadow-sm bg-white">
+            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Burn Rate</div>
+            <div className="text-xl font-code font-bold text-destructive">
+              {fmtINR(formData.burnRate)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Net Monthly spend</div>
+          </Card>
         </div>
 
         <Card className="shadow-sm border-border">
           <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Financial Details</CardTitle>
+            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Financial & Deal Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <LabelWithInfo label="Monthly Revenue" info="Total income this month. Used for ARR." />
                 <div className="relative">
@@ -353,16 +416,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   />
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Deal Terms</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <LabelWithInfo label="Investment Amount" info="The total capital being raised in this round." />
                 <div className="relative">
