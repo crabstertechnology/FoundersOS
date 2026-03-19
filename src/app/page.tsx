@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
@@ -15,11 +15,6 @@ export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('calc');
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const glossaryRef = useRef<HTMLDivElement>(null);
-
-  const scrollToGlossary = () => {
-    glossaryRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   // If we are checking auth state, show a minimal loader
   if (isUserLoading) {
@@ -66,7 +61,7 @@ export default function FounderOSPage() {
             </Tabs>
           ) : (
             <div className="hidden md:flex items-center gap-8">
-              <Button variant="ghost" onClick={scrollToGlossary} className="text-sm font-semibold hover:text-primary transition-colors">Resources</Button>
+              <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Product</Button>
               <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Pricing</Button>
               <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Contact</Button>
             </div>
@@ -117,9 +112,6 @@ export default function FounderOSPage() {
                 <AuthDialog trigger={<Button size="lg" className="h-16 px-10 text-xl font-bold gap-3 rounded-full shadow-2xl hover:scale-105 transition-all bg-primary hover:shadow-primary/20">
                   Get Started for Free <ArrowRight className="w-6 h-6" />
                 </Button>} />
-                <Button variant="ghost" size="lg" onClick={scrollToGlossary} className="h-16 px-10 text-xl font-semibold gap-3 rounded-full hover:bg-muted/50">
-                  Explore the Glossary <BookOpen className="w-6 h-6" />
-                </Button>
               </div>
             </div>
 
@@ -151,18 +143,6 @@ export default function FounderOSPage() {
                   <p className="text-muted-foreground leading-relaxed">Get personalized recommendations based on your unique cap table and unit economics.</p>
                 </div>
               </div>
-            </div>
-
-            <div ref={glossaryRef} className="pt-20 border-t border-dashed scroll-mt-24">
-              <div className="mb-12 text-center space-y-4">
-                <h2 className="text-4xl md:text-6xl font-black tracking-tight">
-                  Free <span className="text-primary">Resource</span> Center
-                </h2>
-                <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                  We've open-sourced our entire startup glossary to help founders navigate complex VC jargon.
-                </p>
-              </div>
-              <GlossarySection />
             </div>
           </div>
         ) : (
