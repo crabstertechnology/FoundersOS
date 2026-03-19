@@ -9,6 +9,7 @@ import { GlossarySection } from '@/components/glossary/GlossarySection';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import { useUser, useAuth, initiateSignOut } from '@/firebase';
 import { Button } from '@/components/ui/button';
+import { QuickCalculator } from '@/components/calculator/QuickCalculator';
 
 export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('calc');
@@ -46,7 +47,7 @@ export default function FounderOSPage() {
               <TabsList className="bg-transparent border-none gap-1">
                 <TabsTrigger value="calc" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <Calculator className="w-4 h-4" />
-                  <span className="hidden sm:inline">Calculator</span>
+                  <span className="hidden sm:inline">Valuation</span>
                 </TabsTrigger>
                 <TabsTrigger value="tracker" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <LayoutDashboard className="w-4 h-4" />
@@ -67,7 +68,9 @@ export default function FounderOSPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-4 ml-auto shrink-0">
+        <div className="flex items-center gap-3 ml-auto shrink-0">
+          {isAuthenticated && <QuickCalculator />}
+          
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <div className="hidden lg:flex flex-col items-end text-right">
