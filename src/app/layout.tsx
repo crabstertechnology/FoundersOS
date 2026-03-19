@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'FounderOS — Startup Toolkit for Indian Founders',
@@ -18,7 +19,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased bg-background text-foreground">{children}</body>
+      <body className="font-body antialiased bg-background text-foreground" suppressHydrationWarning>
+        <FirebaseClientProvider>
+          {children}
+        </FirebaseClientProvider>
+      </body>
     </html>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,52 +8,72 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { fmtPct } from '@/lib/utils/formatters';
-import { Trash2, Plus, UserPlus, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+
+interface CapTableTrackerProps {
+  userId: string;
+  companyProfileId: string;
+}
 
 interface Shareholder {
   id: string;
   name: string;
   type: 'common' | 'preference' | 'esop' | 'dvr';
   shares: number;
+  companyId: string;
 }
 
 const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444'];
 
-export function CapTableTracker() {
-  const [shareholders, setShareholders] = useState<Shareholder[]>([
-    { id: '1', name: 'Founding Team', type: 'common', shares: 5000000 },
-    { id: '2', name: 'Angel Investor A', type: 'preference', shares: 1000000 },
-    { id: '3', name: 'ESOP Pool', type: 'esop', shares: 800000 },
-    { id: '4', name: 'Antony Dinu (Advisor)', type: 'common', shares: 200000 },
-  ]);
+export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerProps) {
+  const firestore = useFirestore();
+  const shareholdersRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'shareholders');
+  }, [firestore, userId, companyProfileId]);
 
-  const totalShares = useMemo(() => shareholders.reduce((acc, s) => acc + s.shares, 0), [shareholders]);
+  const { data: shareholders, isLoading } = useCollection<Shareholder>(shareholdersRef);
 
-  const updateShareholder = (id: string, field: keyof Shareholder, value: any) => {
-    setShareholders(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+  const totalShares = useMemo(() => (shareholders || []).reduce((acc, s) => acc + (s.shares || 0), 0), [shareholders]);
+
+  const updateShareholder = (id: string, field: string, value: any) => {
+    if (!shareholdersRef) return;
+    const shareholderDoc = doc(shareholdersRef, id);
+    updateDocumentNonBlocking(shareholderDoc, { [field]: value });
   };
 
   const addShareholder = () => {
-    setShareholders(prev => [...prev, { id: Date.now().toString(), name: 'New Entity', type: 'common', shares: 0 }]);
+    if (!shareholdersRef) return;
+    addDocumentNonBlocking(shareholdersRef, {
+      name: 'New Shareholder',
+      type: 'common',
+      shares: 0,
+      companyId: companyProfileId,
+    });
   };
 
   const removeShareholder = (id: string) => {
-    setShareholders(prev => prev.filter(s => s.id !== id));
+    if (!shareholdersRef) return;
+    const shareholderDoc = doc(shareholdersRef, id);
+    deleteDocumentNonBlocking(shareholderDoc);
   };
 
-  const chartData = useMemo(() => shareholders.map((s, i) => ({
-    name: s.name,
-    value: s.shares,
+  const chartData = useMemo(() => (shareholders || []).map((s, i) => ({
+    name: s.name || 'Unnamed',
+    value: s.shares || 0,
     color: COLORS[i % COLORS.length]
   })), [shareholders]);
 
   const authorityChecks = useMemo(() => {
-    const founderShares = shareholders.filter(s => s.type === 'common').reduce((a, b) => a + b.shares, 0);
+    const list = shareholders || [];
+    const founderShares = list.filter(s => s.type === 'common').reduce((a, b) => a + (b.shares || 0), 0);
     const founderPct = totalShares > 0 ? (founderShares / totalShares) * 100 : 0;
-    const prefShares = shareholders.filter(s => s.type === 'preference').reduce((a, b) => a + b.shares, 0);
+    const prefShares = list.filter(s => s.type === 'preference').reduce((a, b) => a + (b.shares || 0), 0);
     const prefPct = totalShares > 0 ? (prefShares / totalShares) * 100 : 0;
-    const esopShares = shareholders.filter(s => s.type === 'esop').reduce((a, b) => a + b.shares, 0);
+    const esopShares = list.filter(s => s.type === 'esop').reduce((a, b) => a + (b.shares || 0), 0);
     const esopPct = totalShares > 0 ? (esopShares / totalShares) * 100 : 0;
 
     return [
@@ -62,6 +82,15 @@ export function CapTableTracker() {
       { label: 'ESOP pool healthy (5-15%)', pass: esopPct >= 5 && esopPct <= 15, val: fmtPct(esopPct), tip: 'Critical for future hiring rounds.' },
     ];
   }, [shareholders, totalShares]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-muted-foreground font-code text-xs">Loading cap table...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -72,69 +101,82 @@ export function CapTableTracker() {
               <CardTitle className="text-xl font-bold">Shareholders</CardTitle>
               <p className="text-sm text-muted-foreground font-code">Total Pool: {totalShares.toLocaleString()} shares</p>
             </div>
-            <Button onClick={addShareholder} variant="outline" className="gap-2 font-body font-bold">
+            <Button onClick={addShareholder} variant="outline" className="gap-2 font-body font-bold" suppressHydrationWarning>
               <UserPlus className="w-4 h-4" />
               Add Shareholder
             </Button>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent uppercase text-[10px] font-bold tracking-widest text-muted-foreground">
-                  <TableHead>Entity</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Shares Held</TableHead>
-                  <TableHead>% Ownership</TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shareholders.map((s, idx) => {
-                  const pct = totalShares > 0 ? (s.shares / totalShares) * 100 : 0;
-                  return (
-                    <TableRow key={s.id}>
-                      <TableCell>
-                        <Input 
-                          value={s.name} 
-                          className="h-8 border-none bg-transparent focus-visible:ring-1" 
-                          onChange={e => updateShareholder(s.id, 'name', e.target.value)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select value={s.type} onValueChange={v => updateShareholder(s.id, 'type', v)}>
-                          <SelectTrigger className="h-8 w-32 font-code text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="common">Common</SelectItem>
-                            <SelectItem value="preference">Preference</SelectItem>
-                            <SelectItem value="esop">ESOP Pool</SelectItem>
-                            <SelectItem value="dvr">DVR Shares</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          value={s.shares} 
-                          className="h-8 font-code w-32" 
-                          onChange={e => updateShareholder(s.id, 'shares', Number(e.target.value))}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-code font-bold text-xs">{fmtPct(pct)}</div>
-                          <Progress value={pct} className="h-1.5" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => removeShareholder(s.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            {(!shareholders || shareholders.length === 0) ? (
+              <div className="text-center py-12 border-2 border-dashed rounded-xl border-muted">
+                <p className="text-muted-foreground italic mb-4">No shareholders found. Start by adding yourself or your co-founders.</p>
+                <Button onClick={addShareholder} variant="outline" size="sm" className="gap-2" suppressHydrationWarning>
+                  <UserPlus className="w-3 h-3" />
+                  Add First Shareholder
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent uppercase text-[10px] font-bold tracking-widest text-muted-foreground">
+                    <TableHead>Entity</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Shares Held</TableHead>
+                    <TableHead>% Ownership</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {shareholders.map((s) => {
+                    const pct = totalShares > 0 ? ((s.shares || 0) / totalShares) * 100 : 0;
+                    return (
+                      <TableRow key={s.id}>
+                        <TableCell>
+                          <Input 
+                            value={s.name || ''} 
+                            placeholder="Name..."
+                            className="h-8 border-none bg-transparent focus-visible:ring-1" 
+                            onChange={e => updateShareholder(s.id, 'name', e.target.value)}
+                            suppressHydrationWarning
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select value={s.type} onValueChange={v => updateShareholder(s.id, 'type', v)}>
+                            <SelectTrigger className="h-8 w-32 font-code text-xs" suppressHydrationWarning><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="common">Common</SelectItem>
+                              <SelectItem value="preference">Preference</SelectItem>
+                              <SelectItem value="esop">ESOP Pool</SelectItem>
+                              <SelectItem value="dvr">DVR Shares</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            value={s.shares || ''} 
+                            className="h-8 font-code w-32" 
+                            onChange={e => updateShareholder(s.id, 'shares', Number(e.target.value))}
+                            suppressHydrationWarning
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-code font-bold text-xs">{fmtPct(pct)}</div>
+                            <Progress value={pct} className="h-1.5" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => removeShareholder(s.id)} suppressHydrationWarning>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -145,37 +187,45 @@ export function CapTableTracker() {
             <CardTitle className="text-lg font-bold">Ownership Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="space-y-2 mt-4">
-              {chartData.map((entry, idx) => (
-                <div key={idx} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                    <span className="text-muted-foreground truncate w-24">{entry.name}</span>
-                  </div>
-                  <span className="font-code font-bold">{fmtPct(totalShares > 0 ? (entry.value / totalShares) * 100 : 0)}</span>
+            {chartData.length > 0 && totalShares > 0 ? (
+              <>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+                <div className="space-y-2 mt-4">
+                  {chartData.map((entry, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                        <span className="text-muted-foreground truncate w-24">{entry.name}</span>
+                      </div>
+                      <span className="font-code font-bold">{fmtPct(totalShares > 0 ? (entry.value / totalShares) * 100 : 0)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="h-64 flex items-center justify-center border rounded-lg bg-muted/10 italic text-muted-foreground text-sm">
+                Distribution data will appear here
+              </div>
+            )}
           </CardContent>
         </Card>
 
