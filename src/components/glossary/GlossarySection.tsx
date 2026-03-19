@@ -209,42 +209,63 @@ export function GlossarySection() {
       </div>
 
       <Dialog open={!!aiExplanation} onOpenChange={() => setAiExplanation(null)}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
-          <div className="p-6 border-b bg-white">
+        <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0 overflow-hidden shadow-2xl border-none">
+          <div className="p-6 border-b bg-white shrink-0">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold">
                 <Sparkles className="w-5 h-5 text-primary" />
                 AI Jargon Explainer
               </DialogTitle>
-              <DialogDescription>
-                A deep-dive analysis of this startup term localized for your context.
+              <DialogDescription className="font-medium">
+                Deep-dive analysis localized for the Indian startup context.
               </DialogDescription>
             </DialogHeader>
           </div>
           
-          <ScrollArea className="flex-1 p-6">
-            {aiExplanation && (
-              <div className="space-y-6 pb-4">
-                <div className="space-y-2">
-                  <div className="text-[10px] uppercase font-black tracking-widest text-primary">Simplified Logic</div>
-                  <p className="text-sm leading-relaxed font-medium">{aiExplanation.explanation}</p>
-                </div>
-                <div className="space-y-3 bg-muted/30 p-5 rounded-xl border border-muted-foreground/10">
-                  <div className="text-[10px] uppercase font-black tracking-widest text-green-700 flex items-center gap-1.5">
-                    <Globe className="w-3 h-3" />
-                    Indian Market Example
+          <ScrollArea className="flex-1">
+            <div className="p-6 space-y-8">
+              {aiExplanation && (
+                <>
+                  <div className="space-y-3">
+                    <div className="text-[10px] uppercase font-black tracking-[0.2em] text-primary flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" />
+                      The Simplified Logic
+                    </div>
+                    <p className="text-base leading-relaxed font-medium text-foreground/90">
+                      {aiExplanation.explanation}
+                    </p>
                   </div>
-                  <p className="text-sm leading-relaxed italic text-foreground/90">{aiExplanation.indianContextExample}</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-[10px] uppercase font-black tracking-widest text-amber-700 flex items-center gap-1.5">
-                    <Lightbulb className="w-3 h-3" />
-                    Practical Implications
+
+                  <div className="space-y-4 bg-green-50/50 p-6 rounded-2xl border border-green-100/50">
+                    <div className="text-[10px] uppercase font-black tracking-[0.2em] text-green-700 flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      Indian Market Context
+                    </div>
+                    <p className="text-sm leading-relaxed italic text-green-900 font-medium">
+                      "{aiExplanation.indianContextExample}"
+                    </p>
                   </div>
-                  <p className="text-sm leading-relaxed font-bold">{aiExplanation.practicalImplications}</p>
-                </div>
-              </div>
-            )}
+
+                  <div className="space-y-3">
+                    <div className="text-[10px] uppercase font-black tracking-[0.2em] text-amber-700 flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4" />
+                      Strategic Implications
+                    </div>
+                    <div className="p-5 bg-amber-50/30 rounded-2xl border border-amber-100/50">
+                      <p className="text-sm leading-relaxed font-bold text-amber-900">
+                        {aiExplanation.practicalImplications}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 border-t border-dashed">
+                    <p className="text-[10px] text-center text-muted-foreground uppercase font-bold tracking-widest">
+                      AI-Generated Strategy · FounderOS Intelligence
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
