@@ -8,12 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
-import { TrendingUp, Zap, Loader2, Coins, Scale, Info, ShieldAlert, CheckCircle2, Target, HeartPulse } from 'lucide-react';
+import { TrendingUp, Zap, Loader2, Coins, Scale, Info, ShieldAlert, CheckCircle2, Target, HeartPulse, Sparkles } from 'lucide-react';
 import { AIStrategicAdvisor } from '@/components/ai-advisor/AIStrategicAdvisor';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, serverTimestamp } from 'firebase/firestore';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 
 interface ValuationCalculatorProps {
   userId: string;
@@ -41,19 +42,26 @@ const DEFAULT_FORM_DATA = {
   prefType: 'nonparticipating'
 };
 
-function LabelWithInfo({ label, info }: { label: string; info: string }) {
+function LabelWithInfo({ label, info, required }: { label: string; info: string; required?: boolean }) {
   return (
     <div className="space-y-1 mb-2">
-      <div className="flex items-center gap-1.5">
-        <Label className="mb-0 font-bold">{label}</Label>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Info className="w-3.5 h-3.5 text-primary cursor-help" />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-[200px] text-xs font-medium">
-            {info}
-          </TooltipContent>
-        </Tooltip>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Label className="mb-0 font-bold">{label}</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3.5 h-3.5 text-primary cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[200px] text-xs font-medium">
+              {info}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        {required && (
+          <Badge variant="outline" className="text-[8px] h-4 uppercase font-black tracking-tighter border-primary/20 bg-primary/5 text-primary">
+            Required for Valuation
+          </Badge>
+        )}
       </div>
       <p className="text-[10px] text-muted-foreground leading-tight italic">{info}</p>
     </div>
@@ -86,8 +94,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
     // Calculate derived Post-Money Valuation to sync with Cap Table
     const investment = newData.investment || 0;
     const equityOffered = newData.equityOffered || 0;
-    const preMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) - investment : 0;
-    const postMoney = preMoney + investment;
+    const postMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
 
     if (profileRef) {
       setDocumentNonBlocking(profileRef, {
@@ -105,8 +112,8 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
       mRevenue, burnRate, cashBank, cac, profitPerOrder, ordersPerCustomer 
     } = formData;
     
-    const preMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) - investment : 0;
-    const postMoney = preMoney + investment;
+    const postMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
+    const preMoney = Math.max(0, postMoney - investment);
     const arr = mRevenue * 12;
     const runway = burnRate > 0 ? cashBank / burnRate : (cashBank > 0 ? 999 : 0);
     
@@ -182,13 +189,13 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Coins className="w-3.5 h-3.5" />
-              Input Variables
+              Unit Econ Inputs
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <LabelWithInfo label="Profit per Order" info="Gross Profit per transaction (Revenue - Cost of Goods Sold)." />
+                <LabelWithInfo label="Profit per Order" info="Gross Profit per transaction (Revenue - COGS)." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -200,7 +207,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 </div>
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Orders per Customer" info="Average number of times a customer purchases in their lifetime." />
+                <LabelWithInfo label="Orders per Customer" info="Avg frequency over customer lifetime." />
                 <Input 
                   type="number" 
                   value={formData.ordersPerCustomer || ''} 
@@ -208,7 +215,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                 />
               </div>
               <div className="space-y-2">
-                <LabelWithInfo label="Avg CAC" info="Customer Acquisition Cost: Sales + Marketing per new user." />
+                <LabelWithInfo label="Avg CAC" info="Total S&M spend per new user acquired." />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
                   <Input 
@@ -227,12 +234,12 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Scale className="w-3.5 h-3.5" />
-              Liquidation Terms
+              Deal Terms
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <LabelWithInfo label="Pref Multiple" info="1x is standard. 2x means investors get double capital back first." />
+              <LabelWithInfo label="Pref Multiple" info="1x is standard. 2x is aggressive." />
               <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -243,7 +250,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               </Select>
             </div>
             <div className="space-y-2">
-              <LabelWithInfo label="Type" info="Non-participating is founder-friendly; Participating is 'double dip'." />
+              <LabelWithInfo label="Type" info="Non-participating is founder-friendly." />
               <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -330,7 +337,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <CardContent>
               <div className="text-4xl font-code font-bold">{fmtINR(results.preMoney)}</div>
               <p className="text-xs mt-2 opacity-80 font-mono">
-                Formula: Investment ÷ Equity % - Investment
+                Formula: Post-Money - Investment
               </p>
             </CardContent>
           </Card>
@@ -350,6 +357,108 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             </CardContent>
           </Card>
         </div>
+
+        <Card className="shadow-sm border-2 border-primary/10 overflow-hidden">
+          <CardHeader className="bg-muted/50 pb-4">
+            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Strategic Fundraising Inputs
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">Fill these to calculate your Startup Valuation and Cap Table dilution.</p>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="space-y-2">
+                <LabelWithInfo required label="Investment Amount" info="The total capital being raised in this round." />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7 h-12 text-lg font-bold border-primary/20 focus-visible:ring-primary"
+                    placeholder="e.g. 5000000"
+                    value={formData.investment || ''} 
+                    onChange={e => handleChange('investment', Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo required label="Equity Offered %" info="Percentage of the company given to investors." />
+                <div className="relative">
+                  <Input 
+                    type="number" 
+                    className="h-12 text-lg font-bold border-primary/20 focus-visible:ring-primary pr-8"
+                    placeholder="e.g. 10"
+                    value={formData.equityOffered || ''} 
+                    onChange={e => handleChange('equityOffered', Number(e.target.value))}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <LabelWithInfo label="Monthly Revenue" info="Total income this month. Used for ARR." />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7"
+                    value={formData.mRevenue || ''} 
+                    onChange={e => handleChange('mRevenue', Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Monthly Burn" info="Net monthly cash out (Burn)." />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7"
+                    value={formData.burnRate || ''} 
+                    onChange={e => handleChange('burnRate', Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Cash in Bank" info="Current liquid reserves." />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7"
+                    value={formData.cashBank || ''} 
+                    onChange={e => handleChange('cashBank', Number(e.target.value))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <LabelWithInfo label="ESOP Pool %" info="Shares reserved for future hires. Usually 10%." />
+                <Input 
+                  type="number" 
+                  value={formData.esopPool || ''} 
+                  onChange={e => handleChange('esopPool', Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Advisor Equity %" info="Mentors stake." />
+                <Input 
+                  type="number" 
+                  value={formData.advisorEquity || ''} 
+                  onChange={e => handleChange('advisorEquity', Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Co-Founder Equity %" info="Equity held by other co-founders." />
+                <Input 
+                  type="number" 
+                  value={formData.coFounderEq || ''} 
+                  onChange={e => handleChange('coFounderEq', Number(e.target.value))}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="p-4 border shadow-sm bg-white">
@@ -381,96 +490,6 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <div className="text-[10px] text-muted-foreground mt-1">Net Monthly spend</div>
           </Card>
         </div>
-
-        <Card className="shadow-sm border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Financial & Deal Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <LabelWithInfo label="Monthly Revenue" info="Total income this month. Used for ARR." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.mRevenue || ''} 
-                    onChange={e => handleChange('mRevenue', Number(e.target.value))}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Monthly Burn" info="Net monthly spend. Runway = Cash / Burn." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.burnRate || ''} 
-                    onChange={e => handleChange('burnRate', Number(e.target.value))}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Cash in Bank" info="Current liquid cash reserves." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.cashBank || ''} 
-                    onChange={e => handleChange('cashBank', Number(e.target.value))}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Investment Amount" info="The total capital being raised in this round." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.investment || ''} 
-                    onChange={e => handleChange('investment', Number(e.target.value))}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Equity Offered %" info="Percentage of the company given to investors." />
-                <Input 
-                  type="number" 
-                  value={formData.equityOffered || ''} 
-                  onChange={e => handleChange('equityOffered', Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="ESOP Pool %" info="Shares reserved for future hires. Usually 10%." />
-                <Input 
-                  type="number" 
-                  value={formData.esopPool || ''} 
-                  onChange={e => handleChange('esopPool', Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Advisor Equity %" info="Stakes allocated to strategic mentors." />
-                <Input 
-                  type="number" 
-                  value={formData.advisorEquity || ''} 
-                  onChange={e => handleChange('advisorEquity', Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Co-Founder Equity %" info="Equity held by other co-founders." />
-                <Input 
-                  type="number" 
-                  value={formData.coFounderEq || ''} 
-                  onChange={e => handleChange('coFounderEq', Number(e.target.value))}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <AIStrategicAdvisor 
           userId={userId}
