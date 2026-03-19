@@ -5,12 +5,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CompanyProfile",
       "type": "object",
-      "description": "Represents a startup company's core information and share-based cap table summary.",
+      "description": "Represents a startup company's core information and equity summary.",
       "properties": {
         "id": { "type": "string" },
         "companyName": { "type": "string" },
-        "totalSharesOutstanding": { "type": "number", "description": "Total count of all issued shares." },
-        "latestValuation": { "type": "number", "description": "Post-money valuation of the most recent round in INR." },
+        "latestValuation": { "type": "number", "description": "Post-money valuation in INR." },
         "stage": { "type": "string" },
         "industry": { "type": "string" },
         "monthlyRevenue": { "type": "number" },
@@ -19,13 +18,13 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "companyName", "totalSharesOutstanding", "latestValuation"]
+      "required": ["id", "companyName", "latestValuation"]
     },
     "FundingRound": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "FundingRound",
       "type": "object",
-      "description": "History of an investment round.",
+      "description": "History of an investment or partnership round.",
       "properties": {
         "id": { "type": "string" },
         "companyId": { "type": "string" },
@@ -34,30 +33,24 @@
         "amountRaised": { "type": "number" },
         "preMoneyValuation": { "type": "number" },
         "postMoneyValuation": { "type": "number" },
-        "sharesIssued": { "type": "number" },
-        "pricePerShare": { "type": "number" }
+        "equityOffered": { "type": "number", "description": "Percentage of equity granted in this round." }
       },
-      "required": ["id", "companyId", "roundName", "amountRaised", "preMoneyValuation"]
+      "required": ["id", "companyId", "roundName", "amountRaised", "equityOffered"]
     },
     "Shareholder": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Shareholder",
       "type": "object",
-      "description": "Represents an owner of company shares.",
+      "description": "Represents an owner of company equity.",
       "properties": {
         "id": { "type": "string" },
         "companyId": { "type": "string" },
         "name": { "type": "string" },
-        "role": { "type": "string", "enum": ["Founder", "Investor", "ESOP", "Advisor"] },
-        "shareClass": { "type": "string", "enum": ["Common", "Preferred", "SAFE"] },
-        "sharesOwned": { "type": "number" },
-        "amountInvested": { "type": "number" },
-        "investmentDate": { "type": "string", "format": "date" },
-        "vestingStart": { "type": "string", "format": "date" },
-        "vestingCliffMonths": { "type": "number" },
-        "vestingDurationMonths": { "type": "number" }
+        "role": { "type": "string", "enum": ["Founder", "Investor", "ESOP", "Advisor", "Partner"] },
+        "ownershipPercentage": { "type": "number" },
+        "investmentDate": { "type": "string", "format": "date" }
       },
-      "required": ["id", "companyId", "name", "role", "shareClass", "sharesOwned"]
+      "required": ["id", "companyId", "name", "role", "ownershipPercentage"]
     }
   },
   "auth": {
