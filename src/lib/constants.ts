@@ -31,53 +31,53 @@ export const GLOSSARY_ITEMS = [
   {
     tag: 'equity',
     label: 'Equity',
-    title: 'Dilution',
-    desc: 'The reduction in ownership percentage for existing stakeholders when new equity is issued. In our model, all dilution is calculated by deducting from the Founder\'s 100% stake.',
-    example: 'You hold 100%. You grant 15% to an investor. You now hold 85%. You haven\'t "lost" value if the valuation increased, but you own a smaller slice of a larger pie.',
-    tipType: 'warn',
-    tip: 'Anti-dilution protection for investors compensates them in a down round by issuing more equity -- diluting YOU further.',
+    title: 'Advisor Equity %',
+    desc: 'Stakes allocated to strategic mentors or advisors who provide specialized expertise or industry access. Typically ranges from 0.1% to 1.0% per advisor, depending on their involvement.',
+    example: 'You bring on a seasoned SaaS advisor and grant them 0.5% over a 2-year vesting period. This is deducted from Sasitharan\'s primary 100% stake.',
+    tipType: 'good',
+    tip: 'Never grant advisor equity without a vesting schedule. A 2-year schedule with a 6-month cliff is standard.',
     color: '#1d4ed8'
   },
   {
     tag: 'equity',
     label: 'Equity',
-    title: 'ESOP Pool',
-    desc: 'A pool of equity reserved for future hires. Investors typically require this pool be created BEFORE they invest, which dilutes only the founders.',
-    example: 'Creating a 10% pool pre-investment dilutes a 100% founder to 90% before the investor even puts in a rupee.',
+    title: 'Co-Founder Equity %',
+    desc: 'The ownership stake held by other active co-founders. In this model, Sasitharan starts at 100%, and co-founder stakes are subtracted to determine the remaining primary ownership.',
+    example: 'If Sasitharan brings in a Tech Co-Founder for 30%, the primary stake drops to 70%.',
     tipType: 'warn',
-    tip: 'A 10-15% pool is standard for seed-stage companies to attract high-quality talent.',
+    tip: 'Ensure all co-founders (including yourself) are on a standard 4-year vesting schedule with a 1-year cliff.',
     color: '#1d4ed8'
   },
 
-  // SECTION 2: UNIT ECONOMICS (LTV & CAC)
+  // SECTION 2: UNIT ECONOMICS
   {
     tag: 'valuation',
     label: 'Valuation',
     title: 'LTV (Lifetime Value)',
-    desc: 'The total PROFIT expected from a customer over their entire relationship with your company. Formula: Profit per Order × Number of Orders.',
-    example: 'You make Rs. 500 profit on every order. A customer orders 10 times. LTV = Rs. 5,000.',
+    desc: 'The total PROFIT expected from a customer over their entire relationship. Calculated as (Profit per Order × Number of Orders). This is a survival metric.',
+    example: 'You make ₹500 profit on every order. A customer orders 10 times. LTV = ₹5,000.',
     tipType: 'good',
-    tip: 'Always use Profit-based LTV (Contribution Margin), not Revenue. Revenue-based LTV hides high operational costs.',
+    tip: 'Always use Profit-based LTV (Contribution Margin), not Revenue. Revenue-based LTV hides high delivery costs.',
     color: '#92400e'
   },
   {
     tag: 'valuation',
     label: 'Valuation',
-    title: 'CAC (Customer Acquisition Cost)',
-    desc: 'The total sales and marketing cost required to acquire one new customer.',
-    example: 'You spend Rs. 50,000 on ads and get 100 customers. CAC = Rs. 500.',
+    title: 'CAC (Acquisition Cost)',
+    desc: 'Customer Acquisition Cost: The total Sales + Marketing spend required to acquire one new customer.',
+    example: 'You spend ₹50,000 on ads and get 100 customers. CAC = ₹500.',
     tipType: 'warn',
-    tip: 'If your CAC is higher than your profit per first order, you need high retention (repeat orders) to stay alive.',
+    tip: 'If your CAC is higher than your profit per first order, you need high retention to stay alive.',
     color: '#92400e'
   },
   {
     tag: 'valuation',
     label: 'Valuation',
     title: 'LTV:CAC Ratio',
-    desc: 'A metric used to determine the efficiency of your marketing spend. Target is typically 3x or higher.',
-    example: 'LTV of Rs. 3,000 / CAC of Rs. 1,000 = 3x. For every Rs. 1 spent, you make Rs. 3 in profit.',
+    desc: 'A metric used to determine marketing efficiency. A ratio of 3x or higher is considered healthy for a scaling startup.',
+    example: 'LTV ₹3,000 / CAC ₹1,000 = 3x. For every ₹1 spent, you make ₹3 in profit.',
     tipType: 'good',
-    tip: 'A ratio below 3x indicates you are spending too much to acquire customers relative to the profit they generate.',
+    tip: 'A ratio below 3x indicates your acquisition is too expensive for the profit generated.',
     color: '#92400e'
   },
 
@@ -86,10 +86,10 @@ export const GLOSSARY_ITEMS = [
     tag: 'valuation',
     label: 'Valuation',
     title: 'Monthly Burn Rate',
-    desc: 'The net amount of money your startup loses each month (Expenses - Revenue).',
-    example: 'Spend Rs. 2.5L, Earn Rs. 1L. Burn = Rs. 1.5L/month.',
+    desc: 'The net amount of money your startup loses each month (Expenses - Revenue). Used to calculate "Runway".',
+    example: 'Expenses: ₹2.5L, Revenue: ₹1L. Net Burn = ₹1.5L/month.',
     tipType: 'warn',
-    tip: 'Monitor this closely. If your burn increases without a proportional increase in growth, you are heading for a "Cash Zero" date.',
+    tip: 'If your burn increases without a proportional increase in growth, you are heading for a "Cash Zero" date.',
     color: '#92400e'
   },
 
@@ -97,11 +97,21 @@ export const GLOSSARY_ITEMS = [
   {
     tag: 'termsheet',
     label: 'Term Sheet',
-    title: 'Liquidation Preference',
-    desc: 'Determines who gets paid first in an exit. A 1x multiple means investors get their capital back before anyone else.',
-    example: 'In a Rs. 5 Cr exit, an investor with a 1x pref on Rs. 2 Cr takes Rs. 2 Cr first. The remaining Rs. 3 Cr is split by equity %.',
+    title: 'Preference Multiple',
+    desc: 'Determines how many times their capital an investor gets back before anyone else. 1x is standard; 2x means they get double their investment back first.',
+    example: 'In a ₹5 Cr exit, an investor with 1x pref on ₹2 Cr takes ₹2 Cr first. The rest is split by equity %.',
     tipType: 'warn',
-    tip: 'Always push for "Non-Participating" preference. "Participating" allows investors to take their capital AND their % share, which is often called "double-dipping".',
+    tip: '2x or 3x multiples are "dark patterns" and can wipe out common shareholders in small exits.',
+    color: '#b91c1c'
+  },
+  {
+    tag: 'termsheet',
+    label: 'Term Sheet',
+    title: 'Liquidation Type',
+    desc: 'Determines if an investor "double dips". Non-Participating means they choose between their capital OR their % share. Participating means they get BOTH.',
+    example: 'Participating preferred allows an investor to take their ₹1 Cr back AND their 20% share of the remainder. This is highly aggressive.',
+    tipType: 'warn',
+    tip: 'Always push for "Non-Participating" preference. It is the global standard for founder-friendly deals.',
     color: '#b91c1c'
   }
 ];
