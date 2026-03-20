@@ -11,6 +11,8 @@ import { useUser, useAuth, initiateSignOut } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { QuickCalculator } from '@/components/calculator/QuickCalculator';
 import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
+import { FeatureBrochure } from '@/components/FeatureBrochure';
+
 
 export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('calc');
@@ -65,10 +67,11 @@ export default function FounderOSPage() {
               </TabsList>
             </Tabs>
           ) : (
-            <div className="hidden md:flex items-center gap-8">
-              <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Product</Button>
-              <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Pricing</Button>
-              <Button variant="ghost" className="text-sm font-semibold hover:text-primary transition-colors">Contact</Button>
+            <div className="hidden lg:flex items-center gap-4 animate-in fade-in">
+              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('valuation')?.scrollIntoView({ behavior: 'smooth' })}>Valuation Engine</Button>
+              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('equity')?.scrollIntoView({ behavior: 'smooth' })}>Equity Tracker</Button>
+              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('term-sheet')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet AI</Button>
+              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('glossary')?.scrollIntoView({ behavior: 'smooth' })}>Founder's Glossary</Button>
             </div>
           )}
         </div>
@@ -100,7 +103,7 @@ export default function FounderOSPage() {
 
       <main className="flex-1 w-full">
         {!isAuthenticated ? (
-          <div className="max-w-6xl mx-auto px-6 py-20 md:py-32 space-y-24">
+          <div className="max-w-6xl mx-auto px-6 pt-12 pb-20 md:pt-16 md:pb-32 space-y-32">
             <div className="text-center space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-sm font-bold tracking-tight mx-auto">
                 <Sparkles className="w-4 h-4" />
@@ -120,35 +123,12 @@ export default function FounderOSPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="p-8 rounded-3xl border bg-white/50 backdrop-blur-sm shadow-sm space-y-5 text-left transition-all hover:shadow-md hover:-translate-y-1">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Calculator className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-bold text-xl tracking-tight">VC-Grade Valuation</h3>
-                  <p className="text-muted-foreground leading-relaxed">Calculate pre-money and post-money valuations using standard VC methods and revenue multiples.</p>
-                </div>
-              </div>
-              <div className="p-8 rounded-3xl border bg-white/50 backdrop-blur-sm shadow-sm space-y-5 text-left transition-all hover:shadow-md hover:-translate-y-1">
-                <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center text-accent-foreground">
-                  <ShieldCheck className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-bold text-xl tracking-tight">Authority Health Checks</h3>
-                  <p className="text-muted-foreground leading-relaxed">Monitor founder control, investor preference, and ESOP pool health automatically with real-time alerts.</p>
-                </div>
-              </div>
-              <div className="p-8 rounded-3xl border bg-white/50 backdrop-blur-sm shadow-sm space-y-5 text-left transition-all hover:shadow-md hover:-translate-y-1">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Sparkles className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-bold text-xl tracking-tight">AI Strategic Advisor</h3>
-                  <p className="text-muted-foreground leading-relaxed">Get personalized recommendations based on your unique cap table and unit economics.</p>
-                </div>
-              </div>
+            <div className="space-y-4 text-center mt-12 mb-8">
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight">The Ultimate Startup OS</h2>
+              <p className="text-xl text-muted-foreground font-medium">Four professional tools integrated into a single unified platform.</p>
             </div>
+
+            <FeatureBrochure />
           </div>
         ) : (
           <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-700">
