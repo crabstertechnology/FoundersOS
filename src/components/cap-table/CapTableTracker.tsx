@@ -154,45 +154,67 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
     <div className="space-y-8">
       {/* Snapshot Layer */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-primary text-primary-foreground border-none shadow-xl">
-          <CardContent className="pt-6">
+        <Card className="bg-primary text-primary-foreground border-none shadow-xl flex flex-col justify-between">
+          <CardContent className="pt-6 flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
               <div className="text-[10px] uppercase font-bold tracking-widest opacity-80">Founder Stake (Sasitharan)</div>
               <ShieldCheck className="w-4 h-4 opacity-80" />
             </div>
             <div className="text-3xl font-black">{fmtPct(stats.founderPct)}</div>
-            <p className="text-[10px] mt-2 opacity-80">Remaining from 100%</p>
+            <div className="mt-4 text-[10px] font-code bg-black/10 p-2.5 rounded-lg flex flex-col gap-1.5 mt-auto">
+              <span className="font-bold uppercase tracking-widest text-[8px] opacity-70">100% - Total Dilution = Retained</span>
+              <span className="flex justify-between items-center text-[10px] font-black">
+                <span>100</span><span className="opacity-50">-</span><span>{fmtPct(stats.totalAllocatedToOthers)}</span><span className="opacity-50">=</span><span>{fmtPct(stats.founderPct)}</span>
+              </span>
+            </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border-2 border-primary/10 shadow-lg">
-          <CardContent className="pt-6">
+        
+        <Card className="bg-white border-2 border-primary/10 shadow-lg flex flex-col justify-between">
+          <CardContent className="pt-6 flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
-              <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Company Valuation</div>
+              <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Market Valuation</div>
               <TrendingUp className="w-4 h-4 text-green-500" />
             </div>
             <div className="text-3xl font-black text-primary">{fmtINR(stats.latestVal)}</div>
-            <p className="text-[10px] mt-2 text-muted-foreground">Market Estimate</p>
-            <p className="text-[9px] text-muted-foreground/60 font-mono mt-1">Formula: Investment ÷ Equity %</p>
+            <div className="mt-4 text-[9px] font-code text-muted-foreground bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col gap-1.5 mt-auto">
+              <span className="font-bold uppercase tracking-widest text-[8px] text-slate-400">Post-Money Anchor</span>
+              <span className="flex justify-center items-center text-[10px] font-black text-primary">
+                Determines Equity Prices
+              </span>
+            </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border-2 border-primary/10 shadow-lg">
-          <CardContent className="pt-6">
+        
+        <Card className="bg-white border-2 border-primary/10 shadow-lg flex flex-col justify-between">
+          <CardContent className="pt-6 flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
-              <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Allocated to Others</div>
+              <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Total Dilution Pool</div>
               <Percent className="w-4 h-4 text-primary" />
             </div>
             <div className="text-3xl font-black text-primary">{fmtPct(stats.totalAllocatedToOthers)}</div>
-            <p className="text-[10px] mt-2 text-muted-foreground">Deducted from Founder</p>
+            <div className="mt-4 text-[9px] font-code text-muted-foreground bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col gap-1.5 mt-auto">
+              <span className="font-bold uppercase tracking-widest text-[8px] text-slate-400">Sum(Investors, ESOP, Advice)</span>
+              <span className="flex justify-between items-center text-[10px] font-black text-primary">
+                <span>Total Diluted</span><span className="opacity-50">=</span><span>{fmtPct(stats.totalAllocatedToOthers)}</span>
+              </span>
+            </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border-2 border-primary/10 shadow-lg">
-          <CardContent className="pt-6">
+        
+        <Card className="bg-white border-2 border-primary/10 shadow-lg flex flex-col justify-between">
+          <CardContent className="pt-6 flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
               <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Investor Share</div>
               <Target className="w-4 h-4 text-red-500" />
             </div>
             <div className="text-3xl font-black text-primary">{fmtPct(stats.investorPct)}</div>
-            <p className="text-[10px] mt-2 text-muted-foreground">Capital Infusion Weight</p>
+            <div className="mt-4 text-[9px] font-code text-muted-foreground bg-red-50 p-2.5 rounded-lg border border-red-100 flex flex-col gap-1.5 mt-auto text-red-800">
+              <span className="font-bold uppercase tracking-widest text-[8px]">External Capital Stake</span>
+              <span className="flex justify-between items-center text-[10px] font-black">
+                <span>Total External</span><span className="opacity-50">=</span><span>{fmtPct(stats.investorPct)}</span>
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>

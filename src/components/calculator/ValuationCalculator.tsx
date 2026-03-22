@@ -273,33 +273,64 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
 
       <div className="lg:col-span-2 space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Founder Stake</div>
-            <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
-              {fmtPct(results.founderEq)}
+          <Card className="p-4 border shadow-sm bg-white flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Founder Stake</div>
+              <div className={`text-xl font-code font-bold ${results.founderEq < 25 ? 'text-destructive' : 'text-primary'}`}>
+                {fmtPct(results.founderEq)}
+              </div>
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Simulated Stake</div>
+            <div className="mt-3 text-[9px] font-code text-muted-foreground bg-slate-50 p-2 rounded border border-slate-100 flex flex-col gap-1.5">
+              <span className="font-bold uppercase tracking-widest text-[8px] text-slate-400">100% - Dilution = Stake</span>
+              <span className="flex justify-between items-center text-[10px] font-black">
+                <span>100</span><span className="opacity-50">-</span><span>{100 - results.founderEq}</span><span className="opacity-50">=</span><span className="text-primary">{results.founderEq}%</span>
+              </span>
+            </div>
           </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
-            <div className={`text-xl font-code font-bold ${results.runway > 0 && results.runway < 6 ? 'text-destructive' : 'text-primary'}`}>
-              {results.runway === 999 ? '∞' : Math.round(results.runway)} mo
+          
+          <Card className="p-4 border shadow-sm bg-white flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Runway</div>
+              <div className={`text-xl font-code font-bold ${results.runway > 0 && results.runway < 6 ? 'text-destructive' : 'text-primary'}`}>
+                {results.runway === 999 ? '∞' : Math.round(results.runway)} mo
+              </div>
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Until cash zero</div>
+            <div className="mt-3 text-[9px] font-code text-muted-foreground bg-slate-50 p-2 rounded border border-slate-100 flex flex-col gap-1.5">
+              <span className="font-bold uppercase tracking-widest text-[8px] text-slate-400">Bank ÷ Burn = Mo</span>
+              <span className="flex justify-between items-center text-[10px] font-black">
+                <span>{fmtINR(formData.cashBank)}</span><span className="opacity-50">÷</span><span>{fmtINR(formData.burnRate)}</span><span className="opacity-50">=</span><span className="text-primary">{results.runway === 999 ? '∞' : Math.round(results.runway)}</span>
+              </span>
+            </div>
           </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
-            <div className="text-xl font-code font-bold text-primary">
-              {fmtINR(results.arr)}
+
+          <Card className="p-4 border shadow-sm bg-white flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">ARR</div>
+              <div className="text-xl font-code font-bold text-primary">
+                {fmtINR(results.arr)}
+              </div>
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Annual Run Rate</div>
+            <div className="mt-3 text-[9px] font-code text-muted-foreground bg-slate-50 p-2 rounded border border-slate-100 flex flex-col gap-1.5">
+              <span className="font-bold uppercase tracking-widest text-[8px] text-slate-400">MRR × 12 = ARR</span>
+              <span className="flex justify-between items-center text-[10px] font-black">
+                <span>{fmtINR(formData.mRevenue)}</span><span className="opacity-50">×</span><span>12</span><span className="opacity-50">=</span><span className="text-primary">{fmtINR(results.arr)}</span>
+              </span>
+            </div>
           </Card>
-          <Card className="p-4 border shadow-sm bg-white">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Burn Rate</div>
-            <div className="text-xl font-code font-bold text-destructive">
-              {fmtINR(formData.burnRate)}
+
+          <Card className="p-4 border shadow-sm bg-white flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Burn Rate</div>
+              <div className="text-xl font-code font-bold text-destructive">
+                {fmtINR(formData.burnRate)}
+              </div>
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">Net Monthly spend</div>
+            <div className="mt-3 text-[9px] font-code text-muted-foreground bg-red-50 p-2 rounded border border-red-100 flex flex-col gap-1.5">
+              <span className="font-bold uppercase tracking-widest text-[8px] text-red-500/70">Monthly Cash Outflow</span>
+              <span className="flex justify-center items-center text-xs font-black text-red-700">
+                {fmtINR(formData.burnRate)}
+              </span>
+            </div>
           </Card>
         </div>
 
@@ -311,41 +342,61 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="p-4 bg-white rounded-xl border shadow-sm space-y-1">
-                <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                  LTV <Info className="w-3 h-3 opacity-50" />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="p-4 bg-white rounded-xl border shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    LTV <Info className="w-3 h-3 opacity-50" />
+                  </div>
+                  <div className="text-xl font-code font-bold text-primary">{fmtINR(results.ltv)}</div>
                 </div>
-                <div className="text-xl font-code font-bold text-primary">{fmtINR(results.ltv)}</div>
-                <div className="text-[9px] text-muted-foreground leading-tight">Lifetime Value</div>
-              </div>
-              
-              <div className="p-4 bg-white rounded-xl border shadow-sm space-y-1">
-                <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                  CAC <Info className="w-3 h-3 opacity-50" />
+                <div className="mt-3 text-[9px] font-code text-muted-foreground bg-slate-50 p-2 rounded border border-slate-100 flex flex-col gap-1.5">
+                  <span className="font-bold uppercase tracking-widest text-[8px] text-slate-400">Profit/Ord × Orders = LTV</span>
+                  <span className="flex justify-between items-center text-[10px] font-black">
+                    <span>{fmtINR(formData.profitPerOrder)}</span><span className="opacity-50">×</span><span>{formData.ordersPerCustomer}</span><span className="opacity-50">=</span><span className="text-primary">{fmtINR(results.ltv)}</span>
+                  </span>
                 </div>
-                <div className="text-xl font-code font-bold text-primary">{fmtINR(formData.cac)}</div>
-                <div className="text-[9px] text-muted-foreground leading-tight">Acquisition Cost</div>
               </div>
 
-              <div className={`p-4 rounded-xl border shadow-sm space-y-1 ${results.ltvCac >= 3 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-                <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                  LTV / CAC <Target className="w-3 h-3 opacity-50" />
+              <div className={`p-4 rounded-xl border shadow-sm flex flex-col justify-between ${results.ltvCac >= 3 ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    LTV / CAC Ratio <Target className="w-3 h-3 opacity-50" />
+                  </div>
+                  <div className={`text-xl font-code font-bold ${results.ltvCac >= 3 ? 'text-green-700' : 'text-amber-700'}`}>{fmtMult(results.ltvCac)}</div>
                 </div>
-                <div className={`text-xl font-code font-bold ${results.ltvCac >= 3 ? 'text-green-700' : 'text-amber-700'}`}>{fmtMult(results.ltvCac)}</div>
-                <div className="text-[9px] text-muted-foreground leading-tight">Efficiency (Target {'>'}3x)</div>
+                <div className={`mt-3 text-[9px] font-code p-2 rounded border flex flex-col gap-1.5 ${results.ltvCac >= 3 ? 'bg-green-100/50 border-green-200 text-green-800' : 'bg-amber-100/50 border-amber-200 text-amber-800'}`}>
+                  <span className="font-bold uppercase tracking-widest text-[8px] opacity-70">LTV ÷ CAC = Efficiency</span>
+                  <span className="flex justify-between items-center text-[10px] font-black">
+                    <span>{fmtINR(results.ltv)}</span><span className="opacity-50">÷</span><span>{fmtINR(formData.cac)}</span><span className="opacity-50">=</span><span>{fmtMult(results.ltvCac)}</span>
+                  </span>
+                </div>
               </div>
 
-              <div className={`p-4 rounded-xl border shadow-sm space-y-1 ${results.profitPerCustomer > 0 ? 'bg-white' : 'bg-red-50 border-red-200'}`}>
-                <div className="text-[10px] uppercase font-bold text-muted-foreground">Profit / Customer</div>
-                <div className={`text-xl font-code font-bold ${results.profitPerCustomer > 0 ? 'text-primary' : 'text-destructive'}`}>{fmtINR(results.profitPerCustomer)}</div>
-                <div className="text-[9px] text-muted-foreground leading-tight">LTV - CAC</div>
+              <div className={`p-4 rounded-xl border shadow-sm flex flex-col justify-between ${results.profitPerCustomer > 0 ? 'bg-white' : 'bg-red-50 border-red-200'}`}>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground">Net Profit / Customer</div>
+                  <div className={`text-xl font-code font-bold ${results.profitPerCustomer > 0 ? 'text-primary' : 'text-destructive'}`}>{fmtINR(results.profitPerCustomer)}</div>
+                </div>
+                <div className={`mt-3 text-[9px] font-code p-2 rounded border flex flex-col gap-1.5 ${results.profitPerCustomer > 0 ? 'bg-slate-50 border-slate-100 text-muted-foreground' : 'bg-red-100/50 border-red-200 text-red-800'}`}>
+                  <span className="font-bold uppercase tracking-widest text-[8px] opacity-70">LTV - CAC = Profit</span>
+                  <span className="flex justify-between items-center text-[10px] font-black">
+                    <span>{fmtINR(results.ltv)}</span><span className="opacity-50">-</span><span>{fmtINR(formData.cac)}</span><span className="opacity-50">=</span><span>{fmtINR(results.profitPerCustomer)}</span>
+                  </span>
+                </div>
               </div>
 
-              <div className="p-4 bg-slate-900 text-white rounded-xl border shadow-sm space-y-1">
-                <div className="text-[10px] uppercase font-bold text-slate-400">Break-even CAC</div>
-                <div className="text-xl font-code font-bold text-accent">{fmtINR(results.breakEvenCac)}</div>
-                <div className="text-[9px] text-slate-400 leading-tight">Max spend allowed</div>
+              <div className="p-4 bg-slate-900 text-white rounded-xl border shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400">Break-even CAC</div>
+                  <div className="text-xl font-code font-bold text-accent">{fmtINR(results.breakEvenCac)}</div>
+                </div>
+                <div className="mt-3 text-[9px] font-code bg-slate-800 p-2 rounded border border-slate-700 flex flex-col gap-1.5 text-slate-300">
+                  <span className="font-bold uppercase tracking-widest text-[8px] text-slate-500">Based on LTV Equilibrium</span>
+                  <span className="flex justify-center items-center text-xs font-black text-accent">
+                    CAC ≤ {fmtINR(results.breakEvenCac)}
+                  </span>
+                </div>
               </div>
             </div>
             
@@ -366,18 +417,39 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-primary text-primary-foreground shadow-xl">
+          <Card className="bg-primary text-primary-foreground shadow-xl flex flex-col justify-between">
             <CardHeader className="pb-2">
               <CardTitle className="text-xs uppercase tracking-widest opacity-80 flex items-center gap-2">
-                <Zap className="w-3 h-3" />
-                Implied Pre-Money Valuation
+                <Zap className="w-4 h-4" />
+                Implied Valuation Math
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-code font-bold">{fmtINR(results.preMoney)}</div>
-              <p className="text-xs mt-2 opacity-80 font-mono">
-                Formula: Post-Money - Investment
-              </p>
+              <div className="space-y-6">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest opacity-70 mb-1 font-bold">Post-Money Result</div>
+                  <div className="text-4xl font-code font-black leading-none">{fmtINR(results.postMoney)}</div>
+                  
+                  <div className="mt-3 text-[10px] font-code bg-black/10 p-3 rounded-lg flex flex-col gap-2">
+                    <span className="font-bold uppercase tracking-widest text-[9px] opacity-70">Inv ÷ Eq% = Post-Money</span>
+                    <span className="flex justify-between items-center text-xs font-black">
+                      <span>{fmtINR(formData.investment)}</span><span className="opacity-50">÷</span><span>{formData.equityOffered}%</span><span className="opacity-50">=</span><span>{fmtINR(results.postMoney)}</span>
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-white/20">
+                  <div className="text-[10px] uppercase tracking-widest opacity-70 mb-1 font-bold">Pre-Money Result</div>
+                  <div className="text-3xl font-code font-black text-white/90 leading-none">{fmtINR(results.preMoney)}</div>
+                  
+                  <div className="mt-3 text-[10px] font-code bg-black/10 p-3 rounded-lg flex flex-col gap-2">
+                    <span className="font-bold uppercase tracking-widest text-[9px] opacity-70">Post - Inv = Pre-Money</span>
+                    <span className="flex justify-between items-center text-xs font-black">
+                      <span>{fmtINR(results.postMoney)}</span><span className="opacity-50">-</span><span>{fmtINR(formData.investment)}</span><span className="opacity-50">=</span><span>{fmtINR(results.preMoney)}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

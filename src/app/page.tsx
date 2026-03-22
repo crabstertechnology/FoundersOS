@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight, Gavel, PieChart } from 'lucide-react';
+import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight, Gavel, PieChart, Home } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
@@ -13,10 +13,11 @@ import { QuickCalculator } from '@/components/calculator/QuickCalculator';
 import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
 import { FeatureBrochure } from '@/components/FeatureBrochure';
 import { ExitSimulator } from '@/components/calculator/ExitSimulator';
+import { CentralDashboard } from '@/components/dashboard/CentralDashboard';
 
 
 export default function FounderOSPage() {
-  const [activeTab, setActiveTab] = useState('calc');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
@@ -49,6 +50,10 @@ export default function FounderOSPage() {
           {isAuthenticated ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mx-auto">
               <TabsList className="bg-transparent border-none gap-1">
+                <TabsTrigger value="dashboard" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
+                  <Home className="w-4 h-4" />
+                  <span className="hidden sm:inline">Home</span>
+                </TabsTrigger>
                 <TabsTrigger value="calc" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <Calculator className="w-4 h-4" />
                   <span className="hidden sm:inline">Calculator</span>
@@ -139,6 +144,9 @@ export default function FounderOSPage() {
         ) : (
           <div className="w-full">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none">
+                <CentralDashboard userId={userId!} companyProfileId={companyProfileId} onNavigate={setActiveTab} />
+              </TabsContent>
               <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
                 <div className="mb-12 text-center space-y-4">
                   <h1 className="text-4xl md:text-6xl font-black tracking-tight">
