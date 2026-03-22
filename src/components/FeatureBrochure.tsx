@@ -231,6 +231,79 @@ export function FeatureBrochure() {
         </div>
       </section>
 
+      {/* 2.5. Exit Simulator */}
+      <section id="exit-sim" className="scroll-mt-32 flex flex-col xl:flex-row items-center gap-12 lg:gap-20">
+        <div className="flex-1 space-y-8 w-full">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold tracking-tight">
+            <PieIcon className="w-4 h-4" /> Exit Waterfall
+          </div>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1]">See exactly who gets what.</h2>
+          <p className="text-xl text-muted-foreground leading-relaxed font-medium max-w-2xl">
+            Simulate an acquisition or IPO event in real-time. Simply type in a gross exit value and see exactly how cash is distributed across your cap table, factoring in every complex liquidation preference.
+          </p>
+          <ul className="space-y-4 pt-2">
+            {[
+              '1x and 2x Participating Preferences', 
+              'Visual Cash Payout Distributions', 
+              'Founder Dilution Warnings at low exits'
+            ].map((f, i) => (
+              <li key={i} className="flex items-center gap-4 text-base font-bold text-foreground/80">
+                <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" /> {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        <div className="flex-1 w-full max-w-3xl relative pointer-events-none select-none hover:scale-[1.02] transition-transform duration-500">
+          <Card className="border-2 shadow-xl overflow-hidden border-emerald-500/10 bg-white">
+            <CardHeader className="bg-emerald-500/5 pb-4">
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <PieIcon className="w-5 h-5 text-emerald-600" /> Payout Distribution (₹50 Cr Exit)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border bg-white shadow-sm">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="font-bold text-base">Founders</div>
+                      <div className="text-[9px] text-muted-foreground uppercase font-bold text-nowrap">Converted to Common</div>
+                    </div>
+                    <Badge className="bg-primary">Founder</Badge>
+                  </div>
+                  <div className="mt-4">
+                    <div className="text-2xl font-black font-code text-foreground">₹20.4Cr</div>
+                    <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1">40.8% Realized</div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border bg-white shadow-sm">
+                   <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="font-bold text-base">Series A VC</div>
+                      <div className="text-[9px] text-muted-foreground uppercase font-bold text-nowrap">Pref + Participating</div>
+                    </div>
+                    <Badge className="bg-muted-foreground text-white">Investor</Badge>
+                  </div>
+                  <div className="mt-4">
+                    <div className="text-2xl font-black font-code text-foreground">₹22.5Cr</div>
+                    <div className="text-[10px] uppercase font-bold text-muted-foreground mt-1 text-green-600">45.0% Realized</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex flex-start gap-3 p-3 bg-red-50/50 text-red-900 border border-red-200 rounded-xl flex-col sm:flex-row">
+                <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-sm mb-1 text-red-700">Founder Dilution Alert</h4>
+                  <p className="text-[11px] leading-relaxed font-medium">Because of investor liquidation preferences, the founder is taking home a significantly smaller percentage of the exit than their "Paper %" suggests.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* 3. Term Sheet Assistant */}
       <section id="term-sheet" className="scroll-mt-32 flex flex-col xl:flex-row items-center gap-12 lg:gap-20">
         <div className="flex-1 space-y-8 w-full">

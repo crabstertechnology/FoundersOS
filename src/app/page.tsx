@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight, Gavel } from 'lucide-react';
+import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight, Gavel, PieChart } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { QuickCalculator } from '@/components/calculator/QuickCalculator';
 import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
 import { FeatureBrochure } from '@/components/FeatureBrochure';
+import { ExitSimulator } from '@/components/calculator/ExitSimulator';
 
 
 export default function FounderOSPage() {
@@ -38,7 +39,7 @@ export default function FounderOSPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-border h-20 flex items-center px-6">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-border h-20 flex items-center px-6 print:hidden">
         <div className="flex items-center gap-3 shrink-0">
           <div className="bg-primary text-white font-headline font-black text-xl w-10 h-10 flex items-center justify-center rounded-lg shadow-sm">F</div>
           <span className="font-headline font-extrabold text-2xl tracking-tighter hidden md:inline">FOUNDER<span className="text-primary">OS</span></span>
@@ -60,6 +61,10 @@ export default function FounderOSPage() {
                   <Gavel className="w-4 h-4" />
                   <span className="hidden sm:inline">Negotiate</span>
                 </TabsTrigger>
+                <TabsTrigger value="exit" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
+                  <PieChart className="w-4 h-4" />
+                  <span className="hidden sm:inline">Exit Sim</span>
+                </TabsTrigger>
                 <TabsTrigger value="glossary" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <BookOpen className="w-4 h-4" />
                   <span className="hidden sm:inline">Glossary</span>
@@ -70,6 +75,7 @@ export default function FounderOSPage() {
             <div className="hidden lg:flex items-center gap-4 animate-in fade-in">
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('valuation')?.scrollIntoView({ behavior: 'smooth' })}>Valuation Engine</Button>
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('equity')?.scrollIntoView({ behavior: 'smooth' })}>Equity Tracker</Button>
+              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('exit-sim')?.scrollIntoView({ behavior: 'smooth' })}>Exit Sim</Button>
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('term-sheet')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet AI</Button>
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('glossary')?.scrollIntoView({ behavior: 'smooth' })}>Founder's Glossary</Button>
             </div>
@@ -101,7 +107,7 @@ export default function FounderOSPage() {
         </div>
       </header>
 
-      <main className="flex-1 w-full">
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-700 print:hidden">
         {!isAuthenticated ? (
           <div className="max-w-6xl mx-auto px-6 pt-12 pb-20 md:pt-16 md:pb-32 space-y-32">
             <div className="text-center space-y-8 animate-in fade-in slide-in-from-top-4 duration-1000">
@@ -131,7 +137,7 @@ export default function FounderOSPage() {
             <FeatureBrochure />
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-700">
+          <div className="w-full">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
                 <div className="mb-12 text-center space-y-4">
@@ -155,6 +161,18 @@ export default function FounderOSPage() {
                   </p>
                 </div>
                 <CapTableTracker userId={userId!} companyProfileId={companyProfileId} />
+              </TabsContent>
+
+              <TabsContent value="exit" className="mt-0 focus-visible:outline-none">
+                <div className="mb-12 text-center space-y-4">
+                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
+                    Exit <span className="text-primary">Waterfall</span> Simulator
+                  </h1>
+                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
+                    See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
+                  </p>
+                </div>
+                <ExitSimulator userId={userId!} companyProfileId={companyProfileId} />
               </TabsContent>
 
               <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none">
@@ -185,7 +203,7 @@ export default function FounderOSPage() {
         )}
       </main>
 
-      <footer className="py-16 border-t mt-20 text-center text-sm text-muted-foreground bg-muted/30">
+      <footer className="py-16 border-t mt-20 text-center text-sm text-muted-foreground bg-muted/30 print:hidden">
         <div className="font-code tracking-widest uppercase font-bold">FOUNDEROS · Built for Indian Startup Founders · Tamil Nadu Edition</div>
       </footer>
     </div>

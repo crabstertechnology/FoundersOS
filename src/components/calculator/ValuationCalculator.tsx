@@ -23,6 +23,7 @@ interface ValuationCalculatorProps {
 }
 
 const DEFAULT_FORM_DATA = {
+  overridePostMoney: null as number | null,
   companyName: '',
   stage: 'idea',
   industry: 'saas',
@@ -95,12 +96,17 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
 
     const investment = newData.investment || 0;
     const equityOffered = newData.equityOffered || 0;
-    const postMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
+    // Prefer explicit override, otherwise calculate it
+    const calculatedPostMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
+    const finalPostMoney = newData.overridePostMoney !== null && newData.overridePostMoney !== undefined
+      ? newData.overridePostMoney 
+      : calculatedPostMoney;
 
     if (profileRef) {
       setDocumentNonBlocking(profileRef, {
         ...newData,
-        latestValuation: postMoney,
+        latestValuation: finalPostMoney,
+        postMoneyValuation: finalPostMoney, // Ensure saved under exact parameter
         id: companyProfileId,
         updatedAt: serverTimestamp(),
       }, { merge: true });
@@ -110,10 +116,11 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
   const results = useMemo(() => {
     const { 
       investment, equityOffered, mRevenue, burnRate, cashBank, cac, 
-      profitPerOrder, ordersPerCustomer, esopPool, advisorEquity, coFounderEq 
+      profitPerOrder, ordersPerCustomer, esopPool, advisorEquity, coFounderEq, overridePostMoney 
     } = formData;
     
-    const postMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
+    const calculatedPostMoney = equityOffered > 0 ? (investment / (equityOffered / 100)) : 0;
+    const postMoney = overridePostMoney !== null && overridePostMoney !== undefined ? overridePostMoney : calculatedPostMoney;
     const preMoney = Math.max(0, postMoney - investment);
     const arr = mRevenue * 12;
     const runway = burnRate > 0 ? cashBank / burnRate : (cashBank > 0 ? 999 : 0);
@@ -424,6 +431,20 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                     onChange={e => handleChange('equityOffered', Number(e.target.value))}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <LabelWithInfo label="Explicit Post-Money Valuation (Optional)" info="Overrides Implied Math. Forces this specific exit value directly into the Exit Simulator." />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-7 h-12 text-lg font-bold border-primary/20 bg-primary/5 focus-visible:ring-primary"
+                    placeholder="Leave blank to use math above..."
+                    value={formData.overridePostMoney !== null && formData.overridePostMoney !== undefined ? formData.overridePostMoney : ''} 
+                    onChange={e => handleChange('overridePostMoney', e.target.value === '' ? null : Number(e.target.value))}
+                  />
                 </div>
               </div>
 
