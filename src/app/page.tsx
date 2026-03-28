@@ -11,6 +11,7 @@ import { useUser, useAuth, initiateSignOut } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { QuickCalculator } from '@/components/calculator/QuickCalculator';
 import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
+import { TermSheetAnalyzer } from '@/components/negotiation/TermSheetAnalyzer';
 import { FeatureBrochure } from '@/components/FeatureBrochure';
 import { ExitSimulator } from '@/components/calculator/ExitSimulator';
 import { CentralDashboard } from '@/components/dashboard/CentralDashboard';
@@ -66,6 +67,10 @@ export default function FounderOSPage() {
                   <Gavel className="w-4 h-4" />
                   <span className="hidden sm:inline">Negotiate</span>
                 </TabsTrigger>
+                <TabsTrigger value="qa" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="hidden sm:inline">Q&A</span>
+                </TabsTrigger>
                 <TabsTrigger value="exit" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <PieChart className="w-4 h-4" />
                   <span className="hidden sm:inline">Exit Sim</span>
@@ -82,6 +87,7 @@ export default function FounderOSPage() {
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('equity')?.scrollIntoView({ behavior: 'smooth' })}>Equity Tracker</Button>
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('exit-sim')?.scrollIntoView({ behavior: 'smooth' })}>Exit Sim</Button>
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('term-sheet')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet AI</Button>
+              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('qa-analyser')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet Q&A</Button>
               <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('glossary')?.scrollIntoView({ behavior: 'smooth' })}>Founder's Glossary</Button>
             </div>
           )}
@@ -193,6 +199,18 @@ export default function FounderOSPage() {
                   </p>
                 </div>
                 <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} />
+              </TabsContent>
+
+              <TabsContent value="qa" className="mt-0 focus-visible:outline-none">
+                <div className="mb-12 text-center space-y-4">
+                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
+                    Term Sheet <span className="text-primary">Q&A</span>
+                  </h1>
+                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
+                    Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
+                  </p>
+                </div>
+                <TermSheetAnalyzer userId={userId!} companyProfileId={companyProfileId} />
               </TabsContent>
 
               <TabsContent value="glossary" className="mt-0 focus-visible:outline-none">

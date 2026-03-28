@@ -397,9 +397,74 @@ export function FeatureBrochure() {
         </div>
       </section>
 
-      {/* 4. Glossary */}
-      <section id="glossary" className="scroll-mt-32 flex flex-col xl:flex-row-reverse items-center gap-12 lg:gap-20">
+      {/* 4. Term Sheet Q&A Analyser */}
+      <section id="qa-analyser" className="scroll-mt-32 flex flex-col xl:flex-row-reverse items-center gap-12 lg:gap-20">
         <div className="flex-1 space-y-8 w-full flex flex-col items-start xl:items-end xl:text-right">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pink-500/10 text-pink-600 text-sm font-bold tracking-tight">
+            <Search className="w-4 h-4" /> Term Sheet Q&A Analyser
+          </div>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1]">Demystify any startup clause.</h2>
+          <p className="text-xl text-muted-foreground leading-relaxed font-medium max-w-2xl">
+            Ask our AI anything about liquidation preferences, dilution, or board control. Get completely truthful, founder-friendly advice with tailored counter-arguments for your next negotiation.
+          </p>
+          <ul className="space-y-4 pt-2 w-full max-w-xl">
+            {[
+              'Context-aware answers based on your startup profile', 
+              'Identifies standard vs. non-standard Indian VC terms', 
+              'Smart follow-up questions to deepen your knowledge'
+            ].map((f, i) => (
+              <li key={i} className="flex items-center xl:flex-row-reverse gap-4 text-base font-bold text-foreground/80">
+                <CheckCircle2 className="w-6 h-6 text-pink-500 shrink-0" /> {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex-1 w-full max-w-3xl relative pointer-events-none select-none hover:scale-[1.02] transition-transform duration-500">
+          <Card className="border-2 border-primary/10 shadow-lg min-h-[400px] flex flex-col bg-white">
+            <CardHeader className="border-b bg-muted/20 pb-4">
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <Search className="w-5 h-5 text-primary" />
+                Term Sheet Q&A Analyser
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 p-6 space-y-6">
+              <div className="flex gap-4 justify-end">
+                <div className="flex flex-col gap-2 items-end">
+                  <div className="p-4 rounded-2xl text-sm leading-relaxed bg-primary text-primary-foreground rounded-tr-none shadow-md">
+                    What happens if I accept a 2x participating preference?
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-4 justify-start">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex flex-col gap-2 items-start max-w-[85%]">
+                  <div className="p-4 rounded-2xl text-sm leading-relaxed bg-muted/50 border shadow-sm rounded-tl-none">
+                    <p className="font-medium text-foreground">With a <strong>2x participating preference</strong>, the investor "double dips".</p>
+                    <p className="mt-2 text-muted-foreground">First, they get double their investment back unconditionally. Then, they take their pro-rata share of whatever cash is left over. This heavily dilutes founder returns in modest exits.</p>
+                  </div>
+                  <div className="flex flex-col gap-2 mt-2 w-full">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Suggested Follow-ups</span>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="text-xs h-8 rounded-full border-primary/20 bg-background pointer-events-none">
+                        How do I counter this?
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs h-8 rounded-full border-primary/20 bg-background pointer-events-none">
+                        What is a 1x non-participating?
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* 5. Glossary */}
+      <section id="glossary" className="scroll-mt-32 flex flex-col xl:flex-row items-center gap-12 lg:gap-20">
+        <div className="flex-1 space-y-8 w-full">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 text-sm font-bold tracking-tight">
             <BookA className="w-4 h-4" /> Founder's Glossary
           </div>
@@ -413,7 +478,7 @@ export function FeatureBrochure() {
               'Pre-loaded dark pattern warnings', 
               'AI Explainer answers specific edge cases'
             ].map((f, i) => (
-              <li key={i} className="flex items-center xl:flex-row-reverse gap-4 text-base font-bold text-foreground/80">
+              <li key={i} className="flex items-center gap-4 text-base font-bold text-foreground/80">
                 <CheckCircle2 className="w-6 h-6 text-amber-500 shrink-0" /> {f}
               </li>
             ))}
