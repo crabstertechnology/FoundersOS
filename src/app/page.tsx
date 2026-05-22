@@ -2,7 +2,10 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, ShieldCheck, ArrowRight, Gavel, PieChart, Home } from 'lucide-react';
+import { 
+  Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
+  ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity 
+} from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
@@ -15,10 +18,13 @@ import { TermSheetAnalyzer } from '@/components/negotiation/TermSheetAnalyzer';
 import { FeatureBrochure } from '@/components/FeatureBrochure';
 import { ExitSimulator } from '@/components/calculator/ExitSimulator';
 import { CentralDashboard } from '@/components/dashboard/CentralDashboard';
+import { SalesAnalytics } from '@/components/sales/SalesAnalytics';
+import { OperationsDashboard } from '@/components/operations/OperationsDashboard';
 
 
 export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [financeTab, setFinanceTab] = useState('calc');
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
 
@@ -39,6 +45,15 @@ export default function FounderOSPage() {
   const userId = user?.uid;
   const companyProfileId = 'primary-startup';
 
+  const handleNavigate = (tab: string) => {
+    if (['calc', 'tracker', 'exit', 'negotiate', 'qa', 'glossary'].includes(tab)) {
+      setActiveTab('finance');
+      setFinanceTab(tab);
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-border h-20 flex items-center px-6 print:hidden">
@@ -53,31 +68,19 @@ export default function FounderOSPage() {
               <TabsList className="bg-transparent border-none gap-1">
                 <TabsTrigger value="dashboard" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <Home className="w-4 h-4" />
-                  <span className="hidden sm:inline">Home</span>
+                  <span className="hidden sm:inline font-bold text-xs">Home</span>
                 </TabsTrigger>
-                <TabsTrigger value="calc" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
+                <TabsTrigger value="sales" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-650 data-[state=active]:text-indigo-700 gap-2 h-10 px-4 rounded-full transition-all">
+                  <TrendingUp className="w-4 h-4 text-indigo-600" />
+                  <span className="hidden sm:inline font-bold text-xs">Sales</span>
+                </TabsTrigger>
+                <TabsTrigger value="finance" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
                   <Calculator className="w-4 h-4" />
-                  <span className="hidden sm:inline">Calculator</span>
+                  <span className="hidden sm:inline font-bold text-xs font-headline">Finance</span>
                 </TabsTrigger>
-                <TabsTrigger value="tracker" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">Cap Table</span>
-                </TabsTrigger>
-                <TabsTrigger value="negotiate" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
-                  <Gavel className="w-4 h-4" />
-                  <span className="hidden sm:inline">Negotiate</span>
-                </TabsTrigger>
-                <TabsTrigger value="qa" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">Q&A</span>
-                </TabsTrigger>
-                <TabsTrigger value="exit" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
-                  <PieChart className="w-4 h-4" />
-                  <span className="hidden sm:inline">Exit Sim</span>
-                </TabsTrigger>
-                <TabsTrigger value="glossary" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary gap-2 h-10 px-4 rounded-full transition-all">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Glossary</span>
+                <TabsTrigger value="operations" className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 gap-2 h-10 px-4 rounded-full transition-all">
+                  <Activity className="w-4 h-4 text-teal-650 text-teal-650 text-teal-600" />
+                  <span className="hidden sm:inline font-bold text-xs">Operations</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -142,7 +145,7 @@ export default function FounderOSPage() {
 
             <div className="space-y-4 text-center mt-12 mb-8">
               <h2 className="text-4xl md:text-5xl font-black tracking-tight">The Ultimate Startup OS</h2>
-              <p className="text-xl text-muted-foreground font-medium">Four professional tools integrated into a single unified platform.</p>
+              <p className="text-xl text-muted-foreground font-medium">Complete Suite for Sales, Equity Finance, and Runway Operations.</p>
             </div>
 
             <FeatureBrochure />
@@ -150,80 +153,122 @@ export default function FounderOSPage() {
         ) : (
           <div className="w-full">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              
+              {/* Home Dashboard Tab */}
               <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none">
-                <CentralDashboard userId={userId!} companyProfileId={companyProfileId} onNavigate={setActiveTab} />
-              </TabsContent>
-              <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
-                <div className="mb-12 text-center space-y-4">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-                    Startup <span className="text-primary">Valuation</span> Calculator
-                  </h1>
-                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                    Model your funding rounds, track unit economics, and get AI-powered strategic advice instantly.
-                  </p>
-                </div>
-                <ValuationCalculator userId={userId!} companyProfileId={companyProfileId} />
+                <CentralDashboard userId={userId!} companyProfileId={companyProfileId} onNavigate={handleNavigate} />
               </TabsContent>
               
-              <TabsContent value="tracker" className="mt-0 focus-visible:outline-none">
-                <div className="mb-12 text-center space-y-4">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-                    Cap <span className="text-primary">Table</span> Tracker
-                  </h1>
-                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                    Track ownership percentages, share types, and board control health checks.
-                  </p>
-                </div>
-                <CapTableTracker userId={userId!} companyProfileId={companyProfileId} />
+              {/* Sales Tab */}
+              <TabsContent value="sales" className="mt-0 focus-visible:outline-none">
+                <SalesAnalytics userId={userId!} companyProfileId={companyProfileId} />
+              </TabsContent>
+              
+              {/* Finance Suite Tab (Nested Tabs) */}
+              <TabsContent value="finance" className="mt-0 focus-visible:outline-none">
+                <Tabs value={financeTab} onValueChange={setFinanceTab} className="w-full">
+                  <div className="flex justify-center border-b pb-3 mb-8">
+                    <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-11">
+                      <TabsTrigger value="calc" className="rounded-full px-5 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                        Valuation Calculator
+                      </TabsTrigger>
+                      <TabsTrigger value="tracker" className="rounded-full px-5 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                        Cap Table
+                      </TabsTrigger>
+                      <TabsTrigger value="exit" className="rounded-full px-5 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                        Exit Simulator
+                      </TabsTrigger>
+                      <TabsTrigger value="negotiate" className="rounded-full px-5 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                        Term Sheet Assistant
+                      </TabsTrigger>
+                      <TabsTrigger value="qa" className="rounded-full px-5 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                        Term Sheet Q&A
+                      </TabsTrigger>
+                      <TabsTrigger value="glossary" className="rounded-full px-5 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                        Glossary
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+
+                  <TabsContent value="calc" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                    <div className="mb-12 text-center space-y-4">
+                      <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                        Startup <span className="text-primary">Valuation</span> Calculator
+                      </h1>
+                      <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                        Model your funding rounds, track unit economics, and get AI-powered strategic advice instantly.
+                      </p>
+                    </div>
+                    <ValuationCalculator userId={userId!} companyProfileId={companyProfileId} />
+                  </TabsContent>
+
+                  <TabsContent value="tracker" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                    <div className="mb-12 text-center space-y-4">
+                      <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                        Cap <span className="text-primary">Table</span> Tracker
+                      </h1>
+                      <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                        Track ownership percentages, share types, and board control health checks.
+                      </p>
+                    </div>
+                    <CapTableTracker userId={userId!} companyProfileId={companyProfileId} />
+                  </TabsContent>
+
+                  <TabsContent value="exit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                    <div className="mb-12 text-center space-y-4">
+                      <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                        Exit <span className="text-primary">Waterfall</span> Simulator
+                      </h1>
+                      <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                        See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
+                      </p>
+                    </div>
+                    <ExitSimulator userId={userId!} companyProfileId={companyProfileId} />
+                  </TabsContent>
+
+                  <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                    <div className="mb-12 text-center space-y-4">
+                      <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                        Term Sheet <span className="text-primary">Assistant</span>
+                      </h1>
+                      <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                        Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
+                      </p>
+                    </div>
+                    <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} />
+                  </TabsContent>
+
+                  <TabsContent value="qa" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                    <div className="mb-12 text-center space-y-4">
+                      <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                        Term Sheet <span className="text-primary">Q&A</span>
+                      </h1>
+                      <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                        Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
+                      </p>
+                    </div>
+                    <TermSheetAnalyzer userId={userId!} companyProfileId={companyProfileId} />
+                  </TabsContent>
+
+                  <TabsContent value="glossary" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                    <div className="mb-12 text-center space-y-4">
+                      <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                        Founder's <span className="text-primary">Glossary</span>
+                      </h1>
+                      <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                        Master the jargon of VC funding with plain-English explanations and real-world examples.
+                      </p>
+                    </div>
+                    <GlossarySection />
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
+              
+              {/* Operations Tab */}
+              <TabsContent value="operations" className="mt-0 focus-visible:outline-none">
+                <OperationsDashboard userId={userId!} companyProfileId={companyProfileId} />
               </TabsContent>
 
-              <TabsContent value="exit" className="mt-0 focus-visible:outline-none">
-                <div className="mb-12 text-center space-y-4">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-                    Exit <span className="text-primary">Waterfall</span> Simulator
-                  </h1>
-                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                    See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
-                  </p>
-                </div>
-                <ExitSimulator userId={userId!} companyProfileId={companyProfileId} />
-              </TabsContent>
-
-              <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none">
-                <div className="mb-12 text-center space-y-4">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-                    Term Sheet <span className="text-primary">Assistant</span>
-                  </h1>
-                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                    Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
-                  </p>
-                </div>
-                <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} />
-              </TabsContent>
-
-              <TabsContent value="qa" className="mt-0 focus-visible:outline-none">
-                <div className="mb-12 text-center space-y-4">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-                    Term Sheet <span className="text-primary">Q&A</span>
-                  </h1>
-                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                    Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
-                  </p>
-                </div>
-                <TermSheetAnalyzer userId={userId!} companyProfileId={companyProfileId} />
-              </TabsContent>
-
-              <TabsContent value="glossary" className="mt-0 focus-visible:outline-none">
-                <div className="mb-12 text-center space-y-4">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-                    Founder's <span className="text-primary">Glossary</span>
-                  </h1>
-                  <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-80">
-                    Master the jargon of VC funding with plain-English explanations and real-world examples.
-                  </p>
-                </div>
-                <GlossarySection />
-              </TabsContent>
             </Tabs>
           </div>
         )}

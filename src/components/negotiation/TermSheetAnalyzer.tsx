@@ -51,7 +51,7 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
         if (snap.exists() && snap.data().messages) {
           setMessages(snap.data().messages);
         }
-      });
+      }).catch(() => { /* Rules not yet deployed — silently skip loading chat */ });
     }
   }, [chatRef]);
 
@@ -63,14 +63,22 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
 
   const saveChat = async (newMessages: ChatMessage[]) => {
     if (chatRef) {
-      await setDoc(chatRef, { messages: newMessages }, { merge: true });
+      try {
+        await setDoc(chatRef, { messages: newMessages }, { merge: true });
+      } catch {
+        // Silently fail — Firestore rules may not be deployed yet
+      }
     }
   };
 
   const handleClearChat = async () => {
     setMessages([]);
     if (chatRef) {
-      await deleteDoc(chatRef);
+      try {
+        await deleteDoc(chatRef);
+      } catch {
+        // Silently fail — Firestore rules may not be deployed yet
+      }
     }
   };
 
