@@ -20,6 +20,7 @@ import * as AccordionPrimitive from "@radix-ui/react-accordion";
 interface ValuationCalculatorProps {
   userId: string;
   companyProfileId: string;
+  readOnly?: boolean;
 }
 
 const DEFAULT_FORM_DATA = {
@@ -70,7 +71,7 @@ function LabelWithInfo({ label, info, required }: { label: string; info: string;
   );
 }
 
-export function ValuationCalculator({ userId, companyProfileId }: ValuationCalculatorProps) {
+export function ValuationCalculator({ userId, companyProfileId, readOnly }: ValuationCalculatorProps) {
   const firestore = useFirestore();
   const profileRef = useMemoFirebase(() => {
     if (!firestore || !userId || !companyProfileId) return null;
@@ -102,7 +103,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
       ? newData.overridePostMoney 
       : calculatedPostMoney;
 
-    if (profileRef) {
+    if (profileRef && !readOnly) {
       setDocumentNonBlocking(profileRef, {
         ...newData,
         latestValuation: finalPostMoney,
@@ -161,35 +162,37 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               Startup Profile
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <LabelWithInfo label="Company Name" info="The official registered name of your company." />
-              <Input 
-                placeholder="Enter startup name..."
-                value={formData.companyName} 
-                onChange={e => handleChange('companyName', e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-4">
+          <CardContent>
+            <fieldset disabled={readOnly} className="space-y-4">
               <div className="space-y-2">
-                <LabelWithInfo label="Stage" info="Idea (Pre-revenue), MVP (Early traction), or Seed." />
-                <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <LabelWithInfo label="Company Name" info="The official registered name of your company." />
+                <Input 
+                  placeholder="Enter startup name..."
+                  value={formData.companyName} 
+                  onChange={e => handleChange('companyName', e.target.value)}
+                />
               </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Industry" info="SaaS usually gets higher multiples than E-commerce." />
-                <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {INDUSTRIES.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <LabelWithInfo label="Stage" info="Idea (Pre-revenue), MVP (Early traction), or Seed." />
+                  <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <LabelWithInfo label="Industry" info="Determines the revenue multiple applied to your startup." />
+                  <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {INDUSTRIES.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            </fieldset>
           </CardContent>
         </Card>
 
@@ -200,8 +203,8 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               Unit Econ Inputs
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
+          <CardContent>
+            <fieldset disabled={readOnly} className="space-y-4">
               <div className="space-y-2">
                 <LabelWithInfo label="Profit per Order" info="Gross Profit per transaction (Revenue - COGS)." />
                 <div className="relative">
@@ -234,7 +237,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
                   />
                 </div>
               </div>
-            </div>
+            </fieldset>
           </CardContent>
         </Card>
 
@@ -245,28 +248,30 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
               Deal Terms
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <LabelWithInfo label="Pref Multiple" info="1x is standard. 2x is aggressive." />
-              <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1x</SelectItem>
-                  <SelectItem value="1.5">1.5x</SelectItem>
-                  <SelectItem value="2">2x</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <LabelWithInfo label="Type" info="Non-participating is founder-friendly." />
-              <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nonparticipating">Non-Participating</SelectItem>
-                  <SelectItem value="participating">Participating</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <CardContent>
+            <fieldset disabled={readOnly} className="space-y-4">
+              <div className="space-y-2">
+                <LabelWithInfo label="Pref Multiple" info="1x is standard. 2x is aggressive." />
+                <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1x</SelectItem>
+                    <SelectItem value="1.5">1.5x</SelectItem>
+                    <SelectItem value="2">2x</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <LabelWithInfo label="Type" info="Non-participating is founder-friendly." />
+                <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nonparticipating">Non-Participating</SelectItem>
+                    <SelectItem value="participating">Participating</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </fieldset>
           </CardContent>
         </Card>
       </div>
@@ -478,110 +483,112 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
             <p className="text-xs text-muted-foreground">Fill these to calculate your Startup Valuation and Cap Table dilution.</p>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              <div className="space-y-2">
-                <LabelWithInfo required label="Investment Amount" info="The total capital being raised in this round." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7 h-12 text-lg font-bold border-primary/20 focus-visible:ring-primary"
-                    placeholder="e.g. 5000000"
-                    value={formData.investment || ''} 
-                    onChange={e => handleChange('investment', Number(e.target.value))}
-                  />
+            <fieldset disabled={readOnly} className="contents">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="space-y-2">
+                  <LabelWithInfo required label="Investment Amount" info="The total capital being raised in this round." />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                    <Input 
+                      type="number" 
+                      className="pl-7 h-12 text-lg font-bold border-primary/20 focus-visible:ring-primary"
+                      placeholder="e.g. 5000000"
+                      value={formData.investment || ''} 
+                      onChange={e => handleChange('investment', Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo required label="Equity Offered %" info="Percentage of the company given to investors." />
-                <div className="relative">
-                  <Input 
-                    type="number" 
-                    className="h-12 text-lg font-bold border-primary/20 focus-visible:ring-primary pr-8"
-                    placeholder="e.g. 10"
-                    value={formData.equityOffered || ''} 
-                    onChange={e => handleChange('equityOffered', Number(e.target.value))}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
+                <div className="space-y-2">
+                  <LabelWithInfo required label="Equity Offered %" info="Percentage of the company given to investors." />
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      className="h-12 text-lg font-bold border-primary/20 focus-visible:ring-primary pr-8"
+                      placeholder="e.g. 10"
+                      value={formData.equityOffered || ''} 
+                      onChange={e => handleChange('equityOffered', Number(e.target.value))}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <LabelWithInfo label="Explicit Post-Money Valuation (Optional)" info="Overrides Implied Math. Forces this specific exit value directly into the Exit Simulator." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7 h-12 text-lg font-bold border-primary/20 bg-primary/5 focus-visible:ring-primary"
-                    placeholder="Leave blank to use math above..."
-                    value={formData.overridePostMoney !== null && formData.overridePostMoney !== undefined ? formData.overridePostMoney : ''} 
-                    onChange={e => handleChange('overridePostMoney', e.target.value === '' ? null : Number(e.target.value))}
-                  />
+                <div className="space-y-2 md:col-span-2">
+                  <LabelWithInfo label="Explicit Post-Money Valuation (Optional)" info="Overrides Implied Math. Forces this specific exit value directly into the Exit Simulator." />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                    <Input 
+                      type="number" 
+                      className="pl-7 h-12 text-lg font-bold border-primary/20 bg-primary/5 focus-visible:ring-primary"
+                      placeholder="Leave blank to use math above..."
+                      value={formData.overridePostMoney !== null && formData.overridePostMoney !== undefined ? formData.overridePostMoney : ''} 
+                      onChange={e => handleChange('overridePostMoney', e.target.value === '' ? null : Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <LabelWithInfo label="Monthly Revenue" info="Total income this month. Used for ARR." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.mRevenue || ''} 
-                    onChange={e => handleChange('mRevenue', Number(e.target.value))}
-                  />
+                <div className="space-y-2">
+                  <LabelWithInfo label="Monthly Revenue" info="Total income this month. Used for ARR." />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                    <Input 
+                      type="number" 
+                      className="pl-7"
+                      value={formData.mRevenue || ''} 
+                      onChange={e => handleChange('mRevenue', Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Monthly Burn" info="Net monthly cash out (Burn)." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.burnRate || ''} 
-                    onChange={e => handleChange('burnRate', Number(e.target.value))}
-                  />
+                <div className="space-y-2">
+                  <LabelWithInfo label="Monthly Burn" info="Net monthly cash out (Burn)." />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                    <Input 
+                      type="number" 
+                      className="pl-7"
+                      value={formData.burnRate || ''} 
+                      onChange={e => handleChange('burnRate', Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Cash in Bank" info="Current liquid reserves." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7"
-                    value={formData.cashBank || ''} 
-                    onChange={e => handleChange('cashBank', Number(e.target.value))}
-                  />
+                <div className="space-y-2">
+                  <LabelWithInfo label="Cash in Bank" info="Current liquid reserves." />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                    <Input 
+                      type="number" 
+                      className="pl-7"
+                      value={formData.cashBank || ''} 
+                      onChange={e => handleChange('cashBank', Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <LabelWithInfo label="ESOP Pool %" info="Shares reserved for future hires. Usually 10%." />
-                <Input 
-                  type="number" 
-                  value={formData.esopPool || ''} 
-                  onChange={e => handleChange('esopPool', Number(e.target.value))}
-                />
+                <div className="space-y-2">
+                  <LabelWithInfo label="ESOP Pool %" info="Shares reserved for future hires. Usually 10%." />
+                  <Input 
+                    type="number" 
+                    value={formData.esopPool || ''} 
+                    onChange={e => handleChange('esopPool', Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <LabelWithInfo label="Advisor Equity %" info="Mentors stake." />
+                  <Input 
+                    type="number" 
+                    value={formData.advisorEquity || ''} 
+                    onChange={e => handleChange('advisorEquity', Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <LabelWithInfo label="Co-Founder Equity %" info="Equity held by other co-founders." />
+                  <Input 
+                    type="number" 
+                    value={formData.coFounderEq || ''} 
+                    onChange={e => handleChange('coFounderEq', Number(e.target.value))}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Advisor Equity %" info="Mentors stake." />
-                <Input 
-                  type="number" 
-                  value={formData.advisorEquity || ''} 
-                  onChange={e => handleChange('advisorEquity', Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <LabelWithInfo label="Co-Founder Equity %" info="Equity held by other co-founders." />
-                <Input 
-                  type="number" 
-                  value={formData.coFounderEq || ''} 
-                  onChange={e => handleChange('coFounderEq', Number(e.target.value))}
-                />
-              </div>
-            </div>
+            </fieldset>
           </CardContent>
         </Card>
 
@@ -591,6 +598,7 @@ export function ValuationCalculator({ userId, companyProfileId }: ValuationCalcu
           data={formData} 
           results={results} 
           industryData={industryData} 
+          readOnly={readOnly}
         />
       </div>
     </div>

@@ -27,9 +27,10 @@ interface Shareholder {
 interface ExitSimulatorProps {
   userId?: string;
   companyProfileId?: string;
+  readOnly?: boolean;
 }
 
-export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) {
+export function ExitSimulator({ userId, companyProfileId, readOnly }: ExitSimulatorProps) {
   const [activeTab, setActiveTab] = useState<'live' | 'sandbox'>('live');
   const firestore = useFirestore();
 
@@ -74,6 +75,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
   const [isSavingExit, setIsSavingExit] = useState(false);
 
   const handleSaveExitValue = async () => {
+    if (readOnly) return;
     if (overrideExitValue === null || !profileRef) return;
     setIsSavingExit(true);
     try {
@@ -91,6 +93,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
   const [isSavingShareholders, setIsSavingShareholders] = useState(false);
 
   const handleSaveShareholders = async () => {
+    if (readOnly) return;
     if (!overrideShareholders || !firestore || !userId || !companyProfileId) return;
     setIsSavingShareholders(true);
     try {
@@ -303,7 +306,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                     className="pl-8 font-code font-bold text-lg border-primary/20 focus-visible:ring-primary"
                   />
                 </div>
-                {activeTab === 'live' && overrideExitValue !== null && (
+                {activeTab === 'live' && overrideExitValue !== null && !readOnly && (
                   <div className="flex items-center justify-between mt-2">
                     <div className="text-[10px] text-amber-600 flex items-center gap-1 font-bold">
                       <InfoIcon className="w-3 h-3" /> Custom override active
@@ -311,7 +314,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                     <Button 
                       size="sm" 
                       onClick={handleSaveExitValue} 
-                      disabled={isSavingExit}
+                      disabled={isSavingExit || readOnly}
                       className="h-6 text-[10px] px-2"
                     >
                       {isSavingExit ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Save className="w-3 h-3 mr-1" />} Save to Profile
@@ -327,11 +330,11 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <CardTitle className="text-md font-bold">Cap Table Rules</CardTitle>
-                  {activeTab === 'live' && overrideShareholders !== null && (
+                  {activeTab === 'live' && overrideShareholders !== null && !readOnly && (
                     <Button 
                       size="sm" 
                       onClick={handleSaveShareholders} 
-                      disabled={isSavingShareholders}
+                      disabled={isSavingShareholders || readOnly}
                       className="h-6 text-[10px] px-2 bg-amber-600 hover:bg-amber-700 font-bold"
                     >
                       {isSavingShareholders ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Save className="w-3 h-3 mr-1" />} Sync Changes
@@ -352,6 +355,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                     <div className="flex justify-between items-center pr-6">
                       <Input 
                         value={sh.name}
+                        disabled={readOnly && activeTab === 'live'}
                         onChange={(e) => {
                           const newSh = [...currentShareholders];
                           newSh[idx].name = e.target.value;
@@ -362,14 +366,16 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                       <Badge variant="outline" className="text-[10px] uppercase">{sh.role}</Badge>
                     </div>
                     
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute top-1 right-1 h-6 w-6 opacity-50 group-hover:opacity-100 text-destructive hover:bg-destructive/10"
-                      onClick={() => removeShareholder(sh.id)}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                    {(!readOnly || activeTab === 'sandbox') && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute top-1 right-1 h-6 w-6 opacity-50 group-hover:opacity-100 text-destructive hover:bg-destructive/10"
+                        onClick={() => removeShareholder(sh.id)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
@@ -377,6 +383,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                         <Input 
                           type="number" 
                           value={sh.ownership} 
+                          disabled={readOnly && activeTab === 'live'}
                           onChange={(e) => {
                             const newSh = [...currentShareholders];
                             newSh[idx].ownership = Number(e.target.value);
@@ -390,7 +397,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                         <Input 
                           type="number" 
                           value={sh.invested}
-                          disabled={sh.preferenceType === 'common'}
+                          disabled={(sh.preferenceType === 'common') || (readOnly && activeTab === 'live')}
                           onChange={(e) => {
                             const newSh = [...currentShareholders];
                             newSh[idx].invested = Number(e.target.value);
@@ -405,6 +412,7 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                       <select 
                         className="w-full h-8 text-xs border rounded-md px-2 bg-white"
                         value={sh.preferenceType}
+                        disabled={readOnly && activeTab === 'live'}
                         onChange={(e) => {
                           const newSh = [...currentShareholders];
                           newSh[idx].preferenceType = e.target.value as any;
@@ -421,9 +429,11 @@ export function ExitSimulator({ userId, companyProfileId }: ExitSimulatorProps) 
                 ))
               )}
 
-              <Button variant="outline" className="w-full gap-2 border-dashed" onClick={addShareholder}>
-                <Plus className="w-4 h-4" /> Add Shareholder
-              </Button>
+              {(!readOnly || activeTab === 'sandbox') && (
+                <Button variant="outline" className="w-full gap-2 border-dashed" onClick={addShareholder}>
+                  <Plus className="w-4 h-4" /> Add Shareholder
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

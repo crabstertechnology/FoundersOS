@@ -1,17 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
+import { doc } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
-  Menu, X, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare
+  Menu, X, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
+  ShieldAlert
 } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
 import { AuthDialog } from '@/components/auth/AuthDialog';
-import { useUser, useAuth, initiateSignOut } from '@/firebase';
+import { useUser, useAuth, initiateSignOut, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { QuickCalculator } from '@/components/calculator/QuickCalculator';
 import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
@@ -38,9 +40,17 @@ export default function FounderOSPage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
+
+  const employeeDocRef = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return doc(firestore, 'employees', user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: employeeData, isLoading: isEmployeeLoading } = useDoc(employeeDocRef);
 
   // If we are checking auth state, show a minimal loader
-  if (isUserLoading) {
+  if (isUserLoading || (user && isEmployeeLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -53,7 +63,33 @@ export default function FounderOSPage() {
 
   // Determine if the user is fully signed in (not anonymous)
   const isAuthenticated = user && !user.isAnonymous;
-  const userId = user?.uid;
+  const employeeRecord = employeeData;
+  const isEmployeeActive = employeeRecord ? employeeRecord.isActive !== false : true;
+
+  // Deactivated screen
+  if (isAuthenticated && !isEmployeeActive) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-md bg-white border border-rose-200 rounded-2xl shadow-lg p-10 text-center space-y-5 animate-in fade-in">
+          <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-8 h-8 text-rose-600" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">Access Suspended</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Your employee account has been deactivated by the administrator. Please contact your company administrator to restore access.
+          </p>
+          <Button onClick={() => initiateSignOut(auth)} className="bg-rose-600 hover:bg-rose-700 text-white font-bold w-full h-12">
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const workspaceUserId = employeeRecord?.adminUid || user?.uid || '';
+  const userRole = (employeeRecord?.role || 'admin').toLowerCase();
+  const isReadOnly = userRole === 'employee';
+  const userId = workspaceUserId;
   const companyProfileId = 'primary-startup';
 
   const handleNavigate = (tab: string) => {
@@ -938,6 +974,7 @@ export default function FounderOSPage() {
                 onSubTabChange={setSalesTab}
                 activeEZCirkitTab={ezCirkitTab}
                 onEZCirkitTabChange={setEzCirkitTab}
+                readOnly={isReadOnly}
               />
             </TabsContent>
 
@@ -953,7 +990,7 @@ export default function FounderOSPage() {
                       Model your funding rounds, track unit economics, and get AI-powered strategic advice instantly.
                     </p>
                   </div>
-                  <ValuationCalculator userId={userId!} companyProfileId={companyProfileId} />
+                  <ValuationCalculator userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="tracker" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
@@ -965,7 +1002,7 @@ export default function FounderOSPage() {
                       Track ownership percentages, share types, and board control health checks.
                     </p>
                   </div>
-                  <CapTableTracker userId={userId!} companyProfileId={companyProfileId} />
+                  <CapTableTracker userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="exit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
@@ -977,7 +1014,7 @@ export default function FounderOSPage() {
                       See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
                     </p>
                   </div>
-                  <ExitSimulator userId={userId!} companyProfileId={companyProfileId} />
+                  <ExitSimulator userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
@@ -989,7 +1026,7 @@ export default function FounderOSPage() {
                       Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
                     </p>
                   </div>
-                  <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} />
+                  <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="qa" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
@@ -1001,7 +1038,7 @@ export default function FounderOSPage() {
                       Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
                     </p>
                   </div>
-                  <TermSheetAnalyzer userId={userId!} companyProfileId={companyProfileId} />
+                  <TermSheetAnalyzer userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="glossary" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
@@ -1025,12 +1062,15 @@ export default function FounderOSPage() {
                 companyProfileId={companyProfileId}
                 activeSubTab={operationsTab}
                 onSubTabChange={setOperationsTab}
+                userRole={userRole}
+                readOnly={isReadOnly}
+                currentUserUid={user?.uid || ''}
               />
             </TabsContent>
 
             {/* Config & Settings Page */}
             <TabsContent value="settings" className="mt-0 focus-visible:outline-none">
-              <SettingsPage userId={userId!} />
+              <SettingsPage userId={userId!} userRole={userRole} />
             </TabsContent>
           </Tabs>
         </main>

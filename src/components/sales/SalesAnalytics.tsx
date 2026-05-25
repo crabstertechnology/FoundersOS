@@ -27,6 +27,7 @@ interface SalesAnalyticsProps {
   onSubTabChange?: (tab: string) => void;
   activeEZCirkitTab?: string;
   onEZCirkitTabChange?: (tab: string) => void;
+  readOnly?: boolean;
 }
 
 interface Deal {
@@ -54,7 +55,8 @@ export function SalesAnalytics({
   activeSubTab,
   onSubTabChange,
   activeEZCirkitTab,
-  onEZCirkitTabChange
+  onEZCirkitTabChange,
+  readOnly
 }: SalesAnalyticsProps) {
   const firestore = useFirestore();
 
@@ -184,6 +186,7 @@ export function SalesAnalytics({
 
   const handleSaveDeal = (e: React.FormEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     if (!profileRef || !dealName || !value) return;
 
     const dealData: Deal = {
@@ -236,7 +239,7 @@ export function SalesAnalytics({
   };
 
   const handleDeleteDeal = (dealId: string) => {
-    if (!profileRef) return;
+    if (readOnly || !profileRef) return;
     const updatedPipeline = deals.filter(d => d.id !== dealId);
     
     const totalWonMonthlyVal = updatedPipeline
@@ -260,14 +263,14 @@ export function SalesAnalytics({
   };
 
   const handleUpdateTarget = () => {
-    if (!profileRef || customTargetMRR === '') return;
+    if (readOnly || !profileRef || customTargetMRR === '') return;
     setDocumentNonBlocking(profileRef, { targetMRR: Number(customTargetMRR) }, { merge: true });
     setShowSettings(false);
   };
 
   // AI Analyst Trigger
   const triggerAIAnalysis = async () => {
-    if (!profile || aiLoading) return;
+    if (readOnly || !profile || aiLoading) return;
     setAiLoading(true);
     try {
       const input = {
@@ -312,7 +315,7 @@ export function SalesAnalytics({
 
   const handleDeleteReport = (reportId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!reportsRef) return;
+    if (readOnly || !reportsRef) return;
     deleteDocumentNonBlocking(doc(reportsRef, reportId));
     if (activeReport?.id === reportId) setActiveReport(null);
   };
@@ -344,6 +347,7 @@ export function SalesAnalytics({
             companyProfileId={companyProfileId}
             activeSubTab={activeEZCirkitTab}
             onSubTabChange={onEZCirkitTabChange}
+            readOnly={readOnly}
           />
         </TabsContent>
 
@@ -360,19 +364,21 @@ export function SalesAnalytics({
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="border-indigo-200 hover:bg-indigo-50"
-            onClick={() => {
-              setShowSettings(!showSettings);
-              setCustomTargetMRR(targetMRR);
-            }}
-          >
-            <Target className="w-4 h-4 mr-2 text-indigo-600" />
-            Set Target: {fmtINR(targetMRR)}
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="border-indigo-200 hover:bg-indigo-50"
+              onClick={() => {
+                setShowSettings(!showSettings);
+                setCustomTargetMRR(targetMRR);
+              }}
+            >
+              <Target className="w-4 h-4 mr-2 text-indigo-600" />
+              Set Target: {fmtINR(targetMRR)}
+            </Button>
+          </div>
+        )}
       </div>
 
       {showSettings && (
@@ -493,109 +499,112 @@ export function SalesAnalytics({
         <div className="lg:col-span-1 space-y-6">
           
           {/* CRM Form */}
-          <Card className="border shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                {editingId ? 'Edit Sales Deal' : 'Add New Sales Deal'}
-              </CardTitle>
-              <CardDescription>
-                Track a lead through your pipeline phases.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSaveDeal} className="space-y-4">
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Deal / Opportunity Name</Label>
-                  <Input 
-                    placeholder="e.g. Enterprise License..."
-                    value={dealName} 
-                    onChange={e => setDealName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+          {!readOnly && (
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                  {editingId ? 'Edit Sales Deal' : 'Add New Sales Deal'}
+                </CardTitle>
+                <CardDescription>
+                  Track a lead through your pipeline phases.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSaveDeal} className="space-y-4">
                   <div className="space-y-1">
-                    <Label className="font-bold text-xs">Company Name</Label>
+                    <Label className="font-bold text-xs">Deal / Opportunity Name</Label>
                     <Input 
-                      placeholder="e.g. Acme Corp..."
-                      value={company} 
-                      onChange={e => setCompany(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="font-bold text-xs">Value (₹)</Label>
-                    <Input 
-                      type="number"
-                      placeholder="e.g. 50000"
-                      value={value} 
-                      onChange={e => setValue(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="e.g. Enterprise License..."
+                      value={dealName} 
+                      onChange={e => setDealName(e.target.value)}
                       required
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="font-bold text-xs">Stage</Label>
-                    <Select value={stage} onValueChange={handleStageChange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STAGES.map(s => (
-                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="font-bold text-xs">Company Name</Label>
+                      <Input 
+                        placeholder="e.g. Acme Corp..."
+                        value={company} 
+                        onChange={e => setCompany(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="font-bold text-xs">Value (₹)</Label>
+                      <Input 
+                        type="number"
+                        placeholder="e.g. 50000"
+                        value={value} 
+                        onChange={e => setValue(e.target.value === '' ? '' : Number(e.target.value))}
+                        required
+                      />
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="font-bold text-xs">Stage</Label>
+                      <Select value={stage} onValueChange={handleStageChange}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STAGES.map(s => (
+                            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="font-bold text-xs">Probability (%)</Label>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        max="100"
+                        placeholder="e.g. 20"
+                        value={probability} 
+                        onChange={e => setProbability(e.target.value === '' ? '' : Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-1">
-                    <Label className="font-bold text-xs">Probability (%)</Label>
+                    <Label className="font-bold text-xs">Target Close Date</Label>
                     <Input 
-                      type="number" 
-                      min="0" 
-                      max="100"
-                      placeholder="e.g. 20"
-                      value={probability} 
-                      onChange={e => setProbability(e.target.value === '' ? '' : Number(e.target.value))}
+                      type="date"
+                      value={closeDate} 
+                      onChange={e => setCloseDate(e.target.value)}
                     />
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Target Close Date</Label>
-                  <Input 
-                    type="date"
-                    value={closeDate} 
-                    onChange={e => setCloseDate(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
-                    {editingId ? 'Update Deal' : 'Add Opportunity'}
-                  </Button>
-                  {editingId && (
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      onClick={() => {
-                        setEditingId(null);
-                        setDealName('');
-                        setCompany('');
-                        setValue('');
-                        setStage('lead');
-                        setProbability(10);
-                        setCloseDate('');
-                      }}
-                    >
-                      Cancel
+                  <div className="flex gap-2 pt-2">
+                    <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+                      {editingId ? 'Update Deal' : 'Add Opportunity'}
                     </Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                    {editingId && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        onClick={() => {
+                          setEditingId(null);
+                          setDealName('');
+                          setCompany('');
+                          setValue('');
+                          setStage('lead');
+                          setProbability(10);
+                          setCloseDate('');
+                          setEditingId(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
           {/* CSS Funnel Visualizer */}
           <Card className="border shadow-sm">
@@ -667,7 +676,7 @@ export function SalesAnalytics({
                         <TableHead className="font-black text-xs uppercase text-slate-500">Stage</TableHead>
                         <TableHead className="font-black text-xs uppercase text-slate-500">Probability</TableHead>
                         <TableHead className="font-black text-xs uppercase text-slate-500">Est. Close</TableHead>
-                        <TableHead className="w-20 text-right"></TableHead>
+                        {!readOnly && <TableHead className="w-20 text-right"></TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -676,7 +685,7 @@ export function SalesAnalytics({
                         return (
                           <TableRow key={deal.id} className="hover:bg-slate-50 transition-colors">
                             <TableCell className="font-bold py-4">
-                              <div className="text-slate-900">{deal.dealName}</div>
+                               <div className="text-slate-900">{deal.dealName}</div>
                               <div className="text-xs text-muted-foreground font-medium">{deal.company}</div>
                             </TableCell>
                             <TableCell className="font-code font-black text-slate-800">
@@ -693,26 +702,28 @@ export function SalesAnalytics({
                             <TableCell className="text-xs text-slate-500 font-mono">
                               {deal.closeDate}
                             </TableCell>
-                            <TableCell className="text-right py-4">
-                              <div className="flex justify-end gap-1.5 pr-2">
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-full"
-                                  onClick={() => handleEditDeal(deal)}
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
-                                  onClick={() => handleDeleteDeal(deal.id)}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </div>
-                            </TableCell>
+                            {!readOnly && (
+                              <TableCell className="text-right py-4">
+                                <div className="flex justify-end gap-1.5 pr-2">
+                                  <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-full"
+                                    onClick={() => handleEditDeal(deal)}
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
+                                    onClick={() => handleDeleteDeal(deal.id)}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            )}
                           </TableRow>
                         );
                       })}
@@ -841,12 +852,13 @@ export function SalesAnalytics({
                     className="w-full text-sm p-3 rounded-lg border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                     value={customQuestion}
                     onChange={e => setCustomQuestion(e.target.value)}
+                    disabled={readOnly}
                   />
                 </div>
 
                 <Button 
                   onClick={triggerAIAnalysis}
-                  disabled={aiLoading || deals.length === 0}
+                  disabled={aiLoading || deals.length === 0 || readOnly}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2 rounded-full py-5"
                 >
                   {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -880,14 +892,16 @@ export function SalesAnalytics({
                         <span className="truncate">{label}</span>
                         <div className="flex items-center gap-1">
                           <Badge variant="outline" className="text-[8px] h-4 bg-white border-indigo-200 text-indigo-700">Audit</Badge>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-6 w-6 text-slate-400 hover:text-rose-600"
-                            onClick={(e) => handleDeleteReport(report.id, e)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                          {!readOnly && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-6 w-6 text-slate-400 hover:text-rose-600"
+                              onClick={(e) => handleDeleteReport(report.id, e)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     );

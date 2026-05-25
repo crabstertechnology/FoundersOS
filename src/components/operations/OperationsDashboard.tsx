@@ -28,6 +28,9 @@ interface OperationsDashboardProps {
   companyProfileId: string;
   activeSubTab?: string;
   onSubTabChange?: (tab: string) => void;
+  userRole?: string;
+  readOnly?: boolean;
+  currentUserUid?: string;
 }
 
 interface SaasSubscription {
@@ -54,7 +57,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other software', color: 'bg-slate-50 text-slate-700 border-slate-150' },
 ];
 
-export function OperationsDashboard({ userId, companyProfileId, activeSubTab, onSubTabChange }: OperationsDashboardProps) {
+export function OperationsDashboard({ userId, companyProfileId, activeSubTab, onSubTabChange, userRole, readOnly, currentUserUid }: OperationsDashboardProps) {
   const firestore = useFirestore();
 
   // Firestore References
@@ -438,6 +441,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
             companyProfileId={companyProfileId}
             employees={employees}
             initialAssigneeUid={preselectedAssigneeUid}
+            userRole={userRole}
+            currentUserUid={currentUserUid}
           />
         </TabsContent>
 
@@ -502,6 +507,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                 className="pl-7 h-9 text-lg font-bold font-code"
                 value={cashBankInput}
                 onChange={e => handleUpdateCash(Number(e.target.value))}
+                disabled={readOnly}
               />
             </div>
             <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Type in bank balance to update runway</p>
@@ -568,6 +574,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                       value={saasName}
                       onChange={e => setSaasName(e.target.value)}
                       required
+                      disabled={readOnly}
                     />
                   </div>
                   
@@ -580,11 +587,12 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                         value={saasCost}
                         onChange={e => setSaasCost(e.target.value === '' ? '' : Number(e.target.value))}
                         required
+                        disabled={readOnly}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="font-bold text-xs">Billing</Label>
-                      <Select value={saasBilling} onValueChange={(v: any) => setSaasBilling(v)}>
+                      <Select value={saasBilling} onValueChange={(v: any) => setSaasBilling(v)} disabled={readOnly}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="monthly">Monthly</SelectItem>
@@ -596,7 +604,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
 
                   <div className="space-y-1">
                     <Label className="font-bold text-xs">Category</Label>
-                    <Select value={saasCategory} onValueChange={(v: any) => setSaasCategory(v)}>
+                    <Select value={saasCategory} onValueChange={(v: any) => setSaasCategory(v)} disabled={readOnly}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {CATEGORIES.map(c => (
@@ -607,7 +615,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold">
+                    <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold" disabled={readOnly}>
                       {editingSaasId ? 'Update SaaS' : 'Add Subscription'}
                     </Button>
                     {editingSaasId && (
@@ -619,6 +627,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                           setSaasName('');
                           setSaasCost('');
                         }}
+                        disabled={readOnly}
                       >
                         Cancel
                       </Button>
@@ -671,6 +680,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                                     variant="ghost" 
                                     className="h-8 w-8 text-slate-400 hover:text-teal-600 rounded-full"
                                     onClick={() => handleEditSaas(sub)}
+                                    disabled={readOnly}
                                   >
                                     <Edit2 className="w-3 h-3" />
                                   </Button>
@@ -679,6 +689,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                                     variant="ghost" 
                                     className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
                                     onClick={() => handleDeleteSaas(sub.id)}
+                                    disabled={readOnly}
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
@@ -716,6 +727,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                         value={memberName}
                         onChange={e => setMemberName(e.target.value)}
                         required
+                        disabled={readOnly}
                       />
                     </div>
                     <div className="space-y-1">
@@ -724,6 +736,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                         placeholder="e.g. Lead Engineer..."
                         value={memberRole}
                         onChange={e => setMemberRole(e.target.value)}
+                        disabled={readOnly}
                       />
                     </div>
                   </div>
@@ -737,11 +750,12 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                         value={memberSalary}
                         onChange={e => setMemberSalary(e.target.value === '' ? '' : Number(e.target.value))}
                         required
+                        disabled={readOnly}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="font-bold text-xs">Status</Label>
-                      <Select value={memberStatus} onValueChange={(v: any) => setMemberStatus(v)}>
+                      <Select value={memberStatus} onValueChange={(v: any) => setMemberStatus(v)} disabled={readOnly}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="active">Active Employee</SelectItem>
@@ -752,7 +766,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold">
+                    <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold" disabled={readOnly}>
                       {editingMemberId ? 'Update Role' : 'Add Team Member'}
                     </Button>
                     {editingMemberId && (
@@ -765,6 +779,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                           setMemberRole('');
                           setMemberSalary('');
                         }}
+                        disabled={readOnly}
                       >
                         Cancel
                       </Button>
@@ -814,6 +829,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                                   variant="ghost" 
                                   className="h-8 w-8 text-slate-400 hover:text-teal-600 rounded-full"
                                   onClick={() => handleEditMember(member)}
+                                  disabled={readOnly}
                                 >
                                   <Edit2 className="w-3.5 h-3.5" />
                                 </Button>
@@ -822,6 +838,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                                   variant="ghost" 
                                   className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
                                   onClick={() => handleDeleteMember(member.id)}
+                                  disabled={readOnly}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
@@ -864,6 +881,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                     className="pl-7"
                     value={otherBurnInput}
                     onChange={e => handleUpdateOverhead(Number(e.target.value))}
+                    disabled={readOnly}
                   />
                 </div>
               </div>
@@ -945,12 +963,13 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                     className="w-full text-sm p-3 rounded-lg border border-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
                     value={customQuestion}
                     onChange={e => setCustomQuestion(e.target.value)}
+                    disabled={readOnly}
                   />
                 </div>
 
                 <Button 
                   onClick={triggerAIAnalysis}
-                  disabled={aiLoading}
+                  disabled={aiLoading || readOnly}
                   className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold gap-2 rounded-full py-5"
                 >
                   {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -986,6 +1005,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                             variant="ghost" 
                             className="h-6 w-6 text-slate-400 hover:text-rose-600"
                             onClick={(e) => handleDeleteReport(report.id, e)}
+                            disabled={readOnly}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>

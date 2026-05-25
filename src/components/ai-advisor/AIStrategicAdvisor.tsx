@@ -24,9 +24,10 @@ interface AdvisorProps {
   data: any;
   results: any;
   industryData: any;
+  readOnly?: boolean;
 }
 
-export function AIStrategicAdvisor({ userId, companyProfileId, data, results, industryData }: AdvisorProps) {
+export function AIStrategicAdvisor({ userId, companyProfileId, data, results, industryData, readOnly }: AdvisorProps) {
   const [loading, setLoading] = useState(false);
   const [activeReport, setActiveReport] = useState<any | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -46,6 +47,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
   const { data: reports, isLoading: isReportsLoading } = useCollection(reportsQuery);
 
   const getAIAdvice = async () => {
+    if (readOnly) return;
     setLoading(true);
     try {
       const input = {
@@ -112,6 +114,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
 
   const handleDeleteReport = (reportId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (readOnly) return;
     if (!reportsRef) return;
     deleteDocumentNonBlocking(doc(reportsRef, reportId));
     if (activeReport?.id === reportId) setActiveReport(null);
@@ -140,7 +143,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
           <Button 
             size="lg" 
             onClick={getAIAdvice} 
-            disabled={loading}
+            disabled={loading || readOnly}
             className="rounded-full px-8 font-bold gap-2 shadow-lg hover:scale-105 transition-transform"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -193,14 +196,16 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
                       <Badge variant="outline" className="text-[9px] uppercase font-bold bg-white">
                         {report.inputSnapshot?.stage}
                       </Badge>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => handleDeleteReport(report.id, e)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      {!readOnly && (
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => handleDeleteReport(report.id, e)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

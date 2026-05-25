@@ -17,13 +17,15 @@ import type { Employee } from './TaskManager';
 
 interface SettingsPageProps {
   userId: string;
+  userRole?: string;
 }
 
-export function SettingsPage({ userId }: SettingsPageProps) {
+export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) {
   const { user } = useFirebase();
   const auth = useAuth();
   const firestore = useFirestore();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const isAdmin = userRole.toLowerCase() === 'admin';
 
   // Firestore collections for Admin Panel controls
   const inviteCodesRef = useMemoFirebase(() => {
@@ -132,20 +134,24 @@ export function SettingsPage({ userId }: SettingsPageProps) {
                   <User className="w-4 h-4 text-slate-500" />
                   My Details
                 </TabsTrigger>
-                <TabsTrigger
-                  value="invites"
-                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
-                >
-                  <Key className="w-4 h-4 text-slate-500" />
-                  Invite Links
-                </TabsTrigger>
-                <TabsTrigger
-                  value="members"
-                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
-                >
-                  <Users className="w-4 h-4 text-slate-500" />
-                  Team Management
-                </TabsTrigger>
+                {isAdmin && (
+                  <>
+                    <TabsTrigger
+                      value="invites"
+                      className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                    >
+                      <Key className="w-4 h-4 text-slate-500" />
+                      Invite Links
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="members"
+                      className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                    >
+                      <Users className="w-4 h-4 text-slate-500" />
+                      Team Management
+                    </TabsTrigger>
+                  </>
+                )}
               </TabsList>
             </div>
 
@@ -210,154 +216,158 @@ export function SettingsPage({ userId }: SettingsPageProps) {
                 </div>
               </TabsContent>
 
-              {/* Invite Codes Tab */}
-              <TabsContent value="invites" className="mt-0 h-full focus-visible:outline-none">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 mb-1">Onboarding Invite Links</h3>
-                      <p className="text-xs text-muted-foreground font-medium">Generate single-use sign-up links for your employee onboarding.</p>
-                    </div>
-                    <Button onClick={handleGenerateCode} className="bg-primary hover:bg-primary/95 text-white font-bold text-xs gap-1.5">
-                      <Plus className="w-3.5 h-3.5" />
-                      Create Invite Link
-                    </Button>
-                  </div>
-
-                  {/* Active Codes */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest">Active Links ({activeCodes.length})</h4>
-                    {activeCodes.length === 0 ? (
-                      <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground font-medium">
-                        No active onboarding links generated. Click "Create Invite Link" to generate one.
+              {isAdmin && (
+                <>
+                  {/* Invite Codes Tab */}
+                  <TabsContent value="invites" className="mt-0 h-full focus-visible:outline-none">
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 mb-1">Onboarding Invite Links</h3>
+                          <p className="text-xs text-muted-foreground font-medium">Generate single-use sign-up links for your employee onboarding.</p>
+                        </div>
+                        <Button onClick={handleGenerateCode} className="bg-primary hover:bg-primary/95 text-white font-bold text-xs gap-1.5">
+                          <Plus className="w-3.5 h-3.5" />
+                          Create Invite Link
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="border rounded-xl overflow-hidden shadow-sm">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-slate-50">
-                              <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Sign-up URL Link</TableHead>
-                              <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Code</TableHead>
-                              <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5 text-right pr-4">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {activeCodes.map((c: any) => {
-                              const signupLink = typeof window !== 'undefined' ? `${window.location.origin}/employee-signup?code=${c.code}` : `/employee-signup?code=${c.code}`;
-                              return (
-                                <TableRow key={c.id}>
-                                  <TableCell className="text-xs text-slate-600 py-2 max-w-[280px] truncate font-mono">
-                                    {signupLink}
+
+                      {/* Active Codes */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest">Active Links ({activeCodes.length})</h4>
+                        {activeCodes.length === 0 ? (
+                          <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground font-medium">
+                            No active onboarding links generated. Click "Create Invite Link" to generate one.
+                          </div>
+                        ) : (
+                          <div className="border rounded-xl overflow-hidden shadow-sm">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-slate-50">
+                                  <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Sign-up URL Link</TableHead>
+                                  <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Code</TableHead>
+                                  <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5 text-right pr-4">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {activeCodes.map((c: any) => {
+                                  const signupLink = typeof window !== 'undefined' ? `${window.location.origin}/employee-signup?code=${c.code}` : `/employee-signup?code=${c.code}`;
+                                  return (
+                                    <TableRow key={c.id}>
+                                      <TableCell className="text-xs text-slate-600 py-2 max-w-[280px] truncate font-mono">
+                                        {signupLink}
+                                      </TableCell>
+                                      <TableCell className="py-2">
+                                        <Badge className="bg-teal-50 text-teal-700 border-teal-100 font-mono text-[9px] uppercase">{c.code}</Badge>
+                                      </TableCell>
+                                      <TableCell className="text-right pr-4 py-2">
+                                        <div className="flex justify-end gap-1.5">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 text-xs font-bold gap-1 hover:bg-teal-50 hover:text-teal-700"
+                                            onClick={() => copyToClipboard(c.code)}
+                                          >
+                                            {copiedCode === c.code ? (
+                                              <>
+                                                <Check className="w-3 h-3 text-emerald-600" />
+                                                Copied
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Copy className="w-3 h-3" />
+                                                Copy Link
+                                              </>
+                                            )}
+                                          </Button>
+                                          <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
+                                            onClick={() => handleDeleteCode(c.id)}
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Employees / Team Members Tab */}
+                  <TabsContent value="members" className="mt-0 h-full focus-visible:outline-none">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Employee Authorization Roster</h3>
+                        <p className="text-xs text-muted-foreground font-medium">Activate, deactivate, or customize access roles for registered employee accounts.</p>
+                      </div>
+
+                      {employees.length === 0 ? (
+                        <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground font-medium">
+                          No employee accounts registered yet. Use onboarding links to sign up team members.
+                        </div>
+                      ) : (
+                        <div className="border rounded-xl overflow-hidden shadow-sm">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-slate-50">
+                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Name/Email</TableHead>
+                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Department</TableHead>
+                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Role Permission</TableHead>
+                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {employees.map(emp => (
+                                <TableRow key={emp.uid}>
+                                  <TableCell className="py-2.5">
+                                    <div className="font-bold text-slate-800 text-xs">{emp.name}</div>
+                                    <div className="text-[10px] text-muted-foreground">{emp.email}</div>
                                   </TableCell>
-                                  <TableCell className="py-2">
-                                    <Badge className="bg-teal-50 text-teal-700 border-teal-100 font-mono text-[9px] uppercase">{c.code}</Badge>
+                                  <TableCell className="text-xs text-slate-700 font-medium py-2.5">
+                                    {emp.department || '—'}
                                   </TableCell>
-                                  <TableCell className="text-right pr-4 py-2">
-                                    <div className="flex justify-end gap-1.5">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-7 text-xs font-bold gap-1 hover:bg-teal-50 hover:text-teal-700"
-                                        onClick={() => copyToClipboard(c.code)}
-                                      >
-                                        {copiedCode === c.code ? (
-                                          <>
-                                            <Check className="w-3 h-3 text-emerald-600" />
-                                            Copied
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Copy className="w-3 h-3" />
-                                            Copy Link
-                                          </>
-                                        )}
-                                      </Button>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
-                                        onClick={() => handleDeleteCode(c.id)}
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </Button>
-                                    </div>
+                                  <TableCell className="py-2.5">
+                                    <Select value={emp.role} onValueChange={(val) => handleRoleChange(emp, val)}>
+                                      <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Employee">Employee</SelectItem>
+                                        <SelectItem value="Manager">Manager</SelectItem>
+                                        <SelectItem value="Admin">Admin</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </TableCell>
+                                  <TableCell className="py-2.5">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleToggleActive(emp)}
+                                      className={`h-7 text-[10px] font-black uppercase rounded-full px-2.5 ${
+                                        emp.isActive
+                                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800'
+                                          : 'bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800'
+                                      }`}
+                                    >
+                                      {emp.isActive ? 'Active' : 'Inactive'}
+                                    </Button>
                                   </TableCell>
                                 </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Employees / Team Members Tab */}
-              <TabsContent value="members" className="mt-0 h-full focus-visible:outline-none">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 mb-1">Employee Authorization Roster</h3>
-                    <p className="text-xs text-muted-foreground font-medium">Activate, deactivate, or customize access roles for registered employee accounts.</p>
-                  </div>
-
-                  {employees.length === 0 ? (
-                    <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground font-medium">
-                      No employee accounts registered yet. Use onboarding links to sign up team members.
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="border rounded-xl overflow-hidden shadow-sm">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-slate-50">
-                            <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Name/Email</TableHead>
-                            <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Department</TableHead>
-                            <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Role Permission</TableHead>
-                            <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {employees.map(emp => (
-                            <TableRow key={emp.uid}>
-                              <TableCell className="py-2.5">
-                                <div className="font-bold text-slate-800 text-xs">{emp.name}</div>
-                                <div className="text-[10px] text-muted-foreground">{emp.email}</div>
-                              </TableCell>
-                              <TableCell className="text-xs text-slate-700 font-medium py-2.5">
-                                {emp.department || '—'}
-                              </TableCell>
-                              <TableCell className="py-2.5">
-                                <Select value={emp.role} onValueChange={(val) => handleRoleChange(emp, val)}>
-                                  <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Employee">Employee</SelectItem>
-                                    <SelectItem value="Manager">Manager</SelectItem>
-                                    <SelectItem value="Admin">Admin</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </TableCell>
-                              <TableCell className="py-2.5">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleToggleActive(emp)}
-                                  className={`h-7 text-[10px] font-black uppercase rounded-full px-2.5 ${
-                                    emp.isActive
-                                      ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800'
-                                      : 'bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800'
-                                  }`}
-                                >
-                                  {emp.isActive ? 'Active' : 'Inactive'}
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
+                  </TabsContent>
+                </>
+              )}
             </div>
           </Tabs>
         </div>

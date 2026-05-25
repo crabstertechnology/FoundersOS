@@ -66,9 +66,11 @@ interface TaskManagerProps {
   companyProfileId: string;
   employees: Employee[];
   initialAssigneeUid?: string;
+  userRole?: string;
+  currentUserUid?: string;
 }
 
-export function TaskManager({ userId, companyProfileId, employees, initialAssigneeUid }: TaskManagerProps) {
+export function TaskManager({ userId, companyProfileId, employees, initialAssigneeUid, userRole, currentUserUid }: TaskManagerProps) {
   const firestore = useFirestore();
   const today = new Date().toISOString().split('T')[0];
 
@@ -181,7 +183,8 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form */}
-        <Card className="border shadow-sm lg:col-span-1">
+        {userRole !== 'employee' && (
+          <Card className="border shadow-sm lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-600" />
@@ -261,10 +264,11 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
               </div>
             </form>
           </CardContent>
-        </Card>
+          </Card>
+        )}
 
         {/* Task Board */}
-        <Card className="border shadow-sm bg-white overflow-hidden lg:col-span-2">
+        <Card className={`border shadow-sm bg-white overflow-hidden ${userRole === 'employee' ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
           <CardHeader className="pb-3 border-b">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
@@ -305,7 +309,7 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      {['Task', 'Assignee', 'Priority', 'Status', 'Due', ''].map(h => (
+                      {['Task', 'Assignee', 'Priority', 'Status', 'Due', ...(userRole !== 'employee' ? [''] : [])].map(h => (
                         <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
                       ))}
                     </TableRow>
@@ -332,7 +336,11 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                             <Badge className={`border text-[9px] font-black uppercase ${PRIORITY_COLORS[t.priority as TaskPriority]}`}>{t.priority}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Select value={t.status} onValueChange={(v: any) => handleStatusChange(t.id, v)}>
+                            <Select 
+                              value={t.status} 
+                              onValueChange={(v: any) => handleStatusChange(t.id, v)}
+                              disabled={userRole === 'employee' && t.assignedToUid !== currentUserUid}
+                            >
                               <SelectTrigger className="h-7 text-[10px] font-black border-0 p-0 bg-transparent w-28 focus:ring-0">
                                 <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border font-black text-[9px] ${STATUS_COLORS[t.status as TaskStatus]}`}>
                                   {STATUS_ICONS[t.status as TaskStatus]}
@@ -350,16 +358,18 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                           <TableCell className={`text-xs font-mono whitespace-nowrap ${isOverdue ? 'text-rose-600 font-black' : 'text-slate-500'}`}>
                             {t.dueDate || '—'}{isOverdue && ' ⚠'}
                           </TableCell>
-                          <TableCell className="pr-4">
-                            <div className="flex justify-end gap-1">
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full" onClick={() => handleEdit(t)}>
-                                <Edit2 className="w-3 h-3" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(t.id)}>
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                          {userRole !== 'employee' && (
+                            <TableCell className="pr-4">
+                              <div className="flex justify-end gap-1">
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full" onClick={() => handleEdit(t)}>
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(t.id)}>
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          )}
                         </TableRow>
                       );
                     })}

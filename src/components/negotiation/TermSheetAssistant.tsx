@@ -17,9 +17,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface TermSheetAssistantProps {
   userId: string;
   companyProfileId: string;
+  readOnly?: boolean;
 }
 
-export function TermSheetAssistant({ userId, companyProfileId }: TermSheetAssistantProps) {
+export function TermSheetAssistant({ userId, companyProfileId, readOnly }: TermSheetAssistantProps) {
   const [inputClauses, setInputClauses] = useState('');
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<TermSheetNegotiationAssistantOutput | null>(null);
@@ -33,6 +34,7 @@ export function TermSheetAssistant({ userId, companyProfileId }: TermSheetAssist
   const { data: profile } = useDoc(profileRef);
 
   const handleAnalyze = async () => {
+    if (readOnly) return;
     if (!inputClauses.trim()) return;
     setLoading(true);
     try {
@@ -80,14 +82,15 @@ export function TermSheetAssistant({ userId, companyProfileId }: TermSheetAssist
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea 
-              placeholder="Example: Investor proposes 2x participating liquidation preference and full-ratchet anti-dilution..."
+              placeholder={readOnly ? "Term Sheet Assistant is in view-only mode for employees." : "Example: Investor proposes 2x participating liquidation preference and full-ratchet anti-dilution..."}
               className="min-h-[250px] resize-none border-primary/20 focus-visible:ring-primary font-medium text-sm leading-relaxed"
               value={inputClauses}
               onChange={(e) => setInputClauses(e.target.value)}
+              disabled={loading || readOnly}
             />
             <Button 
               className="w-full h-12 rounded-full font-bold text-base gap-2 shadow-lg hover:scale-[1.02] transition-transform"
-              disabled={loading || !inputClauses.trim()}
+              disabled={loading || !inputClauses.trim() || readOnly}
               onClick={handleAnalyze}
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}

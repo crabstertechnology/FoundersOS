@@ -27,11 +27,12 @@ import { collection, doc, query, orderBy } from 'firebase/firestore';
 interface CapTableTrackerProps {
   userId: string;
   companyProfileId: string;
+  readOnly?: boolean;
 }
 
 const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444'];
 
-export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerProps) {
+export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTableTrackerProps) {
   const [activeView, setActiveView] = useState('registry');
   const [isAddingRound, setIsAddingRound] = useState(false);
   const [newRoundData, setNewRoundData] = useState({
@@ -108,7 +109,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
   // Actions
   const addStakeholder = () => {
-    if (!shareholdersRef) return;
+    if (readOnly || !shareholdersRef) return;
     addDocumentNonBlocking(shareholdersRef, {
       name: 'New Partner',
       role: 'Partner',
@@ -118,13 +119,13 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
   };
 
   const updateStakeholder = (id: string, field: string, value: any) => {
-    if (!shareholdersRef) return;
+    if (readOnly || !shareholdersRef) return;
     const stakeholderDoc = doc(shareholdersRef, id);
     updateDocumentNonBlocking(stakeholderDoc, { [field]: value });
   };
 
   const handleRecordRound = () => {
-    if (!roundsCollectionRef || !newRoundData.roundName) return;
+    if (readOnly || !roundsCollectionRef || !newRoundData.roundName) return;
     
     addDocumentNonBlocking(roundsCollectionRef, {
       ...newRoundData,
@@ -241,9 +242,11 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                     <CardTitle className="text-xl font-bold">Ownership Registry</CardTitle>
                     <CardDescription>Sasitharan starts at 100%. Adding partners reduces his stake.</CardDescription>
                   </div>
-                  <Button onClick={addStakeholder} variant="outline" className="gap-2 font-bold rounded-full">
-                    <UserPlus className="w-4 h-4" /> Add Partner
-                  </Button>
+                  {!readOnly && (
+                    <Button onClick={addStakeholder} variant="outline" className="gap-2 font-bold rounded-full">
+                      <UserPlus className="w-4 h-4" /> Add Partner
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -252,7 +255,7 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                         <TableHead className="w-[300px]">Name</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead className="text-right">Ownership %</TableHead>
-                        <TableHead className="w-10"></TableHead>
+                        {!readOnly && <TableHead className="w-10"></TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -270,15 +273,16 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
 
                       {(stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan').map((s) => (
                         <TableRow key={s.id} className="group hover:bg-muted/20">
-                          <TableCell>
+                           <TableCell>
                             <Input 
                               value={s.name || ''} 
                               className="h-8 border-none bg-transparent font-medium focus-visible:ring-1" 
                               onChange={e => updateStakeholder(s.id, 'name', e.target.value)}
+                              disabled={readOnly}
                             />
                           </TableCell>
                           <TableCell>
-                            <Select value={s.role} onValueChange={v => updateStakeholder(s.id, 'role', v)}>
+                            <Select value={s.role} onValueChange={v => updateStakeholder(s.id, 'role', v)} disabled={readOnly}>
                               <SelectTrigger className="h-8 w-24 border-none bg-muted/50 text-[10px] font-bold uppercase">
                                 <SelectValue />
                               </SelectTrigger>
@@ -297,15 +301,18 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                                 value={s.ownershipPercentage || ''} 
                                 className="h-8 w-20 border-none bg-muted/30 text-right font-code font-bold text-primary" 
                                 onChange={e => updateStakeholder(s.id, 'ownershipPercentage', Number(e.target.value))}
+                                disabled={readOnly}
                               />
                               <span className="text-xs font-bold">%</span>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(shareholdersRef!, s.id))}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
+                          {!readOnly && (
+                            <TableCell>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(shareholdersRef!, s.id))}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -331,66 +338,68 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                     <CardTitle className="text-xl font-bold">Funding History</CardTitle>
                     <CardDescription>Track key milestones where equity was exchanged for capital.</CardDescription>
                   </div>
-                  <Dialog open={isAddingRound} onOpenChange={setIsAddingRound}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="gap-2 font-bold rounded-full">
-                        <Plus className="w-4 h-4" /> Record Round
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Record New Funding Round</DialogTitle>
-                        <DialogDescription>
-                          Document a milestone where you raised capital in exchange for equity.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="name" className="text-right">Round Name</Label>
-                          <Input 
-                            id="name" 
-                            placeholder="Seed, Series A..." 
-                            className="col-span-3"
-                            value={newRoundData.roundName}
-                            onChange={e => setNewRoundData({...newRoundData, roundName: e.target.value})}
-                          />
+                  {!readOnly && (
+                    <Dialog open={isAddingRound} onOpenChange={setIsAddingRound}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="gap-2 font-bold rounded-full">
+                          <Plus className="w-4 h-4" /> Record Round
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Record New Funding Round</DialogTitle>
+                          <DialogDescription>
+                            Document a milestone where you raised capital in exchange for equity.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">Round Name</Label>
+                            <Input 
+                              id="name" 
+                              placeholder="Seed, Series A..." 
+                              className="col-span-3"
+                              value={newRoundData.roundName}
+                              onChange={e => setNewRoundData({...newRoundData, roundName: e.target.value})}
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="date" className="text-right">Date</Label>
+                            <Input 
+                              id="date" 
+                              type="date" 
+                              className="col-span-3"
+                              value={newRoundData.date}
+                              onChange={e => setNewRoundData({...newRoundData, date: e.target.value})}
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="amount" className="text-right">Amount (₹)</Label>
+                            <Input 
+                              id="amount" 
+                              type="number" 
+                              className="col-span-3"
+                              value={newRoundData.amountRaised || ''}
+                              onChange={e => setNewRoundData({...newRoundData, amountRaised: Number(e.target.value)})}
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="equity" className="text-right">Equity %</Label>
+                            <Input 
+                              id="equity" 
+                              type="number" 
+                              className="col-span-3"
+                              value={newRoundData.equityOffered || ''}
+                              onChange={e => setNewRoundData({...newRoundData, equityOffered: Number(e.target.value)})}
+                            />
+                          </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="date" className="text-right">Date</Label>
-                          <Input 
-                            id="date" 
-                            type="date" 
-                            className="col-span-3"
-                            value={newRoundData.date}
-                            onChange={e => setNewRoundData({...newRoundData, date: e.target.value})}
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="amount" className="text-right">Amount (₹)</Label>
-                          <Input 
-                            id="amount" 
-                            type="number" 
-                            className="col-span-3"
-                            value={newRoundData.amountRaised || ''}
-                            onChange={e => setNewRoundData({...newRoundData, amountRaised: Number(e.target.value)})}
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="equity" className="text-right">Equity %</Label>
-                          <Input 
-                            id="equity" 
-                            type="number" 
-                            className="col-span-3"
-                            value={newRoundData.equityOffered || ''}
-                            onChange={e => setNewRoundData({...newRoundData, equityOffered: Number(e.target.value)})}
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="button" onClick={handleRecordRound} className="w-full">Save Milestone</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                        <DialogFooter>
+                          <Button onClick={handleRecordRound} className="bg-primary text-white font-bold rounded-full px-6">Save Round</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {(!rounds || rounds.length === 0) ? (
@@ -420,9 +429,11 @@ export function CapTableTracker({ userId, companyProfileId }: CapTableTrackerPro
                               <div className="text-[10px] text-muted-foreground uppercase font-bold">Equity Granted</div>
                               <div className="font-bold text-primary">{fmtPct(r.equityOffered)}</div>
                             </div>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(roundsCollectionRef!, r.id))}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {!readOnly && (
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(roundsCollectionRef!, r.id))}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}

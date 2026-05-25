@@ -16,6 +16,7 @@ import ReactMarkdown from 'react-markdown';
 interface TermSheetAnalyzerProps {
   userId: string;
   companyProfileId: string;
+  readOnly?: boolean;
 }
 
 interface ChatMessage {
@@ -26,7 +27,7 @@ interface ChatMessage {
   riskRationale?: string;
 }
 
-export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyzerProps) {
+export function TermSheetAnalyzer({ userId, companyProfileId, readOnly }: TermSheetAnalyzerProps) {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -62,6 +63,7 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
   }, [messages, loading]);
 
   const saveChat = async (newMessages: ChatMessage[]) => {
+    if (readOnly) return;
     if (chatRef) {
       try {
         await setDoc(chatRef, { messages: newMessages }, { merge: true });
@@ -72,6 +74,7 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
   };
 
   const handleClearChat = async () => {
+    if (readOnly) return;
     setMessages([]);
     if (chatRef) {
       try {
@@ -83,6 +86,7 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
   };
 
   const handleAsk = async (explicitQuestion?: string) => {
+    if (readOnly) return;
     const q = explicitQuestion || question;
     if (!q.trim() || loading) return;
     
@@ -147,7 +151,7 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
               Ask any question about term sheet content or negotiation details. Powered by founder-friendly AI.
             </CardDescription>
           </div>
-          {messages.length > 0 && (
+          {messages.length > 0 && !readOnly && (
             <Button variant="ghost" size="sm" onClick={handleClearChat} className="text-muted-foreground hover:text-destructive shrink-0 mt-0">
               <Trash2 className="w-4 h-4 mr-2" />
               Clear Chat
@@ -169,11 +173,13 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
                       Ask about specific clauses, dilution, board seats, liquidations preferences, or anything else in your term sheet.
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2 justify-center mt-4">
-                    <BadgeButton text="What is a 'Full Ratchet'?" onClick={() => handleAsk("What is a 'Full Ratchet' anti-dilution clause?")} />
-                    <BadgeButton text="How should I negotiate Board Seats?" onClick={() => handleAsk("How should I negotiate Board Seats?")} />
-                    <BadgeButton text="Explain 1x Non-Participating" onClick={() => handleAsk("Explain 1x Non-Participating Liquidation Preference")} />
-                  </div>
+                  {!readOnly && (
+                    <div className="flex flex-wrap gap-2 justify-center mt-4">
+                      <BadgeButton text="What is a 'Full Ratchet'?" onClick={() => handleAsk("What is a 'Full Ratchet' anti-dilution clause?")} />
+                      <BadgeButton text="How should I negotiate Board Seats?" onClick={() => handleAsk("How should I negotiate Board Seats?")} />
+                      <BadgeButton text="Explain 1x Non-Participating" onClick={() => handleAsk("Explain 1x Non-Participating Liquidation Preference")} />
+                    </div>
+                  )}
                 </div>
               ) : (
                 messages.map((msg, idx) => (
@@ -266,17 +272,17 @@ export function TermSheetAnalyzer({ userId, companyProfileId }: TermSheetAnalyze
           <div className="p-4 bg-muted/20 border-t">
             <div className="relative">
               <Textarea 
-                placeholder="Ask about liquidation preferences, dilution, anti-dilution, board control..."
+                placeholder={readOnly ? "Term Sheet Q&A is in view-only mode for employees." : "Ask about liquidation preferences, dilution, anti-dilution, board control..."}
                 className="pr-14 min-h-[60px] max-h-[150px] resize-y rounded-xl border-primary/20 focus-visible:ring-primary shadow-sm"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={loading}
+                disabled={loading || readOnly}
               />
               <Button 
                 size="icon" 
                 className="absolute right-2 bottom-2 h-8 w-8 rounded-lg shadow-md hover:scale-105 transition-transform"
-                disabled={loading || !question.trim()}
+                disabled={loading || !question.trim() || readOnly}
                 onClick={() => handleAsk()}
               >
                 <Send className="w-4 h-4" />
