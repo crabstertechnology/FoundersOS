@@ -77,6 +77,11 @@ service cloud.firestore {
           allow update, delete: if isSignedIn() &&
             resource.data.senderUid == request.auth.uid;
         }
+
+        match /presence/{presenceId} {
+          allow read: if hasReadAccess(userId);
+          allow write: if isSignedIn();
+        }
       }
     }
 
