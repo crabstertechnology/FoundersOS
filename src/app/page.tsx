@@ -584,7 +584,7 @@ export default function FounderOSPage() {
       {/* Mobile Drawer Navigation */}
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-300">
-          <aside className="w-72 bg-[#090d16] text-slate-350 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-800">
+          <aside className="w-72 bg-[#090d16] text-slate-200 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-800">
             <button
               onClick={() => setIsMobileSidebarOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
@@ -602,8 +602,8 @@ export default function FounderOSPage() {
                 onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                   activeTab === 'dashboard'
-                    ? 'bg-primary text-white'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -618,8 +618,8 @@ export default function FounderOSPage() {
                   onClick={() => setIsSalesExpanded(!isSalesExpanded)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'sales'
-                      ? 'text-white font-bold'
-                      : 'hover:bg-slate-800/50 hover:text-slate-100'
+                      ? 'text-white font-black bg-slate-800/30'
+                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -640,7 +640,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'sales' && salesTab === 'crm'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       CRM Pipeline
@@ -652,8 +652,8 @@ export default function FounderOSPage() {
                         onClick={() => setIsEZCirkitExpanded(!isEZCirkitExpanded)}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                           activeTab === 'sales' && salesTab === 'ezcirkit'
-                            ? 'text-white'
-                            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/10'
+                            ? 'text-white font-bold'
+                            : 'text-slate-300 hover:text-white hover:bg-slate-800/10'
                         }`}
                       >
                         <span>EZCirkit Tracker</span>
@@ -671,7 +671,7 @@ export default function FounderOSPage() {
                             className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                               activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
                                 ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                             }`}
                           >
                             Weekly Dashboard
@@ -681,7 +681,7 @@ export default function FounderOSPage() {
                             className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                               activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
                                 ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                             }`}
                           >
                             Lead Tracker
@@ -691,7 +691,7 @@ export default function FounderOSPage() {
                             className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                               activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
                                 ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                             }`}
                           >
                             Workshop Tracker
@@ -701,7 +701,7 @@ export default function FounderOSPage() {
                             className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                               activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
                                 ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                             }`}
                           >
                             Product Sales
@@ -711,7 +711,7 @@ export default function FounderOSPage() {
                             className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                               activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
                                 ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                             }`}
                           >
                             Daily Activity
@@ -730,8 +730,8 @@ export default function FounderOSPage() {
                   onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'finance'
-                      ? 'text-white font-bold'
-                      : 'hover:bg-slate-800/50 hover:text-slate-100'
+                      ? 'text-white font-black bg-slate-800/30'
+                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -752,7 +752,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'calc'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Valuation Calculator
@@ -762,7 +762,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'tracker'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Cap Table Tracker
@@ -772,7 +772,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'exit'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Exit Simulator
@@ -782,7 +782,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'negotiate'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Term Sheet Assistant
@@ -792,7 +792,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'qa'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Term Sheet Q&A
@@ -802,7 +802,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'glossary'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Founder's Glossary
@@ -818,8 +818,8 @@ export default function FounderOSPage() {
                   onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'operations'
-                      ? 'text-white font-bold'
-                      : 'hover:bg-slate-800/50 hover:text-slate-100'
+                      ? 'text-white font-black bg-slate-800/30'
+                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -840,7 +840,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'operations' && operationsTab === 'ops'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Runway & SaaS Burn
@@ -850,7 +850,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'operations' && operationsTab === 'tasks'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Task Workspace
@@ -860,7 +860,7 @@ export default function FounderOSPage() {
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'operations' && operationsTab === 'chat'
                           ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
                       }`}
                     >
                       Team Chat
