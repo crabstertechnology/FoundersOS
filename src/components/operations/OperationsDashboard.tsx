@@ -26,6 +26,8 @@ import type { Employee } from './TaskManager';
 interface OperationsDashboardProps {
   userId: string;
   companyProfileId: string;
+  activeSubTab?: string;
+  onSubTabChange?: (tab: string) => void;
 }
 
 interface SaasSubscription {
@@ -52,7 +54,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other software', color: 'bg-slate-50 text-slate-700 border-slate-150' },
 ];
 
-export function OperationsDashboard({ userId, companyProfileId }: OperationsDashboardProps) {
+export function OperationsDashboard({ userId, companyProfileId, activeSubTab, onSubTabChange }: OperationsDashboardProps) {
   const firestore = useFirestore();
 
   // Firestore References
@@ -123,7 +125,9 @@ export function OperationsDashboard({ userId, companyProfileId }: OperationsDash
   const [customQuestion, setCustomQuestion] = useState('');
 
   // Tab & Quick Task States
-  const [activeTab, setActiveTab] = useState('ops');
+  const [localActiveTab, setLocalActiveTab] = useState('ops');
+  const activeTab = activeSubTab !== undefined ? activeSubTab : localActiveTab;
+  const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
   const [preselectedAssigneeUid, setPreselectedAssigneeUid] = useState<string>('');
 
   // Derived Operations Data
@@ -412,19 +416,21 @@ export function OperationsDashboard({ userId, companyProfileId }: OperationsDash
     <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex border-b pb-3 mb-6">
-          <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
-            <TabsTrigger value="ops" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
-              <Activity className="w-3.5 h-3.5" /> Operations
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
-              <ListChecks className="w-3.5 h-3.5" /> Task Manager
-            </TabsTrigger>
-            <TabsTrigger value="chat" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
-              <MessageSquare className="w-3.5 h-3.5" /> Team Chat
-            </TabsTrigger>
-          </TabsList>
-        </div>
+        {activeSubTab === undefined && (
+          <div className="flex border-b pb-3 mb-6">
+            <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
+              <TabsTrigger value="ops" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+                <Activity className="w-3.5 h-3.5" /> Operations
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+                <ListChecks className="w-3.5 h-3.5" /> Task Manager
+              </TabsTrigger>
+              <TabsTrigger value="chat" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" /> Team Chat
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        )}
 
         <TabsContent value="tasks" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <TaskManager

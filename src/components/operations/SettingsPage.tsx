@@ -106,7 +106,7 @@ export function SettingsPage({ userId }: SettingsPageProps) {
   if (!user) return null;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 w-full">
       <div>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1] mb-2">
           Founder <span className="text-primary">Settings</span>
@@ -116,56 +116,55 @@ export function SettingsPage({ userId }: SettingsPageProps) {
         </p>
       </div>
 
-      <Card className="border shadow-sm bg-white overflow-hidden">
-        <div className="flex flex-col md:flex-row h-[600px] min-h-0">
-          <Tabs defaultValue="profile" className="flex w-full h-full">
-            {/* Left Nav */}
-            <div className="w-full md:w-60 border-r bg-slate-50/50 p-4 shrink-0 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Control Center
-                </div>
-                <TabsList className="flex flex-col w-full h-auto bg-transparent gap-1 p-0">
-                  <TabsTrigger
-                    value="profile"
-                    className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
-                  >
-                    <User className="w-4 h-4 text-slate-500" />
-                    My Details
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="invites"
-                    className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
-                  >
-                    <Key className="w-4 h-4 text-slate-500" />
-                    Invite Links
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="members"
-                    className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
-                  >
-                    <Users className="w-4 h-4 text-slate-500" />
-                    Team Management
-                  </TabsTrigger>
-                </TabsList>
+      <div className="mt-6">
+        <Tabs defaultValue="profile" className="flex flex-col md:flex-row w-full gap-8">
+          {/* Left Nav */}
+          <div className="w-full md:w-64 border bg-slate-50/50 p-5 rounded-2xl shrink-0 flex flex-col justify-between h-[450px]">
+            <div className="space-y-4">
+              <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Control Center
               </div>
-
-              <div>
-                <div className="h-px bg-slate-200 my-4" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => initiateSignOut(auth)}
-                  className="w-full justify-start text-xs font-bold gap-2.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 h-10 px-3 rounded-lg"
+              <TabsList className="flex flex-col w-full h-auto bg-transparent gap-1 p-0">
+                <TabsTrigger
+                  value="profile"
+                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
                 >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out Account
-                </Button>
-              </div>
+                  <User className="w-4 h-4 text-slate-500" />
+                  My Details
+                </TabsTrigger>
+                <TabsTrigger
+                  value="invites"
+                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                >
+                  <Key className="w-4 h-4 text-slate-500" />
+                  Invite Links
+                </TabsTrigger>
+                <TabsTrigger
+                  value="members"
+                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                >
+                  <Users className="w-4 h-4 text-slate-500" />
+                  Team Management
+                </TabsTrigger>
+              </TabsList>
             </div>
 
-            {/* Right Content */}
-            <div className="flex-1 p-6 overflow-y-auto h-full min-h-0 bg-white">
+            <div>
+              <div className="h-px bg-slate-200 my-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => initiateSignOut(auth)}
+                className="w-full justify-start text-xs font-bold gap-2.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 h-10 px-3 rounded-lg"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out Account
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Content */}
+          <div className="flex-1 bg-white border p-8 rounded-2xl shadow-sm min-h-[500px]">
               {/* Profile Details Tab */}
               <TabsContent value="profile" className="mt-0 h-full focus-visible:outline-none">
                 <div className="space-y-6">
@@ -362,7 +361,6 @@ export function SettingsPage({ userId }: SettingsPageProps) {
             </div>
           </Tabs>
         </div>
-      </Card>
-    </div>
+      </div>
   );
 }

@@ -23,6 +23,10 @@ import { EZCirkitSalesTracker } from './EZCirkitSalesTracker';
 interface SalesAnalyticsProps {
   userId: string;
   companyProfileId: string;
+  activeSubTab?: string;
+  onSubTabChange?: (tab: string) => void;
+  activeEZCirkitTab?: string;
+  onEZCirkitTabChange?: (tab: string) => void;
 }
 
 interface Deal {
@@ -44,7 +48,14 @@ const STAGES = [
   { value: 'lost', label: 'Closed Lost', defaultProb: 0, color: 'bg-rose-50 text-rose-700 border-rose-100' },
 ];
 
-export function SalesAnalytics({ userId, companyProfileId }: SalesAnalyticsProps) {
+export function SalesAnalytics({
+  userId,
+  companyProfileId,
+  activeSubTab,
+  onSubTabChange,
+  activeEZCirkitTab,
+  onEZCirkitTabChange
+}: SalesAnalyticsProps) {
   const firestore = useFirestore();
 
   // Firestore References
@@ -72,6 +83,11 @@ export function SalesAnalytics({ userId, companyProfileId }: SalesAnalyticsProps
     if (!reports) return [];
     return reports.filter(r => r.type === 'sales' || (r.advice && 'funnelBottlenecks' in r.advice));
   }, [reports]);
+
+  // Tab States
+  const [localActiveTab, setLocalActiveTab] = useState('crm');
+  const activeTab = activeSubTab !== undefined ? activeSubTab : localActiveTab;
+  const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
 
   // Form States
   const [dealName, setDealName] = useState('');
@@ -308,20 +324,27 @@ export function SalesAnalytics({ userId, companyProfileId }: SalesAnalyticsProps
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
 
-      <Tabs defaultValue="crm" className="w-full">
-        <div className="flex items-center justify-between border-b pb-3 mb-6 gap-4 flex-wrap">
-          <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
-            <TabsTrigger value="crm" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
-              <BarChart3 className="w-3.5 h-3.5" /> CRM Pipeline
-            </TabsTrigger>
-            <TabsTrigger value="ezcirkit" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
-              <Zap className="w-3.5 h-3.5" /> EZCirkit Sales Tracker
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {activeSubTab === undefined && (
+          <div className="flex items-center justify-between border-b pb-3 mb-6 gap-4 flex-wrap">
+            <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
+              <TabsTrigger value="crm" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5" /> CRM Pipeline
+              </TabsTrigger>
+              <TabsTrigger value="ezcirkit" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+                <Zap className="w-3.5 h-3.5" /> EZCirkit Sales Tracker
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        )}
 
         <TabsContent value="ezcirkit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <EZCirkitSalesTracker userId={userId} companyProfileId={companyProfileId} />
+          <EZCirkitSalesTracker
+            userId={userId}
+            companyProfileId={companyProfileId}
+            activeSubTab={activeEZCirkitTab}
+            onSubTabChange={onEZCirkitTabChange}
+          />
         </TabsContent>
 
         <TabsContent value="crm" className="mt-0 focus-visible:outline-none">
