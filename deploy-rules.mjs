@@ -1,5 +1,5 @@
-const fs = require('fs');
-const { execSync } = require('child_process');
+import fs from 'fs';
+import { execSync } from 'child_process';
 
 const PROJECT_ID = 'studio-5418824271-71a21';
 const RULES_CONTENT = fs.readFileSync('./firestore.rules', 'utf8');

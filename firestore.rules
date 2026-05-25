@@ -2,14 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * CORE PHILOSOPHY
-     * This ruleset enforces a strict user-ownership model. All data under a user's
-     * path is accessible only by that specific authenticated user.
-     */
-
-    // --- Helper Functions ---
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -18,14 +10,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // --- Collection Rules ---
-
     match /users/{userId} {
-      // Allow a user to read/write their own user document
       allow get, create, update, delete: if isUser(userId);
-      allow list: if false; // Users cannot list other users
+      allow list: if false;
 
-      // All company-related data is nested under the user
       match /companyProfiles/{companyId} {
         allow read, write: if isUser(userId);
 
@@ -39,14 +27,44 @@ service cloud.firestore {
 
         match /strategicReports/{reportId} {
           allow read, create, delete: if isUser(userId);
-          // Strategic reports are historically immutable
           allow update: if false;
         }
 
         match /chats/{chatId} {
           allow read, write: if isUser(userId);
         }
+
+        match /tasks/{taskId} {
+          allow read, write: if isUser(userId);
+          allow read: if isSignedIn() && resource.data.assignedToUid == request.auth.uid;
+          allow update: if isSignedIn()
+            && resource.data.assignedToUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+        }
+
+        match /teamChats/{messageId} {
+          allow read, write: if isUser(userId);
+          allow read, create: if isSignedIn() &&
+            exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
+            get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.adminUid == userId;
+          allow update, delete: if isSignedIn() &&
+            resource.data.senderUid == request.auth.uid;
+        }
       }
+    }
+
+    match /employees/{employeeId} {
+      allow read, update: if isSignedIn() && request.auth.uid == employeeId;
+      allow create: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && resource.data.adminUid == request.auth.uid;
+      allow list: if isSignedIn();
+    }
+
+    match /inviteCodes/{code} {
+      allow get: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.adminUid == request.auth.uid;
+      allow list: if isSignedIn();
     }
   }
 }

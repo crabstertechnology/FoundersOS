@@ -8,15 +8,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { 
   BarChart3, Plus, Trash2, Edit2, Sparkles, Loader2, Target, 
-  TrendingUp, Users, ArrowUpRight, DollarSign, Calendar, ChevronRight, CheckCircle2, AlertTriangle, AlertCircle
+  TrendingUp, Users, ArrowUpRight, DollarSign, Calendar, ChevronRight, CheckCircle2, AlertTriangle, AlertCircle, Zap
 } from 'lucide-react';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { salesAdvisorAssistant, SalesAdvisorOutput } from '@/ai/flows/sales-advisor-flow';
+import { EZCirkitSalesTracker } from './EZCirkitSalesTracker';
 
 interface SalesAnalyticsProps {
   userId: string;
@@ -304,8 +306,26 @@ export function SalesAnalytics({ userId, companyProfileId }: SalesAnalyticsProps
   const maxStageCount = Math.max(...funnelStages.map(s => stageStats[s.value]?.count || 0), 1);
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      
+    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+
+      <Tabs defaultValue="crm" className="w-full">
+        <div className="flex items-center justify-between border-b pb-3 mb-6 gap-4 flex-wrap">
+          <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
+            <TabsTrigger value="crm" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+              <BarChart3 className="w-3.5 h-3.5" /> CRM Pipeline
+            </TabsTrigger>
+            <TabsTrigger value="ezcirkit" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+              <Zap className="w-3.5 h-3.5" /> EZCirkit Sales Tracker
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="ezcirkit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+          <EZCirkitSalesTracker userId={userId} companyProfileId={companyProfileId} />
+        </TabsContent>
+
+        <TabsContent value="crm" className="mt-0 focus-visible:outline-none">
+      <div className="space-y-8">
       {/* Title block */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -959,6 +979,9 @@ export function SalesAnalytics({ userId, companyProfileId }: SalesAnalyticsProps
         </div>
       </div>
 
+      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

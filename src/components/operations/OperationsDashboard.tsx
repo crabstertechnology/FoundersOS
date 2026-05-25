@@ -8,15 +8,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { 
   Plus, Trash2, Edit2, Sparkles, Loader2, Wallet, Users, Layout, ShieldAlert,
-  Server, Laptop, Briefcase, Calendar, CheckCircle2, ChevronRight, Activity, Info
+  Server, Laptop, Briefcase, Calendar, CheckCircle2, ChevronRight, Activity, Info, ListChecks, Shield, MessageSquare
 } from 'lucide-react';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc, collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, where } from 'firebase/firestore';
 import { operationsAdvisorAssistant, OperationsAdvisorOutput } from '@/ai/flows/operations-advisor-flow';
+import { TaskManager } from './TaskManager';
+import { AdminPanel } from './AdminPanel';
+import { TeamChat } from './TeamChat';
+import type { Employee } from './TaskManager';
 
 interface OperationsDashboardProps {
   userId: string;
@@ -55,6 +60,24 @@ export function OperationsDashboard({ userId, companyProfileId }: OperationsDash
     if (!firestore || !userId || !companyProfileId) return null;
     return doc(firestore, 'users', userId, 'companyProfiles', companyProfileId);
   }, [firestore, userId, companyProfileId]);
+
+  // Employees collection (top-level, linked by adminUid)
+  const employeesRef = useMemoFirebase(() => {
+    if (!firestore || !userId) return null;
+    return collection(firestore, 'employees');
+  }, [firestore, userId]);
+
+  const employeesQuery = useMemoFirebase(() => {
+    if (!employeesRef) return null;
+    return query(employeesRef, where('adminUid', '==', userId));
+  }, [employeesRef, userId]);
+
+  const { data: rawEmployeesData } = useCollection(employeesQuery);
+  const employees = useMemo<Employee[]>(() => (rawEmployeesData || []).map((e: any) => ({
+    id: e.id, uid: e.uid || e.id, name: e.name || 'Unknown',
+    email: e.email || '', department: e.department || '',
+    role: e.role || 'Employee', isActive: e.isActive !== false,
+  })), [rawEmployeesData]);
 
   const reportsRef = useMemoFirebase(() => {
     if (!firestore || !userId || !companyProfileId) return null;
@@ -98,6 +121,10 @@ export function OperationsDashboard({ userId, companyProfileId }: OperationsDash
   const [aiLoading, setAiLoading] = useState(false);
   const [activeReport, setActiveReport] = useState<any | null>(null);
   const [customQuestion, setCustomQuestion] = useState('');
+
+  // Tab & Quick Task States
+  const [activeTab, setActiveTab] = useState('ops');
+  const [preselectedAssigneeUid, setPreselectedAssigneeUid] = useState<string>('');
 
   // Derived Operations Data
   const subscriptions = useMemo<SaasSubscription[]>(() => {
@@ -379,9 +406,49 @@ export function OperationsDashboard({ userId, companyProfileId }: OperationsDash
 
   const isDangerRunway = calculatedStats.runway < 6 && calculatedStats.runway > 0;
 
+  const companyName = profile?.companyName || 'EZCirkit';
+
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      
+    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex border-b pb-3 mb-6">
+          <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
+            <TabsTrigger value="ops" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+              <Activity className="w-3.5 h-3.5" /> Operations
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+              <ListChecks className="w-3.5 h-3.5" /> Task Manager
+            </TabsTrigger>
+            <TabsTrigger value="chat" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+              <MessageSquare className="w-3.5 h-3.5" /> Team Chat
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="tasks" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+          <TaskManager
+            userId={userId}
+            companyProfileId={companyProfileId}
+            employees={employees}
+            initialAssigneeUid={preselectedAssigneeUid}
+          />
+        </TabsContent>
+
+        <TabsContent value="chat" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+          <TeamChat
+            userId={userId}
+            companyProfileId={companyProfileId}
+            employees={employees}
+            onQuickAssign={(empUid) => {
+              setPreselectedAssigneeUid(empUid);
+              setActiveTab('tasks');
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="ops" className="mt-0 focus-visible:outline-none">
+      <div className="space-y-8">
       {/* Title block */}
       <div>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1] mb-2">
@@ -1036,11 +1103,13 @@ export function OperationsDashboard({ userId, companyProfileId }: OperationsDash
                 </div>
               </div>
             )}
-          </div>
+              </div>
 
         </div>
       </div>
-
+      </div>
+      </TabsContent>
+      </Tabs>
     </div>
   );
 }

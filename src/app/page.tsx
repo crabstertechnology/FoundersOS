@@ -20,6 +20,7 @@ import { ExitSimulator } from '@/components/calculator/ExitSimulator';
 import { CentralDashboard } from '@/components/dashboard/CentralDashboard';
 import { SalesAnalytics } from '@/components/sales/SalesAnalytics';
 import { OperationsDashboard } from '@/components/operations/OperationsDashboard';
+import { SettingsPage } from '@/components/operations/SettingsPage';
 
 
 export default function FounderOSPage() {
@@ -100,21 +101,20 @@ export default function FounderOSPage() {
           {isAuthenticated && <QuickCalculator />}
           
           {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <div className="hidden lg:flex flex-col items-end text-right">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Founder Account</span>
-                <span className="text-xs font-semibold truncate max-w-[150px]">{user.email}</span>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex items-center gap-3 text-left p-1.5 rounded-full transition-all group border ${
+                activeTab === 'settings' ? 'bg-primary/5 border-primary/20 ring-2 ring-primary/20' : 'hover:bg-slate-50 border-transparent'
+              }`}
+            >
+              <div className="w-9 h-9 bg-primary text-white font-black text-sm flex items-center justify-center rounded-full shadow-sm group-hover:scale-105 transition-all">
+                {user.email?.charAt(0).toUpperCase() || 'F'}
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => initiateSignOut(auth)} 
-                title="Sign Out"
-                className="hover:bg-destructive/10 hover:text-destructive rounded-full"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
+              <div className="hidden lg:flex flex-col items-start leading-none shrink-0 pr-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Founder Account</span>
+                <span className="text-xs font-semibold text-slate-800 truncate max-w-[140px]">{user.email}</span>
+              </div>
+            </button>
           ) : (
             <AuthDialog />
           )}
@@ -269,6 +269,10 @@ export default function FounderOSPage() {
                 <OperationsDashboard userId={userId!} companyProfileId={companyProfileId} />
               </TabsContent>
 
+              {/* Settings Tab */}
+              <TabsContent value="settings" className="mt-0 focus-visible:outline-none">
+                <SettingsPage userId={userId!} />
+              </TabsContent>
             </Tabs>
           </div>
         )}
