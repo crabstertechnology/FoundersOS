@@ -10,32 +10,56 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function isEmployeeOrManager(userId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.adminUid == userId;
+    }
+
+    function hasReadAccess(userId) {
+      return isUser(userId) || isEmployeeOrManager(userId);
+    }
+
+    function hasWriteAccess(userId) {
+      return isUser(userId) || (
+        isEmployeeOrManager(userId) && 
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'Manager'
+      );
+    }
+
     match /users/{userId} {
-      allow get, create, update, delete: if isUser(userId);
+      allow get: if hasReadAccess(userId);
+      allow create, update, delete: if isUser(userId);
       allow list: if false;
 
       match /companyProfiles/{companyId} {
-        allow read, write: if isUser(userId);
+        allow read: if hasReadAccess(userId);
+        allow write: if hasWriteAccess(userId);
 
         match /fundingRounds/{roundId} {
-          allow read, write: if isUser(userId);
+          allow read: if hasReadAccess(userId);
+          allow write: if hasWriteAccess(userId);
         }
 
         match /shareholders/{shareholderId} {
-          allow read, write: if isUser(userId);
+          allow read: if hasReadAccess(userId);
+          allow write: if hasWriteAccess(userId);
         }
 
         match /strategicReports/{reportId} {
-          allow read, create, delete: if isUser(userId);
+          allow read: if hasReadAccess(userId);
+          allow create, delete: if hasWriteAccess(userId);
           allow update: if false;
         }
 
         match /chats/{chatId} {
-          allow read, write: if isUser(userId);
+          allow read: if hasReadAccess(userId);
+          allow write: if hasWriteAccess(userId);
         }
 
         match /tasks/{taskId} {
-          allow read, write: if isUser(userId);
+          allow read: if hasReadAccess(userId);
+          allow write: if hasWriteAccess(userId);
           allow read: if isSignedIn() && resource.data.assignedToUid == request.auth.uid;
           allow update: if isSignedIn()
             && resource.data.assignedToUid == request.auth.uid
