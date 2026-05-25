@@ -37,9 +37,10 @@ const PAYMENT_COLORS: Record<string, string> = {
 interface ProductSalesProps {
   profileRef: DocumentReference | null;
   productSales: ProductSale[];
+  readOnly?: boolean;
 }
 
-export function EZCirkitProductSales({ profileRef, productSales }: ProductSalesProps) {
+export function EZCirkitProductSales({ profileRef, productSales, readOnly }: ProductSalesProps) {
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
   const [product, setProduct] = useState('EZCirkit Starter Kit');
@@ -110,7 +111,8 @@ export function EZCirkitProductSales({ profileRef, productSales }: ProductSalesP
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="border shadow-sm lg:col-span-1">
+        {!readOnly && (
+          <Card className="border shadow-sm lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
@@ -171,8 +173,9 @@ export function EZCirkitProductSales({ profileRef, productSales }: ProductSalesP
             </form>
           </CardContent>
         </Card>
+        )}
 
-        <Card className="border shadow-sm bg-white overflow-hidden lg:col-span-2">
+        <Card className={`border shadow-sm bg-white overflow-hidden ${readOnly ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
           <CardHeader className="pb-3 border-b">
             <CardTitle className="text-base font-black text-slate-900">Product Sales Log</CardTitle>
             <CardDescription>Track kit and product sales with payment status.</CardDescription>
@@ -188,7 +191,7 @@ export function EZCirkitProductSales({ profileRef, productSales }: ProductSalesP
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      {['Date', 'Product', 'Customer', 'Qty', 'Unit Price', 'Total', 'Payment', 'Notes', ''].map(h => (
+                      {['Date', 'Product', 'Customer', 'Qty', 'Unit Price', 'Total', 'Payment', 'Notes', ...(!readOnly ? [''] : [])].map(h => (
                         <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
                       ))}
                     </TableRow>
@@ -206,16 +209,18 @@ export function EZCirkitProductSales({ profileRef, productSales }: ProductSalesP
                           <Badge className={`border text-[9px] font-black uppercase ${PAYMENT_COLORS[p.paymentStatus]}`}>{p.paymentStatus}</Badge>
                         </TableCell>
                         <TableCell className="text-xs text-slate-500 max-w-[100px] truncate">{p.notes || '—'}</TableCell>
-                        <TableCell className="pr-4">
-                          <div className="flex justify-end gap-1">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-emerald-600 rounded-full" onClick={() => handleEdit(p)}>
-                              <Edit2 className="w-3 h-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(p.id)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {!readOnly && (
+                          <TableCell className="pr-4">
+                            <div className="flex justify-end gap-1">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-emerald-600 rounded-full" onClick={() => handleEdit(p)}>
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(p.id)}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

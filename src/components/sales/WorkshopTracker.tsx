@@ -42,9 +42,10 @@ const STATUS_COLORS: Record<string, string> = {
 interface WorkshopTrackerProps {
   profileRef: DocumentReference | null;
   workshops: Workshop[];
+  readOnly?: boolean;
 }
 
-export function WorkshopTracker({ profileRef, workshops }: WorkshopTrackerProps) {
+export function WorkshopTracker({ profileRef, workshops, readOnly }: WorkshopTrackerProps) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [format, setFormat] = useState<Workshop['format']>('online');
@@ -126,8 +127,8 @@ export function WorkshopTracker({ profileRef, workshops }: WorkshopTrackerProps)
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form */}
-        <Card className="border shadow-sm lg:col-span-1">
+        {!readOnly && (
+          <Card className="border shadow-sm lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-violet-600" />
@@ -197,9 +198,10 @@ export function WorkshopTracker({ profileRef, workshops }: WorkshopTrackerProps)
             </form>
           </CardContent>
         </Card>
+        )}
 
         {/* Table */}
-        <Card className="border shadow-sm bg-white overflow-hidden lg:col-span-2">
+        <Card className={`border shadow-sm bg-white overflow-hidden ${readOnly ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
           <CardHeader className="pb-3 border-b">
             <CardTitle className="text-base font-black text-slate-900">Workshop Log</CardTitle>
             <CardDescription>All scheduled and completed learning sessions.</CardDescription>
@@ -215,7 +217,7 @@ export function WorkshopTracker({ profileRef, workshops }: WorkshopTrackerProps)
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      {['Workshop', 'Date', 'Format', 'Attendees', 'Revenue', 'Leads', 'Status', ''].map(h => (
+                      {['Workshop', 'Date', 'Format', 'Attendees', 'Revenue', 'Leads', 'Status', ...(!readOnly ? [''] : [])].map(h => (
                         <TableHead key={h} className="font-black text-xs uppercase text-slate-500">{h}</TableHead>
                       ))}
                     </TableRow>
@@ -237,16 +239,18 @@ export function WorkshopTracker({ profileRef, workshops }: WorkshopTrackerProps)
                         <TableCell>
                           <Badge className={`border text-[9px] font-black uppercase ${STATUS_COLORS[w.status]}`}>{w.status}</Badge>
                         </TableCell>
-                        <TableCell className="pr-4">
-                          <div className="flex justify-end gap-1">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-violet-600 rounded-full" onClick={() => handleEdit(w)}>
-                              <Edit2 className="w-3 h-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(w.id)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {!readOnly && (
+                          <TableCell className="pr-4">
+                            <div className="flex justify-end gap-1">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-violet-600 rounded-full" onClick={() => handleEdit(w)}>
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(w.id)}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

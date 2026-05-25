@@ -29,6 +29,7 @@ interface WeeklyDashboardProps {
   productSales: ProductSale[];
   activities: DailyActivity[];
   targets: WeeklyTargets;
+  readOnly?: boolean;
 }
 
 const DEFAULT_TARGETS: WeeklyTargets = {
@@ -66,7 +67,7 @@ function ProgressRow({ label, actual, target, color }: { label: string; actual: 
   );
 }
 
-export function EZCirkitWeeklyDashboard({ profileRef, leads, productSales, activities, targets }: WeeklyDashboardProps) {
+export function EZCirkitWeeklyDashboard({ profileRef, leads, productSales, activities, targets, readOnly }: WeeklyDashboardProps) {
   const [editingTargets, setEditingTargets] = useState(false);
   const [draft, setDraft] = useState<WeeklyTargets>(targets);
 
@@ -133,9 +134,11 @@ export function EZCirkitWeeklyDashboard({ profileRef, leads, productSales, activ
               <CardTitle className="text-base font-black text-slate-900">Weekly Progress Dashboard</CardTitle>
               <CardDescription>Last 7 days actuals vs your weekly targets.</CardDescription>
             </div>
-            <Button variant="outline" size="sm" className="shrink-0 text-xs" onClick={() => { setDraft(targets); setEditingTargets(!editingTargets); }}>
-              <Target className="w-3.5 h-3.5 mr-1.5" /> Edit Targets
-            </Button>
+            {!readOnly && (
+              <Button variant="outline" size="sm" className="shrink-0 text-xs" onClick={() => { setDraft(targets); setEditingTargets(!editingTargets); }}>
+                <Target className="w-3.5 h-3.5 mr-1.5" /> Edit Targets
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="pt-6 space-y-5">
             {metrics.map(m => (

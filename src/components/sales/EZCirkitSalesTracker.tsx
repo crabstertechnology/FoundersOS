@@ -88,31 +88,32 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
               productSales={productSales}
               activities={activities}
               targets={targets}
+              readOnly={readOnly}
             />
           </fieldset>
         </TabsContent>
 
         <TabsContent value="leads" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <fieldset disabled={readOnly} className="contents">
-            <EZCirkitLeadTracker profileRef={profileRef} leads={leads} />
+            <EZCirkitLeadTracker profileRef={profileRef} leads={leads} readOnly={readOnly} />
           </fieldset>
         </TabsContent>
 
         <TabsContent value="workshops" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <fieldset disabled={readOnly} className="contents">
-            <WorkshopTracker profileRef={profileRef} workshops={workshops} />
+            <WorkshopTracker profileRef={profileRef} workshops={workshops} readOnly={readOnly} />
           </fieldset>
         </TabsContent>
 
         <TabsContent value="products" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <fieldset disabled={readOnly} className="contents">
-            <EZCirkitProductSales profileRef={profileRef} productSales={productSales} />
+            <EZCirkitProductSales profileRef={profileRef} productSales={productSales} readOnly={readOnly} />
           </fieldset>
         </TabsContent>
 
         <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <fieldset disabled={readOnly} className="contents">
-            <EZCirkitDailyActivity profileRef={profileRef} activities={activities} />
+            <EZCirkitDailyActivity profileRef={profileRef} activities={activities} readOnly={readOnly} />
           </fieldset>
         </TabsContent>
       </Tabs>

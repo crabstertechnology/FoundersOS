@@ -267,12 +267,18 @@ export function AdminPanel({ userId, companyProfileId, companyName, employees }:
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          className="h-7 text-xs w-28 border-slate-200"
-                          placeholder="e.g. Sales Rep"
-                          defaultValue={emp.role}
-                          onBlur={e => handleUpdateRole(emp, e.target.value)}
-                        />
+                        <Select
+                          defaultValue={emp.role || 'Employee'}
+                          onValueChange={(val) => handleUpdateRole(emp, val)}
+                        >
+                          <SelectTrigger className="h-7 text-xs w-28 border-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Employee">Employee</SelectItem>
+                            <SelectItem value="Manager">Manager</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <Badge className={`border text-[9px] font-black uppercase ${emp.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>

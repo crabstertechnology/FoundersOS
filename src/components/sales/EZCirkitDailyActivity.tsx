@@ -26,9 +26,10 @@ export interface DailyActivity {
 interface DailyActivityProps {
   profileRef: DocumentReference | null;
   activities: DailyActivity[];
+  readOnly?: boolean;
 }
 
-export function EZCirkitDailyActivity({ profileRef, activities }: DailyActivityProps) {
+export function EZCirkitDailyActivity({ profileRef, activities, readOnly }: DailyActivityProps) {
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
   const [callsMade, setCallsMade] = useState<number | ''>(0);
@@ -119,7 +120,8 @@ export function EZCirkitDailyActivity({ profileRef, activities }: DailyActivityP
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="border shadow-sm lg:col-span-1">
+        {!readOnly && (
+          <Card className="border shadow-sm lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
@@ -162,8 +164,9 @@ export function EZCirkitDailyActivity({ profileRef, activities }: DailyActivityP
             </form>
           </CardContent>
         </Card>
+        )}
 
-        <Card className="border shadow-sm bg-white overflow-hidden lg:col-span-2">
+        <Card className={`border shadow-sm bg-white overflow-hidden ${readOnly ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
           <CardHeader className="pb-3 border-b">
             <CardTitle className="text-base font-black text-slate-900">Daily Activity Log</CardTitle>
             <CardDescription>All recorded outreach and sales activity by day.</CardDescription>
@@ -179,7 +182,7 @@ export function EZCirkitDailyActivity({ profileRef, activities }: DailyActivityP
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      {['Date', 'Calls', 'Schools', 'Colleges', 'Meetings', 'Proposals', 'Follow-ups', 'Orders', 'Notes', ''].map(h => (
+                      {['Date', 'Calls', 'Schools', 'Colleges', 'Meetings', 'Proposals', 'Follow-ups', 'Orders', 'Notes', ...(!readOnly ? [''] : [])].map(h => (
                         <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
                       ))}
                     </TableRow>
@@ -198,16 +201,18 @@ export function EZCirkitDailyActivity({ profileRef, activities }: DailyActivityP
                         <TableCell className="font-code font-bold">{a.followUps}</TableCell>
                         <TableCell className="font-code font-black text-emerald-700">{a.ordersClosed}</TableCell>
                         <TableCell className="text-xs text-slate-500 max-w-[100px] truncate">{a.notes || '—'}</TableCell>
-                        <TableCell className="pr-4">
-                          <div className="flex justify-end gap-1">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-blue-600 rounded-full" onClick={() => handleEdit(a)}>
-                              <Edit2 className="w-3 h-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(a.id)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {!readOnly && (
+                          <TableCell className="pr-4">
+                            <div className="flex justify-end gap-1">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-blue-600 rounded-full" onClick={() => handleEdit(a)}>
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(a.id)}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

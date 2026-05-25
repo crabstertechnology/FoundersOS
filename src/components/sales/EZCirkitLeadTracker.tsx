@@ -69,9 +69,10 @@ const STATUS_LABELS: Record<LeadStatus, string> = {
 interface Props {
   profileRef: DocumentReference | null;
   leads: EZLead[];
+  readOnly?: boolean;
 }
 
-export function EZCirkitLeadTracker({ profileRef, leads }: Props) {
+export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
   const [leadType, setLeadType] = useState<LeadType>('school');
@@ -170,8 +171,8 @@ export function EZCirkitLeadTracker({ profileRef, leads }: Props) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form */}
-        <Card className="border shadow-sm lg:col-span-1">
+        {!readOnly && (
+          <Card className="border shadow-sm lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
@@ -282,9 +283,10 @@ export function EZCirkitLeadTracker({ profileRef, leads }: Props) {
             </form>
           </CardContent>
         </Card>
+        )}
 
         {/* Table */}
-        <Card className="border shadow-sm bg-white overflow-hidden lg:col-span-2">
+        <Card className={`border shadow-sm bg-white overflow-hidden ${readOnly ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
           <CardHeader className="pb-3 border-b">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
@@ -325,7 +327,7 @@ export function EZCirkitLeadTracker({ profileRef, leads }: Props) {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      {['Date', 'Type', 'Organization', 'Contact', 'Requirement', 'Status', 'Next Action', 'Follow-up', 'Exp. Rev', 'Act. Rev', 'Remarks', ''].map(h => (
+                      {['Date', 'Type', 'Organization', 'Contact', 'Requirement', 'Status', 'Next Action', 'Follow-up', 'Exp. Rev', 'Act. Rev', 'Remarks', ...(!readOnly ? [''] : [])].map(h => (
                         <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
                       ))}
                     </TableRow>
@@ -368,16 +370,18 @@ export function EZCirkitLeadTracker({ profileRef, leads }: Props) {
                         <TableCell className="font-code font-bold text-indigo-700 whitespace-nowrap">{l.expectedRevenue > 0 ? fmtINR(l.expectedRevenue) : '—'}</TableCell>
                         <TableCell className="font-code font-bold text-emerald-700 whitespace-nowrap">{l.actualRevenue > 0 ? fmtINR(l.actualRevenue) : '—'}</TableCell>
                         <TableCell className="text-xs text-slate-500 max-w-[100px] truncate">{l.remarks || '—'}</TableCell>
-                        <TableCell className="pr-4">
-                          <div className="flex justify-end gap-1">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-indigo-600 rounded-full" onClick={() => handleEdit(l)}>
-                              <Edit2 className="w-3 h-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(l.id)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {!readOnly && (
+                          <TableCell className="pr-4">
+                            <div className="flex justify-end gap-1">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-indigo-600 rounded-full" onClick={() => handleEdit(l)}>
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(l.id)}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
