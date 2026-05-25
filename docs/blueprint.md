@@ -9,6 +9,7 @@
 - Founder Authority Health Checks: Analyzes the cap table to identify potential risks to founder voting majority, investor preference share dominance, or ESOP pool balance, providing actionable tips for protection.
 - Interactive Startup Glossary: A comprehensive and searchable glossary of critical startup terms, providing plain English descriptions, real-world examples with financial figures, and India-specific insights, categorized for easy navigation.
 - Contextual Startup Advice Generator: Leverages an AI tool to generate personalized strategic advice and early warnings based on the aggregated financial calculations, equity structures, and health checks, helping founders make informed decisions.
+-
 
 ## Style Guidelines:
 
