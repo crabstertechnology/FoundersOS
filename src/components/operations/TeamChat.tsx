@@ -439,7 +439,6 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
               </Button>
             </div>
           </div>
-          <CardDescription>Chat or view activity indicators</CardDescription>
         </CardHeader>
         <CardContent className="p-3 flex-1 overflow-y-auto space-y-1 bg-white">
           
@@ -613,7 +612,7 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
             </div>
           ) : (
             searchedMessages.map((msg: any) => {
-              const isSelf = user && msg.senderUid === user.uid;
+              const isSelf = user && (msg.senderUid === user.uid || msg.senderId === user.uid);
               const senderInitial = (msg.senderName || 'U').charAt(0).toUpperCase();
               const isEditing = editingMessageId === msg.id;
               const decText = decryptText(msg.text, companyProfileId);
@@ -640,19 +639,20 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
               };
 
               return (
-                <div key={msg.id} className={`flex gap-3 max-w-[85%] ${isSelf ? 'ml-auto flex-row-reverse' : ''}`}>
-                  
-                  {/* Avatar */}
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                      isSelf ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'
-                    }`}
-                  >
-                    {senderInitial}
-                  </div>
+                <div key={msg.id} className={`flex w-full ${isSelf ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex gap-3 max-w-[85%] ${isSelf ? 'flex-row-reverse' : ''}`}>
+                    
+                    {/* Avatar */}
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                        isSelf ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'
+                      }`}
+                    >
+                      {senderInitial}
+                    </div>
 
-                  {/* Bubble */}
-                  <div className={`space-y-0.5 flex flex-col max-w-[85%] ${isSelf ? 'items-end' : 'items-start'}`}>
+                    {/* Bubble */}
+                    <div className={`space-y-0.5 flex flex-col max-w-[85%] ${isSelf ? 'items-end' : 'items-start'}`}>
                     <div className="flex items-center gap-1.5 text-[9px] text-slate-500 font-semibold px-1">
                       <span className="font-bold text-slate-700">{msg.senderName}</span>
                       <span>•</span>
@@ -795,8 +795,9 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
                     </div>
                   </div>
                 </div>
-              );
-            })
+              </div>
+            );
+          })
           )}
 
           {/* Typing Indicator Panel */}
