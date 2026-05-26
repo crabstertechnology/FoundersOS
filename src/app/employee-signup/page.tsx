@@ -28,6 +28,16 @@ export default function EmployeeSignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (code) {
+        setInviteCode(code.toUpperCase());
+      }
+    }
+  }, []);
+
   const handleVerifyInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setInviteError('');

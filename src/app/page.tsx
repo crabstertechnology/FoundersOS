@@ -596,7 +596,7 @@ export default function FounderOSPage() {
                 }`}
               >
                 <div className="w-8 h-8 bg-primary text-white font-black text-xs flex items-center justify-center rounded-lg shadow-sm">
-                  {user.email?.charAt(0).toUpperCase() || 'F'}
+                  {(user?.email || 'F').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col items-start leading-tight min-w-0 flex-1">
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Founder Profile</span>
@@ -916,7 +916,7 @@ export default function FounderOSPage() {
                 }`}
               >
                 <div className="w-8 h-8 bg-primary text-white font-black text-xs flex items-center justify-center rounded-lg shadow-sm">
-                  {user.email?.charAt(0).toUpperCase() || 'F'}
+                  {(user?.email || 'F').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col items-start leading-tight min-w-0 flex-1">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Founder Profile</span>
