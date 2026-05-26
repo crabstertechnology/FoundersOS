@@ -127,9 +127,9 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
     if (sel?.id===id) setSel(null);
   };
 
-  const handleDeleteHistory = () => {
-    if (!profileRef || !sel || !window.confirm('Are you sure you want to delete the change history for this lead?')) return;
-    const updated: EZLead = { ...sel, history: [] };
+  const handleDeleteHistoryEntry = (entryId: string) => {
+    if (!profileRef || !sel || !window.confirm('Are you sure you want to delete this history entry?')) return;
+    const updated: EZLead = { ...sel, history: (sel.history || []).filter(h => h.id !== entryId) };
     setDocumentNonBlocking(profileRef, { ezLeads:leads.map(l=>l.id===sel.id?updated:l) }, { merge:true });
     setSel(updated);
   };
@@ -170,11 +170,6 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                 <div className="border-t pt-5">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><History className="w-3.5 h-3.5"/> Change History ({sel.history.length})</h3>
-                    {!readOnly && (
-                      <Button type="button" variant="link" className="text-rose-500 hover:text-rose-700 font-bold text-xs p-0 h-auto" onClick={handleDeleteHistory}>
-                        Clear History
-                      </Button>
-                    )}
                   </div>
                   <div className="space-y-0">
                     {[...(sel.history||[])].reverse().map((h,i)=>(
@@ -183,11 +178,18 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                           <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${i===0?'bg-indigo-600':'bg-slate-300'}`}/>
                           {i<sel.history.length-1&&<div className="w-px flex-1 bg-slate-200 my-1"/>}
                         </div>
-                        <div className="pb-4 flex-1">
-                          <div className="font-bold text-slate-800">{h.note}</div>
-                          <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5"><Clock className="w-2.5 h-2.5"/>{new Date(h.timestamp).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})} · {h.changedBy}</div>
-                          <Badge className={`mt-1.5 border text-[8px] font-black ${STAT_CLR[h.snapshot.status]}`}>{STAT_LABELS[h.snapshot.status]}</Badge>
-                          {h.snapshot.nextAction&&<p className="text-[10px] text-slate-500 mt-1">→ {h.snapshot.nextAction}</p>}
+                        <div className="pb-4 flex-1 flex justify-between items-start gap-2">
+                          <div>
+                            <div className="font-bold text-slate-800">{h.note}</div>
+                            <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5"><Clock className="w-2.5 h-2.5"/>{new Date(h.timestamp).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})} · {h.changedBy}</div>
+                            <Badge className={`mt-1.5 border text-[8px] font-black ${STAT_CLR[h.snapshot.status]}`}>{STAT_LABELS[h.snapshot.status]}</Badge>
+                            {h.snapshot.nextAction&&<p className="text-[10px] text-slate-500 mt-1">→ {h.snapshot.nextAction}</p>}
+                          </div>
+                          {!readOnly && (
+                            <Button size="icon" variant="ghost" className="h-6 w-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full shrink-0" onClick={() => handleDeleteHistoryEntry(h.id)}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}

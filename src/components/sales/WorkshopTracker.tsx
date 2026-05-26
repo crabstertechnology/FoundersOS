@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,52 +9,112 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { fmtINR } from '@/lib/utils/formatters';
-import {
-  BookOpen, Trash2, Edit2, Users, TrendingUp, DollarSign, Lightbulb, AlertCircle
-} from 'lucide-react';
+import { BookOpen, Trash2, Users, TrendingUp, DollarSign, Lightbulb, AlertCircle, Plus, X } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { DocumentReference } from 'firebase/firestore';
 
 export interface Workshop {
-  id: string;
-  title: string;
-  date: string;
-  format: 'online' | 'in-person' | 'hybrid';
-  attendees: number;
-  revenue: number;
-  leadsGenerated: number;
-  status: 'planned' | 'completed' | 'cancelled';
-  notes: string;
+  id: string; title: string; date: string; format: 'online' | 'in-person' | 'hybrid';
+  attendees: number; revenue: number; leadsGenerated: number; status: 'planned' | 'completed' | 'cancelled'; notes: string;
 }
 
-const FORMAT_COLORS: Record<string, string> = {
+const FORMAT_CLR: Record<string, string> = {
   online: 'bg-blue-50 text-blue-700 border-blue-100',
   'in-person': 'bg-emerald-50 text-emerald-700 border-emerald-100',
   hybrid: 'bg-purple-50 text-purple-700 border-purple-100',
 };
 
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_CLR: Record<string, string> = {
   planned: 'bg-amber-50 text-amber-700 border-amber-100',
   completed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   cancelled: 'bg-rose-50 text-rose-700 border-rose-100',
 };
 
-interface WorkshopTrackerProps {
-  profileRef: DocumentReference | null;
-  workshops: Workshop[];
-  readOnly?: boolean;
+interface F { title: string; date: string; format: Workshop['format']; attendees: number | ''; revenue: number | ''; leadsGenerated: number | ''; status: Workshop['status']; notes: string; }
+const blank = (d: string): F => ({ title: '', date: d, format: 'online', attendees: '', revenue: '', leadsGenerated: '', status: 'planned', notes: '' });
+
+function WorkshopForm({ f, setF, onSubmit, onCancel, isEdit, readOnly }: { f: F; setF: React.Dispatch<React.SetStateAction<F>>; onSubmit: (e: React.FormEvent) => void; onCancel: () => void; isEdit: boolean; readOnly?: boolean; }) {
+  const s = (k: keyof F) => (v: any) => setF(p => ({ ...p, [k]: v }));
+  return (
+    <form onSubmit={onSubmit} className="space-y-3">
+      <div className="space-y-1">
+        <Label className="font-bold text-xs">Workshop Title</Label>
+        <Input placeholder="e.g. SaaS Pricing Masterclass" value={f.title} onChange={e => s('title')(e.target.value)} required disabled={readOnly} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Date</Label>
+          <Input type="date" value={f.date} onChange={e => s('date')(e.target.value)} disabled={readOnly} />
+        </div>
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Format</Label>
+          <Select value={f.format} onValueChange={s('format')} disabled={readOnly}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="online">Online</SelectItem>
+              <SelectItem value="in-person">In-Person</SelectItem>
+              <SelectItem value="hybrid">Hybrid</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Attendees</Label>
+          <Input type="number" placeholder="e.g. 45" value={f.attendees} onChange={e => s('attendees')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} />
+        </div>
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Revenue (₹)</Label>
+          <Input type="number" placeholder="e.g. 25000" value={f.revenue} onChange={e => s('revenue')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Leads Generated</Label>
+          <Input type="number" placeholder="e.g. 12" value={f.leadsGenerated} onChange={e => s('leadsGenerated')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} />
+        </div>
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Status</Label>
+          <Select value={f.status} onValueChange={s('status')} disabled={readOnly}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="planned">Planned</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label className="font-bold text-xs">Notes</Label>
+        <Input placeholder="e.g. High engagement, follow-up pending..." value={f.notes} onChange={e => s('notes')(e.target.value)} disabled={readOnly} />
+      </div>
+      {!readOnly && (
+        <div className="flex gap-2 pt-1">
+          <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs">
+            {isEdit ? 'Update Workshop' : 'Add Workshop'}
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+        </div>
+      )}
+    </form>
+  );
 }
 
+interface WorkshopTrackerProps { profileRef: DocumentReference | null; workshops: Workshop[]; readOnly?: boolean; }
+
 export function WorkshopTracker({ profileRef, workshops, readOnly }: WorkshopTrackerProps) {
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [format, setFormat] = useState<Workshop['format']>('online');
-  const [attendees, setAttendees] = useState<number | ''>('');
-  const [revenue, setRevenue] = useState<number | ''>('');
-  const [leadsGenerated, setLeadsGenerated] = useState<number | ''>('');
-  const [status, setStatus] = useState<Workshop['status']>('planned');
-  const [notes, setNotes] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const today = new Date().toISOString().split('T')[0];
+  const [showAdd, setShowAdd] = useState(false);
+  const [addF, setAddF] = useState<F>(blank(today));
+  const [sel, setSel] = useState<Workshop | null>(null);
+  const [editF, setEditF] = useState<F>(blank(today));
+
+  useEffect(() => {
+    if (sel) {
+      setEditF({ title: sel.title, date: sel.date, format: sel.format, attendees: sel.attendees, revenue: sel.revenue, leadsGenerated: sel.leadsGenerated, status: sel.status, notes: sel.notes });
+    }
+  }, [sel]);
 
   const kpis = useMemo(() => {
     const completed = workshops.filter(w => w.status === 'completed');
@@ -64,47 +124,81 @@ export function WorkshopTracker({ profileRef, workshops, readOnly }: WorkshopTra
     return { total: workshops.length, completed: completed.length, totalAttendees, totalRevenue, totalLeads };
   }, [workshops]);
 
-  const resetForm = () => {
-    setTitle(''); setDate(''); setFormat('online'); setAttendees('');
-    setRevenue(''); setLeadsGenerated(''); setStatus('planned'); setNotes('');
-    setEditingId(null);
-  };
-
-  const handleSave = (e: React.FormEvent) => {
+  const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profileRef || !title) return;
-
+    if (!profileRef || !addF.title) return;
     const item: Workshop = {
-      id: editingId || Math.random().toString(36).substr(2, 9),
-      title, date, format,
-      attendees: Number(attendees) || 0,
-      revenue: Number(revenue) || 0,
-      leadsGenerated: Number(leadsGenerated) || 0,
-      status, notes,
+      id: Math.random().toString(36).substr(2, 9),
+      title: addF.title, date: addF.date, format: addF.format,
+      attendees: Number(addF.attendees) || 0,
+      revenue: Number(addF.revenue) || 0,
+      leadsGenerated: Number(addF.leadsGenerated) || 0,
+      status: addF.status, notes: addF.notes,
     };
-
-    const updated = editingId
-      ? workshops.map(w => w.id === editingId ? item : w)
-      : [...workshops, item];
-
-    setDocumentNonBlocking(profileRef, { workshops: updated }, { merge: true });
-    resetForm();
+    setDocumentNonBlocking(profileRef, { workshops: [...workshops, item] }, { merge: true });
+    setAddF(blank(today)); setShowAdd(false);
   };
 
-  const handleEdit = (w: Workshop) => {
-    setEditingId(w.id); setTitle(w.title); setDate(w.date);
-    setFormat(w.format); setAttendees(w.attendees); setRevenue(w.revenue);
-    setLeadsGenerated(w.leadsGenerated); setStatus(w.status); setNotes(w.notes);
+  const handleUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileRef || !sel) return;
+    const item: Workshop = {
+      id: sel.id,
+      title: editF.title, date: editF.date, format: editF.format,
+      attendees: Number(editF.attendees) || 0,
+      revenue: Number(editF.revenue) || 0,
+      leadsGenerated: Number(editF.leadsGenerated) || 0,
+      status: editF.status, notes: editF.notes,
+    };
+    setDocumentNonBlocking(profileRef, { workshops: workshops.map(w => w.id === sel.id ? item : w) }, { merge: true });
+    setSel(null);
   };
 
   const handleDelete = (id: string) => {
-    if (!profileRef) return;
+    if (!profileRef || !window.confirm('Delete this workshop?')) return;
     setDocumentNonBlocking(profileRef, { workshops: workshops.filter(w => w.id !== id) }, { merge: true });
-    if (editingId === id) resetForm();
+    if (sel?.id === id) setSel(null);
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+
+      {/* Add Workshop Modal */}
+      {showAdd && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowAdd(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b">
+              <div><h2 className="text-base font-black text-slate-900">Log a Workshop</h2><p className="text-xs text-muted-foreground">Track learning sessions and generate leads.</p></div>
+              <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setShowAdd(false)}><X className="w-4 h-4" /></Button>
+            </div>
+            <div className="p-5">
+              <WorkshopForm f={addF} setF={setAddF} onSubmit={handleAdd} onCancel={() => setShowAdd(false)} isEdit={false} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workshop Detail / Edit Panel */}
+      {sel && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSel(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b shrink-0">
+              <div className="flex items-center gap-3">
+                <Badge className={`border text-[9px] font-black uppercase ${FORMAT_CLR[sel.format]}`}>{sel.format}</Badge>
+                <div><h2 className="text-base font-black text-slate-900">{sel.title}</h2><p className="text-xs text-muted-foreground">{sel.date}</p></div>
+              </div>
+              <div className="flex items-center gap-2">
+                {!readOnly && <Button size="icon" variant="ghost" className="h-7 w-7 text-rose-500 hover:bg-rose-50 rounded-full" onClick={() => handleDelete(sel.id)}><Trash2 className="w-3.5 h-3.5" /></Button>}
+                <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setSel(null)}><X className="w-4 h-4" /></Button>
+              </div>
+            </div>
+            <div className="p-5">
+              <WorkshopForm f={editF} setF={setEditF} onSubmit={handleUpdate} onCancel={() => setSel(null)} isEdit={true} readOnly={readOnly} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* KPI Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -126,140 +220,62 @@ export function WorkshopTracker({ profileRef, workshops, readOnly }: WorkshopTra
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {!readOnly && (
-          <Card className="border shadow-sm lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-600" />
-              {editingId ? 'Edit Workshop' : 'Log a Workshop'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSave} className="space-y-3">
-              <div className="space-y-1">
-                <Label className="font-bold text-xs">Workshop Title</Label>
-                <Input placeholder="e.g. SaaS Pricing Masterclass" value={title} onChange={e => setTitle(e.target.value)} required />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Date</Label>
-                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Format</Label>
-                  <Select value={format} onValueChange={(v: any) => setFormat(v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="in-person">In-Person</SelectItem>
-                      <SelectItem value="hybrid">Hybrid</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Attendees</Label>
-                  <Input type="number" placeholder="e.g. 45" value={attendees} onChange={e => setAttendees(e.target.value === '' ? '' : Number(e.target.value))} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Revenue (₹)</Label>
-                  <Input type="number" placeholder="e.g. 25000" value={revenue} onChange={e => setRevenue(e.target.value === '' ? '' : Number(e.target.value))} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Leads Generated</Label>
-                  <Input type="number" placeholder="e.g. 12" value={leadsGenerated} onChange={e => setLeadsGenerated(e.target.value === '' ? '' : Number(e.target.value))} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Status</Label>
-                  <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planned">Planned</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="font-bold text-xs">Notes</Label>
-                <Input placeholder="e.g. High engagement, follow-up pending..." value={notes} onChange={e => setNotes(e.target.value)} />
-              </div>
-              <div className="flex gap-2 pt-1">
-                <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs">
-                  {editingId ? 'Update Workshop' : 'Add Workshop'}
-                </Button>
-                {editingId && <Button type="button" variant="ghost" size="sm" onClick={resetForm}>Cancel</Button>}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-        )}
-
-        {/* Table */}
-        <Card className={`border shadow-sm bg-white overflow-hidden ${readOnly ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
-          <CardHeader className="pb-3 border-b">
-            <CardTitle className="text-base font-black text-slate-900">Workshop Log</CardTitle>
-            <CardDescription>All scheduled and completed learning sessions.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {workshops.length === 0 ? (
-              <div className="p-10 text-center text-muted-foreground flex flex-col items-center gap-3">
-                <AlertCircle className="w-9 h-9 text-violet-200" />
-                <p className="text-sm font-semibold">No workshops tracked yet. Add your first one.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      {['Workshop', 'Date', 'Format', 'Attendees', 'Revenue', 'Leads', 'Status', ...(!readOnly ? [''] : [])].map(h => (
-                        <TableHead key={h} className="font-black text-xs uppercase text-slate-500">{h}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {workshops.map(w => (
-                      <TableRow key={w.id} className="hover:bg-slate-50 transition-colors">
-                        <TableCell className="font-bold py-3">
-                          <div className="text-slate-900 truncate max-w-[140px]">{w.title}</div>
-                          {w.notes && <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{w.notes}</div>}
-                        </TableCell>
-                        <TableCell className="text-xs font-mono text-slate-600">{w.date || '—'}</TableCell>
-                        <TableCell>
-                          <Badge className={`border text-[9px] font-black uppercase ${FORMAT_COLORS[w.format]}`}>{w.format}</Badge>
-                        </TableCell>
-                        <TableCell className="font-code font-bold">{w.attendees}</TableCell>
-                        <TableCell className="font-code font-bold">{fmtINR(w.revenue)}</TableCell>
-                        <TableCell className="font-code font-bold text-amber-700">{w.leadsGenerated}</TableCell>
-                        <TableCell>
-                          <Badge className={`border text-[9px] font-black uppercase ${STATUS_COLORS[w.status]}`}>{w.status}</Badge>
-                        </TableCell>
-                        {!readOnly && (
-                          <TableCell className="pr-4">
-                            <div className="flex justify-end gap-1">
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-violet-600 rounded-full" onClick={() => handleEdit(w)}>
-                                <Edit2 className="w-3 h-3" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(w.id)}>
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+      {/* Table Card */}
+      <Card className="border shadow-sm bg-white overflow-hidden">
+        <CardHeader className="pb-3 border-b">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base font-black text-slate-900">Workshop Log</CardTitle>
+              <CardDescription>Click any workshop to view details, update, or delete.</CardDescription>
+            </div>
+            {!readOnly && (
+              <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs gap-1.5 h-8" onClick={() => setShowAdd(true)}>
+                <Plus className="w-3.5 h-3.5" /> Log Workshop
+              </Button>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {workshops.length === 0 ? (
+            <div className="p-10 text-center text-muted-foreground flex flex-col items-center gap-3">
+              <AlertCircle className="w-9 h-9 text-violet-200" />
+              <p className="text-sm font-semibold">No workshops tracked yet. {!readOnly && 'Click "Log Workshop" to get started.'}</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    {['Workshop', 'Date', 'Format', 'Attendees', 'Revenue', 'Leads', 'Status'].map(h => (
+                      <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {workshops.map(w => (
+                    <TableRow key={w.id} className="hover:bg-violet-50/30 cursor-pointer transition-colors" onClick={() => setSel(w)}>
+                      <TableCell className="font-bold py-3">
+                        <div className="text-slate-900 truncate max-w-[180px]">{w.title}</div>
+                        {w.notes && <div className="text-[10px] text-muted-foreground truncate max-w-[180px]">{w.notes}</div>}
+                      </TableCell>
+                      <TableCell className="text-xs font-mono text-slate-600 whitespace-nowrap">{w.date || '—'}</TableCell>
+                      <TableCell>
+                        <Badge className={`border text-[9px] font-black uppercase ${FORMAT_CLR[w.format]}`}>{w.format}</Badge>
+                      </TableCell>
+                      <TableCell className="font-code font-bold">{w.attendees}</TableCell>
+                      <TableCell className="font-code font-bold text-emerald-700">{fmtINR(w.revenue)}</TableCell>
+                      <TableCell className="font-code font-bold text-amber-700">{w.leadsGenerated}</TableCell>
+                      <TableCell>
+                        <Badge className={`border text-[9px] font-black uppercase ${STATUS_CLR[w.status]}`}>{w.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
