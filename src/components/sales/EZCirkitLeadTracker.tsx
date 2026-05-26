@@ -127,6 +127,13 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
     if (sel?.id===id) setSel(null);
   };
 
+  const handleDeleteHistory = () => {
+    if (!profileRef || !sel || !window.confirm('Are you sure you want to delete the change history for this lead?')) return;
+    const updated: EZLead = { ...sel, history: [] };
+    setDocumentNonBlocking(profileRef, { ezLeads:leads.map(l=>l.id===sel.id?updated:l) }, { merge:true });
+    setSel(updated);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
 
@@ -161,7 +168,14 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
               <LeadForm f={editF} setF={setEditF} onSubmit={handleUpdate} onCancel={()=>setSel(null)} isEdit={true} readOnly={readOnly}/>
               {(sel.history||[]).length>0&&(
                 <div className="border-t pt-5">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2 mb-4"><History className="w-3.5 h-3.5"/> Change History ({sel.history.length} entries)</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><History className="w-3.5 h-3.5"/> Change History ({sel.history.length})</h3>
+                    {!readOnly && (
+                      <Button type="button" variant="link" className="text-rose-500 hover:text-rose-700 font-bold text-xs p-0 h-auto" onClick={handleDeleteHistory}>
+                        Clear History
+                      </Button>
+                    )}
+                  </div>
                   <div className="space-y-0">
                     {[...(sel.history||[])].reverse().map((h,i)=>(
                       <div key={h.id} className="flex gap-3 text-xs">
