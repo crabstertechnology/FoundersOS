@@ -90,24 +90,14 @@ service cloud.firestore {
         }
 
         match /directMessages/{dmChannelId}/messages/{messageId} {
-          // Admin can always read/write all DMs in their company
+          // Admin (userId) can always read/write all DMs in their company
           allow read, write: if isUser(userId);
-          // Participants can read their own DM messages
-          allow read: if isSignedIn() &&
+          // Employees can access DMs where their UID appears in the channel ID
+          // channelId format: "uid1_uid2" (sorted). Firebase UIDs have no underscores so this is safe.
+          allow read, write: if isSignedIn() &&
             isEmployeeOrManager(userId) &&
-            request.auth.uid in resource.data.participants;
-          // Any team member can create a DM if they are listed as a participant
-          allow create: if isSignedIn() &&
-            isEmployeeOrManager(userId) &&
-            request.auth.uid in request.resource.data.participants;
-          // Only read-receipt updates (readBy) are allowed for participants
-          allow update: if isSignedIn() &&
-            isEmployeeOrManager(userId) &&
-            request.auth.uid in resource.data.participants &&
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
-          // Only the sender can delete their own DM
-          allow delete: if isSignedIn() &&
-            resource.data.senderUid == request.auth.uid;
+            (dmChannelId.matches('^' + request.auth.uid + '_.*') ||
+             dmChannelId.matches('.*_' + request.auth.uid + '$'));
         }
       }
     }
