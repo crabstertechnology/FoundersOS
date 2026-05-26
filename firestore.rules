@@ -88,6 +88,27 @@ service cloud.firestore {
           allow read: if hasReadAccess(userId);
           allow write: if isSignedIn();
         }
+
+        match /directMessages/{dmChannelId}/messages/{messageId} {
+          // Admin can always read/write all DMs in their company
+          allow read, write: if isUser(userId);
+          // Participants can read their own DM messages
+          allow read: if isSignedIn() &&
+            isEmployeeOrManager(userId) &&
+            request.auth.uid in resource.data.participants;
+          // Any team member can create a DM if they are listed as a participant
+          allow create: if isSignedIn() &&
+            isEmployeeOrManager(userId) &&
+            request.auth.uid in request.resource.data.participants;
+          // Only read-receipt updates (readBy) are allowed for participants
+          allow update: if isSignedIn() &&
+            isEmployeeOrManager(userId) &&
+            request.auth.uid in resource.data.participants &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
+          // Only the sender can delete their own DM
+          allow delete: if isSignedIn() &&
+            resource.data.senderUid == request.auth.uid;
+        }
       }
     }
 

@@ -96,9 +96,12 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageIdRef = useRef<string | null>(null);
 
+  // selectedChat: 'general' = group channel, object = private DM
+  type ChatTarget = 'general' | { uid: string; name: string; role: string };
+  const [selectedChat, setSelectedChat] = useState<ChatTarget>('general');
+
   // States
   const [messageText, setMessageText] = useState('');
-  const [selectedMemberFilter, setSelectedMemberFilter] = useState<string>('all');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -158,6 +161,42 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
 
   const { data: rawMessages } = useCollection(chatQuery);
   const messages = rawMessages || [];
+
+  // DM channel ID = sorted UIDs joined by '_'
+  const dmChannelId = useMemo(() => {
+    if (selectedChat === 'general' || !user) return null;
+    return [user.uid, selectedChat.uid].sort().join('_');
+  }, [selectedChat, user]);
+
+  const dmRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId || !dmChannelId) return null;
+    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'directMessages', dmChannelId, 'messages');
+  }, [firestore, userId, companyProfileId, dmChannelId]);
+
+  const dmQuery = useMemoFirebase(() => {
+    if (!dmRef) return null;
+    return query(dmRef, orderBy('createdAt', 'asc'));
+  }, [dmRef]);
+
+  const { data: rawDmMessages } = useCollection(dmQuery);
+
+  // Active refs based on current view
+  const activeChatRef = selectedChat === 'general' ? chatRef : dmRef;
+  const activeMessages = selectedChat === 'general' ? messages : (rawDmMessages || []);
+
+  // Contact list: all team members except self
+  const contactList = useMemo(() => {
+    const contacts: Array<{ uid: string; name: string; role: string; isAdmin: boolean }> = [];
+    if (user?.uid !== userId) {
+      contacts.push({ uid: userId, name: 'Founder', role: 'Admin', isAdmin: true });
+    }
+    employees.forEach(emp => {
+      if (emp.uid !== user?.uid) {
+        contacts.push({ uid: emp.uid, name: emp.name, role: emp.role || 'Employee', isAdmin: false });
+      }
+    });
+    return contacts;
+  }, [employees, user, userId]);
 
   const presenceCollectionRef = useMemoFirebase(() => {
     if (!firestore || !userId || !companyProfileId) return null;
@@ -238,16 +277,16 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
 
   // Update read indicators (Blue Ticks)
   useEffect(() => {
-    if (!user || !chatRef || !messages.length) return;
-
-    messages.forEach((msg: any) => {
+    if (!user || !activeChatRef || !activeMessages.length) return;
+    activeMessages.forEach((msg: any) => {
       if (msg.senderUid !== user.uid && (!msg.readBy || !msg.readBy.includes(user.uid))) {
-        setDocumentNonBlocking(doc(chatRef, msg.id), {
+        setDocumentNonBlocking(doc(activeChatRef, msg.id), {
           readBy: [...(msg.readBy || []), user.uid]
         }, { merge: true });
       }
     });
-  }, [messages, user, chatRef]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMessages, user]);
 
   // ---------------------------------------------------------
   // Chat Actions
@@ -272,88 +311,66 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatRef || !messageText.trim() || !user) return;
-
-    // Encrypt the text before pushing to server (E2EE)
+    if (!activeChatRef || !messageText.trim() || !user) return;
     const encryptedText = encryptText(messageText.trim(), companyProfileId);
-
-    addDocumentNonBlocking(chatRef, {
+    const payload: any = {
       senderUid: user.uid,
       senderName: user.displayName || user.email?.split('@')[0] || 'User',
       senderEmail: user.email || '',
       text: encryptedText,
       isEncrypted: true,
       createdAt: serverTimestamp(),
-      readBy: [user.uid]
-    });
-
+      readBy: [user.uid],
+    };
+    if (selectedChat !== 'general') {
+      payload.participants = [user.uid, selectedChat.uid];
+    }
+    addDocumentNonBlocking(activeChatRef, payload);
     setMessageText('');
-
-    // Clear typing status instantly
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     setLocalIsTyping(false);
     if (firestore) {
       setDocumentNonBlocking(
         doc(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'presence', user.uid),
-        { isTyping: false },
-        { merge: true }
+        { isTyping: false }, { merge: true }
       );
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !chatRef || !user) return;
-
+    if (!file || !activeChatRef || !user) return;
     setUploadProgress(0);
     setUploadStatus('Compressing media...');
-
     let mediaData = '';
     const isImage = file.type.startsWith('image/');
     const mediaType = isImage ? 'image' : 'document';
-
     if (isImage) {
-      try {
-        mediaData = await compressImage(file);
-      } catch (err) {
-        console.error('Compression failed, uploading normal preview', err);
-      }
+      try { mediaData = await compressImage(file); } catch (err) { console.error(err); }
     }
-
     let progress = 10;
     setUploadProgress(progress);
     setUploadStatus('Uploading file payload...');
-
     const interval = setInterval(() => {
       progress += Math.floor(Math.random() * 25) + 15;
-      if (progress >= 100) {
-        progress = 100;
-        setUploadStatus('Applying E2EE signature...');
-      }
+      if (progress >= 100) { progress = 100; setUploadStatus('Applying E2EE signature...'); }
       setUploadProgress(progress);
-
       if (progress === 100) {
         clearInterval(interval);
         setTimeout(() => {
           const rawText = `Shared a ${mediaType}: ${file.name}`;
           const encryptedText = encryptText(rawText, companyProfileId);
-
-          addDocumentNonBlocking(chatRef, {
+          const payload: any = {
             senderUid: user.uid,
             senderName: user.displayName || user.email?.split('@')[0] || 'User',
             senderEmail: user.email || '',
-            text: encryptedText,
-            mediaName: file.name,
-            mediaType,
-            mediaSize: file.size,
-            mediaUrl: mediaData || null,
-            isEncrypted: true,
-            createdAt: serverTimestamp(),
-            readBy: [user.uid]
-          });
-
-          setUploadProgress(null);
-          setUploadStatus('');
+            text: encryptedText, mediaName: file.name, mediaType,
+            mediaSize: file.size, mediaUrl: mediaData || null,
+            isEncrypted: true, createdAt: serverTimestamp(), readBy: [user.uid],
+          };
+          if (selectedChat !== 'general') payload.participants = [user.uid, selectedChat.uid];
+          addDocumentNonBlocking(activeChatRef, payload);
+          setUploadProgress(null); setUploadStatus('');
           if (fileInputRef.current) fileInputRef.current.value = '';
         }, 600);
       }
@@ -366,16 +383,16 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
   };
 
   const handleSaveEdit = (msgId: string) => {
-    if (!chatRef || !editText.trim()) return;
+    if (!activeChatRef || !editText.trim()) return;
     const encryptedText = encryptText(editText.trim(), companyProfileId);
-    setDocumentNonBlocking(doc(chatRef, msgId), { text: encryptedText }, { merge: true });
+    setDocumentNonBlocking(doc(activeChatRef, msgId), { text: encryptedText }, { merge: true });
     setEditingMessageId(null);
     setEditText('');
   };
 
   const handleDeleteMessage = (msgId: string) => {
-    if (!chatRef || !window.confirm('Delete this message for everyone?')) return;
-    deleteDocumentNonBlocking(doc(chatRef, msgId));
+    if (!activeChatRef || !window.confirm('Delete this message for everyone?')) return;
+    deleteDocumentNonBlocking(doc(activeChatRef, msgId));
   };
 
   const triggerDownload = (name: string, dataUrl?: string) => {
@@ -390,33 +407,26 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
   // ---------------------------------------------------------
   // Filtering & Search
   // ---------------------------------------------------------
-  const filteredMessages = useMemo(() => {
-    if (selectedMemberFilter === 'all') return messages;
-    return messages.filter(
-      (m: any) => m.senderUid === selectedMemberFilter || (m.senderUid === userId && selectedMemberFilter === 'admin')
-    );
-  }, [messages, selectedMemberFilter, userId]);
-
   const searchedMessages = useMemo(() => {
-    if (!searchQuery.trim()) return filteredMessages;
-    return filteredMessages.filter((msg: any) => {
+    if (!searchQuery.trim()) return activeMessages;
+    return activeMessages.filter((msg: any) => {
       const dec = decryptText(msg.text, companyProfileId).toLowerCase();
       const sender = (msg.senderName || '').toLowerCase();
       const file = (msg.mediaName || '').toLowerCase();
-      const query = searchQuery.toLowerCase();
-      return dec.includes(query) || sender.includes(query) || file.includes(query);
+      const q = searchQuery.toLowerCase();
+      return dec.includes(q) || sender.includes(q) || file.includes(q);
     });
-  }, [filteredMessages, searchQuery, companyProfileId]);
+  }, [activeMessages, searchQuery, companyProfileId]);
 
-  // Typing users list (excluding self)
+  // For DMs, only show typing from the other participant
   const typingUsers = useMemo(() => {
-    return presenceList.filter((p: any) => 
-      p.isTyping === true && 
-      p.uid !== user?.uid && 
-      p.lastActive && 
-      (Date.now() - p.lastActive.seconds * 1000 < 8000)
-    );
-  }, [presenceList, user]);
+    return presenceList.filter((p: any) => {
+      if (!p.isTyping || p.uid === user?.uid) return false;
+      if (!p.lastActive || Date.now() - p.lastActive.seconds * 1000 >= 8000) return false;
+      if (selectedChat !== 'general') return p.uid === selectedChat.uid;
+      return true;
+    });
+  }, [presenceList, user, selectedChat]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[600px] animate-in fade-in duration-300">
@@ -443,11 +453,12 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
           </div>
         </CardHeader>
         <CardContent className="p-3 flex-1 overflow-y-auto space-y-1 bg-white">
-          
+
+          {/* General Channel */}
           <button
-            onClick={() => setSelectedMemberFilter('all')}
+            onClick={() => { setSelectedChat('general'); setSearchQuery(''); }}
             className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-              selectedMemberFilter === 'all'
+              selectedChat === 'general'
                 ? 'bg-teal-50 text-teal-700 border-l-2 border-teal-600'
                 : 'hover:bg-slate-50 text-slate-600'
             }`}
@@ -457,92 +468,50 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
           </button>
 
           <div className="h-px bg-slate-100 my-2" />
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 pb-1">Direct Messages</p>
 
-          {/* Admin Member */}
-          {(() => {
-            const adminPresence = presenceList.find((p: any) => p.id === userId);
-            const isOnline = adminPresence?.status === 'online' && 
-                             adminPresence?.lastActive && 
-                             (Date.now() - adminPresence.lastActive.seconds * 1000 < 50000);
-            const isTyping = adminPresence?.isTyping === true && 
-                             adminPresence?.lastActive && 
-                             (Date.now() - adminPresence.lastActive.seconds * 1000 < 8000);
+          {/* Contact list */}
+          {contactList.map(contact => {
+            const presence = presenceList.find((p: any) => p.id === contact.uid);
+            const isOnline = presence?.status === 'online' &&
+              presence?.lastActive &&
+              (Date.now() - presence.lastActive.seconds * 1000 < 50000);
+            const isTyping = presence?.isTyping === true &&
+              presence?.lastActive &&
+              (Date.now() - presence.lastActive.seconds * 1000 < 8000);
+            const isActive = selectedChat !== 'general' && selectedChat.uid === contact.uid;
+            const emp = employees.find(e => e.uid === contact.uid);
 
             return (
               <div
+                key={contact.uid}
                 className={`group w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium transition-all ${
-                  selectedMemberFilter === 'admin' ? 'bg-teal-50 text-teal-700' : 'hover:bg-slate-50 text-slate-600'
+                  isActive ? 'bg-teal-50 text-teal-700 border-l-2 border-teal-600' : 'hover:bg-slate-50 text-slate-600'
                 }`}
               >
                 <button
-                  onClick={() => setSelectedMemberFilter('admin')}
+                  onClick={() => { setSelectedChat({ uid: contact.uid, name: contact.name, role: contact.role }); setSearchQuery(''); }}
                   className="flex items-center gap-2 flex-1 text-left"
                 >
                   <div className="relative shrink-0">
-                    <div className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center text-[10px] font-black text-amber-700">
-                      A
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black ${contact.isAdmin ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
+                      {contact.name.charAt(0).toUpperCase()}
                     </div>
                     <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-white ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
                   </div>
                   <div className="truncate">
-                    <div className="font-bold flex items-center gap-1">
-                      Admin
-                      {user?.uid === userId && <span className="text-[8px] font-normal text-slate-400 font-sans">(You)</span>}
-                    </div>
+                    <div className="font-bold">{contact.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {isTyping ? <span className="text-teal-600 font-bold animate-pulse">Typing...</span> : 'Founder'}
+                      {isTyping ? <span className="text-teal-600 font-bold animate-pulse">Typing...</span> : contact.role}
                     </div>
                   </div>
                 </button>
-              </div>
-            );
-          })()}
-
-          {/* Employee list */}
-          {employees.map(emp => {
-            const empPresence = presenceList.find((p: any) => p.id === emp.uid);
-            const isOnline = empPresence?.status === 'online' && 
-                             empPresence?.lastActive && 
-                             (Date.now() - empPresence.lastActive.seconds * 1000 < 50000);
-            const isTyping = empPresence?.isTyping === true && 
-                             empPresence?.lastActive && 
-                             (Date.now() - empPresence.lastActive.seconds * 1000 < 8000);
-
-            return (
-              <div
-                key={emp.uid}
-                className={`group w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium transition-all ${
-                  selectedMemberFilter === emp.uid ? 'bg-teal-50 text-teal-700' : 'hover:bg-slate-50 text-slate-600'
-                }`}
-              >
-                <button
-                  onClick={() => setSelectedMemberFilter(emp.uid)}
-                  className="flex items-center gap-2 flex-1 text-left"
-                >
-                  <div className="relative shrink-0">
-                    <div className="w-7 h-7 bg-teal-100 rounded-full flex items-center justify-center text-[10px] font-black text-teal-700">
-                      {emp.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-white ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
-                  </div>
-                  <div className="truncate">
-                    <div className="font-bold flex items-center gap-1">
-                      {emp.name}
-                      {user?.uid === emp.uid && <span className="text-[8px] font-normal text-slate-400 font-sans">(You)</span>}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {isTyping ? <span className="text-teal-600 font-bold animate-pulse">Typing...</span> : (emp.role || 'Member')}
-                    </div>
-                  </div>
-                </button>
-
-                {onQuickAssign && emp.isActive && (
+                {onQuickAssign && emp?.isActive && (
                   <Button
-                    size="icon"
-                    variant="ghost"
+                    size="icon" variant="ghost"
                     className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-teal-50 hover:text-teal-600 shrink-0"
                     title="Assign Task"
-                    onClick={() => onQuickAssign(emp.uid)}
+                    onClick={() => onQuickAssign(contact.uid)}
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </Button>
@@ -560,14 +529,21 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
         <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/20 space-y-0">
           <div className="flex-1">
             <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-teal-600" />
-              {selectedMemberFilter === 'all' ? 'General Team Chat' : 'Filtered Message Thread'}
+              {selectedChat === 'general'
+                ? <><MessageSquare className="w-4 h-4 text-teal-600" /> General Team Chat</>
+                : <><div className="w-5 h-5 rounded-full bg-teal-100 flex items-center justify-center text-[9px] font-black text-teal-700">{selectedChat.name.charAt(0)}</div> {selectedChat.name}</>
+              }
             </CardTitle>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <Badge variant="outline" className="text-[8px] h-4 bg-teal-50/50 border-teal-200 text-teal-800 flex items-center gap-1 font-bold">
-                <Lock className="w-2.5 h-2.5" />
-                E2EE Secure
-              </Badge>
+              {selectedChat === 'general' ? (
+                <Badge variant="outline" className="text-[8px] h-4 bg-teal-50/50 border-teal-200 text-teal-800 flex items-center gap-1 font-bold">
+                  <Lock className="w-2.5 h-2.5" /> E2EE · Everyone
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[8px] h-4 bg-indigo-50 border-indigo-200 text-indigo-800 flex items-center gap-1 font-bold">
+                  <Lock className="w-2.5 h-2.5" /> Private DM · E2EE
+                </Badge>
+              )}
               {isSystemOnline ? (
                 <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
                   <Wifi className="w-3 h-3" /> Connected
