@@ -89,7 +89,7 @@ const compressImage = (file: File): Promise<string> => {
 };
 
 export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }: TeamChatProps) {
-  const { user } = useFirebase();
+  const { user, auth } = useFirebase();
   const firestore = useFirestore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -208,11 +208,13 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
 
     return () => {
       clearInterval(interval);
-      setDocumentNonBlocking(myPresenceRef, {
-        status: 'offline',
-        isTyping: false,
-        lastActive: serverTimestamp()
-      }, { merge: true });
+      if (auth?.currentUser) {
+        setDocumentNonBlocking(myPresenceRef, {
+          status: 'offline',
+          isTyping: false,
+          lastActive: serverTimestamp()
+        }, { merge: true });
+      }
     };
   }, [firestore, user, userId, companyProfileId, isSystemOnline]);
 

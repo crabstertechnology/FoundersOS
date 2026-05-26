@@ -74,8 +74,14 @@ service cloud.firestore {
           allow read, create: if isSignedIn() &&
             exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
             get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.adminUid == userId;
+          // Allow sender to fully edit/delete their own messages
           allow update, delete: if isSignedIn() &&
             resource.data.senderUid == request.auth.uid;
+          // Allow any team member to mark messages as read (update readBy only)
+          allow update: if isSignedIn() &&
+            exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
+            get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.adminUid == userId &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
         }
 
         match /presence/{presenceId} {
