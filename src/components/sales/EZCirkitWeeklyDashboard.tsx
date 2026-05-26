@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,10 +71,15 @@ export function EZCirkitWeeklyDashboard({ profileRef, leads, productSales, activ
   const [editingTargets, setEditingTargets] = useState(false);
   const [draft, setDraft] = useState<WeeklyTargets>(targets);
 
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  // Keep draft in sync with Firestore-sourced targets whenever they change
+  // but only when the user is not actively editing the form
+  useEffect(() => {
+    if (!editingTargets) setDraft(targets);
+  }, [targets, editingTargets]);
 
   const actuals = useMemo(() => {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const weekLeads = leads.filter(l => l.date >= weekAgo);
     const weekSales = productSales.filter(s => s.date >= weekAgo);
     const weekActivities = activities.filter(a => a.date >= weekAgo);
@@ -87,7 +92,7 @@ export function EZCirkitWeeklyDashboard({ profileRef, leads, productSales, activ
     const revenueAchieved = weekLeads.filter(l => l.status === 'won').reduce((s, l) => s + (Number(l.actualRevenue) || 0), 0)
       + weekSales.filter(p => p.paymentStatus === 'paid').reduce((s, p) => s + (Number(p.total) || 0), 0);
     return { schoolsContacted, collegesContacted, workshopsProposed, workshopsConfirmed, studentLeads, kitsSold, revenueAchieved };
-  }, [leads, productSales, activities, weekAgo]);
+  }, [leads, productSales, activities]);
 
   const handleSaveTargets = () => {
     if (!profileRef) return;
