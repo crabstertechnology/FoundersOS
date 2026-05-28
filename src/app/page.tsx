@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { doc } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
   Menu, X, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
-  ShieldAlert
+  ShieldAlert, Calendar
 } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
@@ -27,6 +28,7 @@ import { SettingsPage } from '@/components/operations/SettingsPage';
 
 
 export default function FounderOSPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [salesTab, setSalesTab] = useState('crm');
   const [ezCirkitTab, setEzCirkitTab] = useState('weekly');
@@ -966,7 +968,16 @@ export default function FounderOSPage() {
             </h2>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/calendar')}
+              className="flex items-center gap-1.5 font-bold text-xs border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg h-9"
+            >
+              <Calendar className="w-4 h-4 text-indigo-600" />
+              <span>Calendar</span>
+            </Button>
             <QuickCalculator />
           </div>
         </header>

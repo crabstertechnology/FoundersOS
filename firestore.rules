@@ -124,5 +124,10 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.adminUid == request.auth.uid;
       allow list: if isSignedIn();
     }
+
+    match /calendarMeetings/{meetingId} {
+      allow read, update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+    }
   }
 }
