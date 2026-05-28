@@ -42,6 +42,20 @@ export default function FounderOSPage() {
   const auth = useAuth();
   const firestore = useFirestore();
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      const sub = params.get('sub');
+      const ez = params.get('ez');
+      if (tab) {
+        setActiveTab(tab);
+        if (sub) setSalesTab(sub);
+        if (ez) setEzCirkitTab(ez);
+      }
+    }
+  }, []);
+
   const employeeDocRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return doc(firestore, 'employees', user.uid);
