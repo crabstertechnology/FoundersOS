@@ -106,10 +106,33 @@ function NotificationSettingsSection() {
     setTestTriggered(true);
     setTimeout(() => setTestTriggered(false), 2000);
 
-    new Notification('FounderOS Workspace Test 🚀', {
+    const title = 'FounderOS Workspace Test 🚀';
+    const options = {
       body: 'Notifications are synchronized! You will receive push updates outside the application for meetings, chats, and tasks.',
-      icon: '/favicon.ico'
-    });
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: 'founder-os-test-notif',
+      renotify: true
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(title, options);
+      }).catch((err) => {
+        console.warn('Service worker fallback triggered during test:', err);
+        try {
+          new Notification(title, options);
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    } else {
+      try {
+        new Notification(title, options);
+      } catch (e) {
+        console.error(e);
+      }
+    }
   };
 
   return (

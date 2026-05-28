@@ -95,6 +95,19 @@ export function NotificationCenter() {
     }
   }, []);
 
+  // Register service worker on mount to support Android APK/WebView push notifications
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => {
+          console.log('FounderOS Service Worker registered successfully scope:', reg.scope);
+        })
+        .catch((err) => {
+          console.warn('FounderOS Service Worker registration failed:', err);
+        });
+    }
+  }, []);
+
   // Synchronize settings state
   useEffect(() => {
     setSettings(getNotificationSettings());
@@ -116,27 +129,52 @@ export function NotificationCenter() {
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        const notif = new Notification(title, {
+        const options = {
           body,
           icon: '/favicon.ico',
-        });
-        if (linkUrl) {
-          notif.onclick = () => {
-            window.focus();
-            if (linkUrl.startsWith('/calendar') || linkUrl.startsWith('/lead/')) {
-              router.push(linkUrl);
-            } else {
-              const urlParams = new URLSearchParams(linkUrl.split('?')[1]);
-              window.dispatchEvent(new CustomEvent('navigate-app', {
-                detail: {
-                  tab: urlParams.get('tab'),
-                  sub: urlParams.get('sub'),
-                  ez: urlParams.get('ez')
-                }
-              }));
-              router.push('/');
+          badge: '/favicon.ico',
+          tag: 'founder-os-notif',
+          renotify: true,
+          data: { url: linkUrl }
+        };
+
+        // On mobile WebViews, PWAs, or APKs, registration.showNotification is mandatory
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification(title, options);
+          }).catch((err) => {
+            console.warn('Service worker not ready, falling back to window Notification:', err);
+            try {
+              new Notification(title, options);
+            } catch (e) {
+              console.error('Desktop notification fallback error:', e);
             }
-          };
+          });
+        } else {
+          // Standard desktop notifications fallback
+          try {
+            const notif = new Notification(title, options);
+            if (linkUrl && notif) {
+              notif.onclick = () => {
+                window.focus();
+                if (linkUrl.startsWith('/calendar') || linkUrl.startsWith('/lead/')) {
+                  router.push(linkUrl);
+                } else {
+                  const urlParams = new URLSearchParams(linkUrl.split('?')[1]);
+                  window.dispatchEvent(new CustomEvent('navigate-app', {
+                    detail: {
+                      tab: urlParams.get('tab'),
+                      sub: urlParams.get('sub'),
+                      ez: urlParams.get('ez')
+                    }
+                  }));
+                  router.push('/');
+                }
+              };
+            }
+          } catch (e) {
+            console.error('Desktop notification instantiation error:', e);
+          }
         }
       }
     }
