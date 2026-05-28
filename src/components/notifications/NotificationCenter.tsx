@@ -108,6 +108,48 @@ export function NotificationCenter() {
     }
   }, []);
 
+  // Request FCM token and register it under the user document in Firestore
+  useEffect(() => {
+    if (!firestore || !user?.uid || !settings.browserNotificationsEnabled) return;
+
+    let active = true;
+
+    const registerFCM = async () => {
+      try {
+        const { getMessaging, isSupported, getToken } = await import('firebase/messaging');
+        const supported = await isSupported();
+        if (!supported || !active) return;
+
+        const messaging = getMessaging();
+        
+        // VAPID public key can be configured via environments, or defaults to browser auto-association
+        const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || undefined;
+
+        const token = await getToken(messaging, { vapidKey });
+        
+        if (token && active) {
+          console.log('Obtained FCM Device Push Token:', token);
+          const { doc, setDoc, arrayUnion } = await import('firebase/firestore');
+          const tokenRef = doc(firestore, 'users', user.uid, 'fcm', 'tokens');
+          await setDoc(tokenRef, {
+            tokens: arrayUnion(token),
+            lastUpdated: new Date().toISOString()
+          }, { merge: true });
+        }
+      } catch (err) {
+        console.warn('FCM Token generation failed (ensure Web Push certificates are configured in console):', err);
+      }
+    };
+
+    if (Notification.permission === 'granted') {
+      registerFCM();
+    }
+    
+    return () => {
+      active = false;
+    };
+  }, [firestore, user?.uid, settings.browserNotificationsEnabled]);
+
   // Synchronize settings state
   useEffect(() => {
     setSettings(getNotificationSettings());
