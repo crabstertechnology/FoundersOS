@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useUser, useDoc, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 interface Meeting {
   id: string;
@@ -322,6 +323,7 @@ export default function CalendarPage() {
           >
             Today
           </Button>
+          <NotificationCenter />
         </div>
       </header>
 

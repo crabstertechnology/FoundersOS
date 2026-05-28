@@ -25,6 +25,7 @@ import { CentralDashboard } from '@/components/dashboard/CentralDashboard';
 import { SalesAnalytics } from '@/components/sales/SalesAnalytics';
 import { OperationsDashboard } from '@/components/operations/OperationsDashboard';
 import { SettingsPage } from '@/components/operations/SettingsPage';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 
 export default function FounderOSPage() {
@@ -52,10 +53,35 @@ export default function FounderOSPage() {
       const ez = params.get('ez');
       if (tab) {
         setActiveTab(tab);
-        if (sub) setSalesTab(sub);
+        if (sub) {
+          if (tab === 'sales') setSalesTab(sub);
+          else if (tab === 'operations') setOperationsTab(sub);
+          else if (tab === 'finance') setFinanceTab(sub);
+        }
         if (ez) setEzCirkitTab(ez);
       }
     }
+  }, []);
+
+  React.useEffect(() => {
+    const handleNavigateEvent = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.tab) setActiveTab(detail.tab);
+      if (detail.sub) {
+        if (detail.tab === 'sales') {
+          setSalesTab(detail.sub);
+        } else if (detail.tab === 'operations') {
+          setOperationsTab(detail.sub);
+        } else if (detail.tab === 'finance') {
+          setFinanceTab(detail.sub);
+        }
+      }
+      if (detail.ez) {
+        setEzCirkitTab(detail.ez);
+      }
+    };
+    window.addEventListener('navigate-app', handleNavigateEvent);
+    return () => window.removeEventListener('navigate-app', handleNavigateEvent);
   }, []);
 
   const employeeDocRef = useMemoFirebase(() => {
@@ -978,6 +1004,7 @@ export default function FounderOSPage() {
               <Calendar className="w-4 h-4 text-indigo-600" />
               <span>Calendar</span>
             </Button>
+            <NotificationCenter />
             <QuickCalculator />
           </div>
         </header>

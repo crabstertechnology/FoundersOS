@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,243 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useFirebase, useFirestore, useMemoFirebase, useCollection, useAuth, initiateSignOut } from '@/firebase';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, collection, query, where, serverTimestamp } from 'firebase/firestore';
-import { User, Settings, Users, Key, Plus, Trash2, ShieldCheck, LogOut, Copy, Check } from 'lucide-react';
+import { 
+  User, Settings, Users, Key, Plus, Trash2, ShieldCheck, LogOut, Copy, Check,
+  Bell, Video, MessageSquare, ListChecks, Target, ShieldAlert, Loader2
+} from 'lucide-react';
 import type { Employee } from './TaskManager';
 
 interface SettingsPageProps {
   userId: string;
   userRole?: string;
+}
+
+interface NotificationSettings {
+  browserNotificationsEnabled: boolean;
+  notifyChat: boolean;
+  notifyMeetings: boolean;
+  notifyTasks: boolean;
+  notifyLeads: boolean;
+}
+
+function NotificationSettingsSection() {
+  const [settings, setSettings] = useState<NotificationSettings>({
+    browserNotificationsEnabled: false,
+    notifyChat: true,
+    notifyMeetings: true,
+    notifyTasks: true,
+    notifyLeads: true
+  });
+  const [permissionStatus, setPermissionStatus] = useState<string>('default');
+  const [testTriggered, setTestTriggered] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('founderOS_notification_settings');
+      if (saved) {
+        try {
+          setSettings(JSON.parse(saved));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if ('Notification' in window) {
+        setPermissionStatus(Notification.permission);
+      }
+    }
+  }, []);
+
+  const saveSettings = (updated: NotificationSettings) => {
+    setSettings(updated);
+    localStorage.setItem('founderOS_notification_settings', JSON.stringify(updated));
+    // Emit custom event to sync real-time listeners immediately
+    window.dispatchEvent(new Event('founderOS_notification_settings_changed'));
+  };
+
+  const handleToggleBrowser = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      alert('Browser notifications are not supported by this browser.');
+      return;
+    }
+
+    if (Notification.permission === 'denied') {
+      alert('Browser notification permissions are currently blocked in your browser settings. Please enable them manually in your address bar/browser settings.');
+      return;
+    }
+
+    if (Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      setPermissionStatus(permission);
+      if (permission === 'granted') {
+        saveSettings({ ...settings, browserNotificationsEnabled: true });
+      } else {
+        saveSettings({ ...settings, browserNotificationsEnabled: false });
+      }
+    } else if (Notification.permission === 'granted') {
+      const newVal = !settings.browserNotificationsEnabled;
+      saveSettings({ ...settings, browserNotificationsEnabled: newVal });
+    }
+  };
+
+  const handleToggle = (key: keyof Omit<NotificationSettings, 'browserNotificationsEnabled'>) => {
+    const updated = { ...settings, [key]: !settings[key] };
+    saveSettings(updated);
+  };
+
+  const triggerTestNotification = () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    
+    if (Notification.permission !== 'granted') {
+      alert('Please enable browser notifications first.');
+      return;
+    }
+
+    setTestTriggered(true);
+    setTimeout(() => setTestTriggered(false), 2000);
+
+    new Notification('FounderOS Workspace Test 🚀', {
+      body: 'Notifications are synchronized! You will receive push updates outside the application for meetings, chats, and tasks.',
+      icon: '/favicon.ico'
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-base font-bold text-slate-900 mb-1">Notification System Settings</h3>
+        <p className="text-xs text-muted-foreground font-medium">Configure real-time push alerts and in-app updates for chats, tasks, and sales tracking.</p>
+      </div>
+
+      {/* Browser Notification Switch */}
+      <div className="border rounded-2xl p-5 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+            <Bell className="w-4 h-4 text-indigo-600 animate-pulse" /> Desktop/Browser Push Notifications
+          </h4>
+          <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+            Receive real-time sound and banner alerts on your desktop even when the application is running in the background.
+          </p>
+          <div className="flex items-center gap-2 pt-1 text-[10px] font-bold">
+            <span className="text-slate-400">Permission:</span>
+            {permissionStatus === 'granted' ? (
+              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-250 uppercase font-code">Allowed</span>
+            ) : permissionStatus === 'denied' ? (
+              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-250 uppercase font-code">Blocked ⚠</span>
+            ) : (
+              <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-250 uppercase font-code">Not Requested</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2 shrink-0 w-full sm:w-auto">
+          <Button
+            onClick={handleToggleBrowser}
+            className={`w-full sm:w-auto font-bold text-xs h-9 ${
+              settings.browserNotificationsEnabled
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : 'bg-white border text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            {settings.browserNotificationsEnabled ? 'Disable Browser Alerts' : 'Enable Browser Alerts'}
+          </Button>
+
+          {settings.browserNotificationsEnabled && (
+            <Button
+              variant="outline"
+              onClick={triggerTestNotification}
+              disabled={testTriggered}
+              className="font-bold text-xs h-9 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+            >
+              {testTriggered ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Send Test'}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Preferences Checklist */}
+      <div className="space-y-3">
+        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest">Notification Preferences</h4>
+        
+        <div className="border rounded-2xl divide-y divide-slate-100 overflow-hidden bg-white shadow-sm">
+          {/* Chat Messages */}
+          <div className="p-4 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-50 border border-blue-100">
+                <MessageSquare className="w-4 h-4 text-blue-500" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-800">Team & Private Chats</div>
+                <div className="text-[10px] text-slate-400 font-medium">Alert when a team member sends an encrypted chat message.</div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleToggle('notifyChat')}
+              className={`w-11 h-6 rounded-full transition-colors relative ${settings.notifyChat ? 'bg-indigo-600' : 'bg-slate-200'}`}
+            >
+              <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${settings.notifyChat ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+
+          {/* Assigned Tasks */}
+          <div className="p-4 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-50 border border-amber-100">
+                <ListChecks className="w-4 h-4 text-amber-500" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-800">Assigned Tasks</div>
+                <div className="text-[10px] text-slate-400 font-medium">Notify when a new task is assigned or its status is modified.</div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleToggle('notifyTasks')}
+              className={`w-11 h-6 rounded-full transition-colors relative ${settings.notifyTasks ? 'bg-indigo-600' : 'bg-slate-200'}`}
+            >
+              <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${settings.notifyTasks ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+
+          {/* Meetings */}
+          <div className="p-4 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-50 border border-purple-100">
+                <Video className="w-4 h-4 text-purple-500" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-800">Meetings & Calendar Events</div>
+                <div className="text-[10px] text-slate-400 font-medium">Alert when a workspace meeting is scheduled or modified.</div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleToggle('notifyMeetings')}
+              className={`w-11 h-6 rounded-full transition-colors relative ${settings.notifyMeetings ? 'bg-indigo-600' : 'bg-slate-200'}`}
+            >
+              <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${settings.notifyMeetings ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+
+          {/* Lead Tracker Updates */}
+          <div className="p-4 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-indigo-50 border border-indigo-100">
+                <Target className="w-4 h-4 text-indigo-500" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-800">Lead updates & Sales Pipeline</div>
+                <div className="text-[10px] text-slate-400 font-medium">Notify when a new lead is added or a lead status changes.</div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleToggle('notifyLeads')}
+              className={`w-11 h-6 rounded-full transition-colors relative ${settings.notifyLeads ? 'bg-indigo-600' : 'bg-slate-200'}`}
+            >
+              <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${settings.notifyLeads ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) {
@@ -134,6 +365,13 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                   <User className="w-4 h-4 text-slate-500" />
                   My Details
                 </TabsTrigger>
+                <TabsTrigger
+                  value="notifications"
+                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                >
+                  <Bell className="w-4 h-4 text-slate-500" />
+                  Notifications
+                </TabsTrigger>
                 {isAdmin && (
                   <>
                     <TabsTrigger
@@ -214,6 +452,10 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                     </div>
                   </div>
                 </div>
+              </TabsContent>
+              
+              <TabsContent value="notifications" className="mt-0 h-full focus-visible:outline-none">
+                <NotificationSettingsSection />
               </TabsContent>
 
               {isAdmin && (
