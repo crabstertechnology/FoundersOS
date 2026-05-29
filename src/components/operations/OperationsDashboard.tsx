@@ -21,6 +21,8 @@ import { operationsAdvisorAssistant, OperationsAdvisorOutput } from '@/ai/flows/
 import { TaskManager } from './TaskManager';
 import { AdminPanel } from './AdminPanel';
 import { TeamChat } from './TeamChat';
+import { OperationsWeeklyDashboard, DEFAULT_OPS_TARGETS } from './OperationsWeeklyDashboard';
+import { OperationsDailyActivity } from './OperationsDailyActivity';
 import type { Employee } from './TaskManager';
 
 interface OperationsDashboardProps {
@@ -128,7 +130,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
   const [customQuestion, setCustomQuestion] = useState('');
 
   // Tab & Quick Task States
-  const [localActiveTab, setLocalActiveTab] = useState('ops');
+  const [localActiveTab, setLocalActiveTab] = useState('weekly');
   const activeTab = activeSubTab !== undefined ? activeSubTab : localActiveTab;
   const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
   const [preselectedAssigneeUid, setPreselectedAssigneeUid] = useState<string>('');
@@ -422,11 +424,17 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
         {activeSubTab === undefined && (
           <div className="flex border-b pb-3 mb-6">
             <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
+              <TabsTrigger value="weekly" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+                <Activity className="w-3.5 h-3.5" /> Weekly Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
+                <Activity className="w-3.5 h-3.5" /> Daily Activity
+              </TabsTrigger>
               <TabsTrigger value="ops" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
-                <Activity className="w-3.5 h-3.5" /> Operations
+                <Activity className="w-3.5 h-3.5" /> Runway & SaaS Burn
               </TabsTrigger>
               <TabsTrigger value="tasks" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
-                <ListChecks className="w-3.5 h-3.5" /> Task Manager
+                <ListChecks className="w-3.5 h-3.5" /> Task Workspace
               </TabsTrigger>
               <TabsTrigger value="chat" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5">
                 <MessageSquare className="w-3.5 h-3.5" /> Team Chat
@@ -434,6 +442,24 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
             </TabsList>
           </div>
         )}
+
+        <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+          <OperationsWeeklyDashboard
+            profileRef={profileRef}
+            teamSize={calculatedStats.activeHeadcount || team.length}
+            saasCost={calculatedStats.totalSaasMonthly}
+            targets={profile?.opsWeeklyTargets || DEFAULT_OPS_TARGETS}
+            readOnly={readOnly}
+          />
+        </TabsContent>
+
+        <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+          <OperationsDailyActivity
+            profileRef={profileRef}
+            activities={profile?.opsDailyActivities || []}
+            readOnly={readOnly}
+          />
+        </TabsContent>
 
         <TabsContent value="tasks" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <TaskManager

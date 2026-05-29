@@ -24,6 +24,8 @@ import { ExitSimulator } from '@/components/calculator/ExitSimulator';
 import { CentralDashboard } from '@/components/dashboard/CentralDashboard';
 import { SalesAnalytics } from '@/components/sales/SalesAnalytics';
 import { OperationsDashboard } from '@/components/operations/OperationsDashboard';
+import { FinanceWeeklyDashboard, DEFAULT_FINANCE_TARGETS } from '@/components/finance/FinanceWeeklyDashboard';
+import { FinanceDailyActivity } from '@/components/finance/FinanceDailyActivity';
 import { SettingsPage } from '@/components/operations/SettingsPage';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
@@ -33,8 +35,8 @@ export default function FounderOSPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [salesTab, setSalesTab] = useState('crm');
   const [ezCirkitTab, setEzCirkitTab] = useState('weekly');
-  const [financeTab, setFinanceTab] = useState('calc');
-  const [operationsTab, setOperationsTab] = useState('ops');
+  const [financeTab, setFinanceTab] = useState('weekly');
+  const [operationsTab, setOperationsTab] = useState('weekly');
   const [isSalesExpanded, setIsSalesExpanded] = useState(true);
   const [isEZCirkitExpanded, setIsEZCirkitExpanded] = useState(true);
   const [isFinanceExpanded, setIsFinanceExpanded] = useState(true);
@@ -91,6 +93,18 @@ export default function FounderOSPage() {
 
   const { data: employeeData, isLoading: isEmployeeLoading } = useDoc(employeeDocRef);
 
+  const employeeRecord = employeeData;
+  const workspaceUserId = employeeRecord?.adminUid || user?.uid || '';
+  const userId = workspaceUserId;
+  const companyProfileId = 'primary-startup';
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return doc(firestore, 'users', userId, 'companyProfiles', companyProfileId);
+  }, [firestore, userId, companyProfileId]);
+
+  const { data: profile } = useDoc(profileRef);
+
   // If we are checking auth state, show a minimal loader
   if (isUserLoading || (user && isEmployeeLoading)) {
     return (
@@ -105,7 +119,6 @@ export default function FounderOSPage() {
 
   // Determine if the user is fully signed in (not anonymous)
   const isAuthenticated = user && !user.isAnonymous;
-  const employeeRecord = employeeData;
   const isEmployeeActive = employeeRecord ? employeeRecord.isActive !== false : true;
 
   // Deactivated screen
@@ -128,11 +141,8 @@ export default function FounderOSPage() {
     );
   }
 
-  const workspaceUserId = employeeRecord?.adminUid || user?.uid || '';
   const userRole = (employeeRecord?.role || 'admin').toLowerCase();
   const isReadOnly = userRole === 'employee';
-  const userId = workspaceUserId;
-  const companyProfileId = 'primary-startup';
 
   const handleNavigate = (tab: string) => {
     if (['calc', 'tracker', 'exit', 'negotiate', 'qa', 'glossary'].includes(tab)) {
@@ -479,6 +489,26 @@ export default function FounderOSPage() {
                 {isFinanceExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
                     <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
+                    <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'calc'
@@ -567,6 +597,26 @@ export default function FounderOSPage() {
 
                 {isOperationsExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
                     <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('ops'); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -826,6 +876,26 @@ export default function FounderOSPage() {
                 {isFinanceExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
                     <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
+                    <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); setIsMobileSidebarOpen(false); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'finance' && financeTab === 'calc'
@@ -913,6 +983,26 @@ export default function FounderOSPage() {
 
                 {isOperationsExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
                     <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('ops'); setIsMobileSidebarOpen(false); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -1033,6 +1123,43 @@ export default function FounderOSPage() {
             {/* Finance Suite Content */}
             <TabsContent value="finance" className="mt-0 focus-visible:outline-none">
               <Tabs value={financeTab} className="w-full animate-in fade-in duration-300">
+                <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                  <div className="mb-10 text-center space-y-4">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                      Finance <span className="text-primary">Weekly</span> Dashboard
+                    </h1>
+                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                      Monitor your funding progress, valuation targets, burn rate limit, and capital runway metrics.
+                    </p>
+                  </div>
+                  <FinanceWeeklyDashboard
+                    profileRef={profileRef}
+                    cashBank={profile?.cashBank || 0}
+                    burnRate={profile?.burnRate || 0}
+                    runway={profile?.runway || 0}
+                    valuation={profile?.valuation || 0}
+                    capitalRaised={profile?.capitalRaised || 0}
+                    targets={profile?.financeWeeklyTargets || DEFAULT_FINANCE_TARGETS}
+                    readOnly={isReadOnly}
+                  />
+                </TabsContent>
+
+                <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+                  <div className="mb-10 text-center space-y-4">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                      Finance <span className="text-primary">Daily</span> Activity
+                    </h1>
+                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
+                      Log daily cash transactions, categorize software spend, and audit your assigned strategic execution.
+                    </p>
+                  </div>
+                  <FinanceDailyActivity
+                    profileRef={profileRef}
+                    activities={profile?.financeDailyActivities || []}
+                    readOnly={isReadOnly}
+                  />
+                </TabsContent>
+
                 <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
                   <div className="mb-10 text-center space-y-4">
                     <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">

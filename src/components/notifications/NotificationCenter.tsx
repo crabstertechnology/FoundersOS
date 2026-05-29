@@ -287,19 +287,30 @@ export function NotificationCenter() {
         }
         snapshot.docChanges().forEach((change) => {
           const data = change.doc.data();
+          
+          let taskLink = '/?tab=operations&sub=tasks';
+          const cat = data.category?.toLowerCase();
+          if (cat === 'sales' || cat === 'product') {
+            taskLink = '/?tab=sales&sub=ezcirkit&ez=activity';
+          } else if (cat === 'finance') {
+            taskLink = '/?tab=finance&sub=activity';
+          } else if (cat === 'operations') {
+            taskLink = '/?tab=operations&sub=activity';
+          }
+
           if (change.type === 'added') {
             addNotification({
               type: 'task',
               title: 'Task Assigned ⚠',
               body: `"${data.title}" has been assigned to you.`,
-              link: '/?tab=operations&sub=tasks'
+              link: taskLink
             });
           } else if (change.type === 'modified') {
             addNotification({
               type: 'task',
               title: 'Task Status Updated',
               body: `"${data.title}" status changed to ${data.status}.`,
-              link: '/?tab=operations&sub=tasks'
+              link: taskLink
             });
           }
         });

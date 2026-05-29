@@ -8,53 +8,44 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useDoc } from '@/firebase';
 import type { DocumentReference } from 'firebase/firestore';
 
-export interface WeeklyTargets {
-  schoolsTarget: number;
-  collegesTarget: number;
-  workshopsProposedTarget: number;
-  workshopsConfirmedTarget: number;
-  studentLeadsTarget: number;
-  kitsSoldTarget: number;
-  revenueTarget: number;
+export interface OpsTargets {
+  teamSizeTarget: number;
+  saasBudget: number;
+  taskCompletionTarget: number;
 }
 
-export const DEFAULT_TARGETS: WeeklyTargets = {
-  schoolsTarget: 20,
-  collegesTarget: 10,
-  workshopsProposedTarget: 5,
-  workshopsConfirmedTarget: 2,
-  studentLeadsTarget: 50,
-  kitsSoldTarget: 20,
-  revenueTarget: 50000,
+export const DEFAULT_OPS_TARGETS: OpsTargets = {
+  teamSizeTarget: 10,
+  saasBudget: 50000,
+  taskCompletionTarget: 80,
 };
 
-interface WeeklyDashboardProps {
+interface OperationsWeeklyDashboardProps {
   profileRef: DocumentReference | null;
   readOnly?: boolean;
-  leads?: any[];
-  productSales?: any[];
-  activities?: any[];
+  teamSize?: number;
+  saasCost?: number;
   targets?: any;
 }
 
-export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: WeeklyDashboardProps) {
+export function OperationsWeeklyDashboard({ profileRef, readOnly }: OperationsWeeklyDashboardProps) {
   // Load company profile for strategic plan
   const { data: profile } = useDoc(profileRef);
 
   const weeklyPlans = profile?.strategicPlan?.weeklyPlans || [];
   const completedWeeklyActions = profile?.completedWeeklyActions || [];
 
-  // Filter actions based on Sales/Product keywords
+  // Filter actions based on Operations keywords
   const filteredWeeklyActions = useMemo(() => {
     const actions: Array<{ week: string; theme: string; action: string }> = [];
-    const salesKeywords = ['sales', 'crm', 'deals', 'client', 'outreach', 'leads', 'pipeline', 'conversion', 'customer', 'revenue', 'mrr', 'arr', 'growth', 'product', 'mvp', 'marketing'];
+    const opsKeywords = ['ops', 'operations', 'hiring', 'team', 'member', 'headcount', 'saas', 'subscriptions', 'process', 'tool', 'documentation', 'administrative', 'it', 'security'];
 
     weeklyPlans.forEach((plan: any) => {
       const weekName = plan.week || '';
       const theme = plan.theme || '';
       (plan.actions || []).forEach((act: string) => {
         const text = act.toLowerCase();
-        const isMatch = salesKeywords.some(kw => text.includes(kw));
+        const isMatch = opsKeywords.some(kw => text.includes(kw));
         if (isMatch) {
           actions.push({ week: weekName, theme, action: act });
         }
@@ -100,7 +91,7 @@ export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: WeeklyDashboar
           <div>
             <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-indigo-600" />
-              Strategic Sales & Product Weekly Actions ({weeklyStats.completed} / {weeklyStats.total})
+              Strategic Operations Weekly Actions ({weeklyStats.completed} / {weeklyStats.total})
             </CardTitle>
             <CardDescription className="text-xs">
               Weekly objectives aligned with your 12-month goal. Track and complete tasks to drive strategic goals.

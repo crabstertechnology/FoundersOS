@@ -13,18 +13,13 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@
 import { collection, query, doc, where, serverTimestamp } from 'firebase/firestore';
 import type { DocumentReference } from 'firebase/firestore';
 
-export interface DailyActivity {
-  id: string; date: string; callsMade: number; schoolsContacted: number; collegesContacted: number;
-  meetings: number; proposalsSent: number; followUps: number; ordersClosed: number; notes: string;
-}
-
-interface EZCirkitDailyActivityProps {
+interface OperationsDailyActivityProps {
   profileRef: DocumentReference | null;
   activities?: any[];
   readOnly?: boolean;
 }
 
-export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyActivityProps) {
+export function OperationsDailyActivity({ profileRef, readOnly }: OperationsDailyActivityProps) {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -81,38 +76,34 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
 
   const { data: tasksRaw } = useCollection(tasksQuery);
 
-  // All Sales/Product Tasks
-  const allSalesTasks = useMemo(() => {
+  // All Operations Tasks
+  const allOpsTasks = useMemo(() => {
     if (!tasksRaw) return [];
-    return tasksRaw.filter((t: any) => 
-      t.category?.toLowerCase() === 'sales' || t.category?.toLowerCase() === 'product'
-    );
+    return tasksRaw.filter((t: any) => t.category?.toLowerCase() === 'operations');
   }, [tasksRaw]);
 
   // Total stats
   const totalStats = useMemo(() => {
-    const total = allSalesTasks.length;
-    const completed = allSalesTasks.filter((t: any) => t.status === 'done').length;
+    const total = allOpsTasks.length;
+    const completed = allOpsTasks.filter((t: any) => t.status === 'done').length;
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { total, completed, pct };
-  }, [allSalesTasks]);
+  }, [allOpsTasks]);
 
   // Recommended tasks (from AI Strategic Plan)
   const recommendedTasks = useMemo(() => {
     const daily = profile?.strategicPlan?.dailyTasks || [];
-    return daily.filter((t: any) => 
-      t.category?.toLowerCase() === 'sales' || t.category?.toLowerCase() === 'product'
-    );
+    return daily.filter((t: any) => t.category?.toLowerCase() === 'operations');
   }, [profile?.strategicPlan?.dailyTasks]);
 
   // Find already assigned tasks by title
   const assignedTasksMap = useMemo(() => {
     const map = new Map<string, any>();
-    allSalesTasks.forEach((t: any) => {
+    allOpsTasks.forEach((t: any) => {
       map.set(t.title, t);
     });
     return map;
-  }, [allSalesTasks]);
+  }, [allOpsTasks]);
 
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
 
@@ -140,7 +131,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
           assignedToUid: assigneeUid,
           assignedToName: assignee?.name || 'Unassigned',
           assignedToEmail: assignee?.email || '',
-          category: task.category || 'Sales',
+          category: 'Operations',
           createdAt: serverTimestamp()
         };
         await addDocumentNonBlocking(tasksCollectionRef, payload);
@@ -149,14 +140,14 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
 
       // Trigger browser notification
       if (Notification.permission === 'granted') {
-        const notification = new Notification(`New Sales Task Assigned`, {
+        const notification = new Notification(`New Operations Task Assigned`, {
           body: `${task.title} assigned to you. Click to view.`,
           icon: '/favicon.ico'
         });
         notification.onclick = () => {
           window.focus();
           const event = new CustomEvent('navigate-app', { 
-            detail: { tab: 'sales', sub: 'ezcirkit', ez: 'activity' } 
+            detail: { tab: 'operations', sub: 'activity' } 
           });
           window.dispatchEvent(event);
         };
@@ -174,8 +165,8 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-
+    <div className="space-y-8 animate-in fade-in duration-300">
+      
       {/* STRATEGIC EXECUTION PORTAL */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Assigned Strategic Tasks Checklist (col-span-2) */}
@@ -186,7 +177,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
                 <div>
                   <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-800 flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-indigo-600" />
-                    Strategic Sales Actions
+                    Strategic Operations Actions
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Team-wide strategic execution tasks mapped to your 12-month goals.
@@ -206,14 +197,14 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
               )}
             </CardHeader>
             <CardContent className="p-0 divide-y divide-slate-100">
-              {allSalesTasks.length === 0 ? (
+              {allOpsTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
                   <Clock className="w-8 h-8 text-indigo-200" />
-                  <p className="text-xs font-semibold">No strategic Sales tasks assigned currently.</p>
+                  <p className="text-xs font-semibold">No strategic Operations tasks assigned currently.</p>
                   <p className="text-[10px] text-slate-400 font-medium">Assign recommended tasks from the AI recommendations panel on the right.</p>
                 </div>
               ) : (
-                allSalesTasks.map((task: any) => {
+                allOpsTasks.map((task: any) => {
                   const isDone = task.status === 'done';
                   const isMe = task.assignedToUid === user?.uid;
                   return (
