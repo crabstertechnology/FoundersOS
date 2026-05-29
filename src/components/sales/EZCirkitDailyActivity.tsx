@@ -127,7 +127,8 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
         await setDocumentNonBlocking(taskDocRef, {
           assignedToUid: assigneeUid,
           assignedToName: assignee?.name || 'Unassigned',
-          assignedToEmail: assignee?.email || ''
+          assignedToEmail: assignee?.email || '',
+          assignedAt: new Date().toISOString()
         }, { merge: true });
       } else {
         const tasksCollectionRef = collection(profileRef, 'tasks');
@@ -141,7 +142,8 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
           assignedToName: assignee?.name || 'Unassigned',
           assignedToEmail: assignee?.email || '',
           category: task.category || 'Sales',
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          assignedAt: new Date().toISOString()
         };
         await addDocumentNonBlocking(tasksCollectionRef, payload);
       }
@@ -170,7 +172,13 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
     if (!firestore || !profileRef) return;
     const taskDocRef = doc(profileRef, 'tasks', taskId);
     const newStatus = currentStatus === 'done' ? 'todo' : 'done';
-    await setDocumentNonBlocking(taskDocRef, { status: newStatus }, { merge: true });
+    const payload: any = { status: newStatus };
+    if (newStatus === 'done') {
+      payload.completedAt = new Date().toISOString();
+    } else {
+      payload.completedAt = null;
+    }
+    await setDocumentNonBlocking(taskDocRef, payload, { merge: true });
   };
 
   return (

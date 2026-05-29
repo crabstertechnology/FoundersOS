@@ -128,12 +128,21 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
     e.preventDefault();
     if (!tasksRef || !title) return;
     const emp = employees.find(em => em.uid === assignedTo);
-    const payload: Partial<Task> = {
+    const payload: any = {
       title, description, category, priority, status, dueDate,
       assignedToUid: assignedTo || '',
       assignedToName: emp?.name || 'Unassigned',
       assignedToEmail: emp?.email || '',
     };
+    if (assignedTo) {
+      payload.assignedAt = new Date().toISOString();
+    }
+    if (status === 'done') {
+      payload.completedAt = new Date().toISOString();
+    } else {
+      payload.completedAt = null;
+    }
+
     if (editingId) {
       setDocumentNonBlocking(doc(tasksRef, editingId), payload, { merge: true });
     } else {
@@ -156,7 +165,13 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
 
   const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
     if (!tasksRef) return;
-    setDocumentNonBlocking(doc(tasksRef, taskId), { status: newStatus }, { merge: true });
+    const updatePayload: any = { status: newStatus };
+    if (newStatus === 'done') {
+      updatePayload.completedAt = new Date().toISOString();
+    } else {
+      updatePayload.completedAt = null;
+    }
+    setDocumentNonBlocking(doc(tasksRef, taskId), updatePayload, { merge: true });
   };
 
   return (

@@ -9,11 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFirebase, useFirestore, useMemoFirebase, useCollection, useAuth, initiateSignOut } from '@/firebase';
+import { useFirebase, useFirestore, useMemoFirebase, useCollection, useDoc, useAuth, initiateSignOut } from '@/firebase';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { 
-  User, Settings, Users, Key, Plus, Trash2, ShieldCheck, LogOut, Copy, Check,
+  User, Settings, Users, Key, Plus, Trash2, ShieldCheck, LogOut, Copy, Check, Clock,
   Bell, Video, MessageSquare, ListChecks, Target, ShieldAlert, Loader2
 } from 'lucide-react';
 import type { Employee } from './TaskManager';
@@ -281,6 +281,44 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const isAdmin = userRole.toLowerCase() === 'admin';
 
+  // Fetch logged in employee details to determine correct adminUid/workspaceUserId
+  const employeeDocRef = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return doc(firestore, 'employees', user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: employeeData } = useDoc(employeeDocRef);
+  const workspaceUserId = employeeData?.adminUid || user?.uid || userId || '';
+
+  // Fetch tasks assigned to the current user
+  const userTasksRef = useMemoFirebase(() => {
+    if (!firestore || !workspaceUserId) return null;
+    return collection(firestore, 'users', workspaceUserId, 'companyProfiles', 'primary-startup', 'tasks');
+  }, [firestore, workspaceUserId]);
+
+  const userTasksQuery = useMemoFirebase(() => {
+    if (!userTasksRef || !user?.uid) return null;
+    return query(userTasksRef, where('assignedToUid', '==', user.uid));
+  }, [userTasksRef, user?.uid]);
+
+  const { data: rawUserTasks } = useCollection(userTasksQuery);
+  const userTasks = useMemo(() => {
+    return (rawUserTasks || []).map((t: any) => ({
+      id: t.id,
+      title: t.title || 'Untitled Task',
+      description: t.description || '',
+      assignedToUid: t.assignedToUid || '',
+      assignedToName: t.assignedToName || '',
+      assignedToEmail: t.assignedToEmail || '',
+      priority: t.priority || 'medium',
+      status: t.status || 'todo',
+      dueDate: t.dueDate || '',
+      category: t.category || '',
+      assignedAt: t.assignedAt || '',
+      completedAt: t.completedAt || '',
+    }));
+  }, [rawUserTasks]);
+
   // Firestore collections for Admin Panel controls
   const inviteCodesRef = useMemoFirebase(() => {
     if (!firestore || !userId) return null;
@@ -375,7 +413,7 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
       <div className="mt-6">
         <Tabs defaultValue="profile" className="flex flex-col md:flex-row w-full gap-8">
           {/* Left Nav */}
-          <div className="w-full md:w-64 border bg-slate-50/50 p-5 rounded-2xl shrink-0 flex flex-col justify-between h-[450px]">
+          <div className="w-full md:w-64 border bg-slate-50/50 p-5 rounded-2xl shrink-0 flex flex-col justify-between h-[500px]">
             <div className="space-y-4">
               <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Control Center
@@ -394,6 +432,13 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                 >
                   <Bell className="w-4 h-4 text-slate-500" />
                   Notifications
+                </TabsTrigger>
+                <TabsTrigger
+                  value="tasks"
+                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                >
+                  <ListChecks className="w-4 h-4 text-slate-500" />
+                  My Tasks
                 </TabsTrigger>
                 {isAdmin && (
                   <>
@@ -479,6 +524,90 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
               
               <TabsContent value="notifications" className="mt-0 h-full focus-visible:outline-none">
                 <NotificationSettingsSection />
+              </TabsContent>
+
+              {/* My Tasks Tab */}
+              <TabsContent value="tasks" className="mt-0 h-full focus-visible:outline-none">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 mb-1">My Task Tracker</h3>
+                    <p className="text-xs text-muted-foreground font-medium">Track your assigned tasks and deadlines across Sales, Finance, and Operations.</p>
+                  </div>
+
+                  {userTasks.length === 0 ? (
+                    <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground font-medium">
+                      You have no assigned tasks currently.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {userTasks.map((t: any) => (
+                        <div key={t.id} className="border rounded-xl p-4 bg-white shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                          <div className="space-y-1.5 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-slate-900 text-sm truncate">{t.title}</h4>
+                              <Badge className={`text-[8px] font-black uppercase ${
+                                t.category?.toLowerCase() === 'sales' || t.category?.toLowerCase() === 'product' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                                t.category?.toLowerCase() === 'finance' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                'bg-teal-50 text-teal-700 border-teal-100'
+                              }`}>
+                                {t.category}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{t.description}</p>
+                            
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1.5 text-[10px] text-slate-400 font-medium">
+                              {t.assignedAt && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                  Assigned: <span className="font-mono text-slate-655 font-bold">{new Date(t.assignedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                </span>
+                              )}
+                              {t.completedAt && (
+                                <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                                  <Check className="w-3 h-3 text-emerald-600 font-black" />
+                                  Completed: <span className="font-mono font-bold">{new Date(t.completedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3 shrink-0">
+                            <Badge className={`border text-[8px] font-black uppercase ${
+                              t.priority === 'urgent' ? 'bg-rose-50 text-rose-700 border-rose-100' :
+                              t.priority === 'high' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                              'bg-slate-100 text-slate-600 border-slate-200'
+                            }`}>
+                              {t.priority}
+                            </Badge>
+                            
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                const newStatus = t.status === 'done' ? 'todo' : 'done';
+                                const payload: any = { status: newStatus };
+                                if (newStatus === 'done') {
+                                  payload.completedAt = new Date().toISOString();
+                                } else {
+                                  payload.completedAt = null;
+                                }
+                                if (userTasksRef) {
+                                  setDocumentNonBlocking(doc(userTasksRef, t.id), payload, { merge: true });
+                                }
+                              }}
+                              className={`font-bold text-xs h-8 px-3 rounded-lg ${
+                                t.status === 'done'
+                                  ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-250'
+                                  : 'bg-slate-900 hover:bg-slate-950 text-white'
+                              }`}
+                            >
+                              {t.status === 'done' ? 'Completed ✓' : 'Mark Done'}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
               {isAdmin && (

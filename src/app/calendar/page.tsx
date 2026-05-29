@@ -39,6 +39,8 @@ interface Task {
   status: 'todo' | 'in-progress' | 'review' | 'done';
   dueDate: string; // YYYY-MM-DD
   category: string;
+  assignedAt?: string;
+  completedAt?: string;
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -136,6 +138,8 @@ export default function CalendarPage() {
       status: t.status || 'todo',
       dueDate: t.dueDate || '',
       category: t.category || '',
+      assignedAt: t.assignedAt || '',
+      completedAt: t.completedAt || '',
     }));
   }, [rawTasks]);
 
@@ -597,7 +601,24 @@ export default function CalendarPage() {
                               </div>
 
                               {t.description && (
-                                <p className="text-xs text-slate-500 leading-relaxed">{t.description}</p>
+                                <p className="text-xs text-slate-550 leading-relaxed font-medium">{t.description}</p>
+                              )}
+
+                              {(t.assignedAt || t.completedAt) && (
+                                <div className="text-[10px] space-y-1 bg-slate-50 border p-2 rounded-lg text-slate-500 font-medium">
+                                  {t.assignedAt && (
+                                    <div className="flex justify-between items-center">
+                                      <span>Assigned At:</span>
+                                      <span className="font-mono text-slate-700 font-bold">{new Date(t.assignedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                    </div>
+                                  )}
+                                  {t.completedAt && (
+                                    <div className="flex justify-between items-center text-emerald-700 bg-emerald-50 px-1 rounded">
+                                      <span>Completed At:</span>
+                                      <span className="font-mono font-bold">{new Date(t.completedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                    </div>
+                                  )}
+                                </div>
                               )}
 
                               <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">

@@ -118,7 +118,8 @@ export function OperationsDailyActivity({ profileRef, readOnly }: OperationsDail
         await setDocumentNonBlocking(taskDocRef, {
           assignedToUid: assigneeUid,
           assignedToName: assignee?.name || 'Unassigned',
-          assignedToEmail: assignee?.email || ''
+          assignedToEmail: assignee?.email || '',
+          assignedAt: new Date().toISOString()
         }, { merge: true });
       } else {
         const tasksCollectionRef = collection(profileRef, 'tasks');
@@ -132,7 +133,8 @@ export function OperationsDailyActivity({ profileRef, readOnly }: OperationsDail
           assignedToName: assignee?.name || 'Unassigned',
           assignedToEmail: assignee?.email || '',
           category: 'Operations',
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          assignedAt: new Date().toISOString()
         };
         await addDocumentNonBlocking(tasksCollectionRef, payload);
       }
@@ -161,7 +163,13 @@ export function OperationsDailyActivity({ profileRef, readOnly }: OperationsDail
     if (!firestore || !profileRef) return;
     const taskDocRef = doc(profileRef, 'tasks', taskId);
     const newStatus = currentStatus === 'done' ? 'todo' : 'done';
-    await setDocumentNonBlocking(taskDocRef, { status: newStatus }, { merge: true });
+    const payload: any = { status: newStatus };
+    if (newStatus === 'done') {
+      payload.completedAt = new Date().toISOString();
+    } else {
+      payload.completedAt = null;
+    }
+    await setDocumentNonBlocking(taskDocRef, payload, { merge: true });
   };
 
   return (
