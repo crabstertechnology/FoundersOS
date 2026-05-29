@@ -25,7 +25,10 @@ service cloud.firestore {
         isEmployeeOrManager(userId) && (
           get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'Manager' ||
           get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'manager' ||
-          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'MANAGER'
+          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'MANAGER' ||
+          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'Admin' ||
+          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'ADMIN'
         )
       );
     }
