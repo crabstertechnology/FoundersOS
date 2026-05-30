@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit2, AlertCircle, CheckCircle2, Clock, CircleDot, Users, ListChecks, AlertTriangle } from 'lucide-react';
+import { Trash2, Edit2, AlertCircle, CheckCircle2, Clock, CircleDot, Users, ListChecks, AlertTriangle, X, CalendarDays, Tag, User2, FileText } from 'lucide-react';
 import { useFirestore, useMemoFirebase, useCollection } from '@/firebase';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, orderBy, doc, serverTimestamp, where } from 'firebase/firestore';
@@ -102,6 +102,7 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
+  const [selectedTask, setSelectedTask] = useState<any | null>(null);
 
   // Pre-fill assignee if passed from Chat
   React.useEffect(() => {
@@ -344,7 +345,7 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                     {filtered.map((t: any) => {
                       const isOverdue = t.dueDate && t.dueDate < today && t.status !== 'done';
                       return (
-                        <TableRow key={t.id} className={`hover:bg-slate-50 transition-colors ${isOverdue ? 'bg-rose-50/30' : ''}`}>
+                        <TableRow key={t.id} className={`hover:bg-slate-50 transition-colors cursor-pointer ${isOverdue ? 'bg-rose-50/30' : ''}`} onClick={() => setSelectedTask(t)}>
                           <TableCell className="py-3 max-w-[180px]">
                             <div className="font-bold text-slate-900 truncate">{t.title}</div>
                             {t.category && <div className="text-[10px] text-muted-foreground font-medium">{t.category}</div>}
@@ -385,12 +386,11 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                             {t.dueDate || '—'}{isOverdue && ' ⚠'}
                           </TableCell>
                           {userRole !== 'employee' && (
-                            <TableCell className="pr-4">
+                            <TableCell className="pr-4" onClick={e => e.stopPropagation()}>
                               <div className="flex justify-end gap-1">
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full" onClick={() => handleEdit(t)}>
                                   <Edit2 className="w-3 h-3" />
                                 </Button>
-                                {/* Delete button: admin only */}
                                 {isAdmin && (
                                   <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(t.id)}>
                                     <Trash2 className="w-3 h-3" />
@@ -409,6 +409,156 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
           </CardContent>
         </Card>
       </div>
+
+      {/* Task Detail Slide-Over */}
+      {selectedTask && (() => {
+        const t = selectedTask;
+        const isOverdue = t.dueDate && t.dueDate < today && t.status !== 'done';
+        const createdAt = t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000).toLocaleString() : '—';
+        const completedAt = t.completedAt ? new Date(t.completedAt).toLocaleString() : null;
+        const assignedAt = t.assignedAt ? new Date(t.assignedAt).toLocaleDateString() : null;
+        return (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+              onClick={() => setSelectedTask(null)}
+            />
+            {/* Panel */}
+            <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+              {/* Header */}
+              <div className={`px-6 py-5 border-b flex items-start justify-between gap-3 ${isOverdue ? 'bg-rose-50' : 'bg-slate-50'}`}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase ${STATUS_COLORS[t.status as TaskStatus]}`}>
+                      {STATUS_ICONS[t.status as TaskStatus]}
+                      {t.status.replace('-', ' ')}
+                    </span>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full border text-[9px] font-black uppercase ${PRIORITY_COLORS[t.priority as TaskPriority]}`}>
+                      {t.priority}
+                    </span>
+                    {isOverdue && <span className="text-[9px] font-black text-rose-600 uppercase">⚠ Overdue</span>}
+                  </div>
+                  <h2 className="text-base font-black text-slate-900 leading-snug">{t.title}</h2>
+                  {t.category && <p className="text-[10px] text-teal-600 font-bold uppercase mt-0.5">{t.category}</p>}
+                </div>
+                <button
+                  onClick={() => setSelectedTask(null)}
+                  className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors"
+                >
+                  <X className="w-4 h-4 text-slate-500" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    <FileText className="w-3 h-3" /> Description
+                  </div>
+                  <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg p-3 border min-h-[60px]">
+                    {t.description || <span className="text-slate-400 italic">No description provided.</span>}
+                  </p>
+                </div>
+
+                {/* Assignee */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    <User2 className="w-3 h-3" /> Assigned To
+                  </div>
+                  <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3 border">
+                    <div className="w-9 h-9 bg-teal-100 rounded-full flex items-center justify-center text-sm font-black text-teal-700 shrink-0">
+                      {(t.assignedToName || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-slate-900">{t.assignedToName || 'Unassigned'}</div>
+                      {t.assignedToEmail && <div className="text-xs text-slate-500">{t.assignedToEmail}</div>}
+                      {assignedAt && <div className="text-[10px] text-slate-400 mt-0.5">Assigned on {assignedAt}</div>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dates grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                      <CalendarDays className="w-3 h-3" /> Due Date
+                    </div>
+                    <div className={`text-sm font-bold px-3 py-2 rounded-lg border ${isOverdue ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                      {t.dueDate || '—'}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                      <Clock className="w-3 h-3" /> Created
+                    </div>
+                    <div className="text-xs font-medium text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                      {createdAt}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Completed */}
+                {completedAt && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Completed At
+                    </div>
+                    <div className="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100">
+                      {completedAt}
+                    </div>
+                  </div>
+                )}
+
+                {/* Update status inline */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    <Tag className="w-3 h-3" /> Update Status
+                  </div>
+                  <Select
+                    value={t.status}
+                    onValueChange={(v: any) => { handleStatusChange(t.id, v); setSelectedTask({ ...t, status: v }); }}
+                    disabled={userRole === 'employee' && t.assignedToUid !== currentUserUid}
+                  >
+                    <SelectTrigger className="h-9 text-xs font-bold border-slate-200">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todo">To Do</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="review">In Review</SelectItem>
+                      <SelectItem value="done">Done</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Footer actions (admin/manager only) */}
+              {userRole !== 'employee' && (
+                <div className="px-6 py-4 border-t bg-slate-50 flex gap-2">
+                  <Button
+                    className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-1"
+                    onClick={() => { handleEdit(t); setSelectedTask(null); }}
+                  >
+                    <Edit2 className="w-3.5 h-3.5" /> Edit Task
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      className="border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs gap-1"
+                      onClick={() => { handleDelete(t.id); setSelectedTask(null); }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
