@@ -1105,10 +1105,10 @@ export default function FounderOSPage() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/calendar')}
-              className="flex items-center gap-1.5 font-bold text-xs border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg h-9"
+              className="flex items-center gap-1.5 font-bold text-xs border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg h-9 px-2.5 sm:px-3"
             >
               <Calendar className="w-4 h-4 text-indigo-600" />
-              <span>Calendar</span>
+              <span className="hidden sm:inline">Calendar</span>
             </Button>
             <NotificationCenter />
             <QuickCalculator />
@@ -1116,7 +1116,7 @@ export default function FounderOSPage() {
         </header>
 
         {/* Dynamic Inner Tab Switcher */}
-        <main className="flex-1 p-4 md:p-8 max-w-[1500px] w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-8 max-w-[1500px] w-full mx-auto">
           <Tabs value={activeTab} className="w-full">
             {/* Console Landing Dashboard */}
             <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none">

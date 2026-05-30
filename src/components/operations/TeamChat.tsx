@@ -11,7 +11,7 @@ import { collection, query, orderBy, serverTimestamp, doc } from 'firebase/fires
 import { 
   Send, Users, MessageSquare, Plus, Sparkles, Edit2, Trash2, X, Check, CheckCheck,
   Lock, ShieldCheck, Paperclip, Image as ImageIcon, FileText, Download, Volume2, VolumeX, Search,
-  Loader2, Wifi, WifiOff, Clock
+  Loader2, Wifi, WifiOff, Clock, ChevronLeft
 } from 'lucide-react';
 import type { Employee } from './TaskManager';
 
@@ -99,6 +99,7 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
   // selectedChat: 'general' = group channel, object = private DM
   type ChatTarget = 'general' | { uid: string; name: string; role: string };
   const [selectedChat, setSelectedChat] = useState<ChatTarget>('general');
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
 
   // States
   const [messageText, setMessageText] = useState('');
@@ -429,10 +430,10 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
   }, [presenceList, user, selectedChat]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[600px] animate-in fade-in duration-300">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 h-[600px] lg:h-[700px] animate-in fade-in duration-300">
       
       {/* Sidebar - Team Members */}
-      <Card className="lg:col-span-1 border shadow-sm flex flex-col h-full overflow-hidden bg-slate-50/50">
+      <Card className={`lg:col-span-1 border shadow-sm flex flex-col h-full overflow-hidden bg-slate-50/50 ${mobileView === 'chat' ? 'hidden lg:flex' : 'flex'}`}>
         <CardHeader className="pb-3 bg-white border-b">
           <div className="flex justify-between items-center">
             <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
@@ -456,7 +457,7 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
 
           {/* General Channel */}
           <button
-            onClick={() => { setSelectedChat('general'); setSearchQuery(''); }}
+            onClick={() => { setSelectedChat('general'); setSearchQuery(''); setMobileView('chat'); }}
             className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
               selectedChat === 'general'
                 ? 'bg-teal-50 text-teal-700 border-l-2 border-teal-600'
@@ -490,7 +491,7 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
                 }`}
               >
                 <button
-                  onClick={() => { setSelectedChat({ uid: contact.uid, name: contact.name, role: contact.role }); setSearchQuery(''); }}
+                  onClick={() => { setSelectedChat({ uid: contact.uid, name: contact.name, role: contact.role }); setSearchQuery(''); setMobileView('chat'); }}
                   className="flex items-center gap-2 flex-1 text-left"
                 >
                   <div className="relative shrink-0">
@@ -523,44 +524,55 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
       </Card>
 
       {/* Chat Area */}
-      <Card className="lg:col-span-3 border shadow-sm flex flex-col h-full overflow-hidden bg-white">
+      <Card className={`lg:col-span-3 border shadow-sm flex flex-col h-full overflow-hidden bg-white ${mobileView === 'list' ? 'hidden lg:flex' : 'flex'}`}>
         
         {/* Chat Header */}
-        <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/20 space-y-0">
-          <div className="flex-1">
-            <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-              {selectedChat === 'general'
-                ? <><MessageSquare className="w-4 h-4 text-teal-600" /> General Team Chat</>
-                : <><div className="w-5 h-5 rounded-full bg-teal-100 flex items-center justify-center text-[9px] font-black text-teal-700">{selectedChat.name.charAt(0)}</div> {selectedChat.name}</>
-              }
-            </CardTitle>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {selectedChat === 'general' ? (
-                <Badge variant="outline" className="text-[8px] h-4 bg-teal-50/50 border-teal-200 text-teal-800 flex items-center gap-1 font-bold">
-                  <Lock className="w-2.5 h-2.5" /> E2EE · Everyone
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-[8px] h-4 bg-indigo-50 border-indigo-200 text-indigo-800 flex items-center gap-1 font-bold">
-                  <Lock className="w-2.5 h-2.5" /> Private DM · E2EE
-                </Badge>
-              )}
-              {isSystemOnline ? (
-                <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                  <Wifi className="w-3 h-3" /> Connected
-                </span>
-              ) : (
-                <span className="text-[10px] text-rose-500 font-bold flex items-center gap-1 animate-pulse">
-                  <WifiOff className="w-3 h-3" /> Offline (Syncing Queued)
-                </span>
-              )}
+        <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/20 space-y-0 gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Back Button (Mobile Only) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full lg:hidden text-slate-500 hover:bg-slate-100 shrink-0"
+              onClick={() => setMobileView('list')}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <div className="min-w-0">
+              <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2 truncate">
+                {selectedChat === 'general'
+                  ? <><MessageSquare className="w-4 h-4 text-teal-600 shrink-0" /> <span className="truncate">General Team Chat</span></>
+                  : <><div className="w-5 h-5 rounded-full bg-teal-100 flex items-center justify-center text-[9px] font-black text-teal-700 shrink-0">{selectedChat.name.charAt(0)}</div> <span className="truncate">{selectedChat.name}</span></>
+                }
+              </CardTitle>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {selectedChat === 'general' ? (
+                  <Badge variant="outline" className="text-[8px] h-4 bg-teal-50/50 border-teal-200 text-teal-800 flex items-center gap-1 font-bold">
+                    <Lock className="w-2.5 h-2.5" /> E2EE · Everyone
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[8px] h-4 bg-indigo-50 border-indigo-200 text-indigo-800 flex items-center gap-1 font-bold">
+                    <Lock className="w-2.5 h-2.5" /> Private DM · E2EE
+                  </Badge>
+                )}
+                {isSystemOnline ? (
+                  <span className="text-[10px] text-emerald-600 font-bold hidden sm:flex items-center gap-1">
+                    <Wifi className="w-3 h-3" /> Connected
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-rose-500 font-bold flex items-center gap-1 animate-pulse">
+                    <WifiOff className="w-3 h-3" /> Offline
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Search bar inside header */}
-          <div className="relative w-44 sm:w-56">
+          <div className="relative w-28 xs:w-36 sm:w-44 md:w-56 shrink-0">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <Input
-              placeholder="Search chat history..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="h-8 text-xs pl-8 pr-7 bg-white focus-visible:ring-teal-500"

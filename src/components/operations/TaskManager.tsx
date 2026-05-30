@@ -332,44 +332,47 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                 <p className="text-sm font-semibold">No tasks found. Create and assign your first task.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      {['Task', 'Assignee', 'Priority', 'Status', 'Due', ...(userRole !== 'employee' ? [''] : [])].map(h => (
-                        <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((t: any) => {
-                      const isOverdue = t.dueDate && t.dueDate < today && t.status !== 'done';
-                      return (
-                        <TableRow key={t.id} className={`hover:bg-slate-50 transition-colors cursor-pointer ${isOverdue ? 'bg-rose-50/30' : ''}`} onClick={() => setSelectedTask(t)}>
-                          <TableCell className="py-3 max-w-[180px]">
-                            <div className="font-bold text-slate-900 truncate">{t.title}</div>
-                            {t.category && <div className="text-[10px] text-muted-foreground font-medium">{t.category}</div>}
-                            {t.description && <div className="text-[10px] text-slate-400 truncate max-w-[160px]">{t.description}</div>}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center text-[10px] font-black text-teal-700 shrink-0">
-                                {(t.assignedToName || 'U').charAt(0).toUpperCase()}
-                              </div>
-                              <span className="text-xs font-medium text-slate-700 truncate max-w-[80px]">{t.assignedToName || 'Unassigned'}</span>
+              <>
+                {/* Mobile Card List View */}
+                <div className="block md:hidden divide-y divide-slate-100 bg-white">
+                  {filtered.map((t: any) => {
+                    const isOverdue = t.dueDate && t.dueDate < today && t.status !== 'done';
+                    return (
+                      <div 
+                        key={t.id} 
+                        className={`p-4 flex flex-col gap-3 transition-colors cursor-pointer hover:bg-slate-50/50 ${isOverdue ? 'bg-rose-50/20' : ''}`}
+                        onClick={() => setSelectedTask(t)}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="font-bold text-sm text-slate-900 leading-snug truncate">{t.title}</div>
+                            {t.category && <span className="inline-block bg-slate-100 text-slate-700 border border-slate-200 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">{t.category}</span>}
+                          </div>
+                          <Badge className={`border text-[8px] font-black uppercase shrink-0 ${PRIORITY_COLORS[t.priority as TaskPriority]}`}>{t.priority}</Badge>
+                        </div>
+                        
+                        {t.description && (
+                          <div className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">
+                            {t.description}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-50">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="w-5 h-5 bg-teal-100 rounded-full flex items-center justify-center text-[9px] font-black text-teal-700 shrink-0">
+                              {(t.assignedToName || 'U').charAt(0).toUpperCase()}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={`border text-[9px] font-black uppercase ${PRIORITY_COLORS[t.priority as TaskPriority]}`}>{t.priority}</Badge>
-                          </TableCell>
-                          <TableCell>
+                            <span className="text-[11px] font-semibold text-slate-600 truncate">{t.assignedToName || 'Unassigned'}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                             <Select 
                               value={t.status} 
                               onValueChange={(v: any) => handleStatusChange(t.id, v)}
                               disabled={userRole === 'employee' && t.assignedToUid !== currentUserUid}
                             >
-                              <SelectTrigger className="h-7 text-[10px] font-black border-0 p-0 bg-transparent w-28 focus:ring-0">
-                                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border font-black text-[9px] ${STATUS_COLORS[t.status as TaskStatus]}`}>
+                              <SelectTrigger className="h-6 text-[10px] font-black border-0 p-0 bg-transparent w-20 focus:ring-0">
+                                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border font-black text-[8px] ${STATUS_COLORS[t.status as TaskStatus]}`}>
                                   {STATUS_ICONS[t.status as TaskStatus]}
                                   <span className="uppercase">{t.status.replace('-', ' ')}</span>
                                 </div>
@@ -381,13 +384,9 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                                 <SelectItem value="done">Done</SelectItem>
                               </SelectContent>
                             </Select>
-                          </TableCell>
-                          <TableCell className={`text-xs font-mono whitespace-nowrap ${isOverdue ? 'text-rose-600 font-black' : 'text-slate-500'}`}>
-                            {t.dueDate || '—'}{isOverdue && ' ⚠'}
-                          </TableCell>
-                          {userRole !== 'employee' && (
-                            <TableCell className="pr-4" onClick={e => e.stopPropagation()}>
-                              <div className="flex justify-end gap-1">
+
+                            {userRole !== 'employee' && (
+                              <div className="flex items-center gap-0.5">
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full" onClick={() => handleEdit(t)}>
                                   <Edit2 className="w-3 h-3" />
                                 </Button>
@@ -397,14 +396,89 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                                   </Button>
                                 )}
                               </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-slate-50">
+                        {['Task', 'Assignee', 'Priority', 'Status', 'Due', ...(userRole !== 'employee' ? [''] : [])].map(h => (
+                          <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((t: any) => {
+                        const isOverdue = t.dueDate && t.dueDate < today && t.status !== 'done';
+                        return (
+                          <TableRow key={t.id} className={`hover:bg-slate-50 transition-colors cursor-pointer ${isOverdue ? 'bg-rose-50/30' : ''}`} onClick={() => setSelectedTask(t)}>
+                            <TableCell className="py-3 max-w-[180px]">
+                              <div className="font-bold text-slate-900 truncate">{t.title}</div>
+                              {t.category && <div className="text-[10px] text-muted-foreground font-medium">{t.category}</div>}
+                              {t.description && <div className="text-[10px] text-slate-400 truncate max-w-[160px]">{t.description}</div>}
                             </TableCell>
-                          )}
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center text-[10px] font-black text-teal-700 shrink-0">
+                                  {(t.assignedToName || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <span className="text-xs font-medium text-slate-700 truncate max-w-[80px]">{t.assignedToName || 'Unassigned'}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={`border text-[9px] font-black uppercase ${PRIORITY_COLORS[t.priority as TaskPriority]}`}>{t.priority}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Select 
+                                value={t.status} 
+                                onValueChange={(v: any) => handleStatusChange(t.id, v)}
+                                disabled={userRole === 'employee' && t.assignedToUid !== currentUserUid}
+                              >
+                                <SelectTrigger className="h-7 text-[10px] font-black border-0 p-0 bg-transparent w-28 focus:ring-0">
+                                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border font-black text-[9px] ${STATUS_COLORS[t.status as TaskStatus]}`}>
+                                    {STATUS_ICONS[t.status as TaskStatus]}
+                                    <span className="uppercase">{t.status.replace('-', ' ')}</span>
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="todo">To Do</SelectItem>
+                                  <SelectItem value="in-progress">In Progress</SelectItem>
+                                  <SelectItem value="review">In Review</SelectItem>
+                                  <SelectItem value="done">Done</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className={`text-xs font-mono whitespace-nowrap ${isOverdue ? 'text-rose-600 font-black' : 'text-slate-500'}`}>
+                              {t.dueDate || '—'}{isOverdue && ' ⚠'}
+                            </TableCell>
+                            {userRole !== 'employee' && (
+                              <TableCell className="pr-4" onClick={e => e.stopPropagation()}>
+                                <div className="flex justify-end gap-1">
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full" onClick={() => handleEdit(t)}>
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
+                                  {isAdmin && (
+                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(t.id)}>
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
