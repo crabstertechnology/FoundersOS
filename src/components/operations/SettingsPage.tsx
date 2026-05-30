@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useFirebase, useFirestore, useMemoFirebase, useCollection, useDoc, useAuth, initiateSignOut } from '@/firebase';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, collection, query, where, serverTimestamp } from 'firebase/firestore';
+import { updateProfile } from 'firebase/auth';
 import { 
   User, Settings, Users, Key, Plus, Trash2, ShieldCheck, LogOut, Copy, Check, Clock,
-  Bell, Video, MessageSquare, ListChecks, Target, ShieldAlert, Loader2
+  Bell, Video, MessageSquare, ListChecks, Target, ShieldAlert, Loader2, Pencil, X
 } from 'lucide-react';
 import type { Employee } from './TaskManager';
 
@@ -281,6 +282,12 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const isAdmin = userRole.toLowerCase() === 'admin';
 
+  // Display name edit state
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameSaved, setNameSaved] = useState(false);
+
   // Fetch logged in employee details to determine correct adminUid/workspaceUserId
   const employeeDocRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
@@ -289,6 +296,31 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
 
   const { data: employeeData } = useDoc(employeeDocRef);
   const workspaceUserId = employeeData?.adminUid || user?.uid || userId || '';
+
+  // Sync name input from firebase auth or employee doc
+  useEffect(() => {
+    const resolvedName = user?.displayName || employeeData?.name || '';
+    setNameInput(resolvedName);
+  }, [user?.displayName, employeeData?.name]);
+
+  const handleSaveName = async () => {
+    if (!user || !nameInput.trim()) return;
+    setNameSaving(true);
+    try {
+      await updateProfile(user, { displayName: nameInput.trim() });
+      // Also update Firestore employee doc if it exists
+      if (firestore && employeeDocRef) {
+        setDocumentNonBlocking(employeeDocRef, { name: nameInput.trim() }, { merge: true });
+      }
+      setIsEditingName(false);
+      setNameSaved(true);
+      setTimeout(() => setNameSaved(false), 3000);
+    } catch (err) {
+      console.error('Error updating display name:', err);
+    } finally {
+      setNameSaving(false);
+    }
+  };
 
   // Fetch tasks assigned to the current user
   const userTasksRef = useMemoFirebase(() => {
@@ -482,9 +514,75 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-base font-bold text-slate-900 mb-1">Account Specifications</h3>
-                    <p className="text-xs text-muted-foreground font-medium">Verify your active session configuration and credentials.</p>
+                    <p className="text-xs text-muted-foreground font-medium">Manage your profile details, verify credentials, and update your display name.</p>
                   </div>
 
+                  {/* Display Name Edit Section */}
+                  <div className="border-2 border-slate-100 hover:border-indigo-100 transition-all rounded-2xl p-5 bg-white shadow-sm">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-primary text-white font-black text-lg flex items-center justify-center rounded-xl shadow-md">
+                          {(nameInput || user.email || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-900">{nameInput || <span className="text-slate-400 italic">No name set</span>}</p>
+                          <p className="text-[11px] text-slate-400 font-medium">{user.email}</p>
+                        </div>
+                      </div>
+                      {nameSaved && (
+                        <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider animate-in fade-in duration-300">
+                          <Check className="w-3 h-3" /> Name Saved
+                        </div>
+                      )}
+                    </div>
+
+                    {isEditingName ? (
+                      <div className="space-y-3 animate-in slide-in-from-top-2 duration-200">
+                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">New Display Name</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="display-name-input"
+                            value={nameInput}
+                            onChange={e => setNameInput(e.target.value)}
+                            placeholder="Enter your full name..."
+                            className="h-10 text-sm font-semibold border-slate-200 focus:border-indigo-400 focus:ring-indigo-400"
+                            onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setIsEditingName(false); }}
+                            autoFocus
+                            maxLength={60}
+                          />
+                          <Button
+                            onClick={handleSaveName}
+                            disabled={nameSaving || !nameInput.trim()}
+                            className="h-10 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5 shrink-0"
+                          >
+                            {nameSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                            Save
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => { setIsEditingName(false); setNameInput(user?.displayName || employeeData?.name || ''); }}
+                            className="h-10 w-10 p-0 text-slate-400 hover:text-slate-700 shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium">Press Enter to save · Escape to cancel · Max 60 characters</p>
+                      </div>
+                    ) : (
+                      <Button
+                        id="edit-display-name-btn"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingName(true)}
+                        className="h-8 text-xs font-bold gap-1.5 border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Edit Display Name
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Account Details Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5 p-4 border rounded-xl bg-slate-50/50">
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</Label>
@@ -492,8 +590,8 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                     </div>
 
                     <div className="space-y-1.5 p-4 border rounded-xl bg-slate-50/50">
-                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">User ID Reference</Label>
-                      <div className="text-[11px] font-mono text-slate-600 truncate" title={user.uid}>{user.uid}</div>
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role / Access Level</Label>
+                      <div className="text-xs font-bold text-slate-800 capitalize">{userRole}</div>
                     </div>
 
                     <div className="space-y-1.5 p-4 border rounded-xl bg-slate-50/50">
@@ -505,8 +603,8 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                     </div>
 
                     <div className="space-y-1.5 p-4 border rounded-xl bg-slate-50/50">
-                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Authentication Method</Label>
-                      <div className="text-xs font-bold text-slate-800 capitalize">{user.providerId || 'Email/Password'}</div>
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">User ID Reference</Label>
+                      <div className="text-[11px] font-mono text-slate-600 truncate" title={user.uid}>{user.uid}</div>
                     </div>
                   </div>
 
@@ -515,7 +613,7 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                     <div className="space-y-1">
                       <h4 className="text-xs font-bold text-teal-900">Security Credentials Verified</h4>
                       <p className="text-[11px] text-teal-700/80 leading-relaxed font-medium">
-                        This session is authenticated with direct access privileges. You can generate invite links and update employee authorization statuses from the other settings tabs.
+                        This session is authenticated with direct access privileges. Display name changes are saved to your profile and reflected across the entire workspace.
                       </p>
                     </div>
                   </div>

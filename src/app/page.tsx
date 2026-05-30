@@ -1103,6 +1103,15 @@ export default function FounderOSPage() {
 
         {/* Dynamic Inner Tab Switcher */}
         <main className="flex-1 p-4 md:p-8 max-w-[1500px] w-full mx-auto">
+          {/* Visitor interaction lock overlay */}
+          <div className={`relative ${isVisitor ? 'pointer-events-none select-none' : ''}`}>
+            {/* Sticky view-only ribbon for visitors */}
+            {isVisitor && (
+              <div className="sticky top-0 z-50 mb-4 -mt-2 flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 shadow-sm pointer-events-auto">
+                <span className="text-xs font-black uppercase tracking-widest text-amber-700">👁 View-Only Mode</span>
+                <span className="text-[10px] text-amber-600 font-medium">You have visitor access — all data is visible but editing is disabled.</span>
+              </div>
+            )}
           <Tabs value={activeTab} className="w-full">
             {/* Console Landing Dashboard */}
             <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none">
@@ -1259,6 +1268,7 @@ export default function FounderOSPage() {
               <SettingsPage userId={userId!} userRole={userRole} />
             </TabsContent>
           </Tabs>
+          </div>
         </main>
       </div>
     </div>
