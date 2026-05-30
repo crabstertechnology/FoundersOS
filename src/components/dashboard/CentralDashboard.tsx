@@ -65,6 +65,7 @@ interface CentralDashboardProps {
   userId: string;
   companyProfileId: string;
   onNavigate: (tab: string) => void;
+  readOnly?: boolean;
 }
 
 interface Employee {
@@ -77,7 +78,7 @@ interface Employee {
   isActive: boolean;
 }
 
-export function CentralDashboard({ userId, companyProfileId, onNavigate }: CentralDashboardProps) {
+export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnly = false }: CentralDashboardProps) {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -567,7 +568,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
             Aligning your yearly goals with automated roadmaps, milestones, and actionable tasks.
           </p>
         </div>
-        {hasPlan && (
+        {hasPlan && !readOnly && (
           <Button 
             variant="outline" 
             size="sm" 
@@ -595,8 +596,24 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
         </Card>
       )}
 
-      {/* SETUP FORM */}
-      {!aiLoading && !hasPlan && (
+      {/* Visitor no-plan notice */}
+      {!aiLoading && !hasPlan && readOnly && (
+        <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 animate-in fade-in duration-500">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+            <Target className="w-8 h-8 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-black text-slate-700">No Strategic Plan Yet</h3>
+          <p className="text-sm text-muted-foreground font-medium max-w-sm leading-relaxed">
+            The founder hasn't set up a strategic plan yet. Once they define a goal and generate the roadmap, you'll be able to view it here.
+          </p>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
+            👁 View-Only Access
+          </div>
+        </div>
+      )}
+
+      {/* SETUP FORM - hidden for visitors/read-only users */}
+      {!aiLoading && !hasPlan && !readOnly && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Setup Fields */}
           <Card className="lg:col-span-2 border-2 border-slate-200 hover:border-indigo-200 transition-all shadow-sm">
@@ -909,16 +926,25 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                   <span className="text-xs text-slate-300 font-medium">Roadmap active and synced</span>
                 </div>
               </div>
-              <div className="flex gap-3 shrink-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsEditingGoal(true)}
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs rounded-xl h-9"
-                >
-                  Re-Generate Plan
-                </Button>
-              </div>
+              {!readOnly && (
+                <div className="flex gap-3 shrink-0">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsEditingGoal(true)}
+                    className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs rounded-xl h-9"
+                  >
+                    Re-Generate Plan
+                  </Button>
+                </div>
+              )}
+              {readOnly && (
+                <div className="flex gap-3 shrink-0">
+                  <Badge className="bg-slate-500/20 text-slate-200 border-slate-400/30 uppercase text-[9px] font-bold px-3 py-1.5">
+                    👁 View Only
+                  </Badge>
+                </div>
+              )}
             </div>
           )}
 
@@ -934,7 +960,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                   {[
                     { id: 'roadmap', label: 'Quarterly Roadmap', icon: Map },
                     { id: 'milestones', label: 'Monthly Milestones', icon: Calendar },
-                    ...(!selectedHistoricalPlan ? [{ id: 'chat', label: 'Discuss & Modify Plan', icon: MessageSquare }] : []),
+                    ...(!selectedHistoricalPlan && !readOnly ? [{ id: 'chat', label: 'Discuss & Modify Plan', icon: MessageSquare }] : []),
                     { id: 'history', label: 'Plan History', icon: History }
                   ].map(item => {
                     const Icon = item.icon;
@@ -1173,7 +1199,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                       </div>
                     ) : (
                       <div className="divide-y border rounded-xl overflow-hidden bg-white">
-                        {planHistory.map((histPlan: any) => {
+                      {planHistory.map((histPlan: any) => {
                           const date = histPlan.createdAt ? new Date(histPlan.createdAt.seconds * 1000) : new Date();
                           const formattedDate = date.toLocaleString();
                           const isCurrentlySelected = selectedHistoricalPlan?.id === histPlan.id;
@@ -1200,48 +1226,52 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                                 >
                                   {isCurrentlySelected ? "Viewing..." : "View Plan"}
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={async () => {
-                                    if (profileRef) {
-                                      setAiLoading(true);
-                                      try {
-                                        await setDocumentNonBlocking(profileRef, {
-                                          yearlyGoal: histPlan.yearlyGoal,
-                                          companyStage: histPlan.companyStage,
-                                          strategicPlan: histPlan.strategicPlan,
-                                        }, { merge: true });
-                                        setSelectedHistoricalPlan(null);
-                                      } catch (err) {
-                                        console.error("Error restoring plan:", err);
-                                      } finally {
-                                        setAiLoading(false);
-                                      }
-                                    }
-                                  }}
-                                  className="text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700"
-                                >
-                                  Restore
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={async () => {
-                                    if (profileRef && planHistoryRef && window.confirm("Delete this plan from history?")) {
-                                      try {
-                                        await deleteDocumentNonBlocking(doc(planHistoryRef, histPlan.id));
-                                        if (selectedHistoricalPlan?.id === histPlan.id) {
-                                          setSelectedHistoricalPlan(null);
+                                {!readOnly && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      onClick={async () => {
+                                        if (profileRef) {
+                                          setAiLoading(true);
+                                          try {
+                                            await setDocumentNonBlocking(profileRef, {
+                                              yearlyGoal: histPlan.yearlyGoal,
+                                              companyStage: histPlan.companyStage,
+                                              strategicPlan: histPlan.strategicPlan,
+                                            }, { merge: true });
+                                            setSelectedHistoricalPlan(null);
+                                          } catch (err) {
+                                            console.error("Error restoring plan:", err);
+                                          } finally {
+                                            setAiLoading(false);
+                                          }
                                         }
-                                      } catch (err) {
-                                        console.error("Error deleting plan:", err);
-                                      }
-                                    }
-                                  }}
-                                  className="text-xs font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 h-9 w-9 p-0 rounded-lg"
-                                >
-                                  <Trash className="w-4 h-4" />
-                                </Button>
+                                      }}
+                                      className="text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700"
+                                    >
+                                      Restore
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={async () => {
+                                        if (profileRef && planHistoryRef && window.confirm("Delete this plan from history?")) {
+                                          try {
+                                            await deleteDocumentNonBlocking(doc(planHistoryRef, histPlan.id));
+                                            if (selectedHistoricalPlan?.id === histPlan.id) {
+                                              setSelectedHistoricalPlan(null);
+                                            }
+                                          } catch (err) {
+                                            console.error("Error deleting plan:", err);
+                                          }
+                                        }
+                                      }}
+                                      className="text-xs font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 h-9 w-9 p-0 rounded-lg"
+                                    >
+                                      <Trash className="w-4 h-4" />
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                             </div>
                           );
@@ -1252,38 +1282,40 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                 </Card>
               )}
 
-              {/* Weekly Progress Logger / Adaptation Section */}
-              <Card className="border-2 border-indigo-100 bg-indigo-50/5 shadow-sm mt-8">
-                <CardHeader>
-                  <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                    <RefreshCw className="w-5 h-5 text-indigo-600" />
-                    Weekly Adaptation Hub
-                  </CardTitle>
-                  <CardDescription>
-                    Log your startup progress, milestones completed, or roadblocks faced. FounderOS AI will dynamically adapt your roadmaps, monthly targets, and daily actionable tasks.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs uppercase tracking-wider text-slate-500">Weekly Progress Update</Label>
-                    <textarea
-                      className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white"
-                      rows={3}
-                      placeholder="e.g. Completed CRM pilots setup. Delayed MVP dashboard coding due to API bugs. Closed ₹100k ARR SaaS deal..."
-                      value={weeklyProgress}
-                      onChange={e => setWeeklyProgress(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    onClick={() => handleGeneratePlan(undefined, weeklyProgress)}
-                    disabled={!weeklyProgress || aiLoading}
-                    className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-10 gap-2"
-                  >
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
-                    Adapt Future Plans Dynamically
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Weekly Progress Logger / Adaptation Section - hidden for visitors */}
+              {!readOnly && (
+                <Card className="border-2 border-indigo-100 bg-indigo-50/5 shadow-sm mt-8">
+                  <CardHeader>
+                    <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                      <RefreshCw className="w-5 h-5 text-indigo-600" />
+                      Weekly Adaptation Hub
+                    </CardTitle>
+                    <CardDescription>
+                      Log your startup progress, milestones completed, or roadblocks faced. FounderOS AI will dynamically adapt your roadmaps, monthly targets, and daily actionable tasks.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold text-xs uppercase tracking-wider text-slate-500">Weekly Progress Update</Label>
+                      <textarea
+                        className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white"
+                        rows={3}
+                        placeholder="e.g. Completed CRM pilots setup. Delayed MVP dashboard coding due to API bugs. Closed ₹100k ARR SaaS deal..."
+                        value={weeklyProgress}
+                        onChange={e => setWeeklyProgress(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      onClick={() => handleGeneratePlan(undefined, weeklyProgress)}
+                      disabled={!weeklyProgress || aiLoading}
+                      className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-10 gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                      Adapt Future Plans Dynamically
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
             </div>
 

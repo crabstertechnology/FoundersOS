@@ -735,6 +735,7 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                                         <SelectItem value="Employee">Employee</SelectItem>
                                         <SelectItem value="Manager">Manager</SelectItem>
                                         <SelectItem value="Admin">Admin</SelectItem>
+                                        <SelectItem value="Visitor">Visitor</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </TableCell>

@@ -143,7 +143,8 @@ export default function FounderOSPage() {
   }
 
   const userRole = (employeeRecord?.role || 'admin').toLowerCase();
-  const isReadOnly = userRole === 'employee';
+  const isReadOnly = userRole === 'employee' || userRole === 'visitor';
+  const isVisitor = userRole === 'visitor';
 
   const handleNavigate = (tab: string) => {
     if (['calc', 'tracker', 'exit', 'negotiate', 'qa', 'glossary'].includes(tab)) {
@@ -699,7 +700,7 @@ export default function FounderOSPage() {
                   {(user?.email || 'F').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col items-start leading-tight min-w-0 flex-1">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Founder Profile</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{isVisitor ? 'Visitor Access' : 'Founder Profile'}</span>
                   <span className="text-xs font-semibold text-slate-200 truncate w-full">{user.email}</span>
                 </div>
                 <Settings className="w-3.5 h-3.5 opacity-60 shrink-0" />
@@ -1052,7 +1053,7 @@ export default function FounderOSPage() {
                   {(user?.email || 'F').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col items-start leading-tight min-w-0 flex-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Founder Profile</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isVisitor ? 'Visitor Access' : 'Founder Profile'}</span>
                   <span className="text-xs font-semibold text-slate-200 truncate w-full">{user.email}</span>
                 </div>
               </button>
@@ -1105,7 +1106,7 @@ export default function FounderOSPage() {
           <Tabs value={activeTab} className="w-full">
             {/* Console Landing Dashboard */}
             <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none">
-              <CentralDashboard userId={userId!} companyProfileId={companyProfileId} onNavigate={handleNavigate} />
+              <CentralDashboard userId={userId!} companyProfileId={companyProfileId} onNavigate={handleNavigate} readOnly={isVisitor} />
             </TabsContent>
 
             {/* Product Suite Content */}
