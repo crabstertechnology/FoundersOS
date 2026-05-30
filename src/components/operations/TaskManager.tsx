@@ -38,6 +38,9 @@ export interface Employee {
   department: string;
   role: string;
   isActive: boolean;
+  mobile?: string;
+  address?: string;
+  position?: string;
 }
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {

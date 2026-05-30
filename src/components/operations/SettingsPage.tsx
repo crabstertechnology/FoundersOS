@@ -15,7 +15,8 @@ import { doc, collection, query, where, serverTimestamp } from 'firebase/firesto
 import { updateProfile } from 'firebase/auth';
 import { 
   User, Settings, Users, Key, Plus, Trash2, ShieldCheck, LogOut, Copy, Check, Clock,
-  Bell, Video, MessageSquare, ListChecks, Target, ShieldAlert, Loader2, Pencil, X
+  Bell, Video, MessageSquare, ListChecks, Target, ShieldAlert, Loader2, Pencil, X,
+  Phone, MapPin, Briefcase, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 import type { Employee } from './TaskManager';
 
@@ -288,6 +289,16 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
   const [nameSaving, setNameSaving] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
 
+  // Contact info edit state
+  const [mobileInput, setMobileInput] = useState('');
+  const [addressInput, setAddressInput] = useState('');
+  const [contactSaving, setContactSaving] = useState(false);
+  const [contactSaved, setContactSaved] = useState(false);
+
+  // Admin: expanded employee row
+  const [expandedEmpUid, setExpandedEmpUid] = useState<string | null>(null);
+  const [empPositionInputs, setEmpPositionInputs] = useState<Record<string, string>>({});
+
   // Fetch logged in employee details to determine correct adminUid/workspaceUserId
   const employeeDocRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
@@ -297,11 +308,33 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
   const { data: employeeData } = useDoc(employeeDocRef);
   const workspaceUserId = employeeData?.adminUid || user?.uid || userId || '';
 
-  // Sync name input from firebase auth or employee doc
+  // Sync name + contact info from employee doc
   useEffect(() => {
-    const resolvedName = user?.displayName || employeeData?.name || '';
-    setNameInput(resolvedName);
-  }, [user?.displayName, employeeData?.name]);
+    setNameInput(user?.displayName || employeeData?.name || '');
+    setMobileInput(employeeData?.mobile || '');
+    setAddressInput(employeeData?.address || '');
+  }, [user?.displayName, employeeData?.name, employeeData?.mobile, employeeData?.address]);
+
+  const handleSaveContact = async () => {
+    if (!firestore || !employeeDocRef) return;
+    setContactSaving(true);
+    try {
+      setDocumentNonBlocking(employeeDocRef, {
+        mobile: mobileInput.trim(),
+        address: addressInput.trim(),
+      }, { merge: true });
+      setContactSaved(true);
+      setTimeout(() => setContactSaved(false), 3000);
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  const handleSaveEmpPosition = (empUid: string) => {
+    if (!firestore) return;
+    const pos = empPositionInputs[empUid] ?? '';
+    setDocumentNonBlocking(doc(firestore, 'employees', empUid), { position: pos }, { merge: true });
+  };
 
   const handleSaveName = async () => {
     if (!user || !nameInput.trim()) return;
@@ -384,6 +417,9 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
     department: e.department || '',
     role: e.role || 'Employee',
     isActive: e.isActive !== false,
+    mobile: e.mobile || '',
+    address: e.address || '',
+    position: e.position || '',
   })), [rawEmployeesData]);
 
   // Invite code actions
@@ -591,7 +627,12 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
 
                     <div className="space-y-1.5 p-4 border rounded-xl bg-slate-50/50">
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role / Access Level</Label>
-                      <div className="text-xs font-bold text-slate-800 capitalize">{userRole}</div>
+                      <div className="flex items-center gap-1.5">
+                        <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 text-[9px] uppercase font-black">{userRole}</Badge>
+                        {employeeData?.position && (
+                          <span className="text-xs font-semibold text-slate-600">{employeeData.position}</span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-1.5 p-4 border rounded-xl bg-slate-50/50">
@@ -606,6 +647,62 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">User ID Reference</Label>
                       <div className="text-[11px] font-mono text-slate-600 truncate" title={user.uid}>{user.uid}</div>
                     </div>
+                  </div>
+
+                  {/* Contact Info Section — editable by user */}
+                  <div className="border-2 border-slate-100 hover:border-indigo-100 transition-all rounded-2xl p-5 bg-white shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-indigo-500" /> Contact Information
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">Your mobile and address are saved to your workspace profile.</p>
+                      </div>
+                      {contactSaved && (
+                        <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider animate-in fade-in duration-300">
+                          <Check className="w-3 h-3" /> Saved
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile Number</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                          <Input
+                            id="mobile-input"
+                            type="tel"
+                            value={mobileInput}
+                            onChange={e => setMobileInput(e.target.value)}
+                            placeholder="+91 98765 43210"
+                            className="pl-8 h-9 text-sm font-semibold border-slate-200"
+                            maxLength={20}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Address / Location</Label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                          <Input
+                            id="address-input"
+                            value={addressInput}
+                            onChange={e => setAddressInput(e.target.value)}
+                            placeholder="City, State, Country"
+                            className="pl-8 h-9 text-sm font-semibold border-slate-200"
+                            maxLength={120}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleSaveContact}
+                      disabled={contactSaving}
+                      className="h-9 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5"
+                    >
+                      {contactSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      Save Contact Info
+                    </Button>
                   </div>
 
                   <div className="p-4 border border-teal-100 bg-teal-50/20 rounded-xl flex items-start gap-3">
@@ -810,49 +907,136 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                           <Table>
                             <TableHeader>
                               <TableRow className="bg-slate-50">
-                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Name/Email</TableHead>
-                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Department</TableHead>
+                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Name / Email</TableHead>
+                                <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Position</TableHead>
                                 <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Role Permission</TableHead>
                                 <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Status</TableHead>
+                                <TableHead className="w-10 py-2.5"></TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {employees.map(emp => (
-                                <TableRow key={emp.uid}>
-                                  <TableCell className="py-2.5">
-                                    <div className="font-bold text-slate-800 text-xs">{emp.name}</div>
-                                    <div className="text-[10px] text-muted-foreground">{emp.email}</div>
-                                  </TableCell>
-                                  <TableCell className="text-xs text-slate-700 font-medium py-2.5">
-                                    {emp.department || '—'}
-                                  </TableCell>
-                                  <TableCell className="py-2.5">
-                                    <Select value={emp.role} onValueChange={(val) => handleRoleChange(emp, val)}>
-                                      <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Employee">Employee</SelectItem>
-                                        <SelectItem value="Manager">Manager</SelectItem>
-                                        <SelectItem value="Admin">Admin</SelectItem>
-                                        <SelectItem value="Visitor">Visitor</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </TableCell>
-                                  <TableCell className="py-2.5">
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => handleToggleActive(emp)}
-                                      className={`h-7 text-[10px] font-black uppercase rounded-full px-2.5 ${
-                                        emp.isActive
-                                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800'
-                                          : 'bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800'
-                                      }`}
+                              {employees.map(emp => {
+                                const isExpanded = expandedEmpUid === emp.uid;
+                                const posVal = empPositionInputs[emp.uid] ?? emp.position ?? '';
+                                return (
+                                  <React.Fragment key={emp.uid}>
+                                    <TableRow
+                                      className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                      onClick={() => {
+                                        setExpandedEmpUid(isExpanded ? null : emp.uid);
+                                        if (!isExpanded) {
+                                          setEmpPositionInputs(prev => ({ ...prev, [emp.uid]: emp.position || '' }));
+                                        }
+                                      }}
                                     >
-                                      {emp.isActive ? 'Active' : 'Inactive'}
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                                      <TableCell className="py-2.5">
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-primary text-white text-[10px] font-black flex items-center justify-center rounded-lg shrink-0">
+                                            {(emp.name || 'U').charAt(0).toUpperCase()}
+                                          </div>
+                                          <div>
+                                            <div className="font-bold text-slate-800 text-xs">{emp.name}</div>
+                                            <div className="text-[10px] text-muted-foreground">{emp.email}</div>
+                                          </div>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="text-xs text-slate-600 font-semibold py-2.5">
+                                        {emp.position || <span className="text-slate-300 italic text-[10px]">Not set</span>}
+                                      </TableCell>
+                                      <TableCell className="py-2.5" onClick={e => e.stopPropagation()}>
+                                        <Select value={emp.role} onValueChange={(val) => handleRoleChange(emp, val)}>
+                                          <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="Employee">Employee</SelectItem>
+                                            <SelectItem value="Manager">Manager</SelectItem>
+                                            <SelectItem value="Admin">Admin</SelectItem>
+                                            <SelectItem value="Visitor">Visitor</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </TableCell>
+                                      <TableCell className="py-2.5" onClick={e => e.stopPropagation()}>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => handleToggleActive(emp)}
+                                          className={`h-7 text-[10px] font-black uppercase rounded-full px-2.5 ${
+                                            emp.isActive
+                                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800'
+                                              : 'bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800'
+                                          }`}
+                                        >
+                                          {emp.isActive ? 'Active' : 'Inactive'}
+                                        </Button>
+                                      </TableCell>
+                                      <TableCell className="py-2.5 text-slate-400">
+                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                      </TableCell>
+                                    </TableRow>
+
+                                    {/* Expandable detail panel */}
+                                    {isExpanded && (
+                                      <TableRow className="bg-indigo-50/20 border-l-4 border-l-indigo-400">
+                                        <TableCell colSpan={5} className="py-4 px-6">
+                                          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <div className="flex items-center gap-2 mb-2">
+                                              <Eye className="w-3.5 h-3.5 text-indigo-500" />
+                                              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Employee Details — Admin View</span>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                              {/* Mobile */}
+                                              <div className="space-y-1 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                                  <Phone className="w-3 h-3" /> Mobile Number
+                                                </Label>
+                                                <div className="text-xs font-bold text-slate-800">
+                                                  {emp.mobile || <span className="text-slate-300 italic font-normal">Not provided</span>}
+                                                </div>
+                                              </div>
+                                              {/* Address */}
+                                              <div className="space-y-1 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                                  <MapPin className="w-3 h-3" /> Address / Location
+                                                </Label>
+                                                <div className="text-xs font-bold text-slate-800">
+                                                  {emp.address || <span className="text-slate-300 italic font-normal">Not provided</span>}
+                                                </div>
+                                              </div>
+                                              {/* Position — admin can set */}
+                                              <div className="space-y-1.5 p-3 bg-white rounded-xl border border-indigo-100 shadow-sm">
+                                                <Label className="text-[9px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1">
+                                                  <Briefcase className="w-3 h-3" /> Job Position / Title
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                  <Input
+                                                    value={posVal}
+                                                    onChange={e => setEmpPositionInputs(prev => ({ ...prev, [emp.uid]: e.target.value }))}
+                                                    placeholder="e.g. Sales Lead, CTO..."
+                                                    className="h-8 text-xs font-semibold border-indigo-200 focus:border-indigo-400 flex-1"
+                                                    onClick={e => e.stopPropagation()}
+                                                    maxLength={60}
+                                                  />
+                                                  <Button
+                                                    size="sm"
+                                                    onClick={e => { e.stopPropagation(); handleSaveEmpPosition(emp.uid); }}
+                                                    className="h-8 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] shrink-0"
+                                                  >
+                                                    Save
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div className="flex flex-wrap gap-3 text-[10px] text-slate-400 font-medium pt-1">
+                                              <span>Department: <strong className="text-slate-600">{emp.department || '—'}</strong></span>
+                                              <span>·</span>
+                                              <span>UID: <span className="font-mono text-slate-500">{emp.uid}</span></span>
+                                            </div>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    )}
+                                  </React.Fragment>
+                                );
+                              })}
                             </TableBody>
                           </Table>
                         </div>
