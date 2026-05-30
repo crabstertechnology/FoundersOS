@@ -281,6 +281,7 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
   const auth = useAuth();
   const firestore = useFirestore();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [inviteRole, setInviteRole] = useState<string>('Employee');
   const isAdmin = userRole.toLowerCase() === 'admin';
 
   // Display name edit state
@@ -434,6 +435,7 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
     setDocumentNonBlocking(doc(inviteCodesRef, code), {
       code,
       adminUid: userId,
+      role: inviteRole,
       used: false,
       usedByUid: '',
       usedByEmail: '',
@@ -810,15 +812,27 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                   {/* Invite Codes Tab */}
                   <TabsContent value="invites" className="mt-0 h-full focus-visible:outline-none">
                     <div className="space-y-6">
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div>
                           <h3 className="text-base font-bold text-slate-900 mb-1">Onboarding Invite Links</h3>
-                          <p className="text-xs text-muted-foreground font-medium">Generate single-use sign-up links for your employee onboarding.</p>
+                          <p className="text-xs text-muted-foreground font-medium">Generate single-use sign-up links with a pre-assigned role for your team.</p>
                         </div>
-                        <Button onClick={handleGenerateCode} className="bg-primary hover:bg-primary/95 text-white font-bold text-xs gap-1.5">
-                          <Plus className="w-3.5 h-3.5" />
-                          Create Invite Link
-                        </Button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Select value={inviteRole} onValueChange={setInviteRole}>
+                            <SelectTrigger className="h-8 text-xs font-bold w-32 border-slate-200">
+                              <SelectValue placeholder="Role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Employee">Employee</SelectItem>
+                              <SelectItem value="Manager">Manager</SelectItem>
+                              <SelectItem value="Visitor">Visitor</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button onClick={handleGenerateCode} className="bg-primary hover:bg-primary/95 text-white font-bold text-xs gap-1.5 h-8">
+                            <Plus className="w-3.5 h-3.5" />
+                            Create Invite Link
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Active Codes */}
@@ -835,6 +849,7 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                                 <TableRow className="bg-slate-50">
                                   <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Sign-up URL Link</TableHead>
                                   <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Code</TableHead>
+                                  <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5">Role</TableHead>
                                   <TableHead className="font-bold text-[10px] uppercase text-slate-500 py-2.5 text-right pr-4">Actions</TableHead>
                                 </TableRow>
                               </TableHeader>
@@ -848,6 +863,15 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
                                       </TableCell>
                                       <TableCell className="py-2">
                                         <Badge className="bg-teal-50 text-teal-700 border-teal-100 font-mono text-[9px] uppercase">{c.code}</Badge>
+                                      </TableCell>
+                                      <TableCell className="py-2">
+                                        <Badge className={`font-bold text-[9px] uppercase border ${
+                                          (c.role || 'Employee').toLowerCase() === 'manager'
+                                            ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                                            : (c.role || 'Employee').toLowerCase() === 'visitor'
+                                            ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                                        }`}>{c.role || 'Employee'}</Badge>
                                       </TableCell>
                                       <TableCell className="text-right pr-4 py-2">
                                         <div className="flex justify-end gap-1.5">

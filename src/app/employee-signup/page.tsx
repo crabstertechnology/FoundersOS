@@ -20,6 +20,8 @@ export default function EmployeeSignupPage() {
   const [inviteError, setInviteError] = useState('');
   const [adminUid, setAdminUid] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [inviteRole, setInviteRole] = useState('Employee');
+  const [inviteCompanyProfileId, setInviteCompanyProfileId] = useState(ADMIN_COMPANY_PROFILE_ID);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -47,10 +49,13 @@ export default function EmployeeSignupPage() {
       const inviteRef = doc(db, 'inviteCodes', inviteCode.trim().toUpperCase());
       const snap = await getDoc(inviteRef);
       if (!snap.exists() || snap.data().used) {
-        setInviteError('Invalid or already-used invite code. Please contact your admin.');
+        setInviteError('This invite link has already been used or is invalid. Please request a new invite from your admin.');
       } else {
-        setAdminUid(snap.data().adminUid);
-        setCompanyName(snap.data().companyName || 'EZCirkit');
+        const data = snap.data();
+        setAdminUid(data.adminUid);
+        setCompanyName(data.companyName || 'EZCirkit');
+        setInviteRole(data.role || 'Employee');
+        setInviteCompanyProfileId(data.companyProfileId || ADMIN_COMPANY_PROFILE_ID);
         setStep('details');
       }
     } catch (err: any) {
@@ -78,8 +83,8 @@ export default function EmployeeSignupPage() {
         name,
         email,
         adminUid,
-        companyProfileId: ADMIN_COMPANY_PROFILE_ID,
-        role: 'employee',
+        companyProfileId: inviteCompanyProfileId,
+        role: inviteRole,
         department: '',
         joinedAt: serverTimestamp(),
         isActive: true,
@@ -153,8 +158,19 @@ export default function EmployeeSignupPage() {
               <p className="text-sm text-muted-foreground">
                 You're joining <span className="font-bold text-teal-700">{companyName}</span>
               </p>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-[10px] font-black text-emerald-700 uppercase tracking-widest">
-                <ShieldCheck className="w-3 h-3" /> Invite Verified
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+                  <ShieldCheck className="w-3 h-3" /> Invite Verified
+                </div>
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                  inviteRole.toLowerCase() === 'manager'
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                    : inviteRole.toLowerCase() === 'visitor'
+                    ? 'bg-amber-50 border-amber-200 text-amber-700'
+                    : 'bg-slate-100 border-slate-200 text-slate-600'
+                }`}>
+                  Role: {inviteRole}
+                </div>
               </div>
             </div>
             <form onSubmit={handleSignUp} className="space-y-4">
