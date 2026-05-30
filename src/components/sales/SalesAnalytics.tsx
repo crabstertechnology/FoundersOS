@@ -367,7 +367,7 @@ export function SalesAnalytics({
           closeDate: d.closeDate,
           sourceType: d.sourceType || 'manual'
         })),
-        question: customQuestion || undefined,
+        question: customQuestion || "",
         leads: profile?.ezLeads || [],
         workshops: profile?.workshops || [],
         productSales: profile?.ezProductSales || [],
