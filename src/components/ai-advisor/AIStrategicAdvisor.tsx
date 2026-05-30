@@ -115,7 +115,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
 
   const handleExportPDF = () => {
     if (!activeReport) return;
-    const advice = activeReport.advice;
+    const advice = activeReport.advice || {};
     const dateStr = formatDate(activeReport.createdAt);
     const snap = activeReport.inputSnapshot;
 
@@ -145,7 +145,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
 
     const html = `
       <div class="summary-box">
-        "${advice.summary}"
+        "${advice.summary || 'No summary available.'}"
       </div>
 
       ${snapHtml}
@@ -154,14 +154,14 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
         <div class="section">
           <div class="section-title">Key Strengths</div>
           <ul>
-            ${advice.strengths.map((s: string) => `<li>${s}</li>`).join('')}
+            ${(advice.strengths || []).map((s: string) => `<li>${s}</li>`).join('')}
           </ul>
         </div>
 
         <div class="section">
           <div class="section-title">Critical Warnings</div>
           <ul>
-            ${advice.warnings.map((w: string) => `<li>${w}</li>`).join('')}
+            ${(advice.warnings || []).map((w: string) => `<li>${w}</li>`).join('')}
           </ul>
         </div>
       </div>
@@ -169,7 +169,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
       <div class="section" style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 20px;">
         <div class="section-title" style="color: #0f172a; border-bottom: 2px solid #0f172a; padding-bottom: 8px;">Recommended Next Steps</div>
         <div style="margin-top: 15px;">
-          ${advice.recommendations.map((r: string, i: number) => `
+          ${(advice.recommendations || []).map((r: string, i: number) => `
             <div class="bullet-point">
               <span class="action-badge">${i + 1}</span>
               <span>${r}</span>
@@ -314,7 +314,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
           </CardHeader>
           <CardContent className="pt-6 space-y-8">
             <div className="prose prose-sm max-w-none">
-              <p className="text-base font-body italic leading-relaxed text-muted-foreground">"{activeReport.advice.summary}"</p>
+              <p className="text-base font-body italic leading-relaxed text-muted-foreground">"{activeReport.advice?.summary || 'No summary available.'}"</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -324,7 +324,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
                   Key Strengths
                 </div>
                 <div className="space-y-2">
-                  {activeReport.advice.strengths.map((s: string, i: number) => (
+                  {(activeReport.advice?.strengths || []).map((s: string, i: number) => (
                     <div key={i} className="flex gap-2 text-sm leading-relaxed">
                       <ChevronRight className="w-3 h-3 mt-1 text-green-500 shrink-0" />
                       {s}
@@ -339,7 +339,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
                   Critical Warnings
                 </div>
                 <div className="space-y-2">
-                  {activeReport.advice.warnings.map((w: string, i: number) => (
+                  {(activeReport.advice?.warnings || []).map((w: string, i: number) => (
                     <div key={i} className="flex gap-2 text-sm leading-relaxed">
                       <ChevronRight className="w-3 h-3 mt-1 text-red-500 shrink-0" />
                       {w}
@@ -352,7 +352,7 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
             <div className="bg-muted/50 p-6 rounded-xl border-t-4 border-accent">
               <div className="text-[10px] uppercase font-bold tracking-widest text-accent-foreground mb-4">Recommended Next Steps</div>
               <ul className="space-y-3">
-                {activeReport.advice.recommendations.map((r: string, i: number) => (
+                {(activeReport.advice?.recommendations || []).map((r: string, i: number) => (
                   <li key={i} className="flex gap-3 text-sm font-bold">
                     <span className="bg-accent text-accent-foreground w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 font-black">{i+1}</span>
                     {r}

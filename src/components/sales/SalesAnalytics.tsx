@@ -367,12 +367,12 @@ export function SalesAnalytics({
         cac: profile.cac || 0,
         totalCustomers: profile.customers || 0,
         deals: deals.map(d => ({
-          dealName: d.dealName,
-          company: d.company,
+          dealName: d.dealName || '',
+          company: d.company || '',
           value: Number(d.value) || 0,
-          stage: d.stage,
+          stage: d.stage || 'lead',
           probability: Number(d.probability) || 0,
-          closeDate: d.closeDate,
+          closeDate: d.closeDate || '',
           sourceType: d.sourceType || 'manual'
         })),
         question: customQuestion || "",
@@ -405,39 +405,39 @@ export function SalesAnalytics({
 
   const handleExportPDF = () => {
     if (!activeReport) return;
-    const advice = activeReport.advice;
+    const advice = activeReport.advice || {};
     const dateStr = activeReport.createdAt ? new Date(activeReport.createdAt.seconds * 1000).toLocaleString() : 'Just now';
     
     const html = `
       <div class="summary-box">
-        "${advice.summary}"
+        "${advice.summary || 'No summary available.'}"
       </div>
       
       <div class="section">
         <div class="section-title">Pipeline Bottlenecks</div>
         <ul>
-          ${advice.funnelBottlenecks.map((item: string) => `<li>${item}</li>`).join('')}
+          ${(advice.funnelBottlenecks || []).map((item: string) => `<li>${item}</li>`).join('')}
         </ul>
       </div>
 
       <div class="section">
         <div class="section-title">Conversion Recommendations</div>
         <ul>
-          ${advice.conversionRecommendations.map((item: string) => `<li>${item}</li>`).join('')}
+          ${(advice.conversionRecommendations || []).map((item: string) => `<li>${item}</li>`).join('')}
         </ul>
       </div>
 
       <div class="section">
         <div class="section-title">Sales Velocity Tips</div>
         <ul>
-          ${advice.salesVelocityTips.map((tip: string) => `<li>${tip}</li>`).join('')}
+          ${(advice.salesVelocityTips || []).map((tip: string) => `<li>${tip}</li>`).join('')}
         </ul>
       </div>
 
       <div class="section">
         <div class="section-title">Suggested Actions</div>
         <div style="margin-top: 10px;">
-          ${advice.suggestedActions.map((action: string, i: number) => `
+          ${(advice.suggestedActions || []).map((action: string, i: number) => `
             <div class="bullet-point">
               <span class="action-badge">${i + 1}</span>
               <span>${action}</span>
@@ -1098,7 +1098,7 @@ export function SalesAnalytics({
                   {/* Summary */}
                   <div className="prose prose-sm max-w-none text-slate-700 font-medium">
                     <p className="text-sm italic leading-relaxed bg-slate-50 p-4 rounded-xl border border-dashed border-indigo-200">
-                      "{activeReport.advice.summary}"
+                      "{activeReport.advice?.summary || 'No summary available.'}"
                     </p>
                   </div>
 
@@ -1110,7 +1110,7 @@ export function SalesAnalytics({
                         Pipeline Bottlenecks
                       </h4>
                       <ul className="space-y-2">
-                        {activeReport.advice.funnelBottlenecks.map((item: string, i: number) => (
+                        {(activeReport.advice?.funnelBottlenecks || []).map((item: string, i: number) => (
                           <li key={i} className="text-xs text-slate-600 leading-relaxed font-semibold flex gap-1.5 items-start">
                             <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-rose-500 shrink-0" />
                             {item}
@@ -1125,7 +1125,7 @@ export function SalesAnalytics({
                         Conversion Accelerators
                       </h4>
                       <ul className="space-y-2">
-                        {activeReport.advice.conversionRecommendations.map((item: string, i: number) => (
+                        {(activeReport.advice?.conversionRecommendations || []).map((item: string, i: number) => (
                           <li key={i} className="text-xs text-slate-600 leading-relaxed font-semibold flex gap-1.5 items-start">
                             <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-indigo-500 shrink-0" />
                             {item}
@@ -1141,7 +1141,7 @@ export function SalesAnalytics({
                       Sales Cycle Velocity Tips
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activeReport.advice.salesVelocityTips.map((tip: string, i: number) => (
+                      {(activeReport.advice?.salesVelocityTips || []).map((tip: string, i: number) => (
                         <div key={i} className="p-3 bg-white border rounded-lg text-xs leading-relaxed text-slate-600 font-semibold flex gap-2">
                           <TrendingUp className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                           {tip}
@@ -1156,7 +1156,7 @@ export function SalesAnalytics({
                       Immediate Action Plan
                     </h4>
                     <div className="space-y-2.5">
-                      {activeReport.advice.suggestedActions.map((action: string, i: number) => (
+                      {(activeReport.advice?.suggestedActions || []).map((action: string, i: number) => (
                         <div key={i} className="flex gap-3 text-xs font-bold items-center">
                           <span className="w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center text-[10px] shrink-0 font-black">
                             {i + 1}

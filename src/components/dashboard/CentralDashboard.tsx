@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { goalAdvisorAssistant } from '@/ai/flows/goal-advisor-flow';
 import { roadmapChatAssistant } from '@/ai/flows/roadmap-chat-flow';
 import { 
@@ -1222,6 +1222,25 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                                   className="text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700"
                                 >
                                   Restore
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={async () => {
+                                    if (profileRef && planHistoryRef && window.confirm("Delete this plan from history?")) {
+                                      try {
+                                        await deleteDocumentNonBlocking(doc(planHistoryRef, histPlan.id));
+                                        if (selectedHistoricalPlan?.id === histPlan.id) {
+                                          setSelectedHistoricalPlan(null);
+                                        }
+                                      } catch (err) {
+                                        console.error("Error deleting plan:", err);
+                                      }
+                                    }
+                                  }}
+                                  className="text-xs font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 h-9 w-9 p-0 rounded-lg"
+                                >
+                                  <Trash className="w-4 h-4" />
                                 </Button>
                               </div>
                             </div>

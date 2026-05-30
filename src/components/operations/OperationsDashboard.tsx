@@ -136,6 +136,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
   const activeTab = activeSubTab !== undefined ? activeSubTab : localActiveTab;
   const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
   const [preselectedAssigneeUid, setPreselectedAssigneeUid] = useState<string>('');
+  const [showAddSaas, setShowAddSaas] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
 
   // Derived Operations Data
   const subscriptions = useMemo<SaasSubscription[]>(() => {
@@ -208,8 +210,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
       id: editingSaasId || Math.random().toString(36).substr(2, 9),
       name: saasName,
       cost: Number(saasCost) || 0,
-      billing: saasBilling,
-      category: saasCategory
+      billing: 'monthly',
+      category: 'saas'
     };
 
     let updatedSubs: SaasSubscription[];
@@ -235,17 +237,15 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
     // Reset Form
     setSaasName('');
     setSaasCost('');
-    setSaasBilling('monthly');
-    setSaasCategory('hosting');
     setEditingSaasId(null);
+    setShowAddSaas(false);
   };
 
   const handleEditSaas = (sub: SaasSubscription) => {
     setEditingSaasId(sub.id);
     setSaasName(sub.name);
     setSaasCost(sub.cost);
-    setSaasBilling(sub.billing);
-    setSaasCategory(sub.category);
+    setShowAddSaas(true);
   };
 
   const handleDeleteSaas = (subId: string) => {
@@ -309,6 +309,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
     setMemberSalary('');
     setMemberStatus('active');
     setEditingMemberId(null);
+    setShowAddMember(false);
   };
 
   const handleEditMember = (member: TeamMember) => {
@@ -317,6 +318,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
     setMemberRole(member.role);
     setMemberSalary(member.salary);
     setMemberStatus(member.status);
+    setShowAddMember(true);
   };
 
   const handleDeleteMember = (memberId: string) => {
@@ -372,19 +374,19 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
         monthlyBurnRate: calculatedStats.totalBurn,
         runwayMonths: calculatedStats.runway === 999 ? 99 : Math.round(calculatedStats.runway),
         saasSubscriptions: subscriptions.map(s => ({
-          name: s.name,
+          name: s.name || '',
           cost: Number(s.cost) || 0,
-          billing: s.billing,
-          category: s.category
+          billing: s.billing || 'monthly',
+          category: s.category || 'saas'
         })),
         teamMembers: team.map(m => ({
-          name: m.name,
-          role: m.role,
+          name: m.name || '',
+          role: m.role || '',
           salary: Number(m.salary) || 0,
-          status: m.status
+          status: m.status || 'active'
         })),
         otherBurn: otherBurn,
-        question: customQuestion || undefined
+        question: customQuestion || ""
       };
 
       const result = await operationsAdvisorAssistant(input);
@@ -410,46 +412,46 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
 
   const handleExportPDF = () => {
     if (!activeReport) return;
-    const advice = activeReport.advice;
+    const advice = activeReport.advice || {};
     const dateStr = activeReport.createdAt ? new Date(activeReport.createdAt.seconds * 1000).toLocaleString() : 'Just now';
 
     const html = `
       <div class="summary-box">
-        "${advice.summary}"
+        "${advice.summary || 'No summary available.'}"
       </div>
 
       <div class="section">
         <div class="section-title">Runway & Burn Composition</div>
         <p style="font-size: 13px; color: #334155; line-height: 1.6; font-weight: 500;">
-          ${advice.runwayAnalysis}
+          ${advice.runwayAnalysis || 'No runway analysis available.'}
         </p>
       </div>
 
       <div class="section">
         <div class="section-title">SaaS Cost Savings</div>
         <ul>
-          ${advice.costOptimizationOpportunities.map((item: string) => `<li>${item}</li>`).join('')}
+          ${(advice.costOptimizationOpportunities || []).map((item: string) => `<li>${item}</li>`).join('')}
         </ul>
       </div>
 
       <div class="section">
         <div class="section-title">Headcount Recommendations</div>
         <ul>
-          ${advice.teamPlanningRecommendations.map((item: string) => `<li>${item}</li>`).join('')}
+          ${(advice.teamPlanningRecommendations || []).map((item: string) => `<li>${item}</li>`).join('')}
         </ul>
       </div>
 
       <div class="section">
         <div class="section-title">Runway Extension Tactics</div>
         <ul>
-          ${advice.runwayExtensionTactics.map((tip: string) => `<li>${tip}</li>`).join('')}
+          ${(advice.runwayExtensionTactics || []).map((tip: string) => `<li>${tip}</li>`).join('')}
         </ul>
       </div>
 
       <div class="section">
         <div class="section-title">Immediate Action Plan</div>
         <div style="margin-top: 10px;">
-          ${advice.suggestedActions.map((action: string, i: number) => `
+          ${(advice.suggestedActions || []).map((action: string, i: number) => `
             <div class="bullet-point">
               <span class="action-badge">${i + 1}</span>
               <span>${action}</span>
@@ -545,245 +547,250 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
         </TabsContent>
 
         <TabsContent value="ops" className="mt-0 focus-visible:outline-none">
-      <div className="space-y-8">
-      {/* Title block */}
-      <div>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1] mb-2">
-          Operations <span className="text-teal-600">Dashboard</span>
-        </h1>
-        <p className="text-muted-foreground font-medium text-lg">
-          Manage subscriptions, headcount planner, operational burn rate, and runway.
-        </p>
-      </div>
+      <div className="space-y-6 animate-in fade-in duration-300">
+        {/* KPI Cards (Runway Dashboard Parameters & Outflows) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          
+          {/* KPI 1: Runway */}
+          <Card className={`border-2 shadow-sm ${isDangerRunway ? 'border-red-200 bg-red-50/10' : 'border-teal-100 bg-teal-50/10'}`}>
+            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
+              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-teal-950">
+                Survival Runway
+              </CardTitle>
+              <Activity className={`w-4 h-4 ${isDangerRunway ? 'text-red-500' : 'text-teal-500'}`} />
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className={`text-2xl font-code font-black leading-none mb-1 ${isDangerRunway ? 'text-red-900' : 'text-teal-950'}`}>
+                {calculatedStats.runway === 999 ? '∞' : `${Math.round(calculatedStats.runway)} months`}
+              </div>
+              <p className="text-[9px] font-bold text-muted-foreground/80 uppercase">
+                BURN: <span className="font-bold text-slate-800">{fmtINR(calculatedStats.totalBurn)}/mo</span>
+              </p>
+            </CardContent>
+          </Card>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        
-        {/* KPI 1: Runway */}
-        <Card className={`border-2 shadow-sm ${isDangerRunway ? 'border-red-200 bg-red-50/10' : 'border-teal-100 bg-teal-50/10'}`}>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-            <CardTitle className="text-xs uppercase font-black tracking-widest text-teal-950">
-              Survival Runway
-            </CardTitle>
-            <Activity className={`w-5 h-5 ${isDangerRunway ? 'text-red-500' : 'text-teal-500'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-3xl font-code font-black leading-none mb-1.5 ${isDangerRunway ? 'text-red-900' : 'text-teal-950'}`}>
-              {calculatedStats.runway === 999 ? '∞' : `${Math.round(calculatedStats.runway)} months`}
+          {/* KPI 2: Cash in Bank */}
+          <Card className="border-2 border-teal-100/50 bg-white shadow-sm">
+            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
+              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-slate-800">
+                Liquid Bank Cash
+              </CardTitle>
+              <Wallet className="w-4 h-4 text-teal-500 opacity-75" />
+            </CardHeader>
+            <CardContent className="pt-0 space-y-1">
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                <Input 
+                  type="number"
+                  className="pl-6 h-8 text-sm font-bold font-code border-slate-200 focus-visible:ring-teal-500"
+                  value={cashBankInput}
+                  onChange={e => handleUpdateCash(Number(e.target.value))}
+                  disabled={readOnly}
+                />
+              </div>
+              <p className="text-[9px] font-semibold text-muted-foreground/70 uppercase">Adjusts runway calculation</p>
+            </CardContent>
+          </Card>
+
+          {/* KPI 3: Other Monthly Expenses */}
+          <Card className="border-2 border-teal-100/50 bg-white shadow-sm">
+            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
+              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-slate-800">
+                Other Expenses
+              </CardTitle>
+              <Plus className="w-4 h-4 text-teal-500 opacity-75" />
+            </CardHeader>
+            <CardContent className="pt-0 space-y-1">
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
+                <Input 
+                  type="number"
+                  className="pl-6 h-8 text-sm font-bold font-code border-slate-200 focus-visible:ring-teal-500"
+                  value={otherBurnInput}
+                  onChange={e => handleUpdateOverhead(Number(e.target.value))}
+                  disabled={readOnly}
+                />
+              </div>
+              <p className="text-[9px] font-semibold text-muted-foreground/70 uppercase">Rent, marketing, compliance</p>
+            </CardContent>
+          </Card>
+
+          {/* KPI 4: Headcount Expenses */}
+          <Card className="border-2 shadow-sm border-indigo-100 bg-indigo-50/10">
+            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
+              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-indigo-950">
+                Headcount Costs
+              </CardTitle>
+              <Users className="w-4 h-4 text-indigo-500" />
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-code font-black text-indigo-950 mb-1">
+                {fmtINR(calculatedStats.totalSalaries)}
+              </div>
+              <p className="text-[9px] font-bold text-indigo-600 uppercase">
+                {calculatedStats.activeHeadcount} Active | {calculatedStats.openRoles} Planned
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* KPI 5: SaaS Monthly Costs */}
+          <Card className="border-2 shadow-sm border-purple-100 bg-purple-50/10">
+            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
+              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-purple-950">
+                SaaS Costs
+              </CardTitle>
+              <Server className="w-4 h-4 text-purple-500" />
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-code font-black text-purple-950 mb-1">
+                {fmtINR(calculatedStats.totalSaasMonthly)}
+              </div>
+              <p className="text-[9px] font-bold text-purple-600 uppercase">
+                {subscriptions.length} Subscriptions
+              </p>
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Burn Sync Formula Info Strip */}
+        <div className="bg-slate-50 border rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-600">
+          <div className="flex items-center gap-1.5">
+            <Info className="w-4 h-4 text-teal-600 shrink-0" />
+            <span>Monthly Burn Breakdown:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 font-mono">
+            <span>SaaS: <strong className="text-slate-900">{fmtINR(calculatedStats.totalSaasMonthly)}</strong></span>
+            <span className="text-slate-400">+</span>
+            <span>Salaries: <strong className="text-slate-900">{fmtINR(calculatedStats.totalSalaries)}</strong></span>
+            <span className="text-slate-400">+</span>
+            <span>Other: <strong className="text-slate-900">{fmtINR(otherBurn)}</strong></span>
+            <span className="text-slate-400">=</span>
+            <span className="bg-teal-600 text-white px-2.5 py-0.5 rounded font-bold font-mono">Total Burn: {fmtINR(calculatedStats.totalBurn)}/mo</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground text-right">
+            Synced automatically to Valuations
+          </div>
+        </div>
+
+        {/* Main SaaS and Headcount Trackers */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Pillar 1: SaaS Cost Tracker */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                <Laptop className="w-4 h-4 text-teal-600" />
+                SaaS & Subscriptions
+              </h2>
+              {!readOnly && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="border-teal-200 text-teal-700 hover:bg-teal-50 text-xs font-bold gap-1 rounded-full h-8 px-3"
+                  onClick={() => {
+                    setShowAddSaas(!showAddSaas);
+                    if (editingSaasId) {
+                      setEditingSaasId(null);
+                      setSaasName('');
+                      setSaasCost('');
+                    }
+                  }}
+                >
+                  {showAddSaas ? 'Cancel' : editingSaasId ? 'Edit Sub' : '+ Add Sub'}
+                </Button>
+              )}
             </div>
-            <p className="text-xs font-semibold text-muted-foreground">
-              Total Burn: <span className="font-bold">{fmtINR(calculatedStats.totalBurn)}/mo</span>
-            </p>
-          </CardContent>
-        </Card>
 
-        {/* KPI 2: Cash in Bank */}
-        <Card className="border-2 shadow-sm">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-            <CardTitle className="text-xs uppercase font-black tracking-widest">
-              Liquid Bank Cash
-            </CardTitle>
-            <Wallet className="w-5 h-5 opacity-55" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-              <Input 
-                type="number"
-                className="pl-7 h-9 text-lg font-bold font-code"
-                value={cashBankInput}
-                onChange={e => handleUpdateCash(Number(e.target.value))}
-                disabled={readOnly}
-              />
-            </div>
-            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Type in bank balance to update runway</p>
-          </CardContent>
-        </Card>
-
-        {/* KPI 3: Headcount Expenses */}
-        <Card className="border-2 shadow-sm border-indigo-150 bg-indigo-50/10">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-            <CardTitle className="text-xs uppercase font-black tracking-widest text-indigo-950">
-              Headcount Costs
-            </CardTitle>
-            <Users className="w-5 h-5 text-indigo-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-code font-black text-indigo-950 mb-1">
-              {fmtINR(calculatedStats.totalSalaries)}
-            </div>
-            <p className="text-xs font-semibold text-muted-foreground">
-              Active: <span className="font-bold text-indigo-600">{calculatedStats.activeHeadcount}</span> | Open Roles: {calculatedStats.openRoles}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* KPI 4: SaaS Monthly Costs */}
-        <Card className="border-2 shadow-sm border-purple-150 bg-purple-50/10">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-            <CardTitle className="text-xs uppercase font-black tracking-widest text-purple-950">
-              Monthly SaaS Costs
-            </CardTitle>
-            <Server className="w-5 h-5 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-code font-black text-purple-950 mb-1">
-              {fmtINR(calculatedStats.totalSaasMonthly)}
-            </div>
-            <p className="text-xs font-semibold text-muted-foreground">
-              Active Subscriptions: <span className="font-bold text-purple-600">{subscriptions.length}</span>
-            </p>
-          </CardContent>
-        </Card>
-
-      </div>
-
-      {/* Main SaaS and Headcount Trackers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Pillar 1: SaaS Cost Tracker */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
-            <Laptop className="w-5 h-5 text-teal-600" />
-            SaaS & Subscriptions
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6">
-            {/* SaaS Form */}
-            <Card className="md:col-span-1 border shadow-sm">
-              <CardContent className="pt-6">
-                <form onSubmit={handleSaveSaas} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label className="font-bold text-xs">Subscription / SaaS Name</Label>
-                    <Input 
-                      placeholder="e.g. Amazon Web Services..."
-                      value={saasName}
-                      onChange={e => setSaasName(e.target.value)}
-                      required
-                      disabled={readOnly}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
+            {/* SaaS Form (Collapsible) */}
+            {showAddSaas && !readOnly && (
+              <Card className="border border-teal-100 bg-teal-50/5 shadow-sm animate-in slide-in-from-top-2 duration-200">
+                <CardContent className="pt-4 pb-4">
+                  <form onSubmit={handleSaveSaas} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div className="space-y-1">
-                      <Label className="font-bold text-xs">Cost (₹)</Label>
+                      <Label className="font-bold text-xs text-slate-700">Subscription / SaaS Name</Label>
                       <Input 
-                        type="number"
-                        placeholder="e.g. 15000"
-                        value={saasCost}
-                        onChange={e => setSaasCost(e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="e.g. AWS, Github, ChatGPT..."
+                        value={saasName}
+                        onChange={e => setSaasName(e.target.value)}
                         required
                         disabled={readOnly}
+                        className="h-9"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Billing</Label>
-                      <Select value={saasBilling} onValueChange={(v: any) => setSaasBilling(v)} disabled={readOnly}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                          <SelectItem value="yearly">Yearly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="font-bold text-xs">Category</Label>
-                    <Select value={saasCategory} onValueChange={(v: any) => setSaasCategory(v)} disabled={readOnly}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map(c => (
-                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold" disabled={readOnly}>
-                      {editingSaasId ? 'Update SaaS' : 'Add Subscription'}
-                    </Button>
-                    {editingSaasId && (
-                      <Button 
-                        type="button" 
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingSaasId(null);
-                          setSaasName('');
-                          setSaasCost('');
-                        }}
-                        disabled={readOnly}
-                      >
-                        Cancel
+                    
+                    <div className="grid grid-cols-3 gap-2 items-end">
+                      <div className="col-span-2 space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Monthly Cost (₹)</Label>
+                        <Input 
+                          type="number"
+                          placeholder="e.g. 15000"
+                          value={saasCost}
+                          onChange={e => setSaasCost(e.target.value === '' ? '' : Number(e.target.value))}
+                          required
+                          disabled={readOnly}
+                          className="h-9"
+                        />
+                      </div>
+                      <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-9">
+                        Save
                       </Button>
-                    )}
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
 
             {/* SaaS Table */}
-            <Card className="md:col-span-2 border shadow-sm bg-white overflow-hidden">
+            <Card className="border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-0">
                 {subscriptions.length === 0 ? (
-                  <div className="p-12 text-center text-muted-foreground text-sm font-semibold">
-                    No subscriptions tracked yet. Add cloud costs or developer tools above.
+                  <div className="p-8 text-center text-muted-foreground text-xs font-semibold">
+                    No subscriptions tracked yet. Add software costs to start.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead className="font-black text-xs uppercase text-slate-500">Service</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500">Cost (₹)</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500">Category</TableHead>
-                          <TableHead className="w-20"></TableHead>
+                        <TableRow className="bg-slate-50/75">
+                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Service</TableHead>
+                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Monthly Cost</TableHead>
+                          <TableHead className="w-16 h-9 py-2"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {subscriptions.map(sub => {
-                          const catInfo = CATEGORIES.find(c => c.value === sub.category);
-                          return (
-                            <TableRow key={sub.id} className="hover:bg-slate-50 transition-colors">
-                              <TableCell className="font-bold py-3">
-                                <div>{sub.name}</div>
-                                <div className="text-[10px] text-muted-foreground uppercase font-mono font-medium">{sub.billing} billing</div>
-                              </TableCell>
-                              <TableCell className="font-code font-black text-slate-800">
-                                {fmtINR(sub.cost)}
-                                {sub.billing === 'yearly' && <span className="text-[9px] font-normal text-muted-foreground block font-sans">({fmtINR(sub.cost / 12)}/mo)</span>}
-                              </TableCell>
-                              <TableCell>
-                                <Badge className={`border text-[9px] uppercase font-black ${catInfo?.color}`}>
-                                  {sub.category}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right py-3 pr-4">
-                                <div className="flex justify-end gap-1">
-                                  <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-8 w-8 text-slate-400 hover:text-teal-600 rounded-full"
-                                    onClick={() => handleEditSaas(sub)}
-                                    disabled={readOnly}
-                                  >
-                                    <Edit2 className="w-3 h-3" />
-                                  </Button>
-                                  <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
-                                    onClick={() => handleDeleteSaas(sub.id)}
-                                    disabled={readOnly}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                        {subscriptions.map(sub => (
+                          <TableRow key={sub.id} className="hover:bg-slate-50/50 transition-colors">
+                            <TableCell className="font-bold py-2.5">
+                              <span className="text-slate-800 text-sm">{sub.name}</span>
+                            </TableCell>
+                            <TableCell className="font-code font-black text-slate-800 py-2.5">
+                              {fmtINR(sub.cost)}
+                            </TableCell>
+                            <TableCell className="text-right py-2.5 pr-3">
+                              <div className="flex justify-end gap-1">
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full"
+                                  onClick={() => handleEditSaas(sub)}
+                                  disabled={readOnly}
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
+                                  onClick={() => handleDeleteSaas(sub.id)}
+                                  disabled={readOnly}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </div>
@@ -791,142 +798,147 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
               </CardContent>
             </Card>
           </div>
-        </div>
 
-        {/* Pillar 2: Headcount Planner */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-teal-600" />
-            Headcount Planner
-          </h2>
+          {/* Pillar 2: Headcount Planner */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-teal-600" />
+                Headcount Planner
+              </h2>
+              {!readOnly && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="border-teal-200 text-teal-700 hover:bg-teal-50 text-xs font-bold gap-1 rounded-full h-8 px-3"
+                  onClick={() => {
+                    setShowAddMember(!showAddMember);
+                    if (editingMemberId) {
+                      setEditingMemberId(null);
+                      setMemberName('');
+                      setMemberRole('');
+                      setMemberSalary('');
+                    }
+                  }}
+                >
+                  {showAddMember ? 'Cancel' : editingMemberId ? 'Edit Role' : '+ Add Role'}
+                </Button>
+              )}
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6">
-            {/* Team Form */}
-            <Card className="md:col-span-1 border shadow-sm">
-              <CardContent className="pt-6">
-                <form onSubmit={handleSaveMember} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Name</Label>
-                      <Input 
-                        placeholder="e.g. Amit S..."
-                        value={memberName}
-                        onChange={e => setMemberName(e.target.value)}
-                        required
-                        disabled={readOnly}
-                      />
+            {/* Team Form (Collapsible) */}
+            {showAddMember && !readOnly && (
+              <Card className="border border-teal-100 bg-teal-50/5 shadow-sm animate-in slide-in-from-top-2 duration-200">
+                <CardContent className="pt-4 pb-4">
+                  <form onSubmit={handleSaveMember} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Name</Label>
+                        <Input 
+                          placeholder="e.g. Amit S..."
+                          value={memberName}
+                          onChange={e => setMemberName(e.target.value)}
+                          required
+                          disabled={readOnly}
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Role</Label>
+                        <Input 
+                          placeholder="e.g. Lead Engineer..."
+                          value={memberRole}
+                          onChange={e => setMemberRole(e.target.value)}
+                          disabled={readOnly}
+                          className="h-9"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Role</Label>
-                      <Input 
-                        placeholder="e.g. Lead Engineer..."
-                        value={memberRole}
-                        onChange={e => setMemberRole(e.target.value)}
-                        disabled={readOnly}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Monthly Salary (₹)</Label>
-                      <Input 
-                        type="number"
-                        placeholder="e.g. 100000"
-                        value={memberSalary}
-                        onChange={e => setMemberSalary(e.target.value === '' ? '' : Number(e.target.value))}
-                        required
-                        disabled={readOnly}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Status</Label>
-                      <Select value={memberStatus} onValueChange={(v: any) => setMemberStatus(v)} disabled={readOnly}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active Employee</SelectItem>
-                          <SelectItem value="hiring">Hiring / Planned</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold" disabled={readOnly}>
-                      {editingMemberId ? 'Update Role' : 'Add Team Member'}
-                    </Button>
-                    {editingMemberId && (
-                      <Button 
-                        type="button" 
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingMemberId(null);
-                          setMemberName('');
-                          setMemberRole('');
-                          setMemberSalary('');
-                        }}
-                        disabled={readOnly}
-                      >
-                        Cancel
+                    <div className="grid grid-cols-3 gap-3 items-end">
+                      <div className="col-span-1 space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Monthly Salary (₹)</Label>
+                        <Input 
+                          type="number"
+                          placeholder="e.g. 100000"
+                          value={memberSalary}
+                          onChange={e => setMemberSalary(e.target.value === '' ? '' : Number(e.target.value))}
+                          required
+                          disabled={readOnly}
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="col-span-1 space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Status</Label>
+                        <Select value={memberStatus} onValueChange={(v: any) => setMemberStatus(v)} disabled={readOnly}>
+                          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="hiring">Planned Hire</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-9">
+                        Save Member
                       </Button>
-                    )}
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Team Table */}
-            <Card className="md:col-span-2 border shadow-sm bg-white overflow-hidden">
+            <Card className="border shadow-sm bg-white overflow-hidden">
               <CardContent className="p-0">
                 {team.length === 0 ? (
-                  <div className="p-12 text-center text-muted-foreground text-sm font-semibold">
-                    No team members listed yet. Add employees or planned hires above.
+                  <div className="p-8 text-center text-muted-foreground text-xs font-semibold">
+                    No team members listed yet. Add roles to start.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead className="font-black text-xs uppercase text-slate-500">Name & Role</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500">Monthly Salary</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500">Status</TableHead>
-                          <TableHead className="w-20"></TableHead>
+                        <TableRow className="bg-slate-50/75">
+                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Name & Role</TableHead>
+                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Monthly Salary</TableHead>
+                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Status</TableHead>
+                          <TableHead className="w-16 h-9 py-2"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {team.map(member => (
-                          <TableRow key={member.id} className="hover:bg-slate-50 transition-colors">
-                            <TableCell className="font-bold py-3">
-                              <div>{member.name}</div>
-                              <div className="text-xs text-muted-foreground font-medium">{member.role}</div>
+                          <TableRow key={member.id} className="hover:bg-slate-50/50 transition-colors">
+                            <TableCell className="font-bold py-2.5">
+                              <div className="text-slate-800 text-sm">{member.name}</div>
+                              <div className="text-[10px] text-muted-foreground font-medium">{member.role}</div>
                             </TableCell>
-                            <TableCell className="font-code font-black text-slate-800">
-                              {fmtINR(member.salary)}/mo
+                            <TableCell className="font-code font-black text-slate-800 py-2.5">
+                              {fmtINR(member.salary)}
                             </TableCell>
-                            <TableCell>
-                              <Badge className={`border text-[9px] uppercase font-black ${member.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
-                                {member.status === 'active' ? 'Active' : 'Hiring'}
+                            <TableCell className="py-2.5">
+                              <Badge className={`border text-[9px] uppercase font-black px-1.5 py-0.5 ${member.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+                                {member.status === 'active' ? 'Active' : 'Planned'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right py-3 pr-4">
+                            <TableCell className="text-right py-2.5 pr-3">
                               <div className="flex justify-end gap-1">
                                 <Button 
                                   size="icon" 
                                   variant="ghost" 
-                                  className="h-8 w-8 text-slate-400 hover:text-teal-600 rounded-full"
+                                  className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full"
                                   onClick={() => handleEditMember(member)}
                                   disabled={readOnly}
                                 >
-                                  <Edit2 className="w-3.5 h-3.5" />
+                                  <Edit2 className="w-3 h-3" />
                                 </Button>
                                 <Button 
                                   size="icon" 
                                   variant="ghost" 
-                                  className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
+                                  className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
                                   onClick={() => handleDeleteMember(member.id)}
                                   disabled={readOnly}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-3 h-3" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -940,84 +952,6 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
             </Card>
           </div>
         </div>
-
-      </div>
-
-      {/* Burn Sync & Other overheads */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-6 border-t border-slate-100">
-        
-        {/* Inputs */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="border shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-black text-slate-900">
-                Other Operational Burn
-              </CardTitle>
-              <CardDescription>
-                Input non-software, non-salary monthly overheads (marketing, office rent, compliance).
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="font-bold text-xs">Other Monthly Expenses (₹)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-sm">₹</span>
-                  <Input 
-                    type="number"
-                    className="pl-7"
-                    value={otherBurnInput}
-                    onChange={e => handleUpdateOverhead(Number(e.target.value))}
-                    disabled={readOnly}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Burn Rate Calculator Output */}
-        <div className="lg:col-span-2">
-          <Card className="border-2 border-teal-100 bg-teal-50/10 shadow-sm">
-            <CardHeader className="pb-4 border-b border-teal-100">
-              <CardTitle className="text-base font-black text-teal-950 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-teal-600" />
-                Operational Burn Rate Calculator Output
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              
-              {/* Formula */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-3 bg-white border rounded-lg text-center">
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">SaaS spend</div>
-                  <div className="text-sm font-code font-bold text-slate-800">{fmtINR(calculatedStats.totalSaasMonthly)}</div>
-                </div>
-                <div className="p-3 bg-white border rounded-lg text-center flex flex-col justify-center">
-                  <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">+ salaries</div>
-                  <div className="text-sm font-code font-bold text-slate-800">+{fmtINR(calculatedStats.totalSalaries)}</div>
-                </div>
-                <div className="p-3 bg-white border rounded-lg text-center flex flex-col justify-center">
-                  <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">+ other burn</div>
-                  <div className="text-sm font-code font-bold text-slate-800">+{fmtINR(otherBurn)}</div>
-                </div>
-                <div className="p-3 bg-teal-600 text-white rounded-lg text-center flex flex-col justify-center shadow-sm">
-                  <div className="text-[10px] uppercase font-bold text-teal-200 mb-1">= total burn</div>
-                  <div className="text-sm font-code font-bold">{fmtINR(calculatedStats.totalBurn)}/mo</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-4 bg-white/70 border rounded-lg border-teal-200/50">
-                <Info className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-teal-900 leading-relaxed font-semibold">
-                  This true monthly burn of <span className="font-black text-teal-700">{fmtINR(calculatedStats.totalBurn)}</span> is automatically synced to the Valuation Calculator and Dashboard metrics, giving you an instantly updated runway of <span className="font-black text-teal-700">{calculatedStats.runway === 999 ? '∞' : `${Math.round(calculatedStats.runway)} months`}</span> based on your current cash bank balance.
-                </p>
-              </div>
-
-            </CardContent>
-          </Card>
-        </div>
-
-      </div>
 
       {/* Operations AI Advisor Section */}
       <div className="space-y-6 pt-10 border-t border-slate-100">
@@ -1134,7 +1068,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                   {/* Summary */}
                   <div className="prose prose-sm max-w-none text-slate-700 font-medium">
                     <p className="text-sm italic leading-relaxed bg-slate-50 p-4 rounded-xl border border-dashed border-teal-200">
-                      "{activeReport.advice.summary}"
+                      "{activeReport.advice?.summary || 'No summary available.'}"
                     </p>
                   </div>
 
@@ -1144,7 +1078,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                       Runway & Burn Composition
                     </h4>
                     <p className="text-xs text-slate-600 leading-relaxed font-semibold bg-teal-50/30 p-3 rounded-lg border border-teal-100/50">
-                      {activeReport.advice.runwayAnalysis}
+                      {activeReport.advice?.runwayAnalysis || 'No analysis available.'}
                     </p>
                   </div>
 
@@ -1156,7 +1090,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                         SaaS Cost Savings
                       </h4>
                       <ul className="space-y-2">
-                        {activeReport.advice.costOptimizationOpportunities.map((item: string, i: number) => (
+                        {(activeReport.advice?.costOptimizationOpportunities || []).map((item: string, i: number) => (
                           <li key={i} className="text-xs text-slate-600 leading-relaxed font-semibold flex gap-1.5 items-start">
                             <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-teal-500 shrink-0" />
                             {item}
@@ -1171,7 +1105,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                         Headcount Recommendations
                       </h4>
                       <ul className="space-y-2">
-                        {activeReport.advice.teamPlanningRecommendations.map((item: string, i: number) => (
+                        {(activeReport.advice?.teamPlanningRecommendations || []).map((item: string, i: number) => (
                           <li key={i} className="text-xs text-slate-600 leading-relaxed font-semibold flex gap-1.5 items-start">
                             <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-teal-500 shrink-0" />
                             {item}
@@ -1188,7 +1122,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                       Runway Extension Tactics
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activeReport.advice.runwayExtensionTactics.map((tip: string, i: number) => (
+                      {(activeReport.advice?.runwayExtensionTactics || []).map((tip: string, i: number) => (
                         <div key={i} className="p-3 bg-white border rounded-lg text-xs leading-relaxed text-slate-600 font-semibold flex gap-2">
                           <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0 mt-0.5" />
                           {tip}
@@ -1203,7 +1137,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                       Immediate Action Plan
                     </h4>
                     <div className="space-y-2.5">
-                      {activeReport.advice.suggestedActions.map((action: string, i: number) => (
+                      {(activeReport.advice?.suggestedActions || []).map((action: string, i: number) => (
                         <div key={i} className="flex gap-3 text-xs font-bold items-center">
                           <span className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-[10px] shrink-0 font-black">
                             {i + 1}
