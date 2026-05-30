@@ -160,16 +160,19 @@ export function SalesAnalytics({
     // 3. Workshops map to Deal
     const workshopDeals: Deal[] = (profile?.workshops || []).map((w: any) => {
       let crmStage: 'lead' | 'contacted' | 'demo' | 'proposal' | 'won' | 'lost' = 'proposal';
-      if (w.status === 'confirmed' || w.status === 'completed') crmStage = 'won';
+      if (w.status === 'completed') crmStage = 'won';
+      else if (w.status === 'cancelled') crmStage = 'lost';
+      else if (w.status === 'planned') crmStage = 'proposal';
 
-      const val = Number(w.cost || w.fees || 0);
+      const val = Number(w.revenue || 0);
       let prob = 75;
       if (crmStage === 'won') prob = 100;
+      else if (crmStage === 'lost') prob = 0;
 
       return {
         id: `workshop-${w.id}`,
-        dealName: `Workshop: ${w.topic || 'Training'}`,
-        company: w.institution || 'Workshop Client',
+        dealName: `Workshop: ${w.title || 'Untitled Session'}`,
+        company: w.notes || 'Workshop Client',
         value: val,
         stage: crmStage,
         probability: prob,
@@ -180,14 +183,17 @@ export function SalesAnalytics({
 
     // 4. Product Sales map to Deal
     const productDeals: Deal[] = (profile?.ezProductSales || []).map((p: any) => {
-      const val = Number(p.totalAmount || p.amount || 0);
+      const val = Number(p.total || 0);
+      let crmStage: 'lead' | 'contacted' | 'demo' | 'proposal' | 'won' | 'lost' = 'won';
+      if (p.paymentStatus === 'refunded') crmStage = 'lost';
+
       return {
         id: `sale-${p.id}`,
-        dealName: `Product Sale: ${p.productName || 'EZCirkit Kit'}`,
-        company: p.buyerName || 'Direct Buyer',
+        dealName: `Sale: ${p.product || 'EZCirkit Kit'}`,
+        company: p.customer || 'Direct Buyer',
         value: val,
-        stage: 'won' as const,
-        probability: 100,
+        stage: crmStage,
+        probability: crmStage === 'won' ? 100 : 0,
         closeDate: p.date || new Date().toISOString().split('T')[0],
         sourceType: 'product-sale' as const
       };
