@@ -81,7 +81,8 @@ service cloud.firestore {
 
         match /tasks/{taskId} {
           allow read: if hasReadAccess(userId);
-          allow write: if hasWriteAccess(userId) || isVisitor(userId);
+          allow create, update: if hasWriteAccess(userId) || isVisitor(userId);
+          allow delete: if isUser(userId);
           allow read: if isSignedIn() && resource.data.assignedToUid == request.auth.uid;
           allow update: if isSignedIn()
             && resource.data.assignedToUid == request.auth.uid
