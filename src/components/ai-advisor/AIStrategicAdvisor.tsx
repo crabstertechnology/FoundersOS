@@ -5,8 +5,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Sparkles, Loader2, ShieldAlert, CheckCircle2, ChevronRight, 
-  History, Calendar, Trash2, ChevronDown, ChevronUp 
+  History, Calendar, Trash2, ChevronDown, ChevronUp, Printer 
 } from 'lucide-react';
+import { exportReportToPDF } from '@/lib/utils/pdfExport';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { contextualStrategicAdvisor, ContextualStrategicAdvisorOutput } from '@/ai/flows/contextual-strategic-advisor';
 import { 
@@ -110,6 +111,79 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportPDF = () => {
+    if (!activeReport) return;
+    const advice = activeReport.advice;
+    const dateStr = formatDate(activeReport.createdAt);
+    const snap = activeReport.inputSnapshot;
+
+    let snapHtml = '';
+    if (snap) {
+      snapHtml = `
+        <div class="meta-grid">
+          <div class="meta-item">
+            <span class="meta-label">Valuation</span>
+            <span class="meta-value">${fmtINR(snap.preMoneyValuation)}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Burn Rate</span>
+            <span class="meta-value">${fmtINR(snap.monthlyBurnRate)}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">LTV/CAC</span>
+            <span class="meta-value">${(snap.ltvToCacRatio || 0).toFixed(1)}x</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Founder Stake</span>
+            <span class="meta-value">${(snap.currentFounderEquityPercentage || 0).toFixed(1)}%</span>
+          </div>
+        </div>
+      `;
+    }
+
+    const html = `
+      <div class="summary-box">
+        "${advice.summary}"
+      </div>
+
+      ${snapHtml}
+
+      <div class="grid-2">
+        <div class="section">
+          <div class="section-title">Key Strengths</div>
+          <ul>
+            ${advice.strengths.map((s: string) => `<li>${s}</li>`).join('')}
+          </ul>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Critical Warnings</div>
+          <ul>
+            ${advice.warnings.map((w: string) => `<li>${w}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+
+      <div class="section" style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 20px;">
+        <div class="section-title" style="color: #0f172a; border-bottom: 2px solid #0f172a; padding-bottom: 8px;">Recommended Next Steps</div>
+        <div style="margin-top: 15px;">
+          ${advice.recommendations.map((r: string, i: number) => `
+            <div class="bullet-point">
+              <span class="action-badge">${i + 1}</span>
+              <span>${r}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div style="font-size: 9px; color: #94a3b8; text-align: center; margin-top: 50px; font-weight: bold; text-transform: uppercase; font-family: 'JetBrains Mono', monospace;">
+        Report Snapshot Date: ${dateStr}
+      </div>
+    `;
+
+    exportReportToPDF('Strategic Advice & Valuation Report', html);
   };
 
   const handleDeleteReport = (reportId: string, e: React.MouseEvent) => {
@@ -218,13 +292,23 @@ export function AIStrategicAdvisor({ userId, companyProfileId, data, results, in
       {activeReport && (
         <Card className="border-2 border-primary/20 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4">
           <CardHeader className="bg-primary text-primary-foreground">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Sparkles className="w-5 h-5" />
                 Strategic Advice Report
               </CardTitle>
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">
-                Generated {formatDate(activeReport.createdAt)}
+              <div className="flex items-center gap-3">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">
+                  Generated {formatDate(activeReport.createdAt)}
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-white hover:bg-slate-100 text-slate-900 text-[10px] font-black uppercase tracking-wider px-3 h-7 gap-1.5 rounded-md border"
+                  onClick={handleExportPDF}
+                >
+                  <Printer className="w-3.5 h-3.5 text-primary" /> Export PDF
+                </Button>
               </div>
             </div>
           </CardHeader>

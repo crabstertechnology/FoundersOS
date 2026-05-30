@@ -1283,42 +1283,6 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                   {renderMarkdown(strategicPlan.analysis)}
                 </CardContent>
               </Card>
-
-              {/* AI Clarifying Questions / Missing Info Form */}
-              {strategicPlan.missingInfoRequests && strategicPlan.missingInfoRequests.length > 0 && (
-                <Card className="border-2 border-amber-100/80 bg-amber-50/5 shadow-sm">
-                  <CardHeader className="bg-amber-50/30 border-b pb-4">
-                    <CardTitle className="text-xs uppercase font-black tracking-widest text-amber-950 flex items-center gap-2">
-                      <HelpCircle className="w-4 h-4 text-amber-600" />
-                      Refine Plan (AI Requests)
-                    </CardTitle>
-                    <CardDescription className="text-[10px]">
-                      The AI needs some clarity to tailor your roadmaps. Submit details below.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
-                    {strategicPlan.missingInfoRequests.map((question: string, qIdx: number) => (
-                      <div key={qIdx} className="space-y-2">
-                        <Label className="font-bold text-xs text-slate-700 block leading-relaxed">{question}</Label>
-                        <Input
-                          placeholder="Type answer here..."
-                          value={missingInfoAnswers[question] || ''}
-                          onChange={e => setMissingInfoAnswers(prev => ({ ...prev, [question]: e.target.value }))}
-                          className="bg-white border-slate-200"
-                        />
-                      </div>
-                    ))}
-                    <Button
-                      onClick={(e) => handleGeneratePlan(e)}
-                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold h-9 text-xs gap-1.5"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      Submit Answers to AI
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
             </div>
 
           </div>

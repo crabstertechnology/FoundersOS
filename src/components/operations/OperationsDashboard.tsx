@@ -12,8 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { 
   Plus, Trash2, Edit2, Sparkles, Loader2, Wallet, Users, Layout, ShieldAlert,
-  Server, Laptop, Briefcase, Calendar, CheckCircle2, ChevronRight, Activity, Info, ListChecks, Shield, MessageSquare
+  Server, Laptop, Briefcase, Calendar, CheckCircle2, ChevronRight, Activity, Info, ListChecks, Shield, MessageSquare,
+  Printer
 } from 'lucide-react';
+import { exportReportToPDF } from '@/lib/utils/pdfExport';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc, collection, query, orderBy, serverTimestamp, where } from 'firebase/firestore';
@@ -404,6 +406,64 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleExportPDF = () => {
+    if (!activeReport) return;
+    const advice = activeReport.advice;
+    const dateStr = activeReport.createdAt ? new Date(activeReport.createdAt.seconds * 1000).toLocaleString() : 'Just now';
+
+    const html = `
+      <div class="summary-box">
+        "${advice.summary}"
+      </div>
+
+      <div class="section">
+        <div class="section-title">Runway & Burn Composition</div>
+        <p style="font-size: 13px; color: #334155; line-height: 1.6; font-weight: 500;">
+          ${advice.runwayAnalysis}
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">SaaS Cost Savings</div>
+        <ul>
+          ${advice.costOptimizationOpportunities.map((item: string) => `<li>${item}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Headcount Recommendations</div>
+        <ul>
+          ${advice.teamPlanningRecommendations.map((item: string) => `<li>${item}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Runway Extension Tactics</div>
+        <ul>
+          ${advice.runwayExtensionTactics.map((tip: string) => `<li>${tip}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Immediate Action Plan</div>
+        <div style="margin-top: 10px;">
+          ${advice.suggestedActions.map((action: string, i: number) => `
+            <div class="bullet-point">
+              <span class="action-badge">${i + 1}</span>
+              <span>${action}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div style="font-size: 9px; color: #94a3b8; text-align: center; margin-top: 50px; font-weight: bold; text-transform: uppercase; font-family: 'JetBrains Mono', monospace;">
+        Report Snapshot Date: ${dateStr}
+      </div>
+    `;
+
+    exportReportToPDF('Operations & Runway Audit Report', html);
   };
 
   const handleDeleteReport = (reportId: string, e: React.MouseEvent) => {
@@ -1049,14 +1109,24 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
             {activeReport ? (
               <Card className="border-2 border-teal-100 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4">
                 <CardHeader className="bg-teal-900 text-white p-5">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <CardTitle className="text-base font-black uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-teal-250 text-teal-300 animate-pulse" />
+                      <Sparkles className="w-5 h-5 text-teal-350 text-teal-300 animate-pulse" />
                       Operations Audit Report
                     </CardTitle>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-80 font-mono">
-                      Generated {activeReport.createdAt ? new Date(activeReport.createdAt.seconds * 1000).toLocaleString() : 'Just now'}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-80 font-mono">
+                        Generated {activeReport.createdAt ? new Date(activeReport.createdAt.seconds * 1000).toLocaleString() : 'Just now'}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="bg-white hover:bg-slate-100 text-teal-900 text-[10px] font-black uppercase tracking-wider px-3 h-7 gap-1.5 rounded-md border border-teal-200"
+                        onClick={handleExportPDF}
+                      >
+                        <Printer className="w-3.5 h-3.5 text-teal-650" /> Export PDF
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
