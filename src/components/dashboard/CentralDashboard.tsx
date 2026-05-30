@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where, getDoc, setDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { fmtINR, fmtPct } from '@/lib/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,7 @@ import {
   LineChart, Wallet, Rocket, PieChart, Activity, TrendingUp, 
   AlertTriangle, ArrowUpRight, BarChart3, Users, Server, DollarSign, Calendar,
   Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
-  FileText, UploadCloud, Trash, Paperclip, MessageSquare
+  FileText, UploadCloud, Trash, Paperclip, MessageSquare, History
 } from 'lucide-react';
 
 const loadPdfJs = () => {
@@ -91,7 +91,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
   const [assignedTasks, setAssignedTasks] = useState<Record<string, boolean>>({});
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
   const [missingInfoAnswers, setMissingInfoAnswers] = useState<Record<string, string>>({});
-  const [activePlannerTab, setActivePlannerTab] = useState<'roadmap' | 'milestones' | 'chat'>('roadmap');
+  const [activePlannerTab, setActivePlannerTab] = useState<'roadmap' | 'milestones' | 'chat' | 'history'>('roadmap');
+  const [selectedHistoricalPlan, setSelectedHistoricalPlan] = useState<any | null>(null);
   const [attachedDocName, setAttachedDocName] = useState('');
   const [attachedDocText, setAttachedDocText] = useState('');
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -152,6 +153,18 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
   const { data: shareholders } = useCollection(shareholdersRef) || {};
   const { data: rawEmployeesData } = useCollection(employeesQuery) || {};
   const { data: tasksRaw } = useCollection(tasksRef) || {};
+
+  const planHistoryRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'planHistory');
+  }, [firestore, userId, companyProfileId]);
+
+  const planHistoryQuery = useMemoFirebase(() => {
+    if (!planHistoryRef) return null;
+    return query(planHistoryRef, orderBy('createdAt', 'desc'));
+  }, [planHistoryRef]);
+
+  const { data: planHistory } = useCollection(planHistoryQuery) || {};
 
   const roadmapChatRef = useMemoFirebase(() => {
     if (!firestore || !userId || !companyProfileId) return null;
@@ -384,6 +397,17 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
         attachedDocText: attachedDocText || null,
       }, { merge: true });
 
+      // Save in history subcollection
+      if (firestore && userId && companyProfileId) {
+        const historyCollRef = collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'planHistory');
+        await addDocumentNonBlocking(historyCollRef, {
+          yearlyGoal,
+          companyStage: stage,
+          strategicPlan: result,
+          createdAt: serverTimestamp(),
+        });
+      }
+
       setIsEditingGoal(false);
       setMissingInfoAnswers({});
       if (progressText) {
@@ -526,7 +550,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
     });
   }
 
-  const strategicPlan = profile?.strategicPlan;
+  const strategicPlan = selectedHistoricalPlan ? selectedHistoricalPlan.strategicPlan : profile?.strategicPlan;
   const hasPlan = strategicPlan && !isEditingGoal;
 
   return (
@@ -824,29 +848,79 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
         <div className="space-y-8">
           
           {/* Goal Banner */}
-          <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">ACTIVE STRATEGIC INITIATIVE</span>
-              <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">{yearlyGoal}</h2>
-              <div className="flex gap-2 items-center pt-1">
-                <Badge className="bg-indigo-500/20 text-indigo-200 border-indigo-400/30 uppercase text-[9px] font-bold">
-                  Stage: {stage}
-                </Badge>
-                <span className="text-slate-500 text-xs">|</span>
-                <span className="text-xs text-slate-300 font-medium">Roadmap active and synced</span>
+          {selectedHistoricalPlan ? (
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-900 via-slate-900 to-amber-950 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-300">
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">VIEWING HISTORICAL STRATEGIC PLAN</span>
+                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">{selectedHistoricalPlan.yearlyGoal}</h2>
+                <div className="flex gap-2 items-center pt-1">
+                  <Badge className="bg-amber-500/20 text-amber-200 border-amber-400/30 uppercase text-[9px] font-bold">
+                    Stage: {selectedHistoricalPlan.companyStage}
+                  </Badge>
+                  <span className="text-slate-500 text-xs">|</span>
+                  <span className="text-xs text-slate-300 font-medium">
+                    Generated on {selectedHistoricalPlan.createdAt ? new Date(selectedHistoricalPlan.createdAt.seconds * 1000).toLocaleString() : 'N/A'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-3 shrink-0">
+                <Button 
+                  onClick={async () => {
+                    if (profileRef) {
+                      setAiLoading(true);
+                      try {
+                        await setDocumentNonBlocking(profileRef, {
+                          yearlyGoal: selectedHistoricalPlan.yearlyGoal,
+                          companyStage: selectedHistoricalPlan.companyStage,
+                          strategicPlan: selectedHistoricalPlan.strategicPlan,
+                        }, { merge: true });
+                        setSelectedHistoricalPlan(null);
+                      } catch (err) {
+                        console.error("Error restoring plan:", err);
+                      } finally {
+                        setAiLoading(false);
+                      }
+                    }
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-9 font-semibold"
+                >
+                  Restore as Active Plan
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSelectedHistoricalPlan(null)}
+                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs rounded-xl h-9"
+                >
+                  Back to Active Plan
+                </Button>
               </div>
             </div>
-            <div className="flex gap-3 shrink-0">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setIsEditingGoal(true)}
-                className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs rounded-xl h-9"
-              >
-                Re-Generate Plan
-              </Button>
+          ) : (
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">ACTIVE STRATEGIC INITIATIVE</span>
+                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">{yearlyGoal}</h2>
+                <div className="flex gap-2 items-center pt-1">
+                  <Badge className="bg-indigo-500/20 text-indigo-200 border-indigo-400/30 uppercase text-[9px] font-bold">
+                    Stage: {stage}
+                  </Badge>
+                  <span className="text-slate-500 text-xs">|</span>
+                  <span className="text-xs text-slate-300 font-medium">Roadmap active and synced</span>
+                </div>
+              </div>
+              <div className="flex gap-3 shrink-0">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsEditingGoal(true)}
+                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs rounded-xl h-9"
+                >
+                  Re-Generate Plan
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Strategic Analysis & Plans Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -860,7 +934,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                   {[
                     { id: 'roadmap', label: 'Quarterly Roadmap', icon: Map },
                     { id: 'milestones', label: 'Monthly Milestones', icon: Calendar },
-                    { id: 'chat', label: 'Discuss & Modify Plan', icon: MessageSquare }
+                    ...(!selectedHistoricalPlan ? [{ id: 'chat', label: 'Discuss & Modify Plan', icon: MessageSquare }] : []),
+                    { id: 'history', label: 'Plan History', icon: History }
                   ].map(item => {
                     const Icon = item.icon;
                     return (
@@ -1080,6 +1155,80 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                         <Send className="w-4 h-4" />
                       </Button>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* 4. Plan History Tab */}
+              {activePlannerTab === 'history' && (
+                <Card className="border shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-base font-black text-slate-900">Plan Generation History</CardTitle>
+                    <CardDescription>Browse previously generated strategic plans and assessments.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-2 space-y-4">
+                    {!planHistory || planHistory.length === 0 ? (
+                      <div className="p-8 text-center text-muted-foreground font-semibold text-xs">
+                        No plan history found. Any new plans you generate will appear here.
+                      </div>
+                    ) : (
+                      <div className="divide-y border rounded-xl overflow-hidden bg-white">
+                        {planHistory.map((histPlan: any) => {
+                          const date = histPlan.createdAt ? new Date(histPlan.createdAt.seconds * 1000) : new Date();
+                          const formattedDate = date.toLocaleString();
+                          const isCurrentlySelected = selectedHistoricalPlan?.id === histPlan.id;
+                          return (
+                            <div key={histPlan.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-slate-50 transition-all">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-mono font-bold text-slate-500">{formattedDate}</span>
+                                  <Badge className="bg-slate-100 text-slate-700 uppercase text-[9px] font-bold">
+                                    Stage: {histPlan.companyStage}
+                                  </Badge>
+                                </div>
+                                <h4 className="text-sm font-bold text-slate-900">{histPlan.yearlyGoal}</h4>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant={isCurrentlySelected ? "secondary" : "outline"}
+                                  onClick={() => {
+                                    setSelectedHistoricalPlan(histPlan);
+                                    setActivePlannerTab('roadmap');
+                                  }}
+                                  className="text-xs font-bold"
+                                >
+                                  {isCurrentlySelected ? "Viewing..." : "View Plan"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (profileRef) {
+                                      setAiLoading(true);
+                                      try {
+                                        await setDocumentNonBlocking(profileRef, {
+                                          yearlyGoal: histPlan.yearlyGoal,
+                                          companyStage: histPlan.companyStage,
+                                          strategicPlan: histPlan.strategicPlan,
+                                        }, { merge: true });
+                                        setSelectedHistoricalPlan(null);
+                                      } catch (err) {
+                                        console.error("Error restoring plan:", err);
+                                      } finally {
+                                        setAiLoading(false);
+                                      }
+                                    }
+                                  }}
+                                  className="text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700"
+                                >
+                                  Restore
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}

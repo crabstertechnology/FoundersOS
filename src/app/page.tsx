@@ -400,9 +400,7 @@ export default function FounderOSPage() {
                   ) : (
                     <ChevronRight className="w-3.5 h-3.5 opacity-80" />
                   )}
-                </button>
-
-                {isSalesExpanded && (
+                </button>                {isSalesExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('crm'); }}
@@ -415,79 +413,60 @@ export default function FounderOSPage() {
                       CRM Pipeline
                     </button>
 
-                    {/* Nested EZCirkit Tracker Collapse System */}
-                    <div className="space-y-1 mt-1">
-                      <button
-                        onClick={() => setIsEZCirkitExpanded(!isEZCirkitExpanded)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                          activeTab === 'sales' && salesTab === 'ezcirkit'
-                            ? 'text-white font-bold'
-                            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-850/30'
-                        }`}
-                      >
-                        <span>EZCirkit Tracker</span>
-                        {isEZCirkitExpanded ? (
-                          <ChevronDown className="w-3 h-3 opacity-60" />
-                        ) : (
-                          <ChevronRight className="w-3 h-3 opacity-60" />
-                        )}
-                      </button>
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
 
-                      {isEZCirkitExpanded && (
-                        <div className="pl-3 py-0.5 space-y-0.5 border-l border-slate-800 ml-3 animate-in slide-in-from-top-1 duration-150">
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Weekly Dashboard
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('leads'); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Lead Tracker
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('workshops'); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Workshop Tracker
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('products'); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Product Sales
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Daily Activity
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('leads'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Lead Tracker
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('workshops'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Workshop Tracker
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('products'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Product Sales
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
                   </div>
                 )}
               </div>
@@ -802,9 +781,7 @@ export default function FounderOSPage() {
                   ) : (
                     <ChevronRight className="w-3.5 h-3.5 opacity-80" />
                   )}
-                </button>
-
-                {isSalesExpanded && (
+                </button>                {isSalesExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('crm'); setIsMobileSidebarOpen(false); }}
@@ -817,79 +794,60 @@ export default function FounderOSPage() {
                       CRM Pipeline
                     </button>
 
-                    {/* Mobile Nested EZCirkit */}
-                    <div className="space-y-1 mt-1">
-                      <button
-                        onClick={() => setIsEZCirkitExpanded(!isEZCirkitExpanded)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                          activeTab === 'sales' && salesTab === 'ezcirkit'
-                            ? 'text-white font-bold'
-                            : 'text-slate-300 hover:text-white hover:bg-slate-800/10'
-                        }`}
-                      >
-                        <span>EZCirkit Tracker</span>
-                        {isEZCirkitExpanded ? (
-                          <ChevronDown className="w-3 h-3 opacity-60" />
-                        ) : (
-                          <ChevronRight className="w-3 h-3 opacity-60" />
-                        )}
-                      </button>
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
 
-                      {isEZCirkitExpanded && (
-                        <div className="pl-3 py-0.5 space-y-0.5 border-l border-slate-800 ml-3">
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); setIsMobileSidebarOpen(false); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Weekly Dashboard
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('leads'); setIsMobileSidebarOpen(false); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Lead Tracker
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('workshops'); setIsMobileSidebarOpen(false); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Workshop Tracker
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('products'); setIsMobileSidebarOpen(false); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Product Sales
-                          </button>
-                          <button
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); setIsMobileSidebarOpen(false); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                              activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
-                                ? 'text-primary font-bold bg-primary/10'
-                                : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                            }`}
-                          >
-                            Daily Activity
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('leads'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Lead Tracker
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('workshops'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Workshop Tracker
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('products'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Product Sales
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
                   </div>
                 )}
               </div>
