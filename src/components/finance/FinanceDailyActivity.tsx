@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit, MessageSquare
+  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit, MessageSquare, Save
 } from 'lucide-react';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -25,6 +25,7 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
   const { data: profile } = useDoc(profileRef);
 
   const [feedback, setFeedback] = useState(profile?.financeDailyFeedback || '');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (profile?.financeDailyFeedback !== undefined) {
@@ -32,10 +33,28 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
     }
   }, [profile?.financeDailyFeedback]);
 
-  const handleSaveFeedback = async (val: string) => {
-    setFeedback(val);
+  const handleSaveFeedback = async () => {
     if (!profileRef) return;
-    await setDocumentNonBlocking(profileRef, { financeDailyFeedback: val }, { merge: true });
+    setIsSaving(true);
+    const nowStr = new Date().toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    try {
+      await setDocumentNonBlocking(profileRef, { 
+        financeDailyFeedback: feedback,
+        financeDailyFeedbackSavedAt: nowStr
+      }, { merge: true });
+    } catch (err) {
+      console.error("Error saving finance daily feedback:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Get admin UID from path or current user
@@ -403,12 +422,33 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
             rows={3}
             placeholder="Type your notes or feedback here (e.g. Completed today's runway updates but need help audit-testing the spreadsheet formulas)..."
             value={feedback}
-            onChange={(e) => handleSaveFeedback(e.target.value)}
+            onChange={(e) => setFeedback(e.target.value)}
             disabled={readOnly}
           />
-          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Saved automatically in real-time
+          <div className="flex items-center justify-between gap-4 pt-1">
+            <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
+              {profile?.financeDailyFeedbackSavedAt ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Last saved: {profile.financeDailyFeedbackSavedAt}</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-350" />
+                  <span>No feedback saved yet.</span>
+                </>
+              )}
+            </div>
+            {!readOnly && (
+              <Button
+                onClick={handleSaveFeedback}
+                disabled={isSaving}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-[11px] gap-1 px-3 rounded-md shadow-sm"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {isSaving ? 'Saving...' : 'Save Feedback'}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

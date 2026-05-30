@@ -38,6 +38,7 @@ interface Deal {
   stage: 'lead' | 'contacted' | 'demo' | 'proposal' | 'won' | 'lost';
   probability: number;
   closeDate: string;
+  sourceType?: 'manual' | 'lead' | 'workshop' | 'product-sale';
 }
 
 const STAGES = [
@@ -115,9 +116,85 @@ export function SalesAnalytics({
   const [simConversionRate, setSimConversionRate] = useState<number>(20);
 
   // Derived CRM Data
-  const deals = useMemo<Deal[]>(() => {
+  const manualPipeline = useMemo<Deal[]>(() => {
     return profile?.salesPipeline || [];
   }, [profile]);
+
+  const deals = useMemo<Deal[]>(() => {
+    // 1. Manual CRM Deals
+    const manualDeals: Deal[] = manualPipeline.map((d: any) => ({
+      ...d,
+      sourceType: 'manual'
+    }));
+
+    // 2. EZLeads map to Deal
+    const leadDeals: Deal[] = (profile?.ezLeads || []).map((l: any) => {
+      let crmStage: 'lead' | 'contacted' | 'demo' | 'proposal' | 'won' | 'lost' = 'lead';
+      if (l.status === 'contacted') crmStage = 'contacted';
+      else if (l.status === 'meeting-scheduled') crmStage = 'demo';
+      else if (l.status === 'proposal-sent' || l.status === 'follow-up' || l.status === 'negotiation') crmStage = 'proposal';
+      else if (l.status === 'won') crmStage = 'won';
+      else if (l.status === 'lost') crmStage = 'lost';
+
+      const val = crmStage === 'won' ? (Number(l.actualRevenue) || Number(l.expectedRevenue) || 0) : (Number(l.expectedRevenue) || 0);
+
+      let prob = 10;
+      if (crmStage === 'contacted') prob = 30;
+      else if (crmStage === 'demo') prob = 50;
+      else if (crmStage === 'proposal') prob = 75;
+      else if (crmStage === 'won') prob = 100;
+      else if (crmStage === 'lost') prob = 0;
+
+      return {
+        id: `lead-${l.id}`,
+        dealName: l.requirement || `Lead: ${l.organization}`,
+        company: l.organization || 'Lead Client',
+        value: val,
+        stage: crmStage,
+        probability: prob,
+        closeDate: l.followUpDate || l.date || new Date().toISOString().split('T')[0],
+        sourceType: 'lead' as const
+      };
+    });
+
+    // 3. Workshops map to Deal
+    const workshopDeals: Deal[] = (profile?.workshops || []).map((w: any) => {
+      let crmStage: 'lead' | 'contacted' | 'demo' | 'proposal' | 'won' | 'lost' = 'proposal';
+      if (w.status === 'confirmed' || w.status === 'completed') crmStage = 'won';
+
+      const val = Number(w.cost || w.fees || 0);
+      let prob = 75;
+      if (crmStage === 'won') prob = 100;
+
+      return {
+        id: `workshop-${w.id}`,
+        dealName: `Workshop: ${w.topic || 'Training'}`,
+        company: w.institution || 'Workshop Client',
+        value: val,
+        stage: crmStage,
+        probability: prob,
+        closeDate: w.date || new Date().toISOString().split('T')[0],
+        sourceType: 'workshop' as const
+      };
+    });
+
+    // 4. Product Sales map to Deal
+    const productDeals: Deal[] = (profile?.ezProductSales || []).map((p: any) => {
+      const val = Number(p.totalAmount || p.amount || 0);
+      return {
+        id: `sale-${p.id}`,
+        dealName: `Product Sale: ${p.productName || 'EZCirkit Kit'}`,
+        company: p.buyerName || 'Direct Buyer',
+        value: val,
+        stage: 'won' as const,
+        probability: 100,
+        closeDate: p.date || new Date().toISOString().split('T')[0],
+        sourceType: 'product-sale' as const
+      };
+    });
+
+    return [...manualDeals, ...leadDeals, ...workshopDeals, ...productDeals];
+  }, [profile, manualPipeline]);
 
   const targetMRR = useMemo(() => {
     return profile?.targetMRR || 1000000; // 10 L default
@@ -201,9 +278,9 @@ export function SalesAnalytics({
 
     let updatedPipeline: Deal[];
     if (editingId) {
-      updatedPipeline = deals.map(d => d.id === editingId ? dealData : d);
+      updatedPipeline = manualPipeline.map(d => d.id === editingId ? dealData : d);
     } else {
-      updatedPipeline = [...deals, dealData];
+      updatedPipeline = [...manualPipeline, dealData];
     }
 
     // If deal stage is WON, update company's monthly revenue (MRR)
@@ -240,7 +317,7 @@ export function SalesAnalytics({
 
   const handleDeleteDeal = (dealId: string) => {
     if (readOnly || !profileRef) return;
-    const updatedPipeline = deals.filter(d => d.id !== dealId);
+    const updatedPipeline = manualPipeline.filter(d => d.id !== dealId);
     
     const totalWonMonthlyVal = updatedPipeline
       .filter(d => d.stage === 'won')
@@ -287,9 +364,14 @@ export function SalesAnalytics({
           value: Number(d.value) || 0,
           stage: d.stage,
           probability: Number(d.probability) || 0,
-          closeDate: d.closeDate
+          closeDate: d.closeDate,
+          sourceType: d.sourceType || 'manual'
         })),
-        question: customQuestion || undefined
+        question: customQuestion || undefined,
+        leads: profile?.ezLeads || [],
+        workshops: profile?.workshops || [],
+        productSales: profile?.ezProductSales || [],
+        dailyActivities: profile?.ezDailyActivities || []
       };
 
       const result = await salesAdvisorAssistant(input);
@@ -682,10 +764,18 @@ export function SalesAnalytics({
                     <TableBody>
                       {deals.map(deal => {
                         const stageInfo = STAGES.find(s => s.value === deal.stage);
+                        const isManual = deal.sourceType === 'manual';
                         return (
                           <TableRow key={deal.id} className="hover:bg-slate-50 transition-colors">
                             <TableCell className="font-bold py-4">
-                               <div className="text-slate-900">{deal.dealName}</div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <div className="text-slate-900">{deal.dealName}</div>
+                                {deal.sourceType && deal.sourceType !== 'manual' && (
+                                  <Badge className="bg-slate-100 text-slate-700 text-[8px] uppercase tracking-wider font-extrabold border border-slate-200 rounded-sm px-1.5 py-0.5">
+                                    {deal.sourceType}
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="text-xs text-muted-foreground font-medium">{deal.company}</div>
                             </TableCell>
                             <TableCell className="font-code font-black text-slate-800">
@@ -704,23 +794,31 @@ export function SalesAnalytics({
                             </TableCell>
                             {!readOnly && (
                               <TableCell className="text-right py-4">
-                                <div className="flex justify-end gap-1.5 pr-2">
-                                  <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-full"
-                                    onClick={() => handleEditDeal(deal)}
-                                  >
-                                    <Edit2 className="w-3.5 h-3.5" />
-                                  </Button>
-                                  <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
-                                    onClick={() => handleDeleteDeal(deal.id)}
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </Button>
+                                <div className="flex justify-end items-center gap-1.5 pr-2">
+                                  {isManual ? (
+                                    <>
+                                      <Button 
+                                        size="icon" 
+                                        variant="ghost" 
+                                        className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-full"
+                                        onClick={() => handleEditDeal(deal)}
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                      <Button 
+                                        size="icon" 
+                                        variant="ghost" 
+                                        className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
+                                        onClick={() => handleDeleteDeal(deal.id)}
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <span className="text-[10px] text-muted-foreground font-bold italic px-2 whitespace-nowrap bg-slate-50 rounded-md py-1 border border-slate-100">
+                                      Tracked via {deal.sourceType === 'lead' ? 'Lead Tracker' : deal.sourceType === 'workshop' ? 'Workshop Tracker' : 'Product Sales'}
+                                    </span>
+                                  )}
                                 </div>
                               </TableCell>
                             )}

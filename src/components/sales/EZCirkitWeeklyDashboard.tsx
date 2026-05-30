@@ -3,10 +3,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Square, TrendingUp, MessageSquare } from 'lucide-react';
+import { CheckSquare, Square, TrendingUp, MessageSquare, Save } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useDoc } from '@/firebase';
 import type { DocumentReference } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 
 export interface WeeklyTargets {
   schoolsTarget: number;
@@ -42,6 +43,7 @@ export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: EZCirkitWeekly
   const { data: profile } = useDoc(profileRef);
 
   const [feedback, setFeedback] = useState(profile?.salesWeeklyFeedback || '');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (profile?.salesWeeklyFeedback !== undefined) {
@@ -49,10 +51,28 @@ export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: EZCirkitWeekly
     }
   }, [profile?.salesWeeklyFeedback]);
 
-  const handleSaveFeedback = async (val: string) => {
-    setFeedback(val);
+  const handleSaveFeedback = async () => {
     if (!profileRef) return;
-    await setDocumentNonBlocking(profileRef, { salesWeeklyFeedback: val }, { merge: true });
+    setIsSaving(true);
+    const nowStr = new Date().toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    try {
+      await setDocumentNonBlocking(profileRef, { 
+        salesWeeklyFeedback: feedback,
+        salesWeeklyFeedbackSavedAt: nowStr
+      }, { merge: true });
+    } catch (err) {
+      console.error("Error saving sales weekly feedback:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const weeklyPlans = profile?.strategicPlan?.weeklyPlans || [];
@@ -195,12 +215,33 @@ export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: EZCirkitWeekly
             rows={3}
             placeholder="Type your notes or feedback here (e.g. outreach campaign exceeded reply rate goals, but pitch conversion rate is slightly below target)..."
             value={feedback}
-            onChange={(e) => handleSaveFeedback(e.target.value)}
+            onChange={(e) => setFeedback(e.target.value)}
             disabled={readOnly}
           />
-          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Saved automatically in real-time
+          <div className="flex items-center justify-between gap-4 pt-1">
+            <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
+              {profile?.salesWeeklyFeedbackSavedAt ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Last saved: {profile.salesWeeklyFeedbackSavedAt}</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-350" />
+                  <span>No feedback saved yet.</span>
+                </>
+              )}
+            </div>
+            {!readOnly && (
+              <Button
+                onClick={handleSaveFeedback}
+                disabled={isSaving}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-[11px] gap-1 px-3 rounded-md shadow-sm"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {isSaving ? 'Saving...' : 'Save Feedback'}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

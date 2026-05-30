@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit, MessageSquare
+  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit, MessageSquare, Save
 } from 'lucide-react';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -32,6 +32,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
   const { data: profile } = useDoc(profileRef);
 
   const [feedback, setFeedback] = useState(profile?.salesDailyFeedback || '');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (profile?.salesDailyFeedback !== undefined) {
@@ -39,10 +40,28 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
     }
   }, [profile?.salesDailyFeedback]);
 
-  const handleSaveFeedback = async (val: string) => {
-    setFeedback(val);
+  const handleSaveFeedback = async () => {
     if (!profileRef) return;
-    await setDocumentNonBlocking(profileRef, { salesDailyFeedback: val }, { merge: true });
+    setIsSaving(true);
+    const nowStr = new Date().toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    try {
+      await setDocumentNonBlocking(profileRef, { 
+        salesDailyFeedback: feedback,
+        salesDailyFeedbackSavedAt: nowStr
+      }, { merge: true });
+    } catch (err) {
+      console.error("Error saving sales daily feedback:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Get admin UID from path or current user
@@ -416,12 +435,33 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
             rows={3}
             placeholder="Type your notes or feedback here (e.g. Conducted 3 sales meetings, but need to improve workshop proposal templates for quicker sign-offs)..."
             value={feedback}
-            onChange={(e) => handleSaveFeedback(e.target.value)}
+            onChange={(e) => setFeedback(e.target.value)}
             disabled={readOnly}
           />
-          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Saved automatically in real-time
+          <div className="flex items-center justify-between gap-4 pt-1">
+            <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
+              {profile?.salesDailyFeedbackSavedAt ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Last saved: {profile.salesDailyFeedbackSavedAt}</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-350" />
+                  <span>No feedback saved yet.</span>
+                </>
+              )}
+            </div>
+            {!readOnly && (
+              <Button
+                onClick={handleSaveFeedback}
+                disabled={isSaving}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-[11px] gap-1 px-3 rounded-md shadow-sm"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {isSaving ? 'Saving...' : 'Save Feedback'}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
