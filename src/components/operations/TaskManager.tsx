@@ -74,6 +74,7 @@ interface TaskManagerProps {
 }
 
 export function TaskManager({ userId, companyProfileId, employees, initialAssigneeUid, userRole, currentUserUid }: TaskManagerProps) {
+  const isAdmin = (userRole || '').toLowerCase() === 'admin';
   const firestore = useFirestore();
   const today = new Date().toISOString().split('T')[0];
 
@@ -389,9 +390,12 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full" onClick={() => handleEdit(t)}>
                                   <Edit2 className="w-3 h-3" />
                                 </Button>
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(t.id)}>
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
+                                {/* Delete button: admin only */}
+                                {isAdmin && (
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full" onClick={() => handleDelete(t.id)}>
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           )}
