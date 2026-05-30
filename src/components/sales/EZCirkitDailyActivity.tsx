@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit
+  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit, MessageSquare
 } from 'lucide-react';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -30,6 +30,20 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
 
   // Load company profile for strategic plan
   const { data: profile } = useDoc(profileRef);
+
+  const [feedback, setFeedback] = useState(profile?.salesDailyFeedback || '');
+
+  useEffect(() => {
+    if (profile?.salesDailyFeedback !== undefined) {
+      setFeedback(profile.salesDailyFeedback);
+    }
+  }, [profile?.salesDailyFeedback]);
+
+  const handleSaveFeedback = async (val: string) => {
+    setFeedback(val);
+    if (!profileRef) return;
+    await setDocumentNonBlocking(profileRef, { salesDailyFeedback: val }, { merge: true });
+  };
 
   // Get admin UID from path or current user
   const adminUid = profileRef?.parent?.parent?.id || user?.uid || '';
@@ -81,12 +95,13 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
 
   const { data: tasksRaw } = useCollection(tasksQuery);
 
-  // All Sales/Product Tasks
+  // All Sales & Product Tasks
   const allSalesTasks = useMemo(() => {
     if (!tasksRaw) return [];
-    return tasksRaw.filter((t: any) => 
-      t.category?.toLowerCase() === 'sales' || t.category?.toLowerCase() === 'product'
-    );
+    return tasksRaw.filter((t: any) => {
+      const cat = t.category?.toLowerCase() || '';
+      return cat === 'sales' || cat === 'product';
+    });
   }, [tasksRaw]);
 
   // Total stats
@@ -100,9 +115,10 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
   // Recommended tasks (from AI Strategic Plan)
   const recommendedTasks = useMemo(() => {
     const daily = profile?.strategicPlan?.dailyTasks || [];
-    return daily.filter((t: any) => 
-      t.category?.toLowerCase() === 'sales' || t.category?.toLowerCase() === 'product'
-    );
+    return daily.filter((t: any) => {
+      const cat = t.category?.toLowerCase() || '';
+      return cat === 'sales' || cat === 'product';
+    });
   }, [profile?.strategicPlan?.dailyTasks]);
 
   // Find already assigned tasks by title
@@ -141,7 +157,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
           assignedToUid: assigneeUid,
           assignedToName: assignee?.name || 'Unassigned',
           assignedToEmail: assignee?.email || '',
-          category: task.category || 'Sales',
+          category: 'Sales',
           createdAt: serverTimestamp(),
           assignedAt: new Date().toISOString()
         };
@@ -158,7 +174,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
         notification.onclick = () => {
           window.focus();
           const event = new CustomEvent('navigate-app', { 
-            detail: { tab: 'sales', sub: 'ezcirkit', ez: 'activity' } 
+            detail: { tab: 'sales', sub: 'activity' } 
           });
           window.dispatchEvent(event);
         };
@@ -182,7 +198,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in duration-300">
 
       {/* STRATEGIC EXECUTION PORTAL */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -194,7 +210,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
                 <div>
                   <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-800 flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-indigo-600" />
-                    Strategic Sales Actions
+                    Strategic Sales & Product Actions
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Team-wide strategic execution tasks mapped to your 12-month goals.
@@ -217,7 +233,7 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
               {allSalesTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
                   <Clock className="w-8 h-8 text-indigo-200" />
-                  <p className="text-xs font-semibold">No strategic Sales tasks assigned currently.</p>
+                  <p className="text-xs font-semibold">No strategic Sales or Product tasks assigned currently.</p>
                   <p className="text-[10px] text-slate-400 font-medium">Assign recommended tasks from the AI recommendations panel on the right.</p>
                 </div>
               ) : (
@@ -225,8 +241,8 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
                   const isDone = task.status === 'done';
                   const isMe = task.assignedToUid === user?.uid;
                   return (
-                    <div key={task.id} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/30 transition-colors">
-                      <div className="flex items-start gap-3">
+                    <div key={task.id} className="p-4 flex items-start justify-between gap-4 hover:bg-slate-50/30 transition-colors">
+                      <div className="flex items-start gap-3 flex-1">
                         <button 
                           disabled={readOnly}
                           onClick={() => handleToggleTaskStatus(task.id, task.status)}
@@ -238,14 +254,32 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
                             <Square className="w-5 h-5" />
                           )}
                         </button>
-                        <div className="space-y-0.5">
-                          <h4 className={`text-sm font-bold text-slate-800 ${isDone ? 'line-through text-slate-400 font-normal' : ''}`}>
-                            {task.title}
-                          </h4>
-                          <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                            {task.description}
-                          </p>
-                          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold pt-1.5">
+                        <div className="space-y-1.5 flex-1">
+                          <div>
+                            <h4 className={`text-sm font-bold text-slate-800 ${isDone ? 'line-through text-slate-400 font-normal' : ''}`}>
+                              {task.title}
+                            </h4>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                              {task.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-0.5">
+                            <input
+                              type="text"
+                              className="w-full max-w-md text-[11px] px-2.5 py-1 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50/30 placeholder:text-slate-400 font-semibold"
+                              placeholder="Notes/feedback on this task..."
+                              defaultValue={task.feedback || ''}
+                              onBlur={async (e) => {
+                                if (!firestore || !profileRef || !task.id) return;
+                                const taskDocRef = doc(profileRef, 'tasks', task.id);
+                                await setDocumentNonBlocking(taskDocRef, { feedback: e.target.value }, { merge: true });
+                              }}
+                              disabled={readOnly}
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold pt-0.5">
                             <Users className="w-3 h-3 text-slate-400" />
                             <span>
                               {isMe ? 'Assigned to Me' : `Assigned to: ${task.assignedToName}`}
@@ -364,6 +398,33 @@ export function EZCirkitDailyActivity({ profileRef, readOnly }: EZCirkitDailyAct
           </div>
         </Card>
       </div>
+
+      {/* Feedback Section */}
+      <Card className="border-2 border-indigo-100 bg-white shadow-sm mt-6">
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-indigo-600" />
+            Performance Feedback & Notes
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Reflect on how today's Sales & Product activities went. The AI will analyze this feedback during adaptation to optimize your strategy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3">
+          <textarea
+            className="w-full text-xs font-semibold p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-slate-50/30"
+            rows={3}
+            placeholder="Type your notes or feedback here (e.g. Conducted 3 sales meetings, but need to improve workshop proposal templates for quicker sign-offs)..."
+            value={feedback}
+            onChange={(e) => handleSaveFeedback(e.target.value)}
+            disabled={readOnly}
+          />
+          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Saved automatically in real-time
+          </div>
+        </CardContent>
+      </Card>
 
     </div>
   );

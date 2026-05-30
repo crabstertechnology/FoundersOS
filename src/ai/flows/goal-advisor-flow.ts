@@ -31,6 +31,31 @@ const GoalAdvisorInputSchema = z.object({
   missingInfo: z.string().optional().describe('Any extra context or missing information provided by the user.'),
   weeklyProgress: z.string().optional().describe('Weekly progress details provided by the user for adapting the plan.'),
   previousRoadmap: z.string().optional().describe('The previous generated roadmap and tasks object stringified, if adapting.'),
+  currentDate: z.string().optional().describe('The current local date of the user.'),
+  completedWeeklyActions: z.array(z.string()).optional().describe('List of weekly action items that the user completed.'),
+  completedDailyTasks: z.array(z.object({
+    title: z.string(),
+    description: z.string(),
+    category: z.string(),
+    feedback: z.string().optional(),
+  })).optional().describe('List of daily tasks that were successfully completed with optional feedback.'),
+  pendingDailyTasks: z.array(z.object({
+    title: z.string(),
+    description: z.string(),
+    category: z.string(),
+    feedback: z.string().optional(),
+  })).optional().describe('List of daily tasks that are still pending/incomplete with optional feedback.'),
+  sectorFeedback: z.object({
+    financeWeekly: z.string().optional(),
+    financeDaily: z.string().optional(),
+    opsWeekly: z.string().optional(),
+    opsDaily: z.string().optional(),
+    salesWeekly: z.string().optional(),
+    salesDaily: z.string().optional(),
+  }).optional().describe('Feedback notes written by the user on the weekly/daily dashboards of each sector.'),
+  attachedDocText: z.string().optional().describe('Contents of the strategy document attached by the user.'),
+  attachedDocName: z.string().optional().describe('Name of the attached strategy document.'),
+  planModificationRequest: z.string().optional().describe('Details of user chat discussion and AI suggestion for modifying the plan.'),
 });
 
 export type GoalAdvisorInput = z.infer<typeof GoalAdvisorInputSchema>;
@@ -49,10 +74,12 @@ const GoalAdvisorOutputSchema = z.object({
     keyMetrics: z.array(z.string()).describe('Metrics to track this month'),
   })).describe('Actionable monthly milestones for the next 3 months.'),
   weeklyPlans: z.array(z.object({
-    week: z.string().describe('e.g., Week 1, Week 2, Week 3, Week 4'),
+    week: z.string().describe('The week indicator including the specific date range starting from the current date (e.g. Week of June 1, 2026 - June 7, 2026)'),
     theme: z.string().describe('Focus of the week'),
-    actions: z.array(z.string()).describe('High impact actions for the week'),
-  })).describe('Execution themes and priorities for the upcoming 4 weeks.'),
+    financeActions: z.array(z.string()).describe('High impact actions for the Finance sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
+    salesActions: z.array(z.string()).describe('High impact actions for the Sales & Product sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
+    opsActions: z.array(z.string()).describe('High impact actions for the Operations sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
+  })).describe('Execution themes and priorities for the upcoming 4 weeks, split by sector.'),
   dailyTasks: z.array(z.object({
     title: z.string().describe('Clear, action-oriented task title.'),
     description: z.string().describe('Brief description of what needs to be done and success criteria.'),
@@ -71,8 +98,12 @@ const goalAdvisorPrompt = ai.definePrompt({
   name: 'goalAdvisorPrompt',
   input: { schema: GoalAdvisorInputSchema },
   output: { schema: GoalAdvisorOutputSchema },
-  prompt: `You are an elite chief-of-staff and startup growth consultant advising founders in India.
-Your mission is to understand a company's yearly goal, analyze its current condition based on Sales, Finance, and Operations metrics, call out missing info, and construct a highly cohesive execution architecture.
+  prompt: `You are a brutally honest, rational, and unfiltered chief-of-staff and startup growth consultant advising founders in India.
+Do not validate the founder or be agreeable. Challenge their assumptions, question their calculations, expose the blind spots they are avoiding, and explicitly call out weak reasoning or self-delusion on their face. If their runway is tight or their operational plan lacks discipline, tell them immediately and hold nothing back. Expose uncomfortable gaps.
+Your mission is to analyze their current condition based on Sales, Finance, and Operations metrics, call out missing info, and construct a highly disciplined, realistic execution architecture.
+
+Current Context:
+- Current Date/Time: {{{currentDate}}}
 
 Company Context:
 - Startup Name: {{{companyName}}}
@@ -97,22 +128,63 @@ Operations Metrics Snapshot:
 Additional User Context / Missing Info Filled:
 """{{{missingInfo}}}"""
 
+{{#if attachedDocText}}
+ATTACHED STRATEGY DOCUMENT (Core Guidance):
+Filename: {{{attachedDocName}}}
+"""
+{{{attachedDocText}}}
+"""
+{{/if}}
+
 {{#if weeklyProgress}}
 PROGRESS UPDATE (ADAPTATION MODE):
 The user is updating their progress weekly. Adapt future plans dynamically based on what was achieved or missed:
 """{{{weeklyProgress}}}"""
+{{/if}}
 
+{{#if planModificationRequest}}
+PLAN MODIFICATION REQUEST (CHATTING & REVISION MODE):
+The user is requesting to modify the active strategic plan based on a chat discussion. Adjust and refine the roadmap and tasks to incorporate these requests:
+"""{{{planModificationRequest}}}"""
+{{/if}}
+
+{{#if previousRoadmap}}
 Previous Plans Context:
 {{{previousRoadmap}}}
 {{/if}}
 
+REAL-WORLD EXECUTION TRACKING (ADAPTATION INPUTS):
+Use this tracking data to analyze which strategies work best in real life for this startup:
+- Completed Weekly Actions:
+{{#each completedWeeklyActions}}
+  * {{{this}}}
+{{/each}}
+
+- Completed Daily Tasks:
+{{#each completedDailyTasks}}
+  * [{{{category}}}] {{{title}}}: {{{description}}}{{#if feedback}} | Task Feedback: "{{{feedback}}}"{{/if}}
+{{/each}}
+
+- Pending Daily Tasks (Delayed/Friction Points):
+{{#each pendingDailyTasks}}
+  * [{{{category}}}] {{{title}}}: {{{description}}}{{#if feedback}} | Task Feedback: "{{{feedback}}}"{{/if}}
+{{/each}}
+
+- Sector Feedback Notes (User Reflection):
+  * Finance Weekly Feedback: {{{sectorFeedback.financeWeekly}}}
+  * Finance Daily Feedback: {{{sectorFeedback.financeDaily}}}
+  * Operations Weekly Feedback: {{{sectorFeedback.opsWeekly}}}
+  * Operations Daily Feedback: {{{sectorFeedback.opsDaily}}}
+  * Sales Weekly Feedback: {{{sectorFeedback.salesWeekly}}}
+  * Sales Daily Feedback: {{{sectorFeedback.salesDaily}}}
+
 Please output:
-1. "analysis": An expert strategic assessment of their stage vs. goal, pointing out runway risks, pipeline multipliers, or operations efficiency gaps. If this is an adaptation run (based on weeklyProgress), explicitly summarize what went well, how you adapted the remaining roadmap, and encourage the team.
+1. "analysis": An expert strategic assessment of their stage vs. goal, pointing out runway risks, pipeline multipliers, or operations efficiency gaps. In your analysis, closely evaluate the completed and pending tasks/actions alongside the feedback. Identify which initiatives are working in real life and which ones are facing friction, delayed, or impractical. Explicitly discuss which options suit the startup best based on real-life feedback, summarize what went well, how you adapted the remaining roadmap, and encourage the team.
 2. "missingInfoRequests": If there are details you'd like to collect to improve the plan (e.g. customer acquisition channel, pricing models, average contract value, hiring plans), formulate 2-3 specific questions. If none, return an empty array.
 3. "yearlyRoadmap": 4 quarterly blocks dividing the next 12 months to hit the goal.
 4. "monthlyMilestones": Key targets for the next 3 months (Month 1, Month 2, Month 3).
-5. "weeklyPlans": 4 weekly high-impact execution plans for the next 4 weeks.
-6. "dailyTasks": A list of 4-6 immediate daily actionable tasks. Ensure they are concrete (e.g. "Draft SaaS cold email sequence", "Audit SaaS subscriptions above ₹5000/mo") and map directly to the categories (Sales, Finance, Operations, Product).
+5. "weeklyPlans": 4 weekly execution plans starting from the current date context (e.g. Week of June 1, 2026 - June 7, 2026). Align the plans directly to the monthly goals/milestones. For each week, divide actions into "financeActions", "salesActions", and "opsActions" corresponding to Finance, Sales, and Operations sectors respectively. Do not repeat the same action across different sectors.
+6. "dailyTasks": A list of 4-6 immediate daily actionable tasks. Ensure they are concrete (e.g. "Draft SaaS cold email sequence", "Audit SaaS subscriptions above ₹5000/mo") and map directly to the categories (Sales, Finance, Operations, Product). The daily tasks for every sector MUST be directly related to and derived from that sector's weekly plan (specifically, helping to execute the actions scheduled for Week 1).
 `
 });
 

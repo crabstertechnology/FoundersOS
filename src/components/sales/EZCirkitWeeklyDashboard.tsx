@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Square, TrendingUp } from 'lucide-react';
+import { CheckSquare, Square, TrendingUp, MessageSquare } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useDoc } from '@/firebase';
 import type { DocumentReference } from 'firebase/firestore';
@@ -23,12 +23,12 @@ export const DEFAULT_TARGETS: WeeklyTargets = {
   collegesTarget: 10,
   workshopsProposedTarget: 5,
   workshopsConfirmedTarget: 2,
-  studentLeadsTarget: 50,
-  kitsSoldTarget: 20,
+  studentLeadsTarget: 100,
+  kitsSoldTarget: 10,
   revenueTarget: 50000,
 };
 
-interface WeeklyDashboardProps {
+interface EZCirkitWeeklyDashboardProps {
   profileRef: DocumentReference | null;
   readOnly?: boolean;
   leads?: any[];
@@ -37,36 +37,60 @@ interface WeeklyDashboardProps {
   targets?: any;
 }
 
-export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: WeeklyDashboardProps) {
+export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: EZCirkitWeeklyDashboardProps) {
   // Load company profile for strategic plan
   const { data: profile } = useDoc(profileRef);
+
+  const [feedback, setFeedback] = useState(profile?.salesWeeklyFeedback || '');
+
+  useEffect(() => {
+    if (profile?.salesWeeklyFeedback !== undefined) {
+      setFeedback(profile.salesWeeklyFeedback);
+    }
+  }, [profile?.salesWeeklyFeedback]);
+
+  const handleSaveFeedback = async (val: string) => {
+    setFeedback(val);
+    if (!profileRef) return;
+    await setDocumentNonBlocking(profileRef, { salesWeeklyFeedback: val }, { merge: true });
+  };
 
   const weeklyPlans = profile?.strategicPlan?.weeklyPlans || [];
   const completedWeeklyActions = profile?.completedWeeklyActions || [];
 
-  // Filter actions based on Sales/Product keywords
+  // Filter actions based on Sales & Product keywords
   const filteredWeeklyActions = useMemo(() => {
     const actions: Array<{ week: string; theme: string; action: string }> = [];
-    const salesKeywords = ['sales', 'crm', 'deals', 'client', 'outreach', 'leads', 'pipeline', 'conversion', 'customer', 'revenue', 'mrr', 'arr', 'growth', 'product', 'mvp', 'marketing'];
 
     weeklyPlans.forEach((plan: any) => {
       const weekName = plan.week || '';
       const theme = plan.theme || '';
-      (plan.actions || []).forEach((act: string) => {
-        const text = act.toLowerCase();
-        const isMatch = salesKeywords.some(kw => text.includes(kw));
-        if (isMatch) {
+
+      if (Array.isArray(plan.salesActions)) {
+        plan.salesActions.forEach((act: string) => {
           actions.push({ week: weekName, theme, action: act });
-        }
-      });
+        });
+      } else {
+        // Fallback for backward compatibility
+        const salesKeywords = ['school', 'college', 'workshop', 'student', 'lead', 'kit', 'sale', 'sold', 'revenue', 'deal', 'pipeline', 'product', 'marketing', 'customer', 'outreach', 'pitch', 'client'];
+        (plan.actions || []).forEach((act: string) => {
+          const text = act.toLowerCase();
+          const isMatch = salesKeywords.some(kw => text.includes(kw));
+          if (isMatch) {
+            actions.push({ week: weekName, theme, action: act });
+          }
+        });
+      }
     });
 
-    // Fallback: if no actions matched but there are weekly plans, just show all of them
+    // Fallback: if no actions matched but there are weekly plans and old actions exist, show all of them
     if (actions.length === 0 && weeklyPlans.length > 0) {
       weeklyPlans.forEach((plan: any) => {
-        (plan.actions || []).forEach((act: string) => {
-          actions.push({ week: plan.week || '', theme: plan.theme || '', action: act });
-        });
+        if (Array.isArray(plan.actions)) {
+          plan.actions.forEach((act: string) => {
+            actions.push({ week: plan.week || '', theme: plan.theme || '', action: act });
+          });
+        }
       });
     }
 
@@ -151,6 +175,33 @@ export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: WeeklyDashboar
               );
             })
           )}
+        </CardContent>
+      </Card>
+
+      {/* Feedback Section */}
+      <Card className="border-2 border-indigo-100 bg-white shadow-sm mt-6">
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-indigo-600" />
+            Performance Feedback & Notes
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Reflect on how this week's Sales & Product activities went. The AI will analyze this feedback during adaptation to optimize your strategy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3">
+          <textarea
+            className="w-full text-xs font-semibold p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-slate-50/30"
+            rows={3}
+            placeholder="Type your notes or feedback here (e.g. outreach campaign exceeded reply rate goals, but pitch conversion rate is slightly below target)..."
+            value={feedback}
+            onChange={(e) => handleSaveFeedback(e.target.value)}
+            disabled={readOnly}
+          />
+          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Saved automatically in real-time
+          </div>
         </CardContent>
       </Card>
 

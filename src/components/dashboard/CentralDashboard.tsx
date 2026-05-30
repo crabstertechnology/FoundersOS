@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { fmtINR, fmtPct } from '@/lib/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +12,54 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { goalAdvisorAssistant } from '@/ai/flows/goal-advisor-flow';
+import { roadmapChatAssistant } from '@/ai/flows/roadmap-chat-flow';
 import { 
   LineChart, Wallet, Rocket, PieChart, Activity, TrendingUp, 
   AlertTriangle, ArrowUpRight, BarChart3, Users, Server, DollarSign, Calendar,
-  Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X
+  Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
+  FileText, UploadCloud, Trash, Paperclip, MessageSquare
 } from 'lucide-react';
+
+const loadPdfJs = () => {
+  return new Promise<any>((resolve, reject) => {
+    if (typeof window === 'undefined') return reject('Not on browser');
+    if ((window as any).pdfjsLib) {
+      resolve((window as any).pdfjsLib);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+    script.onload = () => {
+      (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+      resolve((window as any).pdfjsLib);
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
+
+const extractTextFromPdf = async (file: File): Promise<string> => {
+  const pdfjsLib = await loadPdfJs();
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item: any) => item.str).join(' ');
+    text += pageText + '\n';
+  }
+  return text;
+};
+
+const extractTextFromFile = (file: File): Promise<string> => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve((e.target?.result as string) || '');
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+};
 
 interface CentralDashboardProps {
   userId: string;
@@ -48,7 +91,14 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
   const [assignedTasks, setAssignedTasks] = useState<Record<string, boolean>>({});
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
   const [missingInfoAnswers, setMissingInfoAnswers] = useState<Record<string, string>>({});
-  const [activePlannerTab, setActivePlannerTab] = useState<'roadmap' | 'milestones' | 'weekly' | 'tasks'>('roadmap');
+  const [activePlannerTab, setActivePlannerTab] = useState<'roadmap' | 'milestones' | 'chat'>('roadmap');
+  const [attachedDocName, setAttachedDocName] = useState('');
+  const [attachedDocText, setAttachedDocText] = useState('');
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [latestModSuggestion, setLatestModSuggestion] = useState('');
   
   // Loading messages loop
   const [loadingMessageIdx, setLoadingMessageIdx] = useState(0);
@@ -92,10 +142,53 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
     return query(employeesRef, where('adminUid', '==', userId));
   }, [employeesRef, userId]);
 
+  const tasksRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'tasks');
+  }, [firestore, userId, companyProfileId]);
+
   // Subscriptions
   const { data: profile } = useDoc(profileRef) || {};
   const { data: shareholders } = useCollection(shareholdersRef) || {};
   const { data: rawEmployeesData } = useCollection(employeesQuery) || {};
+  const { data: tasksRaw } = useCollection(tasksRef) || {};
+
+  const roadmapChatRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return doc(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'chats', 'roadmapDiscussion');
+  }, [firestore, userId, companyProfileId]);
+
+  useEffect(() => {
+    if (roadmapChatRef) {
+      getDoc(roadmapChatRef).then(snap => {
+        if (snap.exists() && snap.data().messages) {
+          setChatMessages(snap.data().messages);
+          if (snap.data().latestModSuggestion) {
+            setLatestModSuggestion(snap.data().latestModSuggestion);
+          }
+        }
+      }).catch(err => console.error("Error reading roadmap chat:", err));
+    }
+  }, [roadmapChatRef]);
+
+  const { completedTasksList, pendingTasksList } = useMemo(() => {
+    const completed: any[] = [];
+    const pending: any[] = [];
+    (tasksRaw || []).forEach((t: any) => {
+      const taskData = {
+        title: t.title || '',
+        description: t.description || '',
+        category: t.category || '',
+        feedback: t.feedback || ''
+      };
+      if (t.status === 'done') {
+        completed.push(taskData);
+      } else {
+        pending.push(taskData);
+      }
+    });
+    return { completedTasksList: completed, pendingTasksList: pending };
+  }, [tasksRaw]);
 
   // Parse employees
   const employees = useMemo<Employee[]>(() => (rawEmployeesData || []).map((e: any) => ({
@@ -127,6 +220,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
       if (profile.yearlyGoal) setYearlyGoal(profile.yearlyGoal);
       if (profile.companyStage) setStage(profile.companyStage);
       if (profile.missingInfoContext) setMissingInfoContext(profile.missingInfoContext);
+      if (profile.attachedDocName) setAttachedDocName(profile.attachedDocName);
+      if (profile.attachedDocText) setAttachedDocText(profile.attachedDocText);
     }
   }, [profile]);
 
@@ -218,7 +313,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
     };
   }, [subscriptions, team, profile]);
 
-  const handleGeneratePlan = async (e?: React.FormEvent, progressText?: string) => {
+  const handleGeneratePlan = async (e?: React.FormEvent, progressText?: string, modSuggestion?: string) => {
     if (e) e.preventDefault();
     if (!profileRef || !yearlyGoal) return;
     setAiLoading(true);
@@ -232,6 +327,15 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
             .map(([q, a]) => `- Q: ${q}\n  A: ${a}`)
             .join('\n');
       }
+
+      const sectorFeedback = {
+        financeWeekly: profile?.financeWeeklyFeedback || '',
+        financeDaily: profile?.financeDailyFeedback || '',
+        opsWeekly: profile?.opsWeeklyFeedback || '',
+        opsDaily: profile?.opsDailyFeedback || '',
+        salesWeekly: profile?.salesWeeklyFeedback || '',
+        salesDaily: profile?.salesDailyFeedback || '',
+      };
 
       const input = {
         companyName,
@@ -257,7 +361,15 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
         },
         missingInfo: refinedMissingInfo,
         weeklyProgress: progressText || undefined,
-        previousRoadmap: progressText ? JSON.stringify(profile?.strategicPlan || null) : undefined,
+        planModificationRequest: modSuggestion || undefined,
+        previousRoadmap: (progressText || modSuggestion) ? JSON.stringify(profile?.strategicPlan || null) : undefined,
+        currentDate: new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        completedWeeklyActions: profile?.completedWeeklyActions || [],
+        completedDailyTasks: completedTasksList,
+        pendingDailyTasks: pendingTasksList,
+        sectorFeedback,
+        attachedDocText: attachedDocText || undefined,
+        attachedDocName: attachedDocName || undefined,
       };
 
       const result = await goalAdvisorAssistant(input);
@@ -268,6 +380,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
         companyStage: stage,
         missingInfoContext: refinedMissingInfo,
         strategicPlan: result,
+        attachedDocName: attachedDocName || null,
+        attachedDocText: attachedDocText || null,
       }, { merge: true });
 
       setIsEditingGoal(false);
@@ -275,10 +389,59 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
       if (progressText) {
         setWeeklyProgress('');
       }
+      if (modSuggestion) {
+        setLatestModSuggestion('');
+        setChatMessages([]);
+        if (roadmapChatRef) {
+          await deleteDoc(roadmapChatRef).catch(() => {});
+        }
+        setActivePlannerTab('roadmap');
+      }
     } catch (err) {
       console.error('Error generating AI execution plan:', err);
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handleSendChatMessage = async (e?: React.FormEvent, explicitMsg?: string) => {
+    if (e) e.preventDefault();
+    const msg = explicitMsg || chatMessage;
+    if (!msg.trim() || chatLoading || !profileRef || !roadmapChatRef) return;
+
+    setChatMessage('');
+    const userMsg = { role: 'user', content: msg };
+    const updatedMessages = [...chatMessages, userMsg];
+    setChatMessages(updatedMessages);
+    setChatLoading(true);
+
+    try {
+      const input = {
+        message: msg,
+        chatHistory: chatMessages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        activePlan: JSON.stringify(profile?.strategicPlan || null),
+        yearlyGoal,
+        companyName,
+      };
+
+      const result = await roadmapChatAssistant(input);
+      const assistantMsg = { role: 'assistant', content: result.response };
+      const finalMessages = [...updatedMessages, assistantMsg];
+      
+      setChatMessages(finalMessages);
+      setLatestModSuggestion(result.planModificationSuggestion);
+
+      await setDoc(roadmapChatRef, {
+        messages: finalMessages,
+        latestModSuggestion: result.planModificationSuggestion
+      }, { merge: true });
+
+    } catch (err) {
+      console.error("Error in roadmap chat assistant:", err);
+      const errorMsg = { role: 'assistant', content: "Sorry, I had trouble processing that query. Please try again." };
+      setChatMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -474,6 +637,89 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                   </div>
                 </div>
 
+                {/* Strategy Document Section */}
+                <div className="space-y-2 pt-2">
+                  <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    Attach Strategy Document / Pitch Deck (PDF, TXT, MD, CSV, JSON)
+                    <Paperclip className="w-3.5 h-3.5 text-indigo-500" />
+                  </Label>
+                  
+                  {attachedDocName ? (
+                    <div className="flex items-center justify-between p-3.5 rounded-lg border-2 border-indigo-50 bg-indigo-50/10 hover:bg-indigo-50/20 transition-all">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-8 h-8 text-indigo-600 shrink-0" />
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-slate-800">{attachedDocName}</p>
+                          <p className="text-[10px] text-slate-400 font-semibold">
+                            {attachedDocText ? `${(attachedDocText.length / 1024).toFixed(1)} KB text extracted` : 'Extracting text...'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full hover:bg-rose-50/50"
+                        onClick={async () => {
+                          setAttachedDocName('');
+                          setAttachedDocText('');
+                          if (profileRef) {
+                            await setDocumentNonBlocking(profileRef, {
+                              attachedDocName: null,
+                              attachedDocText: null
+                            }, { merge: true });
+                          }
+                        }}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="relative group border-2 border-dashed border-slate-200 hover:border-indigo-300 transition-all rounded-lg p-5 bg-slate-50/30 text-center cursor-pointer">
+                      <input
+                        type="file"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        accept=".txt,.md,.json,.csv,.pdf"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingDoc(true);
+                          try {
+                            setAttachedDocName(file.name);
+                            let text = '';
+                            if (file.name.endsWith('.pdf')) {
+                              text = await extractTextFromPdf(file);
+                            } else {
+                              text = await extractTextFromFile(file);
+                            }
+                            setAttachedDocText(text);
+                          } catch (err) {
+                            console.error('Error reading file:', err);
+                          } finally {
+                            setUploadingDoc(false);
+                          }
+                        }}
+                      />
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        {uploadingDoc ? (
+                          <>
+                            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                            <p className="text-xs font-bold text-indigo-600">Extracting content...</p>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                            <div className="space-y-0.5">
+                              <p className="text-xs font-bold text-slate-700">Attach strategy file or business plan</p>
+                              <p className="text-[10px] text-muted-foreground font-semibold">Click or drag here to upload (PDF, TXT, MD, CSV, JSON)</p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Qualitative Context / Missing Info */}
                 <div className="space-y-2 pt-2">
                   <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -614,8 +860,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                   {[
                     { id: 'roadmap', label: 'Quarterly Roadmap', icon: Map },
                     { id: 'milestones', label: 'Monthly Milestones', icon: Calendar },
-                    { id: 'weekly', label: 'Weekly Execution', icon: TrendingUp },
-                    { id: 'tasks', label: 'Daily Actionable Tasks', icon: ListTodo }
+                    { id: 'chat', label: 'Discuss & Modify Plan', icon: MessageSquare }
                   ].map(item => {
                     const Icon = item.icon;
                     return (
@@ -699,111 +944,142 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate }: Centr
                 </div>
               )}
 
-              {/* 3. Weekly Execution Tab */}
-              {activePlannerTab === 'weekly' && (
-                <div className="space-y-6">
-                  {strategicPlan.weeklyPlans?.map((week: any, idx: number) => (
-                    <Card key={idx} className="border shadow-sm">
-                      <CardHeader className="pb-3 bg-slate-50/20 border-b flex flex-row items-center justify-between">
-                        <div>
-                          <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-[10px] font-black uppercase mr-2">
-                            {week.week}
-                          </Badge>
-                          <span className="font-bold text-xs text-slate-900">{week.theme}</span>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {week.actions?.map((action: string, aIdx: number) => (
-                            <li key={aIdx} className="text-xs text-slate-600 bg-slate-50/50 hover:bg-slate-50 p-2.5 rounded-lg border border-slate-150 font-semibold flex items-start gap-2">
-                              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1.5 shrink-0" />
-                              <span>{action}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {/* 4. Daily Actionable Tasks Tab */}
-              {activePlannerTab === 'tasks' && (
-                <Card className="border shadow-sm overflow-hidden">
-                  <CardHeader className="bg-slate-50/30 border-b pb-4">
-                    <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                      <ListTodo className="w-5 h-5 text-indigo-600" />
-                      Daily Roadmap Deliverables
-                    </CardTitle>
-                    <CardDescription>
-                      Assign these strategic daily tasks directly. Assigned members will receive real-time notifications linking to their Task workspace.
-                    </CardDescription>
+              {/* 3. Discuss & Modify Plan Chatbot Tab */}
+              {activePlannerTab === 'chat' && (
+                <Card className="border-2 border-indigo-100 shadow-lg min-h-[500px] flex flex-col">
+                  <CardHeader className="border-b bg-indigo-50/10 py-3.5 flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm font-black text-slate-900 flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5 text-indigo-600" />
+                        Roadmap Co-Pilot Chat
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Discuss changes, constraints, or custom strategies with your growth advisor.
+                      </CardDescription>
+                    </div>
+                    {chatMessages.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          setChatMessages([]);
+                          setLatestModSuggestion('');
+                          if (roadmapChatRef) {
+                            await deleteDoc(roadmapChatRef).catch(() => {});
+                          }
+                        }}
+                        className="text-slate-400 hover:text-rose-600 text-[10px] font-bold"
+                      >
+                        Reset Chat
+                      </Button>
+                    )}
                   </CardHeader>
-                  <CardContent className="p-0 divide-y">
-                    {strategicPlan.dailyTasks?.map((task: any, idx: number) => {
-                      const isAssigned = assignedTasks[task.title];
-                      const isAssigning = assigningTaskId === task.title;
-
-                      return (
-                        <div key={idx} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-slate-50/30 transition-all">
-                          <div className="space-y-1.5 flex-1 min-w-0">
-                            <div className="flex gap-2 items-center flex-wrap">
-                              <Badge className="bg-teal-50 text-teal-700 border-teal-100 text-[9px] uppercase font-bold">
-                                {task.category}
-                              </Badge>
-                              <Badge className={`border text-[9px] uppercase font-bold ${
-                                task.priority === 'urgent' ? 'bg-rose-50 text-rose-700 border-rose-100' :
-                                task.priority === 'high' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                'bg-slate-100 text-slate-600 border-slate-200'
-                              }`}>
-                                {task.priority}
-                              </Badge>
-                            </div>
-                            <h4 className="font-extrabold text-sm text-slate-800 truncate">{task.title}</h4>
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed">{task.description}</p>
+                  
+                  <CardContent className="flex-1 flex flex-col p-0">
+                    {/* Chat Messages List */}
+                    <div className="flex-1 p-4 space-y-4 max-h-[350px] overflow-y-auto bg-slate-50/30">
+                      {chatMessages.length === 0 ? (
+                        <div className="py-12 text-center space-y-3">
+                          <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto animate-bounce">
+                            <Sparkles className="w-6 h-6 text-indigo-600" />
                           </div>
-
-                          <div className="shrink-0 flex items-center gap-2 w-full md:w-auto justify-end">
-                            {isAssigned ? (
-                              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 uppercase text-[10px] font-bold px-2.5 py-1.5 gap-1">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                Assigned & Notified
-                              </Badge>
-                            ) : isAssigning ? (
-                              <div className="flex gap-1.5 items-center bg-white border p-1 rounded-xl shadow-sm animate-in fade-in duration-200">
-                                <Select onValueChange={(uid) => handleAssignTask(task, uid)}>
-                                  <SelectTrigger className="h-8 text-xs w-44">
-                                    <SelectValue placeholder="Select member..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {assigneesList.map(a => (
-                                      <SelectItem key={a.uid} value={a.uid}>{a.name}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  onClick={() => setAssigningTaskId(null)} 
-                                  className="h-8 w-8 text-slate-400 hover:text-slate-600"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button
-                                size="sm"
-                                onClick={() => setAssigningTaskId(task.title)}
-                                className="bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs rounded-xl h-8 gap-1"
-                              >
-                                <Users className="w-3.5 h-3.5" />
-                                Assign Task
-                              </Button>
-                            )}
+                          <div className="space-y-1">
+                            <h4 className="text-xs font-bold text-slate-800">What would you like to discuss?</h4>
+                            <p className="text-[11px] text-slate-400 font-semibold max-w-xs mx-auto leading-relaxed">
+                              Ask the AI to change dates, focus areas, adjust targets, or add custom priorities.
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2 justify-center pt-2">
+                            <button
+                              type="button"
+                              onClick={() => handleSendChatMessage(undefined, "I want to prioritize product development over sales outreach in Q2.")}
+                              className="px-2.5 py-1.5 border border-slate-200 bg-white hover:bg-indigo-50/20 hover:border-indigo-200 rounded-full text-[10px] font-semibold text-slate-600 transition-all shadow-sm"
+                            >
+                              "Prioritize dev over sales in Q2"
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSendChatMessage(undefined, "We are short on runway, adjust the monthly milestones to be more conservative.")}
+                              className="px-2.5 py-1.5 border border-slate-200 bg-white hover:bg-indigo-50/20 hover:border-indigo-200 rounded-full text-[10px] font-semibold text-slate-600 transition-all shadow-sm"
+                            >
+                              "Short on runway, make milestones conservative"
+                            </button>
                           </div>
                         </div>
-                      );
-                    })}
+                      ) : (
+                        chatMessages.map((msg, index) => (
+                          <div key={index} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`p-3 rounded-xl text-xs leading-relaxed max-w-[85%] ${
+                              msg.role === 'user'
+                                ? 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
+                                : 'bg-white border rounded-tl-none text-slate-700 shadow-sm'
+                            }`}>
+                              {msg.role === 'assistant' ? (
+                                <div className="prose prose-slate prose-xs max-w-none">
+                                  {renderMarkdown(msg.content)}
+                                </div>
+                              ) : (
+                                msg.content
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+
+                      {chatLoading && (
+                        <div className="flex gap-2 justify-start items-center">
+                          <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
+                          <span className="text-[10px] font-bold text-slate-400">Co-pilot is thinking...</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Modification Suggestion Alert & Modify Button */}
+                    {latestModSuggestion && (
+                      <div className="p-3.5 bg-amber-50 border-t border-b border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-black tracking-widest text-amber-850 uppercase block">RECOMMENDED REVISION SUGGESTION</span>
+                          <p className="text-xs font-bold text-slate-700 leading-normal">{latestModSuggestion}</p>
+                        </div>
+                        <Button
+                          onClick={() => handleGeneratePlan(undefined, undefined, latestModSuggestion)}
+                          disabled={aiLoading}
+                          className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold h-9 gap-1.5 shrink-0 px-4"
+                        >
+                          {aiLoading ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          )}
+                          Modify Plan
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Chat Input Field */}
+                    <div className="p-3 bg-slate-50 border-t flex gap-2">
+                      <Input
+                        placeholder="Discuss plan adjustments (e.g. shift priorities, change timeline)..."
+                        value={chatMessage}
+                        onChange={e => setChatMessage(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSendChatMessage();
+                          }
+                        }}
+                        disabled={chatLoading}
+                        className="bg-white border-slate-200 text-xs h-9"
+                      />
+                      <Button
+                        size="icon"
+                        disabled={chatLoading || !chatMessage.trim()}
+                        onClick={() => handleSendChatMessage()}
+                        className="h-9 w-9 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}

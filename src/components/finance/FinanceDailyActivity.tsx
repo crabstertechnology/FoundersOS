@@ -1,12 +1,10 @@
-'use client';
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit
+  X, CheckSquare, Square, CheckCircle2, Clock, Users, Edit, MessageSquare
 } from 'lucide-react';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -25,6 +23,20 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
 
   // Load company profile for strategic plan
   const { data: profile } = useDoc(profileRef);
+
+  const [feedback, setFeedback] = useState(profile?.financeDailyFeedback || '');
+
+  useEffect(() => {
+    if (profile?.financeDailyFeedback !== undefined) {
+      setFeedback(profile.financeDailyFeedback);
+    }
+  }, [profile?.financeDailyFeedback]);
+
+  const handleSaveFeedback = async (val: string) => {
+    setFeedback(val);
+    if (!profileRef) return;
+    await setDocumentNonBlocking(profileRef, { financeDailyFeedback: val }, { merge: true });
+  };
 
   // Get admin UID from path or current user
   const adminUid = profileRef?.parent?.parent?.id || user?.uid || '';
@@ -216,8 +228,8 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
                   const isDone = task.status === 'done';
                   const isMe = task.assignedToUid === user?.uid;
                   return (
-                    <div key={task.id} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/30 transition-colors">
-                      <div className="flex items-start gap-3">
+                    <div key={task.id} className="p-4 flex items-start justify-between gap-4 hover:bg-slate-50/30 transition-colors">
+                      <div className="flex items-start gap-3 flex-1">
                         <button 
                           disabled={readOnly}
                           onClick={() => handleToggleTaskStatus(task.id, task.status)}
@@ -229,14 +241,32 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
                             <Square className="w-5 h-5" />
                           )}
                         </button>
-                        <div className="space-y-0.5">
-                          <h4 className={`text-sm font-bold text-slate-800 ${isDone ? 'line-through text-slate-400 font-normal' : ''}`}>
-                            {task.title}
-                          </h4>
-                          <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                            {task.description}
-                          </p>
-                          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold pt-1.5">
+                        <div className="space-y-1.5 flex-1">
+                          <div>
+                            <h4 className={`text-sm font-bold text-slate-800 ${isDone ? 'line-through text-slate-400 font-normal' : ''}`}>
+                              {task.title}
+                            </h4>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                              {task.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-0.5">
+                            <input
+                              type="text"
+                              className="w-full max-w-md text-[11px] px-2.5 py-1 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50/30 placeholder:text-slate-400 font-semibold"
+                              placeholder="Notes/feedback on this task..."
+                              defaultValue={task.feedback || ''}
+                              onBlur={async (e) => {
+                                if (!firestore || !profileRef || !task.id) return;
+                                const taskDocRef = doc(profileRef, 'tasks', task.id);
+                                await setDocumentNonBlocking(taskDocRef, { feedback: e.target.value }, { merge: true });
+                              }}
+                              disabled={readOnly}
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold pt-0.5">
                             <Users className="w-3 h-3 text-slate-400" />
                             <span>
                               {isMe ? 'Assigned to Me' : `Assigned to: ${task.assignedToName}`}
@@ -355,6 +385,33 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
           </div>
         </Card>
       </div>
+
+      {/* Feedback Section */}
+      <Card className="border-2 border-indigo-100 bg-white shadow-sm mt-6">
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-indigo-600" />
+            Performance Feedback & Notes
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Reflect on how today's Finance activities went. The AI will analyze this feedback during adaptation to optimize your strategy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3">
+          <textarea
+            className="w-full text-xs font-semibold p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-slate-50/30"
+            rows={3}
+            placeholder="Type your notes or feedback here (e.g. Completed today's runway updates but need help audit-testing the spreadsheet formulas)..."
+            value={feedback}
+            onChange={(e) => handleSaveFeedback(e.target.value)}
+            disabled={readOnly}
+          />
+          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Saved automatically in real-time
+          </div>
+        </CardContent>
+      </Card>
 
     </div>
   );

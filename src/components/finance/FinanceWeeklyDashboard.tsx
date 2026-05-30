@@ -1,9 +1,7 @@
-'use client';
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Square, TrendingUp } from 'lucide-react';
+import { CheckSquare, Square, TrendingUp, MessageSquare } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useDoc } from '@/firebase';
 import type { DocumentReference } from 'firebase/firestore';
@@ -37,32 +35,56 @@ export function FinanceWeeklyDashboard({ profileRef, readOnly }: FinanceWeeklyDa
   // Load company profile for strategic plan
   const { data: profile } = useDoc(profileRef);
 
+  const [feedback, setFeedback] = useState(profile?.financeWeeklyFeedback || '');
+
+  useEffect(() => {
+    if (profile?.financeWeeklyFeedback !== undefined) {
+      setFeedback(profile.financeWeeklyFeedback);
+    }
+  }, [profile?.financeWeeklyFeedback]);
+
+  const handleSaveFeedback = async (val: string) => {
+    setFeedback(val);
+    if (!profileRef) return;
+    await setDocumentNonBlocking(profileRef, { financeWeeklyFeedback: val }, { merge: true });
+  };
+
   const weeklyPlans = profile?.strategicPlan?.weeklyPlans || [];
   const completedWeeklyActions = profile?.completedWeeklyActions || [];
 
   // Filter actions based on Finance keywords
   const filteredWeeklyActions = useMemo(() => {
     const actions: Array<{ week: string; theme: string; action: string }> = [];
-    const financeKeywords = ['finance', 'audit', 'burn', 'runway', 'cash', 'valuation', 'capital', 'raised', 'fundraising', 'investor', 'term sheet', 'expense', 'budget', 'cost', 'cap table'];
 
     weeklyPlans.forEach((plan: any) => {
       const weekName = plan.week || '';
       const theme = plan.theme || '';
-      (plan.actions || []).forEach((act: string) => {
-        const text = act.toLowerCase();
-        const isMatch = financeKeywords.some(kw => text.includes(kw));
-        if (isMatch) {
+
+      if (Array.isArray(plan.financeActions)) {
+        plan.financeActions.forEach((act: string) => {
           actions.push({ week: weekName, theme, action: act });
-        }
-      });
+        });
+      } else {
+        // Fallback for backward compatibility
+        const financeKeywords = ['finance', 'audit', 'burn', 'runway', 'cash', 'valuation', 'capital', 'raised', 'fundraising', 'investor', 'term sheet', 'expense', 'budget', 'cost', 'cap table'];
+        (plan.actions || []).forEach((act: string) => {
+          const text = act.toLowerCase();
+          const isMatch = financeKeywords.some(kw => text.includes(kw));
+          if (isMatch) {
+            actions.push({ week: weekName, theme, action: act });
+          }
+        });
+      }
     });
 
-    // Fallback: if no actions matched but there are weekly plans, just show all of them
+    // Fallback: if no actions matched but there are weekly plans and old actions exist, show all of them
     if (actions.length === 0 && weeklyPlans.length > 0) {
       weeklyPlans.forEach((plan: any) => {
-        (plan.actions || []).forEach((act: string) => {
-          actions.push({ week: plan.week || '', theme: plan.theme || '', action: act });
-        });
+        if (Array.isArray(plan.actions)) {
+          plan.actions.forEach((act: string) => {
+            actions.push({ week: plan.week || '', theme: plan.theme || '', action: act });
+          });
+        }
       });
     }
 
@@ -147,6 +169,33 @@ export function FinanceWeeklyDashboard({ profileRef, readOnly }: FinanceWeeklyDa
               );
             })
           )}
+        </CardContent>
+      </Card>
+
+      {/* Feedback Section */}
+      <Card className="border-2 border-indigo-100 bg-white shadow-sm mt-6">
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-indigo-600" />
+            Performance Feedback & Notes
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Reflect on how this week's Finance activities went. The AI will analyze this feedback during adaptation to optimize your strategy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3">
+          <textarea
+            className="w-full text-xs font-semibold p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-slate-50/30"
+            rows={3}
+            placeholder="Type your notes or feedback here (e.g. runway calculations are accurate but SaaS cost audit is delayed)..."
+            value={feedback}
+            onChange={(e) => handleSaveFeedback(e.target.value)}
+            disabled={readOnly}
+          />
+          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Saved automatically in real-time
+          </div>
         </CardContent>
       </Card>
 
