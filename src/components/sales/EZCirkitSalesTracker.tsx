@@ -81,40 +81,30 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
         )}
 
         <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <fieldset disabled={readOnly} className="contents">
-            <EZCirkitWeeklyDashboard
-              profileRef={profileRef}
-              leads={leads}
-              productSales={productSales}
-              activities={activities}
-              targets={targets}
-              readOnly={readOnly}
-            />
-          </fieldset>
+          <EZCirkitWeeklyDashboard
+            profileRef={profileRef}
+            leads={leads}
+            productSales={productSales}
+            activities={activities}
+            targets={targets}
+            readOnly={readOnly}
+          />
         </TabsContent>
 
         <TabsContent value="leads" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <fieldset disabled={readOnly} className="contents">
-            <EZCirkitLeadTracker profileRef={profileRef} leads={leads} readOnly={readOnly} />
-          </fieldset>
+          <EZCirkitLeadTracker profileRef={profileRef} leads={leads} readOnly={readOnly} />
         </TabsContent>
 
         <TabsContent value="workshops" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <fieldset disabled={readOnly} className="contents">
-            <WorkshopTracker profileRef={profileRef} workshops={workshops} readOnly={readOnly} />
-          </fieldset>
+          <WorkshopTracker profileRef={profileRef} workshops={workshops} readOnly={readOnly} />
         </TabsContent>
 
         <TabsContent value="products" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <fieldset disabled={readOnly} className="contents">
-            <EZCirkitProductSales profileRef={profileRef} productSales={productSales} readOnly={readOnly} />
-          </fieldset>
+          <EZCirkitProductSales profileRef={profileRef} productSales={productSales} readOnly={readOnly} />
         </TabsContent>
 
         <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <fieldset disabled={readOnly} className="contents">
-            <EZCirkitDailyActivity profileRef={profileRef} activities={activities} readOnly={readOnly} />
-          </fieldset>
+          <EZCirkitDailyActivity profileRef={profileRef} activities={activities} readOnly={readOnly} />
         </TabsContent>
       </Tabs>
     </div>

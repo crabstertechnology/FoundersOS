@@ -53,7 +53,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
   const workspaceUserId = employeeData?.adminUid || user?.uid || '';
   const userRole = (employeeData?.role || 'admin').toLowerCase();
-  const isReadOnly = userRole === 'employee';
+  const isReadOnly = userRole === 'employee' || userRole === 'visitor';
 
   const profileRef = useMemoFirebase(() => {
     if (!firestore || !workspaceUserId) return null;

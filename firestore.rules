@@ -16,6 +16,17 @@ service cloud.firestore {
         get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.adminUid == userId;
     }
 
+    function isVisitor(userId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.adminUid == userId &&
+        (
+          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'visitor' ||
+          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'Visitor' ||
+          get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'VISITOR'
+        );
+    }
+
     function hasReadAccess(userId) {
       return isUser(userId) || isEmployeeOrManager(userId);
     }
@@ -70,7 +81,7 @@ service cloud.firestore {
 
         match /tasks/{taskId} {
           allow read: if hasReadAccess(userId);
-          allow write: if hasWriteAccess(userId);
+          allow write: if hasWriteAccess(userId) || isVisitor(userId);
           allow read: if isSignedIn() && resource.data.assignedToUid == request.auth.uid;
           allow update: if isSignedIn()
             && resource.data.assignedToUid == request.auth.uid

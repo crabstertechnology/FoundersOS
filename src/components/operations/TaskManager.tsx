@@ -130,12 +130,13 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!tasksRef || !title) return;
+    const isFounder = assignedTo === userId;
     const emp = employees.find(em => em.uid === assignedTo);
     const payload: any = {
       title, description, category, priority, status, dueDate,
       assignedToUid: assignedTo || '',
-      assignedToName: emp?.name || 'Unassigned',
-      assignedToEmail: emp?.email || '',
+      assignedToName: isFounder ? 'Founder' : (emp?.name || 'Unassigned'),
+      assignedToEmail: isFounder ? '' : (emp?.email || ''),
     };
     if (assignedTo) {
       payload.assignedAt = new Date().toISOString();
@@ -232,6 +233,9 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                   <SelectTrigger><SelectValue placeholder="Select team member..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">— Unassigned —</SelectItem>
+                    {userId && (
+                      <SelectItem value={userId}>Founder (Admin)</SelectItem>
+                    )}
                     {employees.filter(e => e.isActive).map(emp => (
                       <SelectItem key={emp.uid} value={emp.uid}>{emp.name} ({emp.role || 'Employee'})</SelectItem>
                     ))}
@@ -298,6 +302,9 @@ export function TaskManager({ userId, companyProfileId, employees, initialAssign
                   <SelectTrigger className="h-8 text-xs w-32"><SelectValue placeholder="All Members" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Members</SelectItem>
+                    {userId && (
+                      <SelectItem value={userId}>Founder (Admin)</SelectItem>
+                    )}
                     {employees.map(emp => (
                       <SelectItem key={emp.uid} value={emp.uid}>{emp.name}</SelectItem>
                     ))}
