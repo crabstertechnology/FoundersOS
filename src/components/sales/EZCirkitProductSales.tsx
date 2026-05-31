@@ -16,7 +16,16 @@ import type { DocumentReference } from 'firebase/firestore';
 export type PaymentStatus = 'paid' | 'pending' | 'partial' | 'refunded';
 
 export interface ProductSale {
-  id: string; date: string; product: string; customer: string; qty: number; unitPrice: number; total: number; paymentStatus: PaymentStatus; notes: string;
+  id: string;
+  date: string;
+  product: string;
+  customer: string;
+  qty: number;
+  unitPrice: number;
+  total: number;
+  paymentStatus: PaymentStatus;
+  notes: string;
+  mentionTime?: string; // ISO timestamp when the record was saved
 }
 
 const PAYMENT_CLR: Record<string, string> = {
@@ -120,6 +129,7 @@ export function EZCirkitProductSales({ profileRef, productSales, readOnly }: Pro
       date: addF.date, product: addF.product, customer: addF.customer,
       qty: q, unitPrice: u, total: q * u,
       paymentStatus: addF.paymentStatus, notes: addF.notes,
+      mentionTime: new Date().toISOString(),
     };
     setDocumentNonBlocking(profileRef, { ezProductSales: [...productSales, item] }, { merge: true });
     setAddF(blank(today)); setShowAdd(false);
@@ -135,6 +145,7 @@ export function EZCirkitProductSales({ profileRef, productSales, readOnly }: Pro
       date: editF.date, product: editF.product, customer: editF.customer,
       qty: q, unitPrice: u, total: q * u,
       paymentStatus: editF.paymentStatus, notes: editF.notes,
+      mentionTime: new Date().toISOString(), // update timestamp on edit
     };
     setDocumentNonBlocking(profileRef, { ezProductSales: productSales.map(p => p.id === sel.id ? item : p) }, { merge: true });
     setSel(null);
@@ -232,7 +243,7 @@ export function EZCirkitProductSales({ profileRef, productSales, readOnly }: Pro
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    {['Date', 'Product', 'Customer', 'Qty', 'Unit Price', 'Total', 'Payment', 'Notes'].map(h => (
+                    {['Date', 'Product', 'Customer', 'Qty', 'Unit Price', 'Total', 'Payment', 'Notes', 'Recorded At', ''].map(h => (
                       <TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>
                     ))}
                   </TableRow>
@@ -250,6 +261,24 @@ export function EZCirkitProductSales({ profileRef, productSales, readOnly }: Pro
                         <Badge className={`border text-[9px] font-black uppercase ${PAYMENT_CLR[p.paymentStatus]}`}>{p.paymentStatus}</Badge>
                       </TableCell>
                       <TableCell className="text-xs text-slate-500 max-w-[150px] truncate">{p.notes || '—'}</TableCell>
+                      <TableCell className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
+                        {p.mentionTime
+                          ? new Date(p.mentionTime).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })
+                          : '—'}
+                      </TableCell>
+                      <TableCell onClick={e => e.stopPropagation()}>
+                        {!readOnly && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-full"
+                            onClick={() => handleDelete(p.id)}
+                            title="Delete record"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
