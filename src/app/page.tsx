@@ -153,7 +153,7 @@ export default function FounderOSPage() {
     } else if (['crm', 'ezcirkit'].includes(tab)) {
       setActiveTab('sales');
       setSalesTab(tab);
-    } else if (['weekly', 'leads', 'workshops', 'products', 'activity'].includes(tab)) {
+    } else if (['weekly', 'strategy', 'leads', 'workshops', 'products', 'activity'].includes(tab)) {
       setActiveTab('sales');
       setSalesTab('ezcirkit');
       setEzCirkitTab(tab);
@@ -173,6 +173,7 @@ export default function FounderOSPage() {
           case 'ezcirkit':
             switch (ezCirkitTab) {
               case 'weekly': return 'Weekly Dashboard';
+              case 'strategy': return 'Sales Strategy';
               case 'leads': return 'Lead Tracker';
               case 'workshops': return 'Workshop Tracker';
               case 'products': return 'Product Sales';
@@ -423,6 +424,17 @@ export default function FounderOSPage() {
                       }`}
                     >
                       Weekly Dashboard
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'strategy'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Sales Strategy
                     </button>
 
                     <button
@@ -811,6 +823,17 @@ export default function FounderOSPage() {
                       }`}
                     >
                       Weekly Dashboard
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'strategy'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Sales Strategy
                     </button>
 
                     <button

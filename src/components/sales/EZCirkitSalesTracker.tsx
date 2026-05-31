@@ -2,13 +2,14 @@
 
 import React, { useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, BookOpen, Package, Activity, LayoutDashboard } from 'lucide-react';
+import { BarChart3, BookOpen, Package, Activity, LayoutDashboard, GraduationCap } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { EZCirkitLeadTracker } from './EZCirkitLeadTracker';
 import { EZCirkitProductSales } from './EZCirkitProductSales';
 import { EZCirkitDailyActivity } from './EZCirkitDailyActivity';
 import { EZCirkitWeeklyDashboard, DEFAULT_TARGETS } from './EZCirkitWeeklyDashboard';
+import { SalesStrategy } from './SalesStrategy';
 import type { EZLead } from './EZCirkitLeadTracker';
 import type { ProductSale } from './EZCirkitProductSales';
 import type { DailyActivity } from './EZCirkitDailyActivity';
@@ -64,6 +65,9 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
               <TabsTrigger value="weekly" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
                 <LayoutDashboard className="w-3.5 h-3.5" /> Weekly Dashboard
               </TabsTrigger>
+              <TabsTrigger value="strategy" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5" /> Sales Strategy
+              </TabsTrigger>
               <TabsTrigger value="leads" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
                 <BarChart3 className="w-3.5 h-3.5" /> Lead Tracker
               </TabsTrigger>
@@ -89,6 +93,10 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
             targets={targets}
             readOnly={readOnly}
           />
+        </TabsContent>
+
+        <TabsContent value="strategy" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+          <SalesStrategy profileRef={profileRef} readOnly={readOnly} />
         </TabsContent>
 
         <TabsContent value="leads" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
