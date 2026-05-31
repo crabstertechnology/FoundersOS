@@ -33,6 +33,16 @@ interface SalesStrategyProps {
   readOnly?: boolean;
 }
 
+export interface MapMyProductHistoryItem {
+  id: string;
+  stepNumber: number;
+  stepTitle: string;
+  explanation: string;
+  concreteExample: string;
+  actionableTasks: string[];
+  timestamp: string;
+}
+
 export interface PerformanceLog {
   id: string;
   date: string;
@@ -47,6 +57,10 @@ export interface PerformanceLog {
 
 export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
   const { data: profile } = useDoc(profileRef);
+
+  // Map My Product generated history
+  const history: MapMyProductHistoryItem[] = useMemo(() => profile?.ezMapMyProductHistory || [], [profile]);
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
   // Performance Tracker Logs
   const logs: PerformanceLog[] = useMemo(() => profile?.ezSalesPerformanceLogs || [], [profile]);
@@ -415,7 +429,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
     try {
       const prodName = aiProductName || profile?.companyName || 'Our Product';
       const targetAud = aiTargetAudience || 'B2B Customers';
-      const probSolv = aiProblemSolved || 'Operational inefficiencies';
+      const probSolv = aiProblemSolved || 'Review your product specs, plan developer scopes, and model go-to-market strategies aligned with your runway. use this detail for sales straegy';
 
       const result = await explainMethodologyStep({
         stepNumber: stepNum,
@@ -425,10 +439,54 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
         problemSolved: probSolv
       });
       setStepExplanations(prev => ({ ...prev, [stepNum]: result }));
+
+      // Automatically add to history in Firebase
+      if (profileRef && !readOnly) {
+        const now = new Date();
+        const formattedDateTime = now.toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }) + ' at ' + now.toLocaleTimeString(undefined, {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const newItem: MapMyProductHistoryItem = {
+          id: Math.random().toString(36).substring(2, 9),
+          stepNumber: stepNum,
+          stepTitle,
+          explanation: result.explanation,
+          concreteExample: result.concreteExample,
+          actionableTasks: result.actionableTasks,
+          timestamp: formattedDateTime
+        };
+
+        const currentHistory = profile?.ezMapMyProductHistory || [];
+        const updatedHistory = [newItem, ...currentHistory];
+
+        await setDocumentNonBlocking(profileRef, {
+          ezMapMyProductHistory: updatedHistory
+        }, { merge: true });
+      }
     } catch (err) {
       console.error(`Error explaining step ${stepNum}:`, err);
     } finally {
       setStepExplaining(prev => ({ ...prev, [stepNum]: false }));
+    }
+  };
+
+  const handleDeleteHistoryItem = async (itemId: string) => {
+    if (!profileRef || readOnly) return;
+    if (!confirm('Are you sure you want to delete this generated blueprint?')) return;
+    try {
+      const currentHistory = profile?.ezMapMyProductHistory || [];
+      const updatedHistory = currentHistory.filter((item: MapMyProductHistoryItem) => item.id !== itemId);
+      await setDocumentNonBlocking(profileRef, {
+        ezMapMyProductHistory: updatedHistory
+      }, { merge: true });
+    } catch (err) {
+      console.error('Error deleting map my product history item:', err);
     }
   };
 
@@ -442,9 +500,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
     return (
       <div className="mt-4 border-t border-slate-100 pt-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-150">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
           <div className="flex items-center gap-1.5 text-slate-800">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-650 animate-pulse" />
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
             <span className="text-[10.5px] font-black uppercase tracking-wide">AI Co-Pilot for Step {stepNum}</span>
           </div>
           <div className="flex gap-2">
@@ -472,9 +530,10 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
               size="sm"
               type="button"
               onClick={() => handleInitializeRoleplay(area)}
-              className="h-7 text-[10px] font-extrabold gap-1 bg-indigo-650 hover:bg-indigo-700 text-white border-none"
+              className="h-7 text-[10px] font-extrabold gap-1 rounded-md px-3 border-none hover:opacity-90 transition-all shadow-sm shrink-0"
+              style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-200 animate-bounce" />
+              <Sparkles className="w-3.5 h-3.5 text-white/80 animate-bounce" />
               Practice with AI Coach
             </Button>
           </div>
@@ -534,7 +593,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-950 p-6 rounded-2xl border border-indigo-500/20 text-white shadow-md">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Badge className="bg-indigo-650 hover:bg-indigo-700 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
+            <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
               Sales Syllabus
             </Badge>
             <span className="text-xs text-indigo-300 font-semibold">Value-Driven Sales System</span>
@@ -545,12 +604,12 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
             Use this interactive guide to train, build pitch scripts, and track team conversion performance.
           </p>
         </div>
-        <div className="flex gap-3 shrink-0">
-          <div className="text-center bg-indigo-900/40 border border-indigo-500/20 rounded-xl px-4 py-2 min-w-28">
+        <div className="flex gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
+          <div className="text-center bg-indigo-900/40 border border-indigo-500/20 rounded-xl px-4 py-2 flex-1 md:flex-none min-w-24 md:min-w-28">
             <div className="text-xl font-black text-indigo-400">{aggregateStats.totalSales}</div>
             <div className="text-[10px] text-slate-400 font-bold uppercase">Deals Closed</div>
           </div>
-          <div className="text-center bg-indigo-900/40 border border-indigo-500/20 rounded-xl px-4 py-2 min-w-28">
+          <div className="text-center bg-indigo-900/40 border border-indigo-500/20 rounded-xl px-4 py-2 flex-1 md:flex-none min-w-24 md:min-w-28">
             <div className="text-xl font-black text-emerald-450">{aggregateStats.avgConversion}%</div>
             <div className="text-[10px] text-slate-400 font-bold uppercase">Avg Conv. Rate</div>
           </div>
@@ -558,18 +617,18 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
       </div>
 
       <Tabs defaultValue="syllabus" className="w-full">
-        <div className="border-b pb-3 mb-6">
-          <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
-            <TabsTrigger value="syllabus" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+        <div className="border-b pb-3 mb-6 w-full overflow-hidden">
+          <TabsList className="flex w-full overflow-x-auto whitespace-nowrap bg-slate-100/80 p-1 rounded-xl md:rounded-full gap-1 md:gap-0.5 border-none h-auto md:h-10 scrollbar-none select-none">
+            <TabsTrigger value="syllabus" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <GraduationCap className="w-3.5 h-3.5" /> Complete Teaching Syllabus
             </TabsTrigger>
-            <TabsTrigger value="scripts" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+            <TabsTrigger value="scripts" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <PhoneCall className="w-3.5 h-3.5" /> Cold Call & Pitch Templates
             </TabsTrigger>
-            <TabsTrigger value="tracker" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+            <TabsTrigger value="tracker" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <BarChart3 className="w-3.5 h-3.5" /> Sales Tracker Sub-Logs
             </TabsTrigger>
-            <TabsTrigger value="mentor" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+            <TabsTrigger value="mentor" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <Award className="w-3.5 h-3.5" /> Mentor Coaching Guide
             </TabsTrigger>
           </TabsList>
@@ -907,8 +966,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           Find the pain, name it clearly, and show them you understand it better than they do.
                         </p>
 
-                        <div className="border border-slate-100 rounded-lg overflow-hidden">
-                          <Table className="text-[11px]">
+                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                          <Table className="text-[11px] min-w-[600px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
                                 <TableHead className="font-bold py-2">Question to Ask</TableHead>
@@ -982,8 +1041,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           </p>
                         </div>
 
-                        <div className="border border-slate-100 rounded-lg overflow-hidden">
-                          <Table className="text-[11px]">
+                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                          <Table className="text-[11px] min-w-[650px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
                                 <TableHead className="font-bold py-2 w-12">Stage</TableHead>
@@ -1141,8 +1200,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           Many sales die because no one asked for the order. Ask clearly, confidently, and without apology. Select the close type that fits the situation:
                         </p>
 
-                        <div className="border border-slate-100 rounded-lg overflow-hidden">
-                          <Table className="text-[11px]">
+                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                          <Table className="text-[11px] min-w-[600px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
                                 <TableHead className="font-bold py-2">Close Type</TableHead>
@@ -1194,8 +1253,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           Follow up systematically without looking desperate. Offer value at each touchpoint.
                         </p>
                         
-                        <div className="border border-slate-100 rounded-lg overflow-hidden">
-                          <Table className="text-[11px]">
+                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                          <Table className="text-[11px] min-w-[600px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
                                 <TableHead className="font-bold py-2 w-16">Timing</TableHead>
@@ -1310,6 +1369,109 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   <div className="text-[11px] text-slate-800 font-black border-t border-rose-100 pt-2 mt-3">
                     Sales is not luck. It is a repeatable system. Follow it.
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* AI Blueprint History Card */}
+              <Card className="border-2 border-indigo-150 shadow-sm bg-white overflow-hidden">
+                <CardHeader className="pb-3 border-b bg-indigo-50/10 flex flex-row items-center justify-between gap-3">
+                  <CardTitle className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-indigo-600 animate-pulse" />
+                    AI Blueprint History
+                  </CardTitle>
+                  <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
+                    {history.length} Saved
+                  </Badge>
+                </CardHeader>
+                <CardContent className="p-4">
+                  {history.length === 0 ? (
+                    <div className="py-6 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                      <Sparkles className="w-8 h-8 text-indigo-200" />
+                      <div className="text-[11px] font-extrabold text-slate-500">No blueprints saved yet</div>
+                      <p className="text-[10px] text-slate-400 font-semibold leading-relaxed max-w-xs">
+                        Click <strong className="text-indigo-600 font-black">"Map My Product"</strong> inside any of the syllabus steps to generate and auto-save a custom guide!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 scrollbar-none">
+                      {history.map((item) => {
+                        const isExpanded = expandedHistoryId === item.id;
+                        return (
+                          <div 
+                            key={item.id} 
+                            className={`border rounded-xl transition-all duration-200 overflow-hidden ${
+                              isExpanded 
+                                ? 'bg-indigo-50/30 border-indigo-200 shadow-sm' 
+                                : 'bg-slate-50/40 hover:bg-slate-50 border-slate-200'
+                            }`}
+                          >
+                            {/* Summary Header */}
+                            <div className="p-3 flex items-start justify-between gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedHistoryId(isExpanded ? null : item.id)}
+                                className="flex-1 text-left space-y-1"
+                              >
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <Badge className="bg-indigo-100 text-indigo-800 text-[9px] font-black uppercase px-1.5 border-none h-4">
+                                    Step {item.stepNumber}
+                                  </Badge>
+                                  <span className="text-[9px] font-bold text-slate-400 font-mono">
+                                    {item.timestamp}
+                                  </span>
+                                </div>
+                                <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-600 transition-colors pt-0.5">
+                                  {item.stepTitle.replace(/^\d+\.\s*/, '')}
+                                </h5>
+                              </button>
+                              
+                              <Button
+                                size="icon"
+                                type="button"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteHistoryItem(item.id);
+                                }}
+                                className="h-6 w-6 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+
+                            {/* Collapsible Expanded Content */}
+                            {isExpanded && (
+                              <div className="px-3 pb-3 border-t border-indigo-100/60 pt-3 bg-white space-y-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="space-y-1 text-[10.5px] leading-relaxed text-slate-700 font-medium">
+                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">B2B Strategy:</span>
+                                  <p className="whitespace-pre-line bg-slate-50/50 p-2 border rounded-lg">{item.explanation}</p>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Context Dialogue Example:</span>
+                                  <p className="text-[10.5px] leading-relaxed text-slate-800 italic bg-amber-50/30 border border-amber-100/60 rounded-lg p-2.5 font-semibold font-mono">
+                                    "{item.concreteExample}"
+                                  </p>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <span className="text-[9px] uppercase font-black text-slate-500 block">Action Checklist:</span>
+                                  <div className="space-y-1 flex flex-col">
+                                    {item.actionableTasks.map((task, idx) => (
+                                      <label key={idx} className="flex items-start gap-2 text-[10px] font-semibold text-slate-750 cursor-pointer select-none">
+                                        <input type="checkbox" className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3" />
+                                        <span>{task}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1777,8 +1939,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </div>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <Table className="text-[11px] font-medium text-slate-700">
+                    <div className="overflow-x-auto scrollbar-none">
+                      <Table className="text-[11px] font-medium text-slate-700 min-w-[750px]">
                         <TableHeader className="bg-slate-50 text-[10px] uppercase font-black text-slate-500">
                           <TableRow>
                             <TableHead className="py-2.5">Date</TableHead>
@@ -2010,8 +2172,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="overflow-x-auto border rounded-xl">
-                <Table className="text-xs font-medium text-slate-700">
+              <div className="overflow-x-auto border rounded-xl scrollbar-none">
+                <Table className="text-xs font-medium text-slate-700 min-w-[600px]">
                   <TableHeader className="bg-slate-50 text-[10px] font-black uppercase text-slate-500">
                     <TableRow>
                       <TableHead className="py-3 w-40">Area to Coach</TableHead>

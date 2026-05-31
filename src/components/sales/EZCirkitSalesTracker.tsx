@@ -60,24 +60,24 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {activeSubTab === undefined && (
-          <div className="flex justify-start border-b pb-3 mb-6">
-            <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
-              <TabsTrigger value="weekly" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+          <div className="flex justify-start border-b pb-3 mb-6 w-full overflow-hidden">
+            <TabsList className="flex w-full overflow-x-auto whitespace-nowrap bg-slate-100/80 p-1 rounded-xl md:rounded-full gap-1 md:gap-0.5 border-none h-auto md:h-10 scrollbar-none select-none">
+              <TabsTrigger value="weekly" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <LayoutDashboard className="w-3.5 h-3.5" /> Weekly Dashboard
               </TabsTrigger>
-              <TabsTrigger value="strategy" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+              <TabsTrigger value="strategy" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <GraduationCap className="w-3.5 h-3.5" /> Sales Strategy
               </TabsTrigger>
-              <TabsTrigger value="leads" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+              <TabsTrigger value="leads" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <BarChart3 className="w-3.5 h-3.5" /> Lead Tracker
               </TabsTrigger>
-              <TabsTrigger value="workshops" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+              <TabsTrigger value="workshops" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <BookOpen className="w-3.5 h-3.5" /> Workshop Tracker
               </TabsTrigger>
-              <TabsTrigger value="products" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+              <TabsTrigger value="products" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <Package className="w-3.5 h-3.5" /> Product Sales
               </TabsTrigger>
-              <TabsTrigger value="activity" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
+              <TabsTrigger value="activity" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <Activity className="w-3.5 h-3.5" /> Daily Activity
               </TabsTrigger>
             </TabsList>
