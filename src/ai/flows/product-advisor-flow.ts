@@ -31,7 +31,14 @@ const ProductAdvisorOutputSchema = z.object({
   howToSell: z.string().describe('Marketing, positioning, sales channels, and customer acquisition hacks tailored to this product.'),
   whatToDevelop: z.string().describe('A concrete development roadmap detailing MVP features, priority features, and tech stack/architecture tips.'),
   financialImpact: z.string().describe('Analysis of development and launch cost impact vs. current cash and runway constraints.'),
-  immediateSteps: z.array(z.string()).describe('List of 3-4 immediate actionable tasks for development or sales validation.')
+  immediateSteps: z.array(z.string()).describe('List of 3-4 immediate actionable tasks for development or sales validation.'),
+  pitchGuidance: z.object({
+    pitchDeckStructure: z.string().describe('A recommended 10-slide outline for their pitch deck tailored to this product.'),
+    elevatorPitch: z.string().describe('A punchy, 30-second elevator pitch script.'),
+    normalPitch: z.string().describe('A standard 2-minute pitch script for meetings or demo days.'),
+    laypersonPitch: z.string().describe('A layperson/ELI5 pitch script for someone who has no domain knowledge.'),
+    objectionHandling: z.string().describe('3-4 common objections they will face and how to handle them.')
+  }).describe('Pitching assets and script scripts.')
 });
 
 export type ProductAdvisorOutput = z.infer<typeof ProductAdvisorOutputSchema>;
@@ -75,6 +82,12 @@ Please deliver the output structure as follows:
 3. "whatToDevelop": A pragmatic dev strategy. Define the core MVP feature set that can be built quickly. Recommend a suitable modern, low-overhead technology stack. Detail what the dev priorities are for this phase.
 4. "financialImpact": Map this product development to the runway constraint. Since the startup has only {{{companyContext.runway}}} months of runway and a cash balance of ₹{{{companyContext.cash}}}, analyze how much budget/time is safe to allocate without running out of cash.
 5. "immediateSteps": A prioritised list of 3-4 next steps (e.g. "Create a Figma interactive prototype of feature X", "Draft landing page copywriting for ICP Y").
+6. "pitchGuidance": A comprehensive pitching toolkit consisting of:
+   - pitchDeckStructure: Recommend a 10-slide outline for their pitch deck (e.g., Problem, Solution, Market, Tech, Biz Model, etc.) customized for this specific product.
+   - elevatorPitch: Write a compelling 30-second elevator pitch script.
+   - normalPitch: Write a standard 2-minute pitch script with clear transitions.
+   - laypersonPitch: Explain the product in extremely simple terms to a non-technical/non-domain person (the "ELI5" pitch).
+   - objectionHandling: Anticipate 3-4 heavy objections from investors or customers and provide clear script responses.
 `
 });
 

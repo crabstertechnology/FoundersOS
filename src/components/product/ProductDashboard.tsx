@@ -13,7 +13,7 @@ import { productAdvisorAssistant } from '@/ai/flows/product-advisor-flow';
 import ReactMarkdown from 'react-markdown';
 import { 
   Box, Sparkles, Loader2, Code, TrendingUp, DollarSign, ListTodo, AlertTriangle, 
-  HelpCircle, ChevronRight, FileText, CheckCircle2 
+  HelpCircle, ChevronRight, FileText, CheckCircle2, Mic, Presentation 
 } from 'lucide-react';
 
 interface ProductDashboardProps {
@@ -29,7 +29,8 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
   const [pricingModel, setPricingModel] = useState('');
   const [customQuestion, setCustomQuestion] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState<'review' | 'gtm' | 'dev' | 'finance' | 'steps'>('review');
+  const [activeSubTab, setActiveSubTab] = useState<'review' | 'gtm' | 'dev' | 'finance' | 'steps' | 'pitch'>('review');
+  const [activePitchType, setActivePitchType] = useState<'elevator' | 'normal' | 'layperson' | 'deck' | 'objections'>('elevator');
 
   const firestore = useFirestore();
   const profileRef = useMemoFirebase(() => {
@@ -345,6 +346,17 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
                     <ListTodo className="w-4 h-4" />
                     Action Items
                   </button>
+                  <button
+                    onClick={() => setActiveSubTab('pitch')}
+                    className={`flex-1 py-3 px-4 text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+                      activeSubTab === 'pitch' 
+                        ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Mic className="w-4 h-4" />
+                    Pitching Scripts
+                  </button>
                 </div>
 
                 <CardContent className="p-6 flex-1 max-h-[600px] overflow-y-auto">
@@ -389,6 +401,116 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {activeSubTab === 'pitch' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                      {aiPlan?.pitchGuidance ? (
+                        <>
+                          {/* Sub-tabs for pitch types */}
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 border-b pb-4">
+                            {[
+                              { id: 'elevator', label: 'Elevator (30s)', icon: Mic },
+                              { id: 'normal', label: 'Standard (2m)', icon: FileText },
+                              { id: 'layperson', label: 'Layperson (ELI5)', icon: HelpCircle },
+                              { id: 'deck', label: 'Pitch Deck', icon: Presentation },
+                              { id: 'objections', label: 'Objections', icon: AlertTriangle }
+                            ].map((t) => {
+                              const Icon = t.icon;
+                              const active = activePitchType === t.id;
+                              return (
+                                <button
+                                  key={t.id}
+                                  type="button"
+                                  onClick={() => setActivePitchType(t.id as any)}
+                                  className={`flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all ${
+                                    active
+                                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
+                                      : 'bg-white border-slate-100 hover:bg-slate-50 text-slate-600'
+                                  }`}
+                                >
+                                  <Icon className="w-5 h-5 mb-1.5 text-indigo-500" />
+                                  <span className="text-[11px] font-bold">{t.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Display Selected Pitch script */}
+                          <Card className="border border-slate-200 bg-slate-50/30">
+                            <CardContent className="pt-6">
+                              {activePitchType === 'elevator' && (
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between border-b pb-3 mb-2">
+                                    <h4 className="text-sm font-black text-slate-800">30-Second Elevator Pitch Script</h4>
+                                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full uppercase">For Quick Intro</span>
+                                  </div>
+                                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                    <ReactMarkdown>{aiPlan.pitchGuidance.elevatorPitch || 'No elevator pitch generated yet.'}</ReactMarkdown>
+                                  </div>
+                                </div>
+                              )}
+
+                              {activePitchType === 'normal' && (
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between border-b pb-3 mb-2">
+                                    <h4 className="text-sm font-black text-slate-800">Standard 2-Minute Pitch Script</h4>
+                                    <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full uppercase">For Meetings/Demo Days</span>
+                                  </div>
+                                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                    <ReactMarkdown>{aiPlan.pitchGuidance.normalPitch || 'No standard pitch generated yet.'}</ReactMarkdown>
+                                  </div>
+                                </div>
+                              )}
+
+                              {activePitchType === 'layperson' && (
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between border-b pb-3 mb-2">
+                                    <h4 className="text-sm font-black text-slate-800">Layperson / ELI5 (Explain Like I'm 5) Script</h4>
+                                    <span className="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full uppercase">For Non-Domain Audience</span>
+                                  </div>
+                                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                    <ReactMarkdown>{aiPlan.pitchGuidance.laypersonPitch || 'No layperson pitch generated yet.'}</ReactMarkdown>
+                                  </div>
+                                </div>
+                              )}
+
+                              {activePitchType === 'deck' && (
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between border-b pb-3 mb-2">
+                                    <h4 className="text-sm font-black text-slate-800">Recommended 10-Slide Pitch Deck Structure</h4>
+                                    <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full uppercase">Investor Outline</span>
+                                  </div>
+                                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                    <ReactMarkdown>{aiPlan.pitchGuidance.pitchDeckStructure || 'No deck structure generated yet.'}</ReactMarkdown>
+                                  </div>
+                                </div>
+                              )}
+
+                              {activePitchType === 'objections' && (
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between border-b pb-3 mb-2">
+                                    <h4 className="text-sm font-black text-slate-800">Investor & Customer Objection Handling</h4>
+                                    <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full uppercase">Q&A Preparation</span>
+                                  </div>
+                                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                    <ReactMarkdown>{aiPlan.pitchGuidance.objectionHandling || 'No objection handling generated yet.'}</ReactMarkdown>
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </>
+                      ) : (
+                        <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                          <h4 className="text-sm font-black text-slate-800 mb-1">Pitch Scripts Not Available</h4>
+                          <p className="text-xs text-slate-500 max-w-md mx-auto">
+                            Your current strategic blueprint was generated using an older version without pitching guidance. Please click the <strong>Analyze Specs & Generate Strategy</strong> button again to generate a new blueprint with pitching scripts.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
