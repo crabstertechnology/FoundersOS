@@ -13,8 +13,16 @@ import { productAdvisorAssistant } from '@/ai/flows/product-advisor-flow';
 import ReactMarkdown from 'react-markdown';
 import { 
   Box, Sparkles, Loader2, Code, TrendingUp, DollarSign, ListTodo, AlertTriangle, 
-  HelpCircle, ChevronRight, FileText, CheckCircle2, Mic, Presentation 
+  HelpCircle, ChevronRight, FileText, CheckCircle2, Mic, Presentation,
+  History, Clock, Trash2, RotateCcw
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface ProductDashboardProps {
   userId: string;
@@ -31,6 +39,9 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
   const [loading, setLoading] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<'review' | 'gtm' | 'dev' | 'finance' | 'steps' | 'pitch'>('review');
   const [activePitchType, setActivePitchType] = useState<'elevator' | 'normal' | 'layperson' | 'deck' | 'objections'>('elevator');
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
+  const [historyActiveTab, setHistoryActiveTab] = useState<'review' | 'gtm' | 'dev' | 'finance' | 'steps' | 'pitch'>('review');
+  const [historyActivePitchType, setHistoryActivePitchType] = useState<'elevator' | 'normal' | 'layperson' | 'deck' | 'objections'>('elevator');
 
   const firestore = useFirestore();
   const profileRef = useMemoFirebase(() => {
@@ -116,21 +127,88 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
 
       const result = await productAdvisorAssistant(input);
 
-      // Save fields and AI output in companyProfile
-      await setDocumentNonBlocking(profileRef, {
+      // Save fields and AI output in companyProfile, saving previous version to history if it exists
+      const updateData: any = {
         prodName: productName,
         prodDesc: productDescription,
         prodTarget: targetAudience,
         prodPricing: pricingModel,
         prodQuestion: customQuestion,
         prodAIPlan: result
-      }, { merge: true });
+      };
+
+      if (profile?.prodAIPlan) {
+        const historyEntry = {
+          timestamp: new Date().toISOString(),
+          prodName: profile?.prodName || productName,
+          prodDesc: profile?.prodDesc || productDescription,
+          prodTarget: profile?.prodTarget || targetAudience,
+          prodPricing: profile?.prodPricing || pricingModel,
+          prodQuestion: profile?.prodQuestion || '',
+          prodAIPlan: profile.prodAIPlan
+        };
+        const currentHistory = profile?.prodAIPlanHistory || [];
+        updateData.prodAIPlanHistory = [historyEntry, ...currentHistory];
+      }
+
+      await setDocumentNonBlocking(profileRef, updateData, { merge: true });
 
     } catch (err) {
       console.error('Error generating product plan:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteHistoryItem = async (indexToDelete: number) => {
+    if (!profileRef) return;
+    
+    const currentHistory = profile?.prodAIPlanHistory || [];
+    const updatedHistory = currentHistory.filter((_: any, idx: number) => idx !== indexToDelete);
+    
+    await setDocumentNonBlocking(profileRef, {
+      prodAIPlanHistory: updatedHistory
+    }, { merge: true });
+  };
+
+  const handleRestoreHistoryItem = async (item: any) => {
+    if (!profileRef) return;
+    
+    const currentPlan = profile?.prodAIPlan;
+    let updatedHistory = [...(profile?.prodAIPlanHistory || [])];
+    
+    const restoredIndex = updatedHistory.findIndex((h: any) => h.timestamp === item.timestamp);
+    if (restoredIndex > -1) {
+      updatedHistory.splice(restoredIndex, 1);
+    }
+    
+    if (currentPlan) {
+      updatedHistory = [{
+        timestamp: new Date().toISOString(),
+        prodName: profile?.prodName || productName,
+        prodDesc: profile?.prodDesc || productDescription,
+        prodTarget: profile?.prodTarget || targetAudience,
+        prodPricing: profile?.prodPricing || pricingModel,
+        prodQuestion: profile?.prodQuestion || '',
+        prodAIPlan: currentPlan
+      }, ...updatedHistory];
+    }
+    
+    await setDocumentNonBlocking(profileRef, {
+      prodName: item.prodName || '',
+      prodDesc: item.prodDesc || '',
+      prodTarget: item.prodTarget || '',
+      prodPricing: item.prodPricing || '',
+      prodQuestion: item.prodQuestion || '',
+      prodAIPlan: item.prodAIPlan,
+      prodAIPlanHistory: updatedHistory
+    }, { merge: true });
+    
+    setProductName(item.prodName || '');
+    setProductDescription(item.prodDesc || '');
+    setTargetAudience(item.prodTarget || '');
+    setPricingModel(item.prodPricing || '');
+    setCustomQuestion(item.prodQuestion || '');
   };
 
   const aiPlan = profile?.prodAIPlan;
@@ -271,6 +349,72 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
                 </form>
               </CardContent>
             </Card>
+
+            {/* Saved Strategy Versions */}
+            {profile?.prodAIPlanHistory && profile.prodAIPlanHistory.length > 0 && (
+              <Card className="border-2 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
+                <CardHeader className="bg-slate-50/50 border-b py-4">
+                  <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <History className="w-5 h-5 text-indigo-600" />
+                    Saved Strategy Versions ({profile.prodAIPlanHistory.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Access your previously generated AI strategies and product specifications.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0 divide-y divide-slate-100 max-h-[350px] overflow-y-auto">
+                  {profile.prodAIPlanHistory.map((item: any, idx: number) => {
+                    const formattedDate = new Date(item.timestamp).toLocaleString(undefined, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short'
+                    });
+                    return (
+                      <div key={idx} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="text-xs font-bold text-slate-600">{formattedDate}</span>
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-900 truncate">
+                            {item.prodName || 'Unnamed Product'}
+                          </h4>
+                          <p className="text-xs text-slate-500 line-clamp-1">
+                            {item.prodPricing ? `Pricing: ${item.prodPricing}` : ''}
+                            {item.prodTarget ? ` • Audience: ${item.prodTarget}` : ''}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedHistoryItem(item);
+                              setHistoryActiveTab('review');
+                              setHistoryActivePitchType('elevator');
+                            }}
+                            className="h-8 font-semibold text-xs border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200"
+                          >
+                            View
+                          </Button>
+                          {!readOnly && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteHistoryItem(idx)}
+                              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* AI Outputs Section */}
@@ -519,6 +663,264 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
           </div>
         </div>
       )}
+
+      {/* History Details Dialog */}
+      <Dialog open={!!selectedHistoryItem} onOpenChange={(open) => { if (!open) setSelectedHistoryItem(null); }}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border border-slate-200 shadow-2xl rounded-xl">
+          <DialogHeader className="p-6 pb-4 border-b bg-slate-50/50 flex flex-row items-center justify-between pr-12">
+            <div>
+              <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <History className="w-5 h-5 text-indigo-600" />
+                Archived Strategy Blueprint
+              </DialogTitle>
+              <DialogDescription className="text-xs mt-1 font-semibold text-slate-500">
+                Generated for <span className="text-indigo-700 font-bold">{selectedHistoryItem?.prodName}</span> on {selectedHistoryItem && new Date(selectedHistoryItem.timestamp).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          {/* Dialog Body - scrollable with sub tabs */}
+          {selectedHistoryItem && (
+            <>
+              {/* Mini spec review section */}
+              <div className="bg-slate-50/50 p-4 border-b grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold text-slate-600">
+                <div>
+                  <span className="block text-[10px] uppercase text-slate-400 font-black">Audience</span>
+                  <span className="text-slate-800 line-clamp-1">{selectedHistoryItem.prodTarget || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] uppercase text-slate-400 font-black">Pricing Model</span>
+                  <span className="text-slate-800 capitalize">{selectedHistoryItem.prodPricing || 'N/A'}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="block text-[10px] uppercase text-slate-400 font-black">Description</span>
+                  <span className="text-slate-800 line-clamp-1">{selectedHistoryItem.prodDesc || 'N/A'}</span>
+                </div>
+              </div>
+
+              {/* Sub Tabs */}
+              <div className="flex border-b divide-x overflow-x-auto bg-slate-50/30">
+                <button
+                  type="button"
+                  onClick={() => setHistoryActiveTab('review')}
+                  className={`flex-1 py-3 px-3 text-xs font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0 ${
+                    historyActiveTab === 'review' 
+                      ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Box className="w-3.5 h-3.5" />
+                  Evaluation
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryActiveTab('gtm')}
+                  className={`flex-1 py-3 px-3 text-xs font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0 ${
+                    historyActiveTab === 'gtm' 
+                      ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  How to Sell
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryActiveTab('dev')}
+                  className={`flex-1 py-3 px-3 text-xs font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0 ${
+                    historyActiveTab === 'dev' 
+                      ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Code className="w-3.5 h-3.5" />
+                  What to Develop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryActiveTab('finance')}
+                  className={`flex-1 py-3 px-3 text-xs font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0 ${
+                    historyActiveTab === 'finance' 
+                      ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  Runway Impact
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryActiveTab('steps')}
+                  className={`flex-1 py-3 px-3 text-xs font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0 ${
+                    historyActiveTab === 'steps' 
+                      ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <ListTodo className="w-3.5 h-3.5" />
+                  Action Items
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryActiveTab('pitch')}
+                  className={`flex-1 py-3 px-3 text-xs font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0 ${
+                    historyActiveTab === 'pitch' 
+                      ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  Pitching
+                </button>
+              </div>
+
+              {/* Tab Content Area */}
+              <div className="p-6 flex-1 overflow-y-auto max-h-[50vh]">
+                {historyActiveTab === 'review' && (
+                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+                    <ReactMarkdown>{selectedHistoryItem.prodAIPlan.review}</ReactMarkdown>
+                  </div>
+                )}
+
+                {historyActiveTab === 'gtm' && (
+                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+                    <ReactMarkdown>{selectedHistoryItem.prodAIPlan.howToSell}</ReactMarkdown>
+                  </div>
+                )}
+
+                {historyActiveTab === 'dev' && (
+                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+                    <ReactMarkdown>{selectedHistoryItem.prodAIPlan.whatToDevelop}</ReactMarkdown>
+                  </div>
+                )}
+
+                {historyActiveTab === 'finance' && (
+                  <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
+                    <ReactMarkdown>{selectedHistoryItem.prodAIPlan.financialImpact}</ReactMarkdown>
+                  </div>
+                )}
+
+                {historyActiveTab === 'steps' && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Archived Roadmap Actions</h4>
+                    <div className="space-y-3">
+                      {selectedHistoryItem.prodAIPlan.immediateSteps?.map((step: string, idx: number) => (
+                        <div key={idx} className="flex items-start gap-3 p-3 rounded-lg border bg-slate-50/50">
+                          <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </div>
+                          <span className="text-xs font-semibold text-slate-700 leading-relaxed">{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {historyActiveTab === 'pitch' && (
+                  <div className="space-y-6">
+                    {selectedHistoryItem.prodAIPlan?.pitchGuidance ? (
+                      <>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 border-b pb-4">
+                          {[
+                            { id: 'elevator', label: 'Elevator', icon: Mic },
+                            { id: 'normal', label: 'Standard', icon: FileText },
+                            { id: 'layperson', label: 'Layperson', icon: HelpCircle },
+                            { id: 'deck', label: 'Deck Structure', icon: Presentation },
+                            { id: 'objections', label: 'Objections', icon: AlertTriangle }
+                          ].map((t) => {
+                            const Icon = t.icon;
+                            const active = historyActivePitchType === t.id;
+                            return (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => setHistoryActivePitchType(t.id as any)}
+                                className={`flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all ${
+                                  active
+                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
+                                    : 'bg-white border-slate-100 hover:bg-slate-50 text-slate-600'
+                                }`}
+                              >
+                                <Icon className="w-4 h-4 mb-1 text-indigo-500" />
+                                <span className="text-[10px] font-bold">{t.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <Card className="border border-slate-200 bg-slate-50/30">
+                          <CardContent className="pt-6">
+                            {historyActivePitchType === 'elevator' && (
+                              <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <ReactMarkdown>{selectedHistoryItem.prodAIPlan.pitchGuidance.elevatorPitch || 'No elevator pitch.'}</ReactMarkdown>
+                              </div>
+                            )}
+                            {historyActivePitchType === 'normal' && (
+                              <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <ReactMarkdown>{selectedHistoryItem.prodAIPlan.pitchGuidance.normalPitch || 'No standard pitch.'}</ReactMarkdown>
+                              </div>
+                            )}
+                            {historyActivePitchType === 'layperson' && (
+                              <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <ReactMarkdown>{selectedHistoryItem.prodAIPlan.pitchGuidance.laypersonPitch || 'No layperson pitch.'}</ReactMarkdown>
+                              </div>
+                            )}
+                            {historyActivePitchType === 'deck' && (
+                              <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <ReactMarkdown>{selectedHistoryItem.prodAIPlan.pitchGuidance.pitchDeckStructure || 'No deck structure.'}</ReactMarkdown>
+                              </div>
+                            )}
+                            {historyActivePitchType === 'objections' && (
+                              <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <ReactMarkdown>{selectedHistoryItem.prodAIPlan.pitchGuidance.objectionHandling || 'No objection handling.'}</ReactMarkdown>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </>
+                    ) : (
+                      <div className="text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                        <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-2" />
+                        <h4 className="text-xs font-black text-slate-800 mb-1">Pitch Scripts Not Available</h4>
+                        <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                          This version was generated without pitch scripts.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Dialog Footer with Action Buttons */}
+              <div className="p-4 border-t bg-slate-50 flex items-center justify-between gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSelectedHistoryItem(null)}
+                  className="font-bold text-xs"
+                >
+                  Close
+                </Button>
+                {!readOnly && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        handleRestoreHistoryItem(selectedHistoryItem);
+                        setSelectedHistoryItem(null);
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Restore This Version
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
