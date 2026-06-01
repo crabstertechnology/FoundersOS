@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
+import { cn } from '@/lib/utils';
 import { 
   Plus, Trash2, Edit2, Sparkles, Loader2, Wallet, Users, Layout, ShieldAlert,
   Server, Laptop, Briefcase, Calendar, CheckCircle2, ChevronRight, Activity, Info, ListChecks, Shield, MessageSquare,
@@ -139,6 +140,11 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
   const [showAddSaas, setShowAddSaas] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
 
+  // Runway Simulation States
+  const [simRevenue, setSimRevenue] = useState(0);
+  const [simSaaSPercent, setSimSaaSPercent] = useState(100);
+  const [simSalariesDelta, setSimSalariesDelta] = useState(0);
+
   // Derived Operations Data
   const subscriptions = useMemo<SaasSubscription[]>(() => {
     return profile?.saasSubscriptions || [];
@@ -168,9 +174,18 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
   const calculatedStats = useMemo(() => {
     // SaaS monthly totals
     let totalSaasMonthly = 0;
+    const categoryTotals: Record<string, number> = { hosting: 0, ai: 0, saas: 0, marketing: 0, other: 0 };
     subscriptions.forEach(sub => {
       const cost = Number(sub.cost) || 0;
-      totalSaasMonthly += sub.billing === 'yearly' ? cost / 12 : cost;
+      const monthlyEquivalent = sub.billing === 'yearly' ? cost / 12 : cost;
+      totalSaasMonthly += monthlyEquivalent;
+      
+      const cat = sub.category || 'saas';
+      if (categoryTotals[cat] !== undefined) {
+        categoryTotals[cat] += monthlyEquivalent;
+      } else {
+        categoryTotals.other += monthlyEquivalent;
+      }
     });
 
     // Salaries totals (only count active ones or count all based on choice, let's include active and hiring separately or total them. Typically, burn includes both. Let's include both, but highlight status)
@@ -197,7 +212,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
       activeHeadcount,
       openRoles,
       totalBurn,
-      runway
+      runway,
+      categoryTotals
     };
   }, [subscriptions, team, otherBurn, cashBank]);
 
@@ -210,8 +226,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
       id: editingSaasId || Math.random().toString(36).substr(2, 9),
       name: saasName,
       cost: Number(saasCost) || 0,
-      billing: 'monthly',
-      category: 'saas'
+      billing: saasBilling,
+      category: saasCategory
     };
 
     let updatedSubs: SaasSubscription[];
@@ -237,6 +253,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
     // Reset Form
     setSaasName('');
     setSaasCost('');
+    setSaasBilling('monthly');
+    setSaasCategory('hosting');
     setEditingSaasId(null);
     setShowAddSaas(false);
   };
@@ -245,6 +263,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
     setEditingSaasId(sub.id);
     setSaasName(sub.name);
     setSaasCost(sub.cost);
+    setSaasBilling(sub.billing || 'monthly');
+    setSaasCategory(sub.category || 'saas');
     setShowAddSaas(true);
   };
 
@@ -268,6 +288,8 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
       setEditingSaasId(null);
       setSaasName('');
       setSaasCost('');
+      setSaasBilling('monthly');
+      setSaasCategory('hosting');
     }
   };
 
@@ -673,6 +695,151 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
           </div>
         </div>
 
+        {/* Scenario Planner and SaaS Breakdown Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* SaaS Spend Breakdown by Category */}
+          <Card className="border shadow-sm bg-white lg:col-span-1">
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-xs uppercase font-black tracking-widest text-slate-800 flex items-center justify-between">
+                <span>SaaS Spending Breakdown</span>
+                <span className="text-[10px] text-teal-600 font-bold lowercase font-sans">monthly eq.</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              {calculatedStats.totalSaasMonthly === 0 ? (
+                <p className="text-xs text-center py-6 text-muted-foreground font-semibold">No SaaS expenses tracked yet.</p>
+              ) : (
+                CATEGORIES.map(cat => {
+                  const monthlyVal = calculatedStats.categoryTotals[cat.value] || 0;
+                  const percent = calculatedStats.totalSaasMonthly > 0 ? (monthlyVal / calculatedStats.totalSaasMonthly) * 100 : 0;
+                  return (
+                    <div key={cat.value} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="text-slate-700">{cat.label}</span>
+                        <span className="text-slate-900 font-bold font-code">{fmtINR(monthlyVal)} ({percent.toFixed(0)}%)</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className={cn("h-full rounded-full", cat.value === 'hosting' ? 'bg-cyan-500' : cat.value === 'ai' ? 'bg-purple-500' : cat.value === 'saas' ? 'bg-indigo-500' : cat.value === 'marketing' ? 'bg-pink-500' : 'bg-slate-500')} 
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Runway Simulator */}
+          <Card className="border shadow-sm bg-white lg:col-span-2">
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-xs uppercase font-black tracking-widest text-slate-800 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-indigo-600" />
+                Runway & Cash Simulator
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Simulator Inputs */}
+                <div className="space-y-4 md:col-span-2">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-slate-700">
+                      <span>Simulated Monthly Revenue (₹)</span>
+                      <span className="text-indigo-600 font-code font-black">{fmtINR(simRevenue)}</span>
+                    </div>
+                    <input 
+                      type="range"
+                      min="0"
+                      max="1000000"
+                      step="10000"
+                      value={simRevenue}
+                      onChange={e => setSimRevenue(Number(e.target.value))}
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-slate-700">
+                      <span>SaaS cost efficiency / cuts</span>
+                      <span className="text-purple-600 font-black">{100 - simSaaSPercent}% cut ({fmtINR(calculatedStats.totalSaasMonthly * (simSaaSPercent / 100))} remaining)</span>
+                    </div>
+                    <input 
+                      type="range"
+                      min="10"
+                      max="100"
+                      step="5"
+                      value={simSaaSPercent}
+                      onChange={e => setSimSaaSPercent(Number(e.target.value))}
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-slate-700">
+                      <span>Salaries change (hire or downscale) (₹/mo)</span>
+                      <span className="text-emerald-600 font-code font-black">{simSalariesDelta >= 0 ? '+' : ''}{fmtINR(simSalariesDelta)}</span>
+                    </div>
+                    <input 
+                      type="range"
+                      min="-500000"
+                      max="500000"
+                      step="10000"
+                      value={simSalariesDelta}
+                      onChange={e => setSimSalariesDelta(Number(e.target.value))}
+                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Simulator Outputs */}
+                <div className="bg-slate-50 border rounded-xl p-4 flex flex-col justify-center space-y-4 md:col-span-1">
+                  {(() => {
+                    const simSaaS = calculatedStats.totalSaasMonthly * (simSaaSPercent / 100);
+                    const simSalaries = calculatedStats.totalSalaries + simSalariesDelta;
+                    const simBurn = simSaaS + simSalaries + otherBurn - simRevenue;
+                    const simRunway = simBurn <= 0 ? 999 : cashBank / simBurn;
+                    
+                    return (
+                      <>
+                        <div className="space-y-0.5 text-center">
+                          <span className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Simulated Net Burn</span>
+                          <div className="text-xl font-code font-black text-slate-900">
+                            {simBurn <= 0 ? 'Profitable (₹0)' : `${fmtINR(simBurn)}/mo`}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-0.5 text-center border-t pt-3">
+                          <span className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Simulated Runway</span>
+                          <div className={`text-2xl font-code font-black ${simRunway === 999 ? 'text-emerald-600' : simRunway < 6 ? 'text-rose-600' : 'text-teal-600'}`}>
+                            {simRunway === 999 ? '∞ months' : `${simRunway.toFixed(1)} months`}
+                          </div>
+                        </div>
+                        
+                        {(simRevenue > 0 || simSaaSPercent < 100 || simSalariesDelta !== 0) && (
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setSimRevenue(0);
+                              setSimSaaSPercent(100);
+                              setSimSalariesDelta(0);
+                            }}
+                            className="text-[10px] uppercase font-bold text-indigo-600 hover:text-indigo-800 transition-colors mx-auto mt-2 block"
+                          >
+                            Reset Scenario
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+                
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Main SaaS and Headcount Trackers */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
@@ -706,22 +873,22 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
             {showAddSaas && !readOnly && (
               <Card className="border border-teal-100 bg-teal-50/5 shadow-sm animate-in slide-in-from-top-2 duration-200">
                 <CardContent className="pt-4 pb-4">
-                  <form onSubmit={handleSaveSaas} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs text-slate-700">Subscription / SaaS Name</Label>
-                      <Input 
-                        placeholder="e.g. AWS, Github, ChatGPT..."
-                        value={saasName}
-                        onChange={e => setSaasName(e.target.value)}
-                        required
-                        disabled={readOnly}
-                        className="h-9"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 items-end">
-                      <div className="col-span-2 space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Monthly Cost (₹)</Label>
+                  <form onSubmit={handleSaveSaas} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                      <div className="space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Subscription / SaaS Name</Label>
+                        <Input 
+                          placeholder="e.g. AWS, Github, ChatGPT..."
+                          value={saasName}
+                          onChange={e => setSaasName(e.target.value)}
+                          required
+                          disabled={readOnly}
+                          className="h-9 border-slate-200"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Subscription Cost (₹)</Label>
                         <Input 
                           type="number"
                           placeholder="e.g. 15000"
@@ -729,11 +896,65 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                           onChange={e => setSaasCost(e.target.value === '' ? '' : Number(e.target.value))}
                           required
                           disabled={readOnly}
-                          className="h-9"
+                          className="h-9 border-slate-200"
                         />
                       </div>
-                      <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-9">
-                        Save
+
+                      <div className="space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Billing Cycle</Label>
+                        <Select 
+                          value={saasBilling} 
+                          onValueChange={(val: 'monthly' | 'yearly') => setSaasBilling(val)}
+                          disabled={readOnly}
+                        >
+                          <SelectTrigger className="h-9 border-slate-200">
+                            <SelectValue placeholder="Billing cycle" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="yearly">Yearly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="font-bold text-xs text-slate-700">Category</Label>
+                        <Select 
+                          value={saasCategory} 
+                          onValueChange={(val: any) => setSaasCategory(val)}
+                          disabled={readOnly}
+                        >
+                          <SelectTrigger className="h-9 border-slate-200">
+                            <SelectValue placeholder="Category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map(cat => (
+                              <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-slate-500 font-bold hover:bg-slate-100"
+                        onClick={() => {
+                          setShowAddSaas(false);
+                          setSaasName('');
+                          setSaasCost('');
+                          setSaasBilling('monthly');
+                          setSaasCategory('hosting');
+                          setEditingSaasId(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" size="sm" className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4">
+                        Save Subscription
                       </Button>
                     </div>
                   </form>
@@ -754,43 +975,61 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
                       <TableHeader>
                         <TableRow className="bg-slate-50/75">
                           <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Service</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Monthly Cost</TableHead>
+                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Cost Details</TableHead>
                           <TableHead className="w-16 h-9 py-2"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {subscriptions.map(sub => (
-                          <TableRow key={sub.id} className="hover:bg-slate-50/50 transition-colors">
-                            <TableCell className="font-bold py-2.5">
-                              <span className="text-slate-800 text-sm">{sub.name}</span>
-                            </TableCell>
-                            <TableCell className="font-code font-black text-slate-800 py-2.5">
-                              {fmtINR(sub.cost)}
-                            </TableCell>
-                            <TableCell className="text-right py-2.5 pr-3">
-                              <div className="flex justify-end gap-1">
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full"
-                                  onClick={() => handleEditSaas(sub)}
-                                  disabled={readOnly}
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
-                                  onClick={() => handleDeleteSaas(sub.id)}
-                                  disabled={readOnly}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {subscriptions.map(sub => {
+                          const cat = CATEGORIES.find(c => c.value === sub.category) || CATEGORIES[4];
+                          const monthlyEquivalent = sub.billing === 'yearly' ? sub.cost / 12 : sub.cost;
+                          return (
+                            <TableRow key={sub.id} className="hover:bg-slate-50/50 transition-colors">
+                              <TableCell className="font-bold py-2.5">
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-slate-800 text-sm font-bold">{sub.name}</span>
+                                  <div>
+                                    <Badge variant="outline" className={cn("text-[8px] font-bold uppercase py-0.5 px-2 rounded-full", cat.color)}>
+                                      {cat.label}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-code text-slate-800 py-2.5">
+                                <div className="flex flex-col">
+                                  <span className="font-bold">{fmtINR(sub.cost)} <span className="text-[10px] font-bold text-muted-foreground uppercase">/ {sub.billing === 'yearly' ? 'yr' : 'mo'}</span></span>
+                                  {sub.billing === 'yearly' && (
+                                    <span className="text-[10px] font-semibold text-teal-600 font-sans italic">
+                                      Eq: {fmtINR(monthlyEquivalent)}/mo
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right py-2.5 pr-3">
+                                <div className="flex justify-end gap-1">
+                                  <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full"
+                                    onClick={() => handleEditSaas(sub)}
+                                    disabled={readOnly}
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
+                                  <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
+                                    onClick={() => handleDeleteSaas(sub.id)}
+                                    disabled={readOnly}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
