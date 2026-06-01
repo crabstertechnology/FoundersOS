@@ -35,9 +35,9 @@ export default function FounderOSPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [salesTab, setSalesTab] = useState('crm');
-  const [ezCirkitTab, setEzCirkitTab] = useState('weekly');
-  const [financeTab, setFinanceTab] = useState('weekly');
-  const [operationsTab, setOperationsTab] = useState('weekly');
+  const [ezCirkitTab, setEzCirkitTab] = useState('strategy');
+  const [financeTab, setFinanceTab] = useState('calc');
+  const [operationsTab, setOperationsTab] = useState('ops');
   const [isSalesExpanded, setIsSalesExpanded] = useState(true);
   const [isEZCirkitExpanded, setIsEZCirkitExpanded] = useState(true);
   const [isFinanceExpanded, setIsFinanceExpanded] = useState(true);
@@ -416,17 +416,6 @@ export default function FounderOSPage() {
                     </button>
 
                     <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-
-                    <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'strategy'
@@ -471,6 +460,17 @@ export default function FounderOSPage() {
                     </button>
 
                     <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+
+                    <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
@@ -509,26 +509,6 @@ export default function FounderOSPage() {
 
                 {isFinanceExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -589,6 +569,26 @@ export default function FounderOSPage() {
                     >
                       Founder's Glossary
                     </button>
+                    <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
                   </div>
                 )}
               </div>
@@ -619,26 +619,6 @@ export default function FounderOSPage() {
                 {isOperationsExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
                     <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
-                    <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('ops'); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'operations' && operationsTab === 'ops'
@@ -667,6 +647,26 @@ export default function FounderOSPage() {
                       }`}
                     >
                       Team Chat
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
                     </button>
                   </div>
                 )}
@@ -815,17 +815,6 @@ export default function FounderOSPage() {
                     </button>
 
                     <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-
-                    <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); setIsMobileSidebarOpen(false); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'strategy'
@@ -870,6 +859,17 @@ export default function FounderOSPage() {
                     </button>
 
                     <button
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+
+                    <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); setIsMobileSidebarOpen(false); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
@@ -907,26 +907,6 @@ export default function FounderOSPage() {
 
                 {isFinanceExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); setIsMobileSidebarOpen(false); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -987,6 +967,26 @@ export default function FounderOSPage() {
                     >
                       Founder's Glossary
                     </button>
+                    <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'finance' && financeTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
+                    </button>
                   </div>
                 )}
               </div>
@@ -1016,26 +1016,6 @@ export default function FounderOSPage() {
                 {isOperationsExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
                     <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
-                    <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('ops'); setIsMobileSidebarOpen(false); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         activeTab === 'operations' && operationsTab === 'ops'
@@ -1064,6 +1044,26 @@ export default function FounderOSPage() {
                       }`}
                     >
                       Team Chat
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'weekly'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Weekly Dashboard
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); setIsMobileSidebarOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeTab === 'operations' && operationsTab === 'activity'
+                          ? 'text-primary font-bold bg-primary/10'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                      }`}
+                    >
+                      Daily Activity
                     </button>
                   </div>
                 )}

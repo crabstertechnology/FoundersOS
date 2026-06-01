@@ -132,7 +132,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
   const [customQuestion, setCustomQuestion] = useState('');
 
   // Tab & Quick Task States
-  const [localActiveTab, setLocalActiveTab] = useState('weekly');
+  const [localActiveTab, setLocalActiveTab] = useState('ops');
   const activeTab = activeSubTab !== undefined ? activeSubTab : localActiveTab;
   const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
   const [preselectedAssigneeUid, setPreselectedAssigneeUid] = useState<string>('');
@@ -486,12 +486,6 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
         {activeSubTab === undefined && (
           <div className="flex border-b pb-3 mb-6 overflow-hidden">
             <TabsList className="w-full overflow-x-auto flex justify-start p-1 bg-slate-100/80 rounded-xl md:rounded-full gap-0.5 border-none h-auto md:h-10 whitespace-nowrap scrollbar-none shrink-0">
-              <TabsTrigger value="weekly" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
-                <Activity className="w-3.5 h-3.5" /> Weekly Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
-                <Activity className="w-3.5 h-3.5" /> Daily Activity
-              </TabsTrigger>
               <TabsTrigger value="ops" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
                 <Activity className="w-3.5 h-3.5" /> Runway & SaaS Burn
               </TabsTrigger>
@@ -500,6 +494,12 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
               </TabsTrigger>
               <TabsTrigger value="chat" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
                 <MessageSquare className="w-3.5 h-3.5" /> Team Chat
+              </TabsTrigger>
+              <TabsTrigger value="weekly" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
+                <Activity className="w-3.5 h-3.5" /> Weekly Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
+                <Activity className="w-3.5 h-3.5" /> Daily Activity
               </TabsTrigger>
             </TabsList>
           </div>

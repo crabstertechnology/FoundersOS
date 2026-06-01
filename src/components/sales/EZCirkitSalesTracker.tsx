@@ -41,7 +41,7 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
   const workshops = useMemo(() => profile?.workshops || [], [profile]);
   const targets = useMemo(() => ({ ...DEFAULT_TARGETS, ...(profile?.ezWeeklyTargets || {}) }), [profile]);
 
-  const [localActiveTab, setLocalActiveTab] = useState('weekly');
+  const [localActiveTab, setLocalActiveTab] = useState('strategy');
   const activeTab = activeSubTab !== undefined ? activeSubTab : localActiveTab;
   const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
 
@@ -62,9 +62,6 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
         {activeSubTab === undefined && (
           <div className="flex justify-start border-b pb-3 mb-6 w-full overflow-hidden">
             <TabsList className="flex w-full overflow-x-auto whitespace-nowrap bg-slate-100/80 p-1 rounded-xl md:rounded-full gap-1 md:gap-0.5 border-none h-auto md:h-10 scrollbar-none select-none">
-              <TabsTrigger value="weekly" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
-                <LayoutDashboard className="w-3.5 h-3.5" /> Weekly Dashboard
-              </TabsTrigger>
               <TabsTrigger value="strategy" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <GraduationCap className="w-3.5 h-3.5" /> Sales Strategy
               </TabsTrigger>
@@ -77,23 +74,15 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
               <TabsTrigger value="products" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <Package className="w-3.5 h-3.5" /> Product Sales
               </TabsTrigger>
+              <TabsTrigger value="weekly" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
+                <LayoutDashboard className="w-3.5 h-3.5" /> Weekly Dashboard
+              </TabsTrigger>
               <TabsTrigger value="activity" className="rounded-full px-4 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
                 <Activity className="w-3.5 h-3.5" /> Daily Activity
               </TabsTrigger>
             </TabsList>
           </div>
         )}
-
-        <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <EZCirkitWeeklyDashboard
-            profileRef={profileRef}
-            leads={leads}
-            productSales={productSales}
-            activities={activities}
-            targets={targets}
-            readOnly={readOnly}
-          />
-        </TabsContent>
 
         <TabsContent value="strategy" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <SalesStrategy profileRef={profileRef} readOnly={readOnly} />
@@ -109,6 +98,17 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
 
         <TabsContent value="products" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <EZCirkitProductSales profileRef={profileRef} productSales={productSales} readOnly={readOnly} />
+        </TabsContent>
+
+        <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+          <EZCirkitWeeklyDashboard
+            profileRef={profileRef}
+            leads={leads}
+            productSales={productSales}
+            activities={activities}
+            targets={targets}
+            readOnly={readOnly}
+          />
         </TabsContent>
 
         <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
