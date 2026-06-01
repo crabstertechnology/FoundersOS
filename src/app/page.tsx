@@ -8,7 +8,7 @@ import {
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
   Menu, X, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
-  ShieldAlert, Calendar, Box
+  ShieldAlert, Calendar, Box, Megaphone
 } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
@@ -29,6 +29,7 @@ import { FinanceDailyActivity } from '@/components/finance/FinanceDailyActivity'
 import { SettingsPage } from '@/components/operations/SettingsPage';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { ProductDashboard } from '@/components/product/ProductDashboard';
+import { DigitalMarketingHub } from '@/components/sales/DigitalMarketingHub';
 
 
 export default function FounderOSPage() {
@@ -167,6 +168,7 @@ export default function FounderOSPage() {
     switch (activeTab) {
       case 'dashboard': return 'Founder Dashboard';
       case 'product': return 'AI Product Suite';
+      case 'dm': return 'Digital Marketing Hub';
       case 'sales':
         switch (salesTab) {
           case 'crm': return 'CRM Pipeline';
@@ -316,6 +318,18 @@ export default function FounderOSPage() {
               </button>
 
               <button
+                onClick={() => setActiveTab('dm')}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
+                  activeTab === 'dm'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400'
+                }`}
+                title="Digital Marketing"
+              >
+                <Megaphone className="w-5 h-5" />
+              </button>
+
+              <button
                 onClick={() => { setActiveTab('sales'); }}
                 className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
                   activeTab === 'sales'
@@ -380,6 +394,21 @@ export default function FounderOSPage() {
                 <div className="flex items-center gap-3">
                   <Box className="w-4 h-4" />
                   <span>Product Suite</span>
+                </div>
+              </button>
+
+              {/* Digital Marketing */}
+              <button
+                onClick={() => setActiveTab('dm')}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'dm'
+                    ? 'bg-primary text-white shadow-md shadow-primary/15'
+                    : 'hover:bg-slate-800/50 hover:text-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Megaphone className="w-4 h-4" />
+                  <span>Digital Marketing</span>
                 </div>
               </button>
 
@@ -782,6 +811,20 @@ export default function FounderOSPage() {
                 </div>
               </button>
 
+              <button
+                onClick={() => { setActiveTab('dm'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'dm'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Megaphone className="w-4 h-4" />
+                  <span>Digital Marketing</span>
+                </div>
+              </button>
+
               {/* Sales Section */}
               <div className="space-y-1">
                 <button
@@ -1149,6 +1192,11 @@ export default function FounderOSPage() {
             {/* Product Suite Content */}
             <TabsContent value="product" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
               <ProductDashboard userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
+            </TabsContent>
+
+            {/* Digital Marketing Content */}
+            <TabsContent value="dm" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+              <DigitalMarketingHub userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
             </TabsContent>
 
             {/* Sales Dashboard */}
