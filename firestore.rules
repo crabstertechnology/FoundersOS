@@ -54,9 +54,13 @@ service cloud.firestore {
       allow create, update, delete: if isUser(userId);
       allow list: if false;
 
+      match /integrations/{integrationId} {
+        allow read, write: if true;
+      }
+
       match /companyProfiles/{companyId} {
         allow read: if hasReadAccess(userId);
-        allow write: if hasWriteAccess(userId);
+        allow write: if hasWriteAccess(userId) || (request.auth == null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dmYtConnected', 'dmYtChannelName', 'dmIgConnected', 'dmIgUsername']));
 
         match /fundingRounds/{roundId} {
           allow read: if hasReadAccess(userId);

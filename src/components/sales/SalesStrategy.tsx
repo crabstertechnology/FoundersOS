@@ -12,7 +12,7 @@ import {
   PhoneCall, GraduationCap, Target, AlertCircle, Sparkles, Plus, Trash2, 
   CheckCircle2, XCircle, Info, Copy, Check, BookOpen, BarChart3, HelpCircle, 
   User, MessageSquareCode, Award, ShieldAlert, ArrowRight, TrendingUp,
-  Loader2, Send, RefreshCw
+  Loader2, Send, RefreshCw, History
 } from 'lucide-react';
 import { useDoc } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -43,6 +43,16 @@ export interface MapMyProductHistoryItem {
   timestamp: string;
 }
 
+export interface ColdCallScriptHistoryItem {
+  id: string;
+  productName: string;
+  targetAudience: string;
+  problemSolved: string;
+  buyerType: 'price' | 'quality' | 'urgent' | 'curious';
+  script: ColdCallGeneratorOutput;
+  timestamp: string;
+}
+
 export interface PerformanceLog {
   id: string;
   date: string;
@@ -61,6 +71,10 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
   // Map My Product generated history
   const history: MapMyProductHistoryItem[] = useMemo(() => profile?.ezMapMyProductHistory || [], [profile]);
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
+
+  // Cold Call Script generated history
+  const scriptHistory: ColdCallScriptHistoryItem[] = useMemo(() => profile?.ezColdCallScriptHistory || [], [profile]);
+  const [expandedScriptId, setExpandedScriptId] = useState<string | null>(null);
 
   // Performance Tracker Logs
   const logs: PerformanceLog[] = useMemo(() => profile?.ezSalesPerformanceLogs || [], [profile]);
@@ -137,10 +151,67 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
         buyerType: aiBuyerType
       });
       setAiGeneratedScript(result);
+
+      // Save to Firebase history
+      if (profileRef && !readOnly) {
+        const now = new Date();
+        const formattedDateTime = now.toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }) + ' at ' + now.toLocaleTimeString(undefined, {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const newItem: ColdCallScriptHistoryItem = {
+          id: Math.random().toString(36).substring(2, 9),
+          productName: aiProductName || 'Our Product',
+          targetAudience: aiTargetAudience || 'Target Customer',
+          problemSolved: aiProblemSolved || 'Operational friction',
+          buyerType: aiBuyerType,
+          script: result,
+          timestamp: formattedDateTime
+        };
+
+        const currentHistory = profile?.ezColdCallScriptHistory || [];
+        const updatedHistory = [newItem, ...currentHistory];
+
+        await setDocumentNonBlocking(profileRef, {
+          ezColdCallScriptHistory: updatedHistory
+        }, { merge: true });
+      }
     } catch (err) {
       console.error('Error generating cold call script:', err);
     } finally {
       setAiScriptLoading(false);
+    }
+  };
+
+  const handleLoadScriptFromHistory = (item: ColdCallScriptHistoryItem) => {
+    setAiProductName(item.productName);
+    setAiTargetAudience(item.targetAudience);
+    setAiProblemSolved(item.problemSolved);
+    setAiBuyerType(item.buyerType);
+    setAiGeneratedScript(item.script);
+  };
+
+  const handleDeleteScriptItem = async (itemId: string) => {
+    if (!profileRef || readOnly) return;
+    if (!confirm('Are you sure you want to delete this cold call script from history?')) return;
+    try {
+      const currentHistory = profile?.ezColdCallScriptHistory || [];
+      const updatedHistory = currentHistory.filter((item: ColdCallScriptHistoryItem) => item.id !== itemId);
+      await setDocumentNonBlocking(profileRef, {
+        ezColdCallScriptHistory: updatedHistory
+      }, { merge: true });
+      
+      // If the currently displayed generated script is the one deleted, clear it
+      if (aiGeneratedScript && aiGeneratedScript.fullDraftScript === scriptHistory.find(h => h.id === itemId)?.script.fullDraftScript) {
+        setAiGeneratedScript(null);
+      }
+    } catch (err) {
+      console.error('Error deleting cold call script history item:', err);
     }
   };
 
@@ -1902,6 +1973,139 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </div>
                     );
                   })()}
+                </CardContent>
+              </Card>
+
+              {/* Cold Call Script History Card */}
+              <Card className="border-2 border-indigo-150 shadow-sm bg-white overflow-hidden">
+                <CardHeader className="pb-3 border-b bg-indigo-50/10 flex flex-row items-center justify-between gap-3">
+                  <CardTitle className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                    <History className="w-4 h-4 text-indigo-650" />
+                    Script History
+                  </CardTitle>
+                  <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
+                    {scriptHistory.length} Saved
+                  </Badge>
+                </CardHeader>
+                <CardContent className="p-4">
+                  {scriptHistory.length === 0 ? (
+                    <div className="py-6 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                      <Sparkles className="w-8 h-8 text-indigo-200" />
+                      <div className="text-[11px] font-extrabold text-slate-500">No scripts generated yet</div>
+                      <p className="text-[10px] text-slate-400 font-semibold leading-relaxed max-w-xs text-center">
+                        Input details and click <strong className="text-indigo-600 font-black">"Generate"</strong> to create and auto-save a script!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 scrollbar-none">
+                      {scriptHistory.map((item) => {
+                        const isExpanded = expandedScriptId === item.id;
+                        return (
+                          <div 
+                            key={item.id} 
+                            className={`border rounded-xl transition-all duration-200 overflow-hidden ${
+                              isExpanded 
+                                ? 'bg-indigo-50/30 border-indigo-200 shadow-sm' 
+                                : 'bg-slate-50/40 hover:bg-slate-50 border-slate-200'
+                            }`}
+                          >
+                            {/* Summary Header */}
+                            <div className="p-3 flex items-start justify-between gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedScriptId(isExpanded ? null : item.id)}
+                                className="flex-1 text-left space-y-1"
+                              >
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <Badge className="bg-indigo-100 text-indigo-800 text-[9px] font-black uppercase px-1.5 border-none h-4">
+                                    {item.buyerType}-focused
+                                  </Badge>
+                                  <span className="text-[9px] font-bold text-slate-400 font-mono">
+                                    {item.timestamp}
+                                  </span>
+                                </div>
+                                <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-600 transition-colors pt-0.5">
+                                  {item.productName} for {item.targetAudience}
+                                </h5>
+                              </button>
+                              
+                              <Button
+                                size="icon"
+                                type="button"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteScriptItem(item.id);
+                                }}
+                                className="h-6 w-6 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+
+                            {/* Collapsible Expanded Content */}
+                            {isExpanded && (
+                              <div className="px-3 pb-3 border-t border-indigo-100/60 pt-3 bg-white space-y-3 bg-gradient-to-b from-white to-slate-50/30 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="space-y-1">
+                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Hook:</span>
+                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.hook}</p>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Problem:</span>
+                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.problem}</p>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Solution:</span>
+                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.solution}</p>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Outcome:</span>
+                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.outcome}</p>
+                                </div>
+
+                                <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 space-y-1">
+                                  <span className="text-[9px] uppercase font-black text-indigo-900 block font-bold">Full Script Draft:</span>
+                                  <p className="text-[11px] leading-relaxed text-slate-850 italic font-semibold">
+                                    "{item.script.fullDraftScript}"
+                                  </p>
+                                </div>
+
+                                <div className="bg-rose-50/50 border border-rose-100/60 rounded-lg p-2.5 space-y-1">
+                                  <span className="text-[9px] uppercase font-black text-rose-800 block font-bold">Objection handling:</span>
+                                  <p className="text-[11px] leading-relaxed text-slate-800 font-semibold whitespace-pre-line">
+                                    {item.script.objectionHandlingStrategy}
+                                  </p>
+                                </div>
+
+                                <div className="flex gap-2 pt-1">
+                                  <Button
+                                    size="sm"
+                                    type="button"
+                                    onClick={() => handleLoadScriptFromHistory(item)}
+                                    className="flex-1 h-7 text-[10px] font-bold bg-indigo-650 hover:bg-indigo-750 text-white rounded-md border-none"
+                                  >
+                                    Load into Editor
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => handleCopy(item.script.fullDraftScript, `hist-copy-${item.id}`)}
+                                    className="h-7 text-[10px] font-bold border rounded-md"
+                                  >
+                                    {copiedText === `hist-copy-${item.id}` ? 'Copied!' : 'Copy Script'}
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
