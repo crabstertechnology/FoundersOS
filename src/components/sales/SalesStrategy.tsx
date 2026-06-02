@@ -2378,8 +2378,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
         <DialogContent className="max-w-[95vw] w-full md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[1200px] h-[90vh] md:h-[85vh] flex flex-col p-0 overflow-hidden bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl shadow-2xl">
           {selectedHistoryScript && (
             <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="p-6 border-b border-slate-850 bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+              <DialogHeader className="p-6 border-b border-slate-850 bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0 space-y-0 text-left">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className="bg-indigo-900/60 text-indigo-300 border border-indigo-850/50 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
@@ -2389,12 +2388,12 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       Generated on {selectedHistoryScript.timestamp}
                     </span>
                   </div>
-                  <h3 className="text-xl font-black text-white tracking-tight pt-1">
+                  <DialogTitle className="text-xl font-black text-white tracking-tight pt-1">
                     {selectedHistoryScript.productName}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1 font-semibold leading-relaxed">
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-400 mt-1 font-semibold leading-relaxed">
                     Target ICP: <span className="text-indigo-400 font-extrabold">{selectedHistoryScript.targetAudience}</span> &bull; Core Problem: <span className="text-slate-300 font-medium">{selectedHistoryScript.problemSolved}</span>
-                  </p>
+                  </DialogDescription>
                 </div>
                 
                 <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center mr-8">
@@ -2429,7 +2428,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     )}
                   </Button>
                 </div>
-              </div>
+              </DialogHeader>
 
               {/* Scrollable Workspace Content */}
               <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-900 scrollbar-none">
