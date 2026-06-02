@@ -113,19 +113,49 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
     return tasksRaw.filter((t: any) => t.category?.toLowerCase() === 'finance');
   }, [tasksRaw]);
 
-  // Total stats
+  // Current active week and month focus
+  const currentWeekIndex = profile?.currentWeekIndex || 0;
+  const currentMonthIndex = profile?.currentMonthIndex || 0;
+  const totalWeeks = profile?.strategicPlan?.weeklyPlans?.length || 4;
+  const totalMonths = profile?.strategicPlan?.monthlyMilestones?.length || 3;
+
+  // Filter tasks belonging to current active week
+  const currentWeekTasks = useMemo(() => {
+    return allFinanceTasks.filter((t: any) => {
+      const wIdx = t.weekIndex !== undefined ? t.weekIndex : 0;
+      return wIdx === currentWeekIndex;
+    });
+  }, [allFinanceTasks, currentWeekIndex]);
+
+  // Total stats for current week
   const totalStats = useMemo(() => {
-    const total = allFinanceTasks.length;
-    const completed = allFinanceTasks.filter((t: any) => t.status === 'done').length;
+    const total = currentWeekTasks.length;
+    const completed = currentWeekTasks.filter((t: any) => t.status === 'done').length;
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { total, completed, pct };
-  }, [allFinanceTasks]);
+  }, [currentWeekTasks]);
 
-  // Recommended tasks (from AI Strategic Plan)
+  // Recommended tasks (from AI Strategic Plan, adapted to active week)
   const recommendedTasks = useMemo(() => {
+    const weeklyPlans = profile?.strategicPlan?.weeklyPlans || [];
+    const activeWeekPlan = weeklyPlans[currentWeekIndex];
+
+    if (activeWeekPlan) {
+      const actions = activeWeekPlan.financeActions || [];
+      if (actions.length > 0) {
+        return actions.map((act: string) => ({
+          title: act,
+          description: `Strategic finance action item scheduled for ${activeWeekPlan.week || 'this week'}.`,
+          priority: 'high',
+          category: 'Finance'
+        }));
+      }
+    }
+
+    // Fallback to dailyTasks
     const daily = profile?.strategicPlan?.dailyTasks || [];
     return daily.filter((t: any) => t.category?.toLowerCase() === 'finance');
-  }, [profile?.strategicPlan?.dailyTasks]);
+  }, [profile?.strategicPlan?.dailyTasks, profile?.strategicPlan?.weeklyPlans, currentWeekIndex]);
 
   // Find already assigned tasks by title
   const assignedTasksMap = useMemo(() => {
@@ -150,7 +180,8 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
           assignedToUid: assigneeUid,
           assignedToName: assignee?.name || 'Unassigned',
           assignedToEmail: assignee?.email || '',
-          assignedAt: new Date().toISOString()
+          assignedAt: new Date().toISOString(),
+          weekIndex: currentWeekIndex
         }, { merge: true });
       } else {
         const tasksCollectionRef = collection(profileRef, 'tasks');
@@ -165,7 +196,8 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
           assignedToEmail: assignee?.email || '',
           category: 'Finance',
           createdAt: serverTimestamp(),
-          assignedAt: new Date().toISOString()
+          assignedAt: new Date().toISOString(),
+          weekIndex: currentWeekIndex
         };
         await addDocumentNonBlocking(tasksCollectionRef, payload);
       }
@@ -201,6 +233,25 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
       payload.completedAt = null;
     }
     await setDocumentNonBlocking(taskDocRef, payload, { merge: true });
+
+    // Check if this completes all tasks for the current week
+    const updatedTasks = currentWeekTasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
+    const total = updatedTasks.length;
+    const completed = updatedTasks.filter((t: any) => t.status === 'done').length;
+
+    if (newStatus === 'done' && total > 0 && completed === total) {
+      const nextWeekIndex = currentWeekIndex + 1;
+      if (nextWeekIndex < totalWeeks) {
+        await setDocumentNonBlocking(profileRef, { currentWeekIndex: nextWeekIndex }, { merge: true });
+      } else {
+        // Reset week to 0, advance month index
+        const nextMonthIndex = currentMonthIndex + 1;
+        await setDocumentNonBlocking(profileRef, {
+          currentWeekIndex: 0,
+          currentMonthIndex: nextMonthIndex
+        }, { merge: true });
+      }
+    }
   };
 
   return (
@@ -212,22 +263,66 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
         <Card className="border-2 border-indigo-100 bg-white shadow-sm overflow-hidden lg:col-span-2 flex flex-col justify-between">
           <div>
             <CardHeader className="bg-slate-50/50 border-b pb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-800 flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-indigo-600" />
                     Strategic Finance Actions
                   </CardTitle>
-                  <CardDescription className="text-xs">
-                    Team-wide strategic execution tasks mapped to your 12-month goals.
+                  <CardDescription className="text-xs mt-1">
+                    Week {currentWeekIndex + 1} &bull; Month {currentMonthIndex + 1} execution tasks.
                   </CardDescription>
                 </div>
-                {totalStats.total > 0 && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-black text-slate-700">{totalStats.completed}/{totalStats.total} Done</span>
-                    <span className="text-xs font-black text-indigo-600">({totalStats.pct}%)</span>
+                
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border">
+                    <span className="text-[9px] font-black uppercase text-slate-500 pl-1.5 shrink-0">View Focus:</span>
+                    <Select 
+                      value={String(currentMonthIndex)} 
+                      onValueChange={async (val) => {
+                        if (profileRef) {
+                          await setDocumentNonBlocking(profileRef, { currentMonthIndex: Number(val) }, { merge: true });
+                        }
+                      }}
+                      disabled={readOnly}
+                    >
+                      <SelectTrigger className="h-6 text-[10px] w-24 bg-white border-none shadow-none font-bold">
+                        <SelectValue placeholder="Month..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: totalMonths }).map((_, mIdx) => (
+                          <SelectItem key={mIdx} value={String(mIdx)}>Month {mIdx + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select 
+                      value={String(currentWeekIndex)} 
+                      onValueChange={async (val) => {
+                        if (profileRef) {
+                          await setDocumentNonBlocking(profileRef, { currentWeekIndex: Number(val) }, { merge: true });
+                        }
+                      }}
+                      disabled={readOnly}
+                    >
+                      <SelectTrigger className="h-6 text-[10px] w-24 bg-white border-none shadow-none font-bold">
+                        <SelectValue placeholder="Week..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: totalWeeks }).map((_, wIdx) => (
+                          <SelectItem key={wIdx} value={String(wIdx)}>Week {wIdx + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
+
+                  {totalStats.total > 0 && (
+                    <div className="flex items-center gap-1.5 shrink-0 bg-indigo-50/50 px-2 py-1 rounded-lg border border-indigo-100">
+                      <span className="text-xs font-black text-slate-700">{totalStats.completed}/{totalStats.total} Done</span>
+                      <span className="text-xs font-black text-indigo-600">({totalStats.pct}%)</span>
+                    </div>
+                  )}
+                </div>
               </div>
               {totalStats.total > 0 && (
                 <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-3 border">
@@ -236,14 +331,14 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
               )}
             </CardHeader>
             <CardContent className="p-0 divide-y divide-slate-100">
-              {allFinanceTasks.length === 0 ? (
+              {currentWeekTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
                   <Clock className="w-8 h-8 text-indigo-200" />
-                  <p className="text-xs font-semibold">No strategic Finance tasks assigned currently.</p>
-                  <p className="text-[10px] text-slate-400 font-medium">Assign recommended tasks from the AI recommendations panel on the right.</p>
+                  <p className="text-xs font-semibold">No strategic Finance tasks assigned for Week {currentWeekIndex + 1}.</p>
+                  <p className="text-[10px] text-slate-400 font-semibold">Assign recommended tasks from the AI recommendations panel on the right.</p>
                 </div>
               ) : (
-                allFinanceTasks.map((task: any) => {
+                currentWeekTasks.map((task: any) => {
                   const isDone = task.status === 'done';
                   const isMe = task.assignedToUid === user?.uid;
                   return (

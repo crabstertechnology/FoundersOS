@@ -552,6 +552,29 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   }
 
   const strategicPlan = selectedHistoricalPlan ? selectedHistoricalPlan.strategicPlan : profile?.strategicPlan;
+  const currentMonthIndex = profile?.currentMonthIndex || 0;
+  const completedMonthlyMilestones = profile?.completedMonthlyMilestones || [];
+
+  const handleToggleMonthlyMilestone = async (milestoneMonth: string, idx: number) => {
+    if (!profileRef) return;
+    let updated: string[];
+    let newMonthIndex = currentMonthIndex;
+    
+    if (completedMonthlyMilestones.includes(milestoneMonth)) {
+      updated = completedMonthlyMilestones.filter((m: string) => m !== milestoneMonth);
+      newMonthIndex = idx;
+    } else {
+      updated = [...completedMonthlyMilestones, milestoneMonth];
+      newMonthIndex = Math.min((strategicPlan?.monthlyMilestones?.length || 3) - 1, idx + 1);
+    }
+    
+    await setDocumentNonBlocking(profileRef, { 
+      completedMonthlyMilestones: updated,
+      currentMonthIndex: newMonthIndex,
+      currentWeekIndex: 0 // Reset week to Week 1 when month changes
+    }, { merge: true });
+  };
+
   const hasPlan = strategicPlan && !isEditingGoal;
 
   return (
@@ -1021,27 +1044,72 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               {/* 2. Monthly Milestones Tab */}
               {activePlannerTab === 'milestones' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {strategicPlan.monthlyMilestones?.map((milestone: any, idx: number) => (
-                    <Card key={idx} className="border shadow-sm flex flex-col justify-between hover:border-indigo-200 transition-all">
-                      <CardHeader className="pb-3 border-b bg-slate-50/50">
-                        <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 text-[10px] uppercase font-bold w-fit mb-2">
-                          {milestone.month}
-                        </Badge>
-                        <CardTitle className="text-sm font-bold text-slate-800 leading-snug">{milestone.milestone}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-4 flex-1">
-                        <span className="text-[9px] uppercase font-black tracking-widest text-slate-400 block mb-2">KEY METRICS TO MONITOR</span>
-                        <ul className="space-y-1.5">
-                          {milestone.keyMetrics?.map((metric: string, mIdx: number) => (
-                            <li key={mIdx} className="text-xs text-slate-600 font-semibold flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
-                              <span>{metric}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {strategicPlan.monthlyMilestones?.map((milestone: any, idx: number) => {
+                    const isCompleted = completedMonthlyMilestones.includes(milestone.month);
+                    const isActive = idx === currentMonthIndex;
+                    return (
+                      <Card key={idx} className={`border-2 shadow-sm flex flex-col justify-between hover:border-indigo-200 transition-all ${
+                        isCompleted ? 'border-emerald-200 bg-emerald-50/5' : 
+                        isActive ? 'border-indigo-300 bg-indigo-50/5' : 'border-slate-200'
+                      }`}>
+                        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-row items-center justify-between gap-2">
+                          <div className="space-y-1">
+                            <Badge className={`${
+                              isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                              isActive ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
+                              'bg-slate-100 text-slate-800 border-slate-200'
+                            } text-[10px] uppercase font-bold w-fit`}>
+                              {milestone.month}
+                            </Badge>
+                            {isCompleted && (
+                              <Badge className="bg-emerald-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5">
+                                Achieved
+                              </Badge>
+                            )}
+                            {isActive && !isCompleted && (
+                              <Badge className="bg-indigo-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5 animate-pulse">
+                                Current
+                              </Badge>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-4 flex-1 space-y-4 flex flex-col justify-between">
+                          <div className="space-y-4">
+                            <div>
+                              <CardTitle className="text-sm font-bold text-slate-800 leading-snug">{milestone.milestone}</CardTitle>
+                            </div>
+                            
+                            <div>
+                              <span className="text-[9px] uppercase font-black tracking-widest text-slate-400 block mb-2">KEY METRICS TO MONITOR</span>
+                              <ul className="space-y-1.5">
+                                {milestone.keyMetrics?.map((metric: string, mIdx: number) => (
+                                  <li key={mIdx} className="text-xs text-slate-650 font-semibold flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
+                                    <span>{metric}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          {!readOnly && (
+                            <div className="pt-2 mt-auto">
+                              <Button
+                                size="sm"
+                                variant={isCompleted ? "outline" : "default"}
+                                onClick={() => handleToggleMonthlyMilestone(milestone.month, idx)}
+                                className={`w-full text-xs font-bold ${
+                                  isCompleted ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                }`}
+                              >
+                                {isCompleted ? 'Mark as Incomplete' : 'Mark Milestone Achieved'}
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
 
