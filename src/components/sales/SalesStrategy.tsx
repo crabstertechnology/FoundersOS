@@ -2375,10 +2375,10 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
         open={!!selectedHistoryScript} 
         onOpenChange={(open) => !open && setSelectedHistoryScript(null)}
       >
-        <DialogContent className="max-w-[95vw] w-full md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[1200px] h-[90vh] md:h-[85vh] flex flex-col p-0 overflow-hidden bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl shadow-2xl">
+        <DialogContent className="max-w-[95vw] w-full md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[1200px] max-h-[90vh] overflow-y-auto p-0 bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl shadow-2xl scrollbar-none">
           {selectedHistoryScript && (
-            <div className="flex flex-col h-full">
-              <DialogHeader className="p-6 border-b border-slate-850 bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0 space-y-0 text-left">
+            <div className="flex flex-col">
+              <DialogHeader className="p-6 border-b border-slate-850 bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 space-y-0 text-left">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className="bg-indigo-900/60 text-indigo-300 border border-indigo-850/50 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
@@ -2430,8 +2430,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                 </div>
               </DialogHeader>
 
-              {/* Scrollable Workspace Content */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-900 scrollbar-none">
+              {/* Workspace Content */}
+              <div className="p-6 md:p-8 bg-slate-900">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                   
                   {/* Left Column: Script Breakdown Blocks (col-span-7) */}
