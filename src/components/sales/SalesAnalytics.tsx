@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { 
   BarChart3, Plus, Trash2, Edit2, Sparkles, Loader2, Target, 
@@ -112,10 +113,7 @@ export function SalesAnalytics({
   const [activeReport, setActiveReport] = useState<any | null>(null);
   const [customQuestion, setCustomQuestion] = useState('');
 
-  // Forecast Simulator States
-  const [simTargetMRR, setSimTargetMRR] = useState<number>(1000000); // 10 L default
-  const [simAvgDealSize, setSimAvgDealSize] = useState<number>(150000);
-  const [simConversionRate, setSimConversionRate] = useState<number>(20);
+
 
   // Derived CRM Data
   const manualPipeline = useMemo<Deal[]>(() => {
@@ -633,350 +631,274 @@ export function SalesAnalytics({
 
       </div>
 
-      {/* Main Layout: CRM & Funnel Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Deal Input & Funnel Chart */}
-        <div className="lg:col-span-1 space-y-6">
-          
-          {/* CRM Form */}
-          {!readOnly && (
-            <Card className="border shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                  {editingId ? 'Edit Sales Deal' : 'Add New Sales Deal'}
-                </CardTitle>
-                <CardDescription>
-                  Track a lead through your pipeline phases.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSaveDeal} className="space-y-4">
-                  <div className="space-y-1">
-                    <Label className="font-bold text-xs">Deal / Opportunity Name</Label>
-                    <Input 
-                      placeholder="e.g. Enterprise License..."
-                      value={dealName} 
-                      onChange={e => setDealName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Company Name</Label>
-                      <Input 
-                        placeholder="e.g. Acme Corp..."
-                        value={company} 
-                        onChange={e => setCompany(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Value (₹)</Label>
-                      <Input 
-                        type="number"
-                        placeholder="e.g. 50000"
-                        value={value} 
-                        onChange={e => setValue(e.target.value === '' ? '' : Number(e.target.value))}
-                        required
-                      />
-                    </div>
-                  </div>
+      {/* 1. Horizontal CSS Funnel Visualizer */}
+      <Card className="border shadow-sm bg-white">
+        <CardHeader className="pb-2 border-b bg-slate-50/50">
+          <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+            <span>Sales Pipeline Funnel</span>
+            <span className="text-xs font-semibold text-indigo-600">Horizontal Stage Flow</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row items-stretch gap-4 justify-between">
+            {funnelStages.map((fs, idx) => {
+              const count = stageStats[fs.value]?.count || 0;
+              const totalVal = stageStats[fs.value]?.totalValue || 0;
+              // Calculate decreasing height percentage to make it look like a horizontal tapering funnel
+              const heightPercent = Math.max(100 - idx * 18, 28);
+              
+              const stageStyles = {
+                lead: 'bg-slate-50 border-slate-200 text-slate-800',
+                contacted: 'bg-blue-50 border-blue-200 text-blue-800',
+                demo: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+                proposal: 'bg-amber-50 border-amber-200 text-amber-800',
+                won: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+              }[fs.value as 'lead' | 'contacted' | 'demo' | 'proposal' | 'won'] || 'bg-slate-50 border-slate-200';
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Stage</Label>
-                      <Select value={stage} onValueChange={handleStageChange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STAGES.map(s => (
-                            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="font-bold text-xs">Probability (%)</Label>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        max="100"
-                        placeholder="e.g. 20"
-                        value={probability} 
-                        onChange={e => setProbability(e.target.value === '' ? '' : Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
+              const barColor = {
+                lead: 'bg-slate-500',
+                contacted: 'bg-blue-500',
+                demo: 'bg-indigo-500',
+                proposal: 'bg-amber-500',
+                won: 'bg-emerald-500'
+              }[fs.value as 'lead' | 'contacted' | 'demo' | 'proposal' | 'won'] || 'bg-indigo-600';
 
-                  <div className="space-y-1">
-                    <Label className="font-bold text-xs">Target Close Date</Label>
-                    <Input 
-                      type="date"
-                      value={closeDate} 
-                      onChange={e => setCloseDate(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
-                      {editingId ? 'Update Deal' : 'Add Opportunity'}
-                    </Button>
-                    {editingId && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        onClick={() => {
-                          setEditingId(null);
-                          setDealName('');
-                          setCompany('');
-                          setValue('');
-                          setStage('lead');
-                          setProbability(10);
-                          setCloseDate('');
-                          setEditingId(null);
+              return (
+                <React.Fragment key={fs.value}>
+                  {idx > 0 && (
+                    <div className="hidden md:flex items-center justify-center text-slate-350 shrink-0">
+                      <ChevronRight className="w-5 h-5 text-indigo-400" />
+                    </div>
+                  )}
+                  
+                  <div className={`flex-1 min-w-[140px] flex flex-col justify-between p-4 rounded-xl border hover:shadow-md transition-all duration-300 ${stageStyles}`}>
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-70">{fs.label}</div>
+                      <div className="text-xl font-code font-black">{count} {count === 1 ? 'deal' : 'deals'}</div>
+                      <div className="text-xs font-bold font-code opacity-80">{fmtINR(totalVal)}</div>
+                    </div>
+                    
+                    <div className="mt-4 flex items-end justify-center h-12 w-full bg-black/5 rounded-lg p-1 border border-dashed border-black/10">
+                      <div 
+                        className={`${barColor} w-full rounded flex items-center justify-center text-[10px] text-white font-black transition-all duration-500 shadow-sm`}
+                        style={{ 
+                          height: `${heightPercent}%`,
+                          opacity: 0.85
                         }}
                       >
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* CSS Funnel Visualizer */}
-          <Card className="border shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                Sales Pipeline Funnel
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              <div className="flex flex-col gap-3">
-                {funnelStages.map((fs, idx) => {
-                  const count = stageStats[fs.value]?.count || 0;
-                  const totalVal = stageStats[fs.value]?.totalValue || 0;
-                  const ratio = maxStageCount > 0 ? (count / maxStageCount) * 100 : 0;
-                  // Calculate decreasing width to make it look like a funnel
-                  const widthPercent = Math.max(100 - idx * 15, 30);
-                  
-                  return (
-                    <div key={fs.value} className="space-y-1">
-                      <div className="flex justify-between text-xs font-bold text-slate-700">
-                        <span>{fs.label}</span>
-                        <span className="font-mono text-indigo-600">{count} deals ({fmtINR(totalVal)})</span>
-                      </div>
-                      <div className="flex justify-center w-full bg-slate-50 p-1 rounded-lg border border-dashed">
-                        <div 
-                          className="bg-indigo-600/80 h-6 rounded flex items-center justify-center text-[10px] text-white font-black transition-all duration-500 shadow-sm"
-                          style={{ 
-                            width: `${widthPercent}%`,
-                            opacity: 0.4 + (idx * 0.15) // Gradient effect
-                          }}
-                        >
-                          {count > 0 ? `${count}` : ''}
-                        </div>
+                        {count > 0 ? count : ''}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  </div>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* CRM Deal Tracker Table */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* CRM Deal list */}
-          <Card className="border shadow-sm bg-white overflow-hidden">
-            <CardHeader className="pb-4 border-b">
-              <CardTitle className="text-base font-black text-slate-900">
-                CRM Opportunity Board
-              </CardTitle>
-              <CardDescription>
-                Active opportunities across all sales cycles. Click edit to advance deals.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              {deals.length === 0 ? (
-                <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center space-y-4">
-                  <AlertCircle className="w-10 h-10 text-indigo-200" />
-                  <p className="text-sm font-semibold">Your CRM pipeline is empty. Add deals on the left to start tracking sales.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="font-black text-xs uppercase text-slate-500">Deal & Company</TableHead>
-                        <TableHead className="font-black text-xs uppercase text-slate-500">Value (₹)</TableHead>
-                        <TableHead className="font-black text-xs uppercase text-slate-500">Stage</TableHead>
-                        <TableHead className="font-black text-xs uppercase text-slate-500">Probability</TableHead>
-                        <TableHead className="font-black text-xs uppercase text-slate-500">Est. Close</TableHead>
-                        {!readOnly && <TableHead className="w-20 text-right"></TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {deals.map(deal => {
-                        const stageInfo = STAGES.find(s => s.value === deal.stage);
-                        const isManual = deal.sourceType === 'manual';
-                        return (
-                          <TableRow key={deal.id} className="hover:bg-slate-50 transition-colors">
-                            <TableCell className="font-bold py-4">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <div className="text-slate-900">{deal.dealName}</div>
-                                {deal.sourceType && deal.sourceType !== 'manual' && (
-                                  <Badge className="bg-slate-100 text-slate-700 text-[8px] uppercase tracking-wider font-extrabold border border-slate-200 rounded-sm px-1.5 py-0.5">
-                                    {deal.sourceType}
-                                  </Badge>
+      {/* Edit Deal Modal Dialog */}
+      <Dialog open={editingId !== null} onOpenChange={(open) => { if (!open) { setEditingId(null); } }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Sales Deal</DialogTitle>
+            <DialogDescription>
+              Update this opportunity's details and sales stage.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveDeal} className="space-y-4">
+            <div className="space-y-1">
+              <Label className="font-bold text-xs">Deal / Opportunity Name</Label>
+              <Input 
+                placeholder="e.g. Enterprise License..."
+                value={dealName} 
+                onChange={e => setDealName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="font-bold text-xs">Company Name</Label>
+                <Input 
+                  placeholder="e.g. Acme Corp..."
+                  value={company} 
+                  onChange={e => setCompany(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="font-bold text-xs">Value (₹)</Label>
+                <Input 
+                  type="number"
+                  placeholder="e.g. 50000"
+                  value={value} 
+                  onChange={e => setValue(e.target.value === '' ? '' : Number(e.target.value))}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="font-bold text-xs">Stage</Label>
+                <Select value={stage} onValueChange={handleStageChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STAGES.map(s => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="font-bold text-xs">Probability (%)</Label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  max="100"
+                  placeholder="e.g. 20"
+                  value={probability} 
+                  onChange={e => setProbability(e.target.value === '' ? '' : Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="font-bold text-xs">Target Close Date</Label>
+              <Input 
+                type="date"
+                value={closeDate} 
+                onChange={e => setCloseDate(e.target.value)}
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2 justify-end">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => {
+                  setEditingId(null);
+                  setDealName('');
+                  setCompany('');
+                  setValue('');
+                  setStage('lead');
+                  setProbability(10);
+                  setCloseDate('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+                Update Deal
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* CRM Opportunity Board */}
+      <div className="space-y-6">
+        
+        {/* CRM Deal list */}
+        <Card className="border shadow-sm bg-white overflow-hidden">
+          <CardHeader className="pb-4 border-b">
+            <CardTitle className="text-base font-black text-slate-900">
+              CRM Opportunity Board
+            </CardTitle>
+            <CardDescription>
+              Active opportunities across all sales cycles. Click edit to advance deals.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {deals.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center space-y-4">
+                <AlertCircle className="w-10 h-10 text-indigo-200" />
+                <p className="text-sm font-semibold">Your CRM pipeline is empty. Track deals using Lead Tracker, Workshop Tracker, or Product Sales.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="font-black text-xs uppercase text-slate-500">Deal & Company</TableHead>
+                      <TableHead className="font-black text-xs uppercase text-slate-500">Value (₹)</TableHead>
+                      <TableHead className="font-black text-xs uppercase text-slate-500">Stage</TableHead>
+                      <TableHead className="font-black text-xs uppercase text-slate-500">Probability</TableHead>
+                      <TableHead className="font-black text-xs uppercase text-slate-500">Est. Close</TableHead>
+                      {!readOnly && <TableHead className="w-20 text-right"></TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {deals.map(deal => {
+                      const stageInfo = STAGES.find(s => s.value === deal.stage);
+                      const isManual = deal.sourceType === 'manual';
+                      return (
+                        <TableRow key={deal.id} className="hover:bg-slate-50 transition-colors">
+                          <TableCell className="font-bold py-4">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="text-slate-900">{deal.dealName}</div>
+                              {deal.sourceType && deal.sourceType !== 'manual' && (
+                                <Badge className="bg-slate-100 text-slate-700 text-[8px] uppercase tracking-wider font-extrabold border border-slate-200 rounded-sm px-1.5 py-0.5">
+                                  {deal.sourceType}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-medium">{deal.company}</div>
+                          </TableCell>
+                          <TableCell className="font-code font-black text-slate-800">
+                            {fmtINR(deal.value)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`border uppercase text-[9px] font-black ${stageInfo?.color}`}>
+                              {stageInfo?.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-mono font-bold text-slate-700">
+                            {deal.probability}%
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-500 font-mono">
+                            {deal.closeDate}
+                          </TableCell>
+                          {!readOnly && (
+                            <TableCell className="text-right py-4">
+                              <div className="flex justify-end items-center gap-1.5 pr-2">
+                                {isManual ? (
+                                  <>
+                                    <Button 
+                                      size="icon" 
+                                      variant="ghost" 
+                                      className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-full"
+                                      onClick={() => handleEditDeal(deal)}
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                    <Button 
+                                      size="icon" 
+                                      variant="ghost" 
+                                      className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
+                                      onClick={() => handleDeleteDeal(deal.id)}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <span className="text-[10px] text-muted-foreground font-bold italic px-2 whitespace-nowrap bg-slate-50 rounded-md py-1 border border-slate-100">
+                                    Tracked via {deal.sourceType === 'lead' ? 'Lead Tracker' : deal.sourceType === 'workshop' ? 'Workshop Tracker' : 'Product Sales'}
+                                  </span>
                                 )}
                               </div>
-                              <div className="text-xs text-muted-foreground font-medium">{deal.company}</div>
                             </TableCell>
-                            <TableCell className="font-code font-black text-slate-800">
-                              {fmtINR(deal.value)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={`border uppercase text-[9px] font-black ${stageInfo?.color}`}>
-                                {stageInfo?.label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-mono font-bold text-slate-700">
-                              {deal.probability}%
-                            </TableCell>
-                            <TableCell className="text-xs text-slate-500 font-mono">
-                              {deal.closeDate}
-                            </TableCell>
-                            {!readOnly && (
-                              <TableCell className="text-right py-4">
-                                <div className="flex justify-end items-center gap-1.5 pr-2">
-                                  {isManual ? (
-                                    <>
-                                      <Button 
-                                        size="icon" 
-                                        variant="ghost" 
-                                        className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-full"
-                                        onClick={() => handleEditDeal(deal)}
-                                      >
-                                        <Edit2 className="w-3.5 h-3.5" />
-                                      </Button>
-                                      <Button 
-                                        size="icon" 
-                                        variant="ghost" 
-                                        className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full"
-                                        onClick={() => handleDeleteDeal(deal.id)}
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <span className="text-[10px] text-muted-foreground font-bold italic px-2 whitespace-nowrap bg-slate-50 rounded-md py-1 border border-slate-100">
-                                      Tracked via {deal.sourceType === 'lead' ? 'Lead Tracker' : deal.sourceType === 'workshop' ? 'Workshop Tracker' : 'Product Sales'}
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Forecasting Calculator */}
-          <Card className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base font-black text-slate-900">
-                Sales Target & Pipeline Gap Forecast
-              </CardTitle>
-              <CardDescription>
-                Simulate how many opportunities you need to close in order to reach your MRR goals.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-1.5">
-                  <Label className="font-bold text-xs">Target MRR (₹)</Label>
-                  <Input 
-                    type="number"
-                    value={simTargetMRR}
-                    onChange={e => setSimTargetMRR(Number(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="font-bold text-xs">Avg Monthly Contract Value (₹)</Label>
-                  <Input 
-                    type="number"
-                    value={simAvgDealSize}
-                    onChange={e => setSimAvgDealSize(Number(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="font-bold text-xs">Conversion Rate (%)</Label>
-                  <Input 
-                    type="number"
-                    value={simConversionRate}
-                    onChange={e => setSimConversionRate(Number(e.target.value))}
-                  />
-                </div>
+                          )}
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
-
-              {/* Forecasting Output Math */}
-              {simAvgDealSize > 0 && simConversionRate > 0 && (
-                <div className="bg-indigo-50/30 border border-indigo-100/50 p-6 rounded-xl space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-indigo-600" />
-                    <span className="font-black text-sm text-indigo-950 uppercase tracking-widest">Growth Forecast Results</span>
-                  </div>
-
-                  {(() => {
-                    const requiredWonCount = Math.ceil(simTargetMRR / simAvgDealSize);
-                    const requiredTotalLeads = Math.ceil(requiredWonCount / (simConversionRate / 100));
-                    const currentWonValue = pipelineKPIs.wonValue;
-                    const revenueGap = Math.max(0, simTargetMRR - currentWonValue);
-                    const extraDealsToWon = Math.ceil(revenueGap / simAvgDealSize);
-                    const extraLeadsToFill = Math.ceil(extraDealsToWon / (simConversionRate / 100));
-
-                    return (
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        <div className="p-4 bg-white rounded-lg border flex flex-col justify-between">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground">Required Won Deals / mo</span>
-                          <span className="text-2xl font-code font-black text-indigo-900">{requiredWonCount}</span>
-                          <span className="text-[9px] text-muted-foreground mt-1">Target MRR ÷ Avg Deal</span>
-                        </div>
-
-                        <div className="p-4 bg-white rounded-lg border flex flex-col justify-between">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground">Required Pipeline Leads</span>
-                          <span className="text-2xl font-code font-black text-indigo-900">{requiredTotalLeads}</span>
-                          <span className="text-[9px] text-muted-foreground mt-1">Won Deals ÷ Conv Rate</span>
-                        </div>
-
-                        <div className="p-4 bg-white rounded-lg border flex flex-col justify-between md:col-span-2 xl:col-span-1">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground">Leads to Close MRR Gap</span>
-                          <span className="text-2xl font-code font-black text-indigo-900">
-                            {revenueGap > 0 ? `${extraLeadsToFill} leads` : 'Goal Met! 🎉'}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground mt-1">
-                            {revenueGap > 0 ? `To bridge ₹${fmtINR(revenueGap)} gap` : 'No revenue gap remaining'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Sales AI Advisor Section */}
