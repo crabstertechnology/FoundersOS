@@ -69,17 +69,24 @@ const GoalAdvisorOutputSchema = z.object({
     objectives: z.array(z.string()).describe('2-3 specific objectives for this period'),
   })).describe('A quarterly breakdown of the 12-month strategic roadmap.'),
   monthlyMilestones: z.array(z.object({
-    month: z.string().describe('e.g., Month 1, Month 2, Month 3'),
+    month: z.string().describe('e.g., Month 1, Month 2, ..., Month 12'),
     milestone: z.string().describe('Key target/milestone for this month'),
     keyMetrics: z.array(z.string()).describe('Metrics to track this month'),
-  })).describe('Actionable monthly milestones for the next 3 months.'),
+    weeklyPlans: z.array(z.object({
+      week: z.string().describe('The week indicator including the specific date range starting from the current date context (e.g. Week of June 1, 2026 - June 7, 2026)'),
+      theme: z.string().describe('Focus of the week'),
+      financeActions: z.array(z.string()).describe('High impact actions for the Finance sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
+      salesActions: z.array(z.string()).describe('High impact actions for the Sales & Product sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
+      opsActions: z.array(z.string()).describe('High impact actions for the Operations sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
+    })).describe('Execution themes and priorities for the 4 weeks of this month, split by sector.'),
+  })).describe('Actionable monthly milestones and weekly execution plans for the next 12 months (Month 1 through Month 12).'),
   weeklyPlans: z.array(z.object({
     week: z.string().describe('The week indicator including the specific date range starting from the current date (e.g. Week of June 1, 2026 - June 7, 2026)'),
     theme: z.string().describe('Focus of the week'),
-    financeActions: z.array(z.string()).describe('High impact actions for the Finance sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
-    salesActions: z.array(z.string()).describe('High impact actions for the Sales & Product sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
-    opsActions: z.array(z.string()).describe('High impact actions for the Operations sector. Must align with monthly goals. Do not repeat actions from other sectors.'),
-  })).describe('Execution themes and priorities for the upcoming 4 weeks, split by sector.'),
+    financeActions: z.array(z.string()).describe('High impact actions for the Finance sector.'),
+    salesActions: z.array(z.string()).describe('High impact actions for the Sales & Product sector.'),
+    opsActions: z.array(z.string()).describe('High impact actions for the Operations sector.'),
+  })).describe('Execution themes and priorities for the upcoming 4 weeks of Month 1, split by sector (for compatibility).'),
   dailyTasks: z.array(z.object({
     title: z.string().describe('Clear, action-oriented task title.'),
     description: z.string().describe('Brief description of what needs to be done and success criteria.'),
@@ -182,9 +189,9 @@ Please output:
 1. "analysis": An expert strategic assessment of their stage vs. goal, pointing out runway risks, pipeline multipliers, or operations efficiency gaps. In your analysis, closely evaluate the completed and pending tasks/actions alongside the feedback. Identify which initiatives are working in real life and which ones are facing friction, delayed, or impractical. Explicitly discuss which options suit the startup best based on real-life feedback, summarize what went well, how you adapted the remaining roadmap, and encourage the team.
 2. "missingInfoRequests": If there are details you'd like to collect to improve the plan (e.g. customer acquisition channel, pricing models, average contract value, hiring plans), formulate 2-3 specific questions. If none, return an empty array.
 3. "yearlyRoadmap": 4 quarterly blocks dividing the next 12 months to hit the goal.
-4. "monthlyMilestones": Key targets for the next 3 months (Month 1, Month 2, Month 3).
-5. "weeklyPlans": 4 weekly execution plans starting from the current date context (e.g. Week of June 1, 2026 - June 7, 2026). Align the plans directly to the monthly goals/milestones. For each week, divide actions into "financeActions", "salesActions", and "opsActions" corresponding to Finance, Sales, and Operations sectors respectively. Do not repeat the same action across different sectors.
-6. "dailyTasks": A list of 4-6 immediate daily actionable tasks. Ensure they are concrete (e.g. "Draft SaaS cold email sequence", "Audit SaaS subscriptions above ₹5000/mo") and map directly to the categories (Sales, Finance, Operations, Product). The daily tasks for every sector MUST be directly related to and derived from that sector's weekly plan (specifically, helping to execute the actions scheduled for Week 1).
+4. "monthlyMilestones": Key targets and weekly execution plans for the next 12 months (Month 1 through Month 12). For each month, generate a list of 4 weekly execution plans nested under that month's milestone. Each week's plan has financeActions, salesActions, and opsActions. Do not repeat the same action across different sectors.
+5. "weeklyPlans": Populate this top-level weekly plans array with the 4 weekly execution plans of the first month (Month 1) starting from the current date context (e.g. Week of June 1, 2026 - June 7, 2026) for backward compatibility.
+6. "dailyTasks": A list of 4-6 immediate daily actionable tasks. Ensure they are concrete (e.g. "Draft SaaS cold email sequence", "Audit SaaS subscriptions above ₹5000/mo") and map directly to the categories (Sales, Finance, Operations, Product). The daily tasks for every sector MUST be directly related to and derived from Month 1's Week 1 weekly plan.
 `
 });
 

@@ -116,16 +116,19 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
   // Current active week and month focus
   const currentWeekIndex = profile?.currentWeekIndex || 0;
   const currentMonthIndex = profile?.currentMonthIndex || 0;
-  const totalWeeks = profile?.strategicPlan?.weeklyPlans?.length || 4;
-  const totalMonths = profile?.strategicPlan?.monthlyMilestones?.length || 3;
+  const currentMonthMilestone = profile?.strategicPlan?.monthlyMilestones?.[currentMonthIndex];
+  const weeklyPlans = currentMonthMilestone?.weeklyPlans || profile?.strategicPlan?.weeklyPlans || [];
+  const totalWeeks = weeklyPlans.length || 4;
+  const totalMonths = profile?.strategicPlan?.monthlyMilestones?.length || 12;
 
-  // Filter tasks belonging to current active week
+  // Filter tasks belonging to current active week and month
   const currentWeekTasks = useMemo(() => {
     return allFinanceTasks.filter((t: any) => {
       const wIdx = t.weekIndex !== undefined ? t.weekIndex : 0;
-      return wIdx === currentWeekIndex;
+      const mIdx = t.monthIndex !== undefined ? t.monthIndex : 0;
+      return wIdx === currentWeekIndex && mIdx === currentMonthIndex;
     });
-  }, [allFinanceTasks, currentWeekIndex]);
+  }, [allFinanceTasks, currentWeekIndex, currentMonthIndex]);
 
   // Total stats for current week
   const totalStats = useMemo(() => {
@@ -137,7 +140,6 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
 
   // Recommended tasks (from AI Strategic Plan, adapted to active week)
   const recommendedTasks = useMemo(() => {
-    const weeklyPlans = profile?.strategicPlan?.weeklyPlans || [];
     const activeWeekPlan = weeklyPlans[currentWeekIndex];
 
     if (activeWeekPlan) {
@@ -155,7 +157,7 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
     // Fallback to dailyTasks
     const daily = profile?.strategicPlan?.dailyTasks || [];
     return daily.filter((t: any) => t.category?.toLowerCase() === 'finance');
-  }, [profile?.strategicPlan?.dailyTasks, profile?.strategicPlan?.weeklyPlans, currentWeekIndex]);
+  }, [profile?.strategicPlan?.dailyTasks, weeklyPlans, currentWeekIndex]);
 
   // Find already assigned tasks by title
   const assignedTasksMap = useMemo(() => {
@@ -181,7 +183,8 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
           assignedToName: assignee?.name || 'Unassigned',
           assignedToEmail: assignee?.email || '',
           assignedAt: new Date().toISOString(),
-          weekIndex: currentWeekIndex
+          weekIndex: currentWeekIndex,
+          monthIndex: currentMonthIndex
         }, { merge: true });
       } else {
         const tasksCollectionRef = collection(profileRef, 'tasks');
@@ -197,7 +200,8 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
           category: 'Finance',
           createdAt: serverTimestamp(),
           assignedAt: new Date().toISOString(),
-          weekIndex: currentWeekIndex
+          weekIndex: currentWeekIndex,
+          monthIndex: currentMonthIndex
         };
         await addDocumentNonBlocking(tasksCollectionRef, payload);
       }
@@ -234,23 +238,66 @@ export function FinanceDailyActivity({ profileRef, readOnly }: FinanceDailyActiv
     }
     await setDocumentNonBlocking(taskDocRef, payload, { merge: true });
 
-    // Check if this completes all tasks for the current week
-    const updatedTasks = currentWeekTasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
-    const total = updatedTasks.length;
-    const completed = updatedTasks.filter((t: any) => t.status === 'done').length;
-
-    if (newStatus === 'done' && total > 0 && completed === total) {
-      const nextWeekIndex = currentWeekIndex + 1;
-      if (nextWeekIndex < totalWeeks) {
-        await setDocumentNonBlocking(profileRef, { currentWeekIndex: nextWeekIndex }, { merge: true });
+    // Sync to weekly actions
+    const taskObj = currentWeekTasks.find(t => t.id === taskId);
+    if (taskObj) {
+      let updatedWeeklyActions = [...(profile?.completedWeeklyActions || [])];
+      if (newStatus === 'done') {
+        if (!updatedWeeklyActions.includes(taskObj.title)) {
+          updatedWeeklyActions.push(taskObj.title);
+        }
       } else {
-        // Reset week to 0, advance month index
-        const nextMonthIndex = currentMonthIndex + 1;
-        await setDocumentNonBlocking(profileRef, {
-          currentWeekIndex: 0,
-          currentMonthIndex: nextMonthIndex
-        }, { merge: true });
+        updatedWeeklyActions = updatedWeeklyActions.filter(a => a !== taskObj.title);
       }
+
+      // Check if all weekly tasks for this month are completed, and if so, mark monthly milestone as completed!
+      const currentMonthMilestone = profile?.strategicPlan?.monthlyMilestones?.[currentMonthIndex];
+      const monthWeeklyPlans = currentMonthMilestone?.weeklyPlans || profile?.strategicPlan?.weeklyPlans || [];
+      const allMonthWeeklyActions: string[] = [];
+      monthWeeklyPlans.forEach((plan: any) => {
+        (plan.financeActions || []).forEach((a: string) => allMonthWeeklyActions.push(a));
+        (plan.salesActions || []).forEach((a: string) => allMonthWeeklyActions.push(a));
+        (plan.opsActions || []).forEach((a: string) => allMonthWeeklyActions.push(a));
+      });
+
+      let updatedMilestones = [...(profile?.completedMonthlyMilestones || [])];
+      const milestoneMonthName = currentMonthMilestone?.month || `Month ${currentMonthIndex + 1}`;
+
+      const allCompleted = allMonthWeeklyActions.length > 0 && allMonthWeeklyActions.every(act => updatedWeeklyActions.includes(act));
+      if (allCompleted) {
+        if (!updatedMilestones.includes(milestoneMonthName)) {
+          updatedMilestones.push(milestoneMonthName);
+        }
+      } else {
+        updatedMilestones = updatedMilestones.filter(m => m !== milestoneMonthName);
+      }
+
+      // Check if this completes all tasks for the current week to auto-advance
+      const updatedTasks = currentWeekTasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
+      const total = updatedTasks.length;
+      const completed = updatedTasks.filter((t: any) => t.status === 'done').length;
+
+      let nextWeekIndex = currentWeekIndex;
+      let nextMonthIndex = currentMonthIndex;
+      if (newStatus === 'done' && total > 0 && completed === total) {
+        const nextW = currentWeekIndex + 1;
+        if (nextW < totalWeeks) {
+          nextWeekIndex = nextW;
+        } else {
+          const nextM = currentMonthIndex + 1;
+          if (nextM < totalMonths) {
+            nextWeekIndex = 0;
+            nextMonthIndex = nextM;
+          }
+        }
+      }
+
+      await setDocumentNonBlocking(profileRef, {
+        completedWeeklyActions: updatedWeeklyActions,
+        completedMonthlyMilestones: updatedMilestones,
+        currentWeekIndex: nextWeekIndex,
+        currentMonthIndex: nextMonthIndex
+      }, { merge: true });
     }
   };
 

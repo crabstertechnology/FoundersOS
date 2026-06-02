@@ -75,7 +75,9 @@ export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: EZCirkitWeekly
     }
   };
 
-  const weeklyPlans = profile?.strategicPlan?.weeklyPlans || [];
+  const currentMonthIndex = profile?.currentMonthIndex || 0;
+  const currentMonthMilestone = profile?.strategicPlan?.monthlyMilestones?.[currentMonthIndex];
+  const weeklyPlans = currentMonthMilestone?.weeklyPlans || profile?.strategicPlan?.weeklyPlans || [];
   const completedWeeklyActions = profile?.completedWeeklyActions || [];
 
   // Filter actions based on Sales & Product keywords
@@ -120,12 +122,53 @@ export function EZCirkitWeeklyDashboard({ profileRef, readOnly }: EZCirkitWeekly
   const handleToggleWeeklyAction = async (actionText: string) => {
     if (!profileRef) return;
     let updated: string[];
+    const isDone = !completedWeeklyActions.includes(actionText);
     if (completedWeeklyActions.includes(actionText)) {
       updated = completedWeeklyActions.filter((a: string) => a !== actionText);
     } else {
       updated = [...completedWeeklyActions, actionText];
     }
-    await setDocumentNonBlocking(profileRef, { completedWeeklyActions: updated }, { merge: true });
+
+    // Automatically update completedMonthlyMilestones
+    const allMonthWeeklyActions: string[] = [];
+    weeklyPlans.forEach((plan: any) => {
+      (plan.financeActions || []).forEach((a: string) => allMonthWeeklyActions.push(a));
+      (plan.salesActions || []).forEach((a: string) => allMonthWeeklyActions.push(a));
+      (plan.opsActions || []).forEach((a: string) => allMonthWeeklyActions.push(a));
+    });
+
+    let updatedMilestones = [...(profile?.completedMonthlyMilestones || [])];
+    const milestoneMonthName = currentMonthMilestone?.month || `Month ${currentMonthIndex + 1}`;
+
+    const allCompleted = allMonthWeeklyActions.length > 0 && allMonthWeeklyActions.every(act => updated.includes(act));
+    if (allCompleted) {
+      if (!updatedMilestones.includes(milestoneMonthName)) {
+        updatedMilestones.push(milestoneMonthName);
+      }
+    } else {
+      updatedMilestones = updatedMilestones.filter(m => m !== milestoneMonthName);
+    }
+
+    await setDocumentNonBlocking(profileRef, { 
+      completedWeeklyActions: updated,
+      completedMonthlyMilestones: updatedMilestones
+    }, { merge: true });
+
+    // Sync to daily tasks in the subcollection
+    try {
+      const { collection, query, where, getDocs } = await import('firebase/firestore');
+      const tasksCollRef = collection(profileRef, 'tasks');
+      const q = query(tasksCollRef, where('title', '==', actionText));
+      const querySnap = await getDocs(q);
+      querySnap.forEach(async (taskDoc) => {
+        await setDocumentNonBlocking(taskDoc.ref, {
+          status: isDone ? 'done' : 'todo',
+          completedAt: isDone ? new Date().toISOString() : null
+        }, { merge: true });
+      });
+    } catch (err) {
+      console.error("Error syncing weekly action check to daily task:", err);
+    }
   };
 
   const weeklyStats = useMemo(() => {
