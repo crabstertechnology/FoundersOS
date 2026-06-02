@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import {
   PhoneCall, GraduationCap, Target, AlertCircle, Sparkles, Plus, Trash2, 
   CheckCircle2, XCircle, Info, Copy, Check, BookOpen, BarChart3, HelpCircle, 
   User, MessageSquareCode, Award, ShieldAlert, ArrowRight, TrendingUp,
-  Loader2, Send, RefreshCw, History
+  Loader2, Send, RefreshCw, History, Maximize2
 } from 'lucide-react';
 import { useDoc } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -75,6 +76,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
   // Cold Call Script generated history
   const scriptHistory: ColdCallScriptHistoryItem[] = useMemo(() => profile?.ezColdCallScriptHistory || [], [profile]);
   const [expandedScriptId, setExpandedScriptId] = useState<string | null>(null);
+  const [selectedHistoryScript, setSelectedHistoryScript] = useState<ColdCallScriptHistoryItem | null>(null);
 
   // Performance Tracker Logs
   const logs: PerformanceLog[] = useMemo(() => profile?.ezSalesPerformanceLogs || [], [profile]);
@@ -1999,23 +2001,15 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   ) : (
                     <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 scrollbar-none">
                       {scriptHistory.map((item) => {
-                        const isExpanded = expandedScriptId === item.id;
                         return (
                           <div 
                             key={item.id} 
-                            className={`border rounded-xl transition-all duration-200 overflow-hidden ${
-                              isExpanded 
-                                ? 'bg-indigo-50/30 border-indigo-200 shadow-sm' 
-                                : 'bg-slate-50/40 hover:bg-slate-50 border-slate-200'
-                            }`}
+                            onClick={() => setSelectedHistoryScript(item)}
+                            className="border rounded-xl transition-all duration-200 overflow-hidden bg-slate-50/40 hover:bg-slate-50 border-slate-200 group cursor-pointer"
                           >
                             {/* Summary Header */}
                             <div className="p-3 flex items-start justify-between gap-2.5">
-                              <button
-                                type="button"
-                                onClick={() => setExpandedScriptId(isExpanded ? null : item.id)}
-                                className="flex-1 text-left space-y-1"
-                              >
+                              <div className="flex-1 text-left space-y-1">
                                 <div className="flex items-center gap-1 flex-wrap">
                                   <Badge className="bg-indigo-100 text-indigo-800 text-[9px] font-black uppercase px-1.5 border-none h-4">
                                     {item.buyerType}-focused
@@ -2024,10 +2018,11 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                                     {item.timestamp}
                                   </span>
                                 </div>
-                                <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-600 transition-colors pt-0.5">
-                                  {item.productName} for {item.targetAudience}
+                                <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-650 transition-colors pt-0.5 flex items-center justify-between gap-1">
+                                  <span>{item.productName} for {item.targetAudience}</span>
+                                  <Maximize2 className="w-3.5 h-3.5 text-slate-450 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
                                 </h5>
-                              </button>
+                              </div>
                               
                               <Button
                                 size="icon"
@@ -2037,70 +2032,11 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                                   e.stopPropagation();
                                   handleDeleteScriptItem(item.id);
                                 }}
-                                className="h-6 w-6 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none"
+                                className="h-6 w-6 text-slate-405 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none animate-in fade-in"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </div>
-
-                            {/* Collapsible Expanded Content */}
-                            {isExpanded && (
-                              <div className="px-3 pb-3 border-t border-indigo-100/60 pt-3 bg-white space-y-3 bg-gradient-to-b from-white to-slate-50/30 animate-in fade-in slide-in-from-top-1 duration-200">
-                                <div className="space-y-1">
-                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Hook:</span>
-                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.hook}</p>
-                                </div>
-
-                                <div className="space-y-1">
-                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Problem:</span>
-                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.problem}</p>
-                                </div>
-
-                                <div className="space-y-1">
-                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Solution:</span>
-                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.solution}</p>
-                                </div>
-
-                                <div className="space-y-1">
-                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Outcome:</span>
-                                  <p className="text-[10.5px] leading-relaxed text-slate-700 font-medium bg-slate-50/50 p-2 border rounded-lg">{item.script.outcome}</p>
-                                </div>
-
-                                <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 space-y-1">
-                                  <span className="text-[9px] uppercase font-black text-indigo-900 block font-bold">Full Script Draft:</span>
-                                  <p className="text-[11px] leading-relaxed text-slate-850 italic font-semibold">
-                                    "{item.script.fullDraftScript}"
-                                  </p>
-                                </div>
-
-                                <div className="bg-rose-50/50 border border-rose-100/60 rounded-lg p-2.5 space-y-1">
-                                  <span className="text-[9px] uppercase font-black text-rose-800 block font-bold">Objection handling:</span>
-                                  <p className="text-[11px] leading-relaxed text-slate-800 font-semibold whitespace-pre-line">
-                                    {item.script.objectionHandlingStrategy}
-                                  </p>
-                                </div>
-
-                                <div className="flex gap-2 pt-1">
-                                  <Button
-                                    size="sm"
-                                    type="button"
-                                    onClick={() => handleLoadScriptFromHistory(item)}
-                                    className="flex-1 h-7 text-[10px] font-bold bg-indigo-650 hover:bg-indigo-750 text-white rounded-md border-none"
-                                  >
-                                    Load into Editor
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => handleCopy(item.script.fullDraftScript, `hist-copy-${item.id}`)}
-                                    className="h-7 text-[10px] font-bold border rounded-md"
-                                  >
-                                    {copiedText === `hist-copy-${item.id}` ? 'Copied!' : 'Copy Script'}
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         );
                       })}
@@ -2433,6 +2369,161 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Full Screen Script Viewer Dialog */}
+      <Dialog 
+        open={!!selectedHistoryScript} 
+        onOpenChange={(open) => !open && setSelectedHistoryScript(null)}
+      >
+        <DialogContent className="max-w-[95vw] w-full md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[1200px] h-[90vh] md:h-[85vh] flex flex-col p-0 overflow-hidden bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl shadow-2xl">
+          {selectedHistoryScript && (
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="p-6 border-b border-slate-850 bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className="bg-indigo-900/60 text-indigo-300 border border-indigo-850/50 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                      {selectedHistoryScript.buyerType}-focused Value Script
+                    </Badge>
+                    <span className="text-[11px] font-bold text-slate-500 font-mono">
+                      Generated on {selectedHistoryScript.timestamp}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black text-white tracking-tight pt-1">
+                    {selectedHistoryScript.productName}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1 font-semibold leading-relaxed">
+                    Target ICP: <span className="text-indigo-400 font-extrabold">{selectedHistoryScript.targetAudience}</span> &bull; Core Problem: <span className="text-slate-300 font-medium">{selectedHistoryScript.problemSolved}</span>
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center mr-8">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      handleLoadScriptFromHistory(selectedHistoryScript);
+                      setSelectedHistoryScript(null);
+                    }}
+                    className="h-9 px-4 text-xs font-black bg-indigo-650 hover:bg-indigo-750 text-white rounded-lg border-none shadow-sm transition-all"
+                  >
+                    Load into Editor
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      handleCopy(selectedHistoryScript.script.fullDraftScript, `modal-copy-${selectedHistoryScript.id}`);
+                    }}
+                    className="h-9 px-4 text-xs font-black border-slate-700 bg-slate-850 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg transition-all"
+                  >
+                    {copiedText === `modal-copy-${selectedHistoryScript.id}` ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-500 shrink-0" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                        Copy Full Script
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Scrollable Workspace Content */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-900 scrollbar-none">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  
+                  {/* Left Column: Script Breakdown Blocks (col-span-7) */}
+                  <div className="lg:col-span-7 space-y-6">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-800/80 pb-2">
+                      Value Framework Breakdown
+                    </h4>
+
+                    {/* Hook Section */}
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-indigo-950 border border-indigo-850 flex items-center justify-center text-[11px] font-black text-indigo-400 shrink-0">1</div>
+                        <span className="text-[10px] uppercase font-black tracking-widest text-indigo-400">Step 1: The Hook (Attention)</span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
+                        {selectedHistoryScript.script.hook}
+                      </p>
+                    </div>
+
+                    {/* Problem Section */}
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-amber-950 border border-amber-850 flex items-center justify-center text-[11px] font-black text-amber-400 shrink-0">2</div>
+                        <span className="text-[10px] uppercase font-black tracking-widest text-amber-400">Step 2: The Problem (Agitation)</span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
+                        {selectedHistoryScript.script.problem}
+                      </p>
+                    </div>
+
+                    {/* Solution Section */}
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-850 flex items-center justify-center text-[11px] font-black text-emerald-400 shrink-0">3</div>
+                        <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400">Step 3: The Solution (Value)</span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
+                        {selectedHistoryScript.script.solution}
+                      </p>
+                    </div>
+
+                    {/* Outcome Section */}
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-blue-950 border border-blue-850 flex items-center justify-center text-[11px] font-black text-blue-400 shrink-0">4</div>
+                        <span className="text-[10px] uppercase font-black tracking-widest text-blue-400">Step 4: The Outcome (Call to Action)</span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
+                        {selectedHistoryScript.script.outcome}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Full Draft Script & Objection Strategy (col-span-5) */}
+                  <div className="lg:col-span-5 space-y-6">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-450 mb-2 border-b border-slate-800/80 pb-2 flex items-center justify-between">
+                        <span>Unified Delivery Script</span>
+                        <Badge className="bg-slate-800 text-indigo-405 border border-slate-700 text-[9px] font-black uppercase px-2 py-0.5">30-Second Pitch</Badge>
+                      </h4>
+                      <div className="bg-gradient-to-br from-indigo-950/50 to-slate-950 border border-indigo-900/40 rounded-2xl p-5 shadow-inner">
+                        <p className="text-sm md:text-base font-bold text-slate-100 leading-relaxed italic relative">
+                          <span className="absolute -top-3 -left-2 text-4xl text-indigo-850 opacity-40 select-none">“</span>
+                          {selectedHistoryScript.script.fullDraftScript}
+                          <span className="absolute -bottom-6 -right-2 text-4xl text-indigo-850 opacity-40 select-none">”</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-800/80 pb-2">
+                        Tailored Objection Handling Strategy
+                      </h4>
+                      <div className="bg-rose-950/20 border border-rose-900/30 rounded-2xl p-5 space-y-3">
+                        <div className="flex items-center gap-2 border-b border-rose-900/30 pb-2">
+                          <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+                          <span className="text-[10px] uppercase font-black tracking-widest text-rose-450">Rebuttal Guide</span>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-300 leading-relaxed whitespace-pre-line">
+                          {selectedHistoryScript.script.objectionHandlingStrategy}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
