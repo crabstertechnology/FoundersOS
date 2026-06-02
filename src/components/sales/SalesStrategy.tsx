@@ -899,24 +899,24 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         </p>
                         
                         {/* Visual Flow diagram */}
-                        <div className="grid grid-cols-5 gap-2 text-center pt-2">
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between">
+                        <div className="flex sm:grid sm:grid-cols-5 overflow-x-auto gap-2 text-center pt-2 scrollbar-none pb-1">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 1</span>
                             <span className="text-[11px] font-bold text-slate-700">Know Customer</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 2</span>
                             <span className="text-[11px] font-bold text-slate-700">Discover Pain</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 3a</span>
                             <span className="text-[11px] font-bold text-slate-700">Address Pain</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 3b</span>
                             <span className="text-[11px] font-bold text-slate-700">Give Value</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 4</span>
                             <span className="text-[11px] font-bold text-slate-700">Handle Obj & Close</span>
                           </div>

@@ -197,7 +197,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
         </div>
 
         {/* Tab switcher */}
-        <div className="bg-slate-100 p-1 rounded-xl flex gap-1 border">
+        <div className="bg-slate-100 p-1 rounded-xl flex gap-1 border overflow-x-auto whitespace-nowrap scrollbar-none shrink-0">
           <Button
             variant={activeTab === 'ai-planner' ? 'default' : 'ghost'}
             size="sm"
@@ -328,7 +328,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
                   {/* Platforms selection checkboxes */}
                   <div className="space-y-2">
                     <Label className="font-black text-xs uppercase text-slate-500">Select Channels</Label>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-3">
                       {['instagram', 'youtube', 'linkedin'].map((plat: any) => {
                         const isChecked = selectedPlatforms.includes(plat);
                         return (
@@ -388,7 +388,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
               {/* Campaign Plan Calendar & Info */}
               <Card className="border-2 border-indigo-100 shadow-sm">
                 <CardHeader className="bg-indigo-50/15 border-b py-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <CardTitle className="text-base font-black text-slate-900">
                         7-Day Campaign Calendar
@@ -455,7 +455,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
 
               {/* Script assets tabs card */}
               <Card className="border-2 border-indigo-100 shadow-sm">
-                <CardHeader className="border-b py-3 flex flex-row items-center justify-between px-6">
+                <CardHeader className="border-b py-3 flex flex-col sm:flex-row sm:items-center justify-between px-6 gap-3">
                   <span className="text-sm font-black text-slate-800">Generated AI Marketing Scripts</span>
                   
                   {/* Internal tabs select */}
