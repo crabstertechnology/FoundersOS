@@ -17,8 +17,9 @@ import {
   LineChart, Wallet, Rocket, PieChart, Activity, TrendingUp, 
   AlertTriangle, ArrowUpRight, BarChart3, Users, Server, DollarSign, Calendar,
   Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
-  FileText, UploadCloud, Trash, Paperclip, MessageSquare, History
+  FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail
 } from 'lucide-react';
+import { weeklyProgressReportAssistant } from '@/ai/flows/weekly-progress-report-flow';
 
 const loadPdfJs = () => {
   return new Promise<any>((resolve, reject) => {
@@ -88,6 +89,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [missingInfoContext, setMissingInfoContext] = useState('');
   const [weeklyProgress, setWeeklyProgress] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [weeklyReport, setWeeklyReport] = useState('');
+  const [weeklyReportLoading, setWeeklyReportLoading] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [assignedTasks, setAssignedTasks] = useState<Record<string, boolean>>({});
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
@@ -236,6 +240,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       if (profile.missingInfoContext) setMissingInfoContext(profile.missingInfoContext);
       if (profile.attachedDocName) setAttachedDocName(profile.attachedDocName);
       if (profile.attachedDocText) setAttachedDocText(profile.attachedDocText);
+      if (profile.weeklyProgressReport) setWeeklyReport(profile.weeklyProgressReport);
     }
   }, [profile]);
 
@@ -326,6 +331,117 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       teamSize
     };
   }, [subscriptions, team, profile]);
+
+  const handleGenerateWeeklyReport = async () => {
+    if (!profileRef) return;
+    setWeeklyReportLoading(true);
+    try {
+      const now = new Date();
+      const currentDateStr = now.toLocaleDateString('en-IN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+
+      // Filter and serialize data
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const filterLast7Days = (list: any[], dateField = 'date') => {
+        return (list || []).filter(item => {
+          const val = item[dateField];
+          if (!val) return true;
+          const d = new Date(val);
+          return !isNaN(d.getTime()) && d >= sevenDaysAgo && d <= now;
+        });
+      };
+
+      const filteredDaily = filterLast7Days(profile?.ezDailyActivities || [], 'date');
+      const filteredWorkshops = filterLast7Days(profile?.workshops || [], 'date');
+      const filteredProductSales = filterLast7Days(profile?.ezProductSales || [], 'date');
+      const filteredLeads = filterLast7Days(profile?.ezLeads || [], 'lastActivity');
+      const filteredBdLeads = filterLast7Days(profile?.bdLeads || [], 'lastActivity');
+      const filteredNetworking = filterLast7Days(profile?.networkingEvents || [], 'date');
+      
+      const filteredTasks = (tasksRaw || []).filter((t: any) => {
+        const completedAt = t.completedAt;
+        if (completedAt) {
+          const d = new Date(completedAt);
+          return !isNaN(d.getTime()) && d >= sevenDaysAgo && d <= now;
+        }
+        const createdAt = t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000) : null;
+        if (createdAt) {
+          return createdAt >= sevenDaysAgo && createdAt <= now;
+        }
+        return true;
+      });
+
+      const feedbacks = {
+        salesDaily: profile?.salesDailyFeedback || '',
+        salesWeekly: profile?.salesWeeklyFeedback || '',
+        opsDaily: profile?.opsDailyFeedback || '',
+        opsWeekly: profile?.opsWeeklyFeedback || '',
+        financeDaily: profile?.financeDailyFeedback || '',
+        financeWeekly: profile?.financeWeeklyFeedback || '',
+      };
+
+      const marketing = profile?.dmActivePlan ? {
+        productName: profile.dmActivePlan.productName,
+        brandTone: profile.dmActivePlan.brandTone,
+        contentGoal: profile.dmActivePlan.contentGoal,
+        platforms: profile.dmActivePlan.platforms,
+        calendarSummary: (profile.dmActivePlan.calendar?.weeklyCalendar || []).map((c: any) => `${c.day}: ${c.platform} ${c.contentType} - ${c.topic}`).join('\n')
+      } : null;
+
+      const serialized = JSON.stringify({
+        ezDailyActivities: filteredDaily,
+        workshops: filteredWorkshops,
+        ezProductSales: filteredProductSales,
+        ezLeads: filteredLeads,
+        bdLeads: filteredBdLeads,
+        networkingEvents: filteredNetworking,
+        tasks: filteredTasks.map((t: any) => ({
+          title: t.title,
+          description: t.description,
+          status: t.status,
+          assignedToName: t.assignedToName,
+          completedAt: t.completedAt,
+          category: t.category
+        })),
+        marketingPlan: marketing,
+        feedbackNotes: feedbacks
+      }, null, 2);
+
+      const result = await weeklyProgressReportAssistant({
+        companyName,
+        currentDate: currentDateStr,
+        activitiesSerialized: serialized
+      });
+
+      setWeeklyReport(result.report);
+
+      await setDocumentNonBlocking(profileRef, {
+        weeklyProgressReport: result.report,
+        weeklyProgressReportGeneratedAt: currentDateStr
+      }, { merge: true });
+
+    } catch (err) {
+      console.error('Error generating weekly progress report:', err);
+    } finally {
+      setWeeklyReportLoading(false);
+    }
+  };
+
+  const handleCopyReport = () => {
+    if (!weeklyReport) return;
+    navigator.clipboard.writeText(weeklyReport);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   const handleGeneratePlan = async (e?: React.FormEvent, progressText?: string, modSuggestion?: string) => {
     if (e) e.preventDefault();
@@ -1344,6 +1460,114 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                             </div>
                           );
                         })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Weekly Founder Update Report Generator */}
+              {!readOnly && (
+                <Card className="border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/10 via-white to-slate-50 shadow-sm mt-8 relative overflow-hidden transition-all hover:shadow-md">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
+                  
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-indigo-600" />
+                      Investor Weekly Report Generator
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Analyze all logs from the last 7 days (CRM, workshops, sales, operations, tasks, feedback) and compile an executive progress report for mentors & investors.
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    {weeklyReportLoading ? (
+                      <div className="py-12 text-center space-y-4 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border rounded-xl animate-in fade-in duration-300">
+                        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-black text-slate-800">Compiling and Analyzing Week's Activities</h4>
+                          <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
+                            Evaluating customer discovery, sales metrics, product milestones, and feedback logs...
+                          </p>
+                        </div>
+                      </div>
+                    ) : weeklyReport ? (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex justify-between items-center bg-indigo-50/30 p-2.5 rounded-lg border border-indigo-100">
+                          <span className="text-[10px] font-black text-indigo-950 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                            Report Generated for Investors & Mentors
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCopyReport}
+                            className="h-8 text-xs font-bold gap-1.5 bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
+                          >
+                            {isCopied ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                Copied to Clipboard
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                Copy Report
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-slate-900 text-slate-100 p-5 rounded-xl border border-slate-800 font-mono text-xs whitespace-pre-wrap leading-relaxed max-h-[350px] overflow-y-auto shadow-inner select-all selection:bg-indigo-500 selection:text-white">
+                          {weeklyReport}
+                        </div>
+                        
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={handleGenerateWeeklyReport}
+                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 text-xs gap-1.5 transition-all"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Regenerate Update
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              if (window.confirm("Are you sure you want to clear the generated report?")) {
+                                setWeeklyReport('');
+                                if (profileRef) {
+                                  setDocumentNonBlocking(profileRef, {
+                                    weeklyProgressReport: null,
+                                    weeklyProgressReportGeneratedAt: null
+                                  }, { merge: true });
+                                }
+                              }
+                            }}
+                            className="border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 font-bold h-10 text-xs transition-all px-4"
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl bg-white/50 space-y-4 hover:border-indigo-200 hover:bg-indigo-50/5 transition-all">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto text-indigo-600 shadow-sm">
+                          <Mail className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-bold text-slate-800">No Weekly Update Compiled Yet</h4>
+                          <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
+                            Click below to analyze the last 7 days of raw workspace data and generate a mentor-ready progress report.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleGenerateWeeklyReport}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-6 rounded-lg gap-1.5 shadow-sm hover:shadow-md transition-all"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Generate Weekly Update
+                        </Button>
                       </div>
                     )}
                   </CardContent>
