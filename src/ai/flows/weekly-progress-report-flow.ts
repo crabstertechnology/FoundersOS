@@ -52,7 +52,7 @@ Requirements:
 
 Good evening Sir,
 
-This week’s progress:
+This week’s progress (Date: {{{currentDate}}}):
 
 [Category]
 • Update 1

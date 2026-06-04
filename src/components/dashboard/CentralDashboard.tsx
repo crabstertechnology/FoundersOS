@@ -17,7 +17,7 @@ import {
   LineChart, Wallet, Rocket, PieChart, Activity, TrendingUp, 
   AlertTriangle, ArrowUpRight, BarChart3, Users, Server, DollarSign, Calendar,
   Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
-  FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail
+  FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail, Save
 } from 'lucide-react';
 import { weeklyProgressReportAssistant } from '@/ai/flows/weekly-progress-report-flow';
 
@@ -92,6 +92,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [weeklyReport, setWeeklyReport] = useState('');
   const [weeklyReportLoading, setWeeklyReportLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isSavingReport, setIsSavingReport] = useState(false);
+  const [reportSavedSuccess, setReportSavedSuccess] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [assignedTasks, setAssignedTasks] = useState<Record<string, boolean>>({});
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
@@ -170,6 +173,18 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   }, [planHistoryRef]);
 
   const { data: planHistory } = useCollection(planHistoryQuery) || {};
+
+  const weeklyReportsRef = useMemoFirebase(() => {
+    if (!firestore || !userId || !companyProfileId) return null;
+    return collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'weeklyReports');
+  }, [firestore, userId, companyProfileId]);
+
+  const weeklyReportsQuery = useMemoFirebase(() => {
+    if (!weeklyReportsRef) return null;
+    return query(weeklyReportsRef, orderBy('createdAt', 'desc'));
+  }, [weeklyReportsRef]);
+
+  const { data: weeklyReportsHistory } = useCollection(weeklyReportsQuery) || {};
 
   const roadmapChatRef = useMemoFirebase(() => {
     if (!firestore || !userId || !companyProfileId) return null;
@@ -337,6 +352,12 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     setWeeklyReportLoading(true);
     try {
       const now = new Date();
+      const dateOnlyStr = now.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
       const currentDateStr = now.toLocaleDateString('en-IN', {
         weekday: 'long',
         year: 'numeric',
@@ -418,7 +439,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
       const result = await weeklyProgressReportAssistant({
         companyName,
-        currentDate: currentDateStr,
+        currentDate: dateOnlyStr,
         activitiesSerialized: serialized
       });
 
@@ -433,6 +454,45 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       console.error('Error generating weekly progress report:', err);
     } finally {
       setWeeklyReportLoading(false);
+    }
+  };
+
+  const handleSaveWeeklyReport = async () => {
+    if (!profileRef) return;
+    setIsSavingReport(true);
+    try {
+      const now = new Date();
+      const currentDateStr = now.toLocaleDateString('en-IN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      
+      await setDocumentNonBlocking(profileRef, {
+        weeklyProgressReport: weeklyReport,
+        weeklyProgressReportSavedAt: currentDateStr
+      }, { merge: true });
+
+      if (firestore && userId && companyProfileId) {
+        const reportsCollRef = collection(firestore, 'users', userId, 'companyProfiles', companyProfileId, 'weeklyReports');
+        await addDocumentNonBlocking(reportsCollRef, {
+          report: weeklyReport,
+          createdAt: serverTimestamp(),
+          date: currentDateStr
+        });
+      }
+
+      setReportSavedSuccess(true);
+      setTimeout(() => setReportSavedSuccess(false), 2000);
+    } catch (err) {
+      console.error('Error saving weekly report:', err);
+    } finally {
+      setIsSavingReport(false);
     }
   };
 
@@ -1497,58 +1557,151 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                         <div className="flex justify-between items-center bg-indigo-50/30 p-2.5 rounded-lg border border-indigo-100">
                           <span className="text-[10px] font-black text-indigo-950 flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                            Report Generated for Investors & Mentors
+                            {showHistory ? "Viewing Saved Report History" : "Report Editor (Save your edits below)"}
                           </span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleCopyReport}
-                            className="h-8 text-xs font-bold gap-1.5 bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
-                          >
-                            {isCopied ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                Copied to Clipboard
-                              </>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setShowHistory(!showHistory)}
+                              className="h-8 text-xs font-bold text-indigo-700 hover:bg-indigo-50/50 animate-in fade-in"
+                            >
+                              {showHistory ? "Back to Editor" : `History (${(weeklyReportsHistory || []).length})`}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCopyReport}
+                              className="h-8 text-xs font-bold gap-1.5 bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
+                            >
+                              {isCopied ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" />
+                                  Copy
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {showHistory ? (
+                          <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 animate-in fade-in duration-200">
+                            {(!weeklyReportsHistory || weeklyReportsHistory.length === 0) ? (
+                              <div className="p-8 text-center text-muted-foreground font-semibold text-xs bg-white rounded-xl border border-dashed border-slate-200">
+                                No saved weekly report history found.
+                              </div>
                             ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5" />
-                                Copy Report
-                              </>
+                              weeklyReportsHistory.map((histReport: any) => {
+                                const date = histReport.createdAt ? new Date(histReport.createdAt.seconds * 1000) : new Date();
+                                const formattedDate = date.toLocaleString('en-IN', {
+                                  dateStyle: 'medium',
+                                  timeStyle: 'short'
+                                });
+                                return (
+                                  <div key={histReport.id} className="p-3 bg-white border border-slate-100 rounded-xl hover:border-indigo-100 transition-all space-y-2">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-[10px] font-bold text-slate-500 font-mono">{formattedDate}</span>
+                                      <div className="flex gap-1.5">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            setWeeklyReport(histReport.report);
+                                            setShowHistory(false);
+                                          }}
+                                          className="h-6 text-[9px] font-bold px-2 py-0"
+                                        >
+                                          Restore
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={async () => {
+                                            if (window.confirm("Delete this saved report from history?")) {
+                                              try {
+                                                await deleteDocumentNonBlocking(doc(weeklyReportsRef!, histReport.id));
+                                              } catch (err) {
+                                                console.error("Error deleting report:", err);
+                                              }
+                                            }
+                                          }}
+                                          className="h-6 text-[9px] font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-0"
+                                        >
+                                          Delete
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    <div className="bg-slate-50 text-slate-700 p-3 rounded-lg font-mono text-[10px] whitespace-pre-wrap leading-relaxed max-h-[120px] overflow-y-auto border border-slate-100 select-all">
+                                      {histReport.report}
+                                    </div>
+                                  </div>
+                                );
+                              })
                             )}
-                          </Button>
-                        </div>
-                        
-                        <div className="bg-slate-900 text-slate-100 p-5 rounded-xl border border-slate-800 font-mono text-xs whitespace-pre-wrap leading-relaxed max-h-[350px] overflow-y-auto shadow-inner select-all selection:bg-indigo-500 selection:text-white">
-                          {weeklyReport}
-                        </div>
-                        
-                        <div className="flex gap-3">
-                          <Button
-                            onClick={handleGenerateWeeklyReport}
-                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 text-xs gap-1.5 transition-all"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                            Regenerate Update
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              if (window.confirm("Are you sure you want to clear the generated report?")) {
-                                setWeeklyReport('');
-                                if (profileRef) {
-                                  setDocumentNonBlocking(profileRef, {
-                                    weeklyProgressReport: null,
-                                    weeklyProgressReportGeneratedAt: null
-                                  }, { merge: true });
-                                }
-                              }
-                            }}
-                            className="border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 font-bold h-10 text-xs transition-all px-4"
-                          >
-                            Clear
-                          </Button>
-                        </div>
+                          </div>
+                        ) : (
+                          <>
+                            <textarea
+                              className="w-full bg-slate-900 text-slate-100 p-5 rounded-xl border border-slate-800 font-mono text-xs leading-relaxed min-h-[300px] max-h-[400px] focus:outline-none focus:ring-2 focus:ring-indigo-500 select-text"
+                              value={weeklyReport}
+                              onChange={(e) => setWeeklyReport(e.target.value)}
+                              placeholder="Type or edit your weekly update here..."
+                            />
+                            
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <Button
+                                onClick={handleSaveWeeklyReport}
+                                disabled={isSavingReport}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 text-xs gap-1.5 transition-all px-6 shrink-0"
+                              >
+                                {reportSavedSuccess ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-white animate-in zoom-in-50 duration-150" />
+                                    Saved to History!
+                                  </>
+                                ) : (
+                                  <>
+                                    <Save className="w-3.5 h-3.5" />
+                                    Save Report
+                                  </>
+                                )}
+                              </Button>
+                              
+                              <Button
+                                onClick={handleGenerateWeeklyReport}
+                                variant="outline"
+                                className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold h-10 text-xs gap-1.5 transition-all"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                Regenerate Update
+                              </Button>
+                              
+                              <Button
+                                variant="ghost"
+                                onClick={() => {
+                                  if (window.confirm("Are you sure you want to clear the generated report?")) {
+                                    setWeeklyReport('');
+                                    if (profileRef) {
+                                      setDocumentNonBlocking(profileRef, {
+                                        weeklyProgressReport: null,
+                                        weeklyProgressReportGeneratedAt: null,
+                                        weeklyProgressReportSavedAt: null
+                                      }, { merge: true });
+                                    }
+                                  }
+                                }}
+                                className="text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-bold h-10 text-xs transition-all px-4"
+                              >
+                                Clear
+                              </Button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ) : (
                       <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl bg-white/50 space-y-4 hover:border-indigo-200 hover:bg-indigo-50/5 transition-all">
