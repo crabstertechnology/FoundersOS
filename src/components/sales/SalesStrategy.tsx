@@ -1192,7 +1192,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
                         <div className="space-y-2">
                           <h4 className="font-extrabold text-slate-800 text-[11px] uppercase tracking-wider">The 4-Step Objection Process:</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             {[
                               { step: '1. Listen Fully', desc: 'Let them finish completely. Do not interrupt. Nod and process.', no: 'Jumping in with counter-arguments' },
                               { step: '2. Identify Root', desc: 'Ask: "Is it price, timing, or fit?" Uncover the real blocker.', no: 'Answering only surface objections' },
@@ -1987,8 +1987,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
               {/* Left Column: Objection List (col-span-4) */}
-              <div className="md:col-span-4 flex flex-col gap-1.5">
-                <span className="text-[10px] uppercase font-black text-slate-450 mb-1">Select Objection:</span>
+              <div className="md:col-span-4 flex flex-row md:flex-col gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+                <span className="text-[10px] uppercase font-black text-slate-450 mb-1 hidden md:block">Select Objection:</span>
                 {[
                   { id: 'expensive', label: '💸 "Too Expensive"' },
                   { id: 'timing', label: '⏳ "Not Needed Now"' },
@@ -1999,9 +1999,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   <button
                     key={obj.id}
                     onClick={() => setSelectedObjection(obj.id)}
-                    className={`text-left text-xs font-bold p-3 rounded-xl border transition-all ${
+                    className={`text-left text-xs font-bold p-3 rounded-xl border transition-all shrink-0 whitespace-nowrap md:whitespace-normal ${
                       selectedObjection === obj.id 
-                        ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-sm font-extrabold'
+                        ? 'bg-indigo-55 border-indigo-300 text-indigo-900 shadow-sm font-extrabold'
                         : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
                     }`}
                   >

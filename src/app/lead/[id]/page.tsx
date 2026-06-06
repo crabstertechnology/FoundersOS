@@ -316,37 +316,38 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="min-h-screen bg-slate-50/50 pb-16">
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b h-16 flex items-center px-4 md:px-8 justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b h-16 flex items-center px-2 sm:px-4 md:px-8 justify-between shadow-sm">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={handleBack} 
-            className="rounded-full hover:bg-slate-100 text-slate-600 font-bold text-xs gap-1.5"
+            className="rounded-full hover:bg-slate-100 text-slate-600 font-bold text-xs gap-1.5 px-2.5 sm:px-3 shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden min-[400px]:inline">Back</span>
           </Button>
-          <div className="h-4 w-px bg-slate-200" />
-          <div className="flex items-center gap-2">
-            <Badge className={`border text-[9px] font-black uppercase ${TYPE_CLR[lead.leadType]}`}>
+          <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <Badge className={`border text-[9px] font-black uppercase shrink-0 ${TYPE_CLR[lead.leadType]}`}>
               {lead.leadType}
             </Badge>
-            <h1 className="text-sm md:text-base font-black text-slate-900 truncate max-w-[200px] sm:max-w-xs">
+            <h1 className="text-xs sm:text-sm md:text-base font-black text-slate-900 truncate max-w-[80px] min-[400px]:max-w-[150px] sm:max-w-xs">
               {lead.organization}
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setIsHistoryOpen(true)}
-            className="text-indigo-600 hover:bg-indigo-50 border-indigo-200 h-9 font-bold text-xs gap-1.5 shadow-sm transition-all"
+            className="text-indigo-600 hover:bg-indigo-50 border-indigo-200 h-9 font-bold text-xs gap-1 sm:gap-1.5 shadow-sm transition-all px-2.5 sm:px-3"
           >
             <History className="w-4 h-4" /> 
             <span className="hidden sm:inline">History & Logs</span>
-            <span className="inline sm:hidden">Logs</span>
+            <span className="inline sm:hidden font-bold">Logs</span>
             {lead.history?.length > 0 && (
               <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-none px-1.5 py-0.5 text-[9px] rounded-full scale-90">
                 {lead.history.length}
@@ -359,9 +360,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               variant="outline" 
               size="sm" 
               onClick={handleDelete}
-              className="text-rose-600 hover:bg-rose-50 border-rose-200 h-9 font-bold text-xs gap-1.5"
+              className="text-rose-600 hover:bg-rose-50 border-rose-200 h-9 font-bold text-xs gap-1.5 px-2.5 sm:px-3"
             >
-              <Trash2 className="w-4 h-4" /> Delete Lead
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Delete Lead</span>
             </Button>
           )}
         </div>
@@ -392,20 +394,20 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:flex items-center gap-6">
+          <div className="grid grid-cols-3 gap-2 min-[400px]:gap-4 sm:flex items-center sm:gap-6 w-full sm:w-auto">
             <div className="text-center sm:text-right">
-              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Expected Revenue</div>
-              <div className="text-xl font-code font-black text-indigo-600">{lead.expectedRevenue > 0 ? fmtINR(lead.expectedRevenue) : '—'}</div>
+              <div className="text-[9px] min-[400px]:text-[10px] uppercase font-bold text-slate-400 tracking-wider">Expected Revenue</div>
+              <div className="text-base min-[400px]:text-xl font-code font-black text-indigo-600">{lead.expectedRevenue > 0 ? fmtINR(lead.expectedRevenue) : '—'}</div>
             </div>
             <div className="h-8 w-px bg-slate-200 hidden sm:block" />
             <div className="text-center sm:text-right">
-              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Actual Revenue</div>
-              <div className="text-xl font-code font-black text-emerald-600">{lead.actualRevenue > 0 ? fmtINR(lead.actualRevenue) : '—'}</div>
+              <div className="text-[9px] min-[400px]:text-[10px] uppercase font-bold text-slate-400 tracking-wider">Actual Revenue</div>
+              <div className="text-base min-[400px]:text-xl font-code font-black text-emerald-600">{lead.actualRevenue > 0 ? fmtINR(lead.actualRevenue) : '—'}</div>
             </div>
             <div className="h-8 w-px bg-slate-200 hidden sm:block" />
             <div className="text-center sm:text-right">
-              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Next Action</div>
-              <div className="text-xs font-bold text-slate-700 max-w-[150px] truncate">{lead.nextAction || '—'}</div>
+              <div className="text-[9px] min-[400px]:text-[10px] uppercase font-bold text-slate-400 tracking-wider">Next Action</div>
+              <div className="text-xs font-bold text-slate-700 max-w-[100px] min-[400px]:max-w-[150px] truncate">{lead.nextAction || '—'}</div>
             </div>
           </div>
         </div>
@@ -495,7 +497,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 {/* Contact Information */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 border-b pb-2">Contact Person</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <Label className="font-bold text-xs text-slate-600">Contact Person Name</Label>
                       <div className="relative">
@@ -542,7 +544,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 {/* Deal Progression */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 border-b pb-2">Status & Progression</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <Label className="font-bold text-xs text-slate-600">Lead Status</Label>
                       <Select value={form.status} onValueChange={setFormKey('status')} disabled={isReadOnly}>
@@ -669,7 +671,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
           <div className="flex-1 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0">
             {/* Left: Add Note & Rich Text Logger */}
-            <div className="lg:col-span-5 p-6 border-r border-slate-100 flex flex-col gap-4 lg:overflow-y-auto lg:max-h-full bg-slate-50/20">
+            <div className="lg:col-span-5 p-6 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col gap-4 lg:overflow-y-auto lg:max-h-full bg-slate-50/20">
               {!isReadOnly && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
