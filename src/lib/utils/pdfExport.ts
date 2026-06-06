@@ -49,11 +49,11 @@ export function exportReportToPDF(title: string, contentHtml: string) {
 
           .header-brand p {
             font-size: 10px;
-            text-transform: uppercase;
-            color: #6366f1;
-            letter-spacing: 0.2em;
-            margin: 6px 0 0 0;
-            font-weight: 800;
+            text-transform: none;
+            color: #64748b;
+            letter-spacing: 0.05em;
+            margin: 4px 0 0 0;
+            font-weight: 600;
           }
 
           .header-meta {
@@ -209,8 +209,8 @@ export function exportReportToPDF(title: string, contentHtml: string) {
       <body>
         <div class="header">
           <div class="header-brand">
-            <h1>Crabster Technology</h1>
-            <p>FoundersOS Strategic Suite</p>
+            <h1>Crabster Technology Report</h1>
+            <p>powered by FoundersOS</p>
           </div>
           <div class="header-meta">
             PRINTED: ${new Date().toLocaleDateString()}<br/>
@@ -219,6 +219,9 @@ export function exportReportToPDF(title: string, contentHtml: string) {
         </div>
         <div class="report-title">${title}</div>
         ${contentHtml}
+        <div style="text-align: center; font-size: 9px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 12px; font-weight: 500;">
+          powered by FoundersOS
+        </div>
       </body>
     </html>
   `);

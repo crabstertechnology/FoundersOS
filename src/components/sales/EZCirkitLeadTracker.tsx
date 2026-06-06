@@ -322,7 +322,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
     const html = `
       <html>
         <head>
-          <title>FoundersOS - Leads Report</title>
+          <title>crabster Technology lead report</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1e293b; padding: 24px; }
             h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; color: #0f172a; }
@@ -354,13 +354,13 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
         <body>
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px;">
             <div>
-              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Leads Pipeline Report</h1>
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">crabster Technology report</h1>
               <div class="subtitle" style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600;">
                 Generated on ${new Date().toLocaleDateString()} · Total Selected: ${selectedLeads.length} leads
               </div>
             </div>
-            <div style="font-size: 10px; font-weight: 900; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.1em; padding-top: 4px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-              FoundersOS
+            <div style="font-size: 10px; font-weight: 500; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: right; margin-top: 4px;">
+              powered by FoundersOS
             </div>
           </div>
           <table>
@@ -414,6 +414,9 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
               `).join('')}
             </tbody>
           </table>
+          <div style="text-align: center; font-size: 9px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+            powered by FoundersOS
+          </div>
           <script>
             window.onload = function() { window.print(); }
           </script>
@@ -423,7 +426,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
     
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.document.title = "FoundersOS - Leads Report";
+    printWindow.document.title = "crabster Technology lead report";
   };
 
   const mkSnap = (f: F) => ({
