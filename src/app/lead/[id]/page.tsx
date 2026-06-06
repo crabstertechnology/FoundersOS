@@ -227,7 +227,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       expectedRevenue: Number(form.expectedRevenue) || 0,
       actualRevenue: Number(form.actualRevenue) || 0,
       remarks: form.remarks,
-      history: [...(lead.history || []), mkEntry(noteText, form)]
+      history: [...(lead.history || []), mkEntry(noteText, form)],
+      updatedAt: new Date().toISOString()
     };
 
     setDocumentNonBlocking(profileRef, {
@@ -246,7 +247,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
     const updated: EZLead = {
       ...lead,
-      history: [...(lead.history || []), mkEntry(noteText, form)]
+      history: [...(lead.history || []), mkEntry(noteText, form)],
+      updatedAt: new Date().toISOString()
     };
 
     setDocumentNonBlocking(profileRef, {
@@ -271,7 +273,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     if (!profileRef || !lead || !window.confirm('Are you sure you want to delete this history entry?')) return;
     const updated: EZLead = {
       ...lead,
-      history: (lead.history || []).filter(h => h.id !== entryId)
+      history: (lead.history || []).filter(h => h.id !== entryId),
+      updatedAt: new Date().toISOString()
     };
     setDocumentNonBlocking(profileRef, {
       ezLeads: leads.map(l => l.id === lead.id ? updated : l)
@@ -312,6 +315,18 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       </div>
     );
   }
+
+  const leadCreatedAt = lead.createdAt || (lead.history && lead.history.length > 0 ? lead.history[0].timestamp : null);
+  const leadUpdatedAt = lead.updatedAt || (lead.history && lead.history.length > 0 ? lead.history[lead.history.length - 1].timestamp : null);
+
+  const formatTimestampWithDay = (tsStr: string | null | undefined) => {
+    if (!tsStr) return '—';
+    const d = new Date(tsStr);
+    if (isNaN(d.getTime())) return tsStr;
+    const datePart = d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+    const timePart = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${datePart} at ${timePart}`;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-16">
@@ -392,6 +407,18 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <p className="text-sm text-slate-500 font-medium">
               Requirement: <span className="font-semibold text-slate-800">{lead.requirement || '—'}</span>
             </p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400 font-medium pt-1.5 border-t border-slate-100 mt-2">
+              {leadCreatedAt && (
+                <span>
+                  Created: <span className="text-slate-650 font-bold">{formatTimestampWithDay(leadCreatedAt)}</span>
+                </span>
+              )}
+              {leadUpdatedAt && (
+                <span>
+                  Last Modified: <span className="text-slate-650 font-bold">{formatTimestampWithDay(leadUpdatedAt)}</span>
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2 min-[400px]:gap-4 sm:flex items-center sm:gap-6 w-full sm:w-auto">

@@ -46,6 +46,8 @@ export interface EZLead {
   requirement: string; status: LeadStatus; nextAction: string;
   followUpDate: string; expectedRevenue: number; actualRevenue: number;
   remarks: string; history: LeadHistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const TYPE_CLR: Record<string,string> = { school:'bg-blue-50 text-blue-700 border-blue-100', college:'bg-purple-50 text-purple-700 border-purple-100', student:'bg-emerald-50 text-emerald-700 border-emerald-100', other:'bg-slate-50 text-slate-600 border-slate-200' };
@@ -130,6 +132,10 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const formatTime = (ts: string) => {
+    const d = new Date(ts);
+    return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
 
   const kpis = useMemo(() => ({ total:leads.length, won:leads.filter(l=>l.status==='won').length, schools:leads.filter(l=>l.leadType==='school').length, colleges:leads.filter(l=>l.leadType==='college').length, students:leads.filter(l=>l.leadType==='student').length, totalExpected:leads.reduce((s,l)=>s+(Number(l.expectedRevenue)||0),0), totalActual:leads.reduce((s,l)=>s+(Number(l.actualRevenue)||0),0) }), [leads]);
   
@@ -144,12 +150,18 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
       }
       return true;
     });
+
+    const getCreatedTime = (l: EZLead) => {
+      if (l.createdAt) return new Date(l.createdAt).getTime();
+      if (l.history && l.history.length > 0) return new Date(l.history[0].timestamp).getTime();
+      return new Date(l.date || 0).getTime();
+    };
     
     if (sortBy === 'date-desc') {
-      return [...res].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+      return [...res].sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
     }
     if (sortBy === 'date-asc') {
-      return [...res].sort((a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime());
+      return [...res].sort((a, b) => getCreatedTime(a) - getCreatedTime(b));
     }
     if (sortBy === 'name') {
       return [...res].sort((a, b) => (a.organization || '').localeCompare(b.organization || ''));
@@ -427,7 +439,27 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileRef || !addF.organization) return;
-    const lead: EZLead = { id:Math.random().toString(36).substr(2,9), date:addF.date, leadType:addF.leadType, organization:addF.organization, contactPerson:addF.contactPerson, phone:addF.phone, email:addF.email, source:addF.source, requirement:addF.requirement, status:addF.status, nextAction:addF.nextAction, followUpDate:addF.followUpDate, expectedRevenue:Number(addF.expectedRevenue)||0, actualRevenue:Number(addF.actualRevenue)||0, remarks:addF.remarks, history:[mkEntry('Lead created',addF)] };
+    const nowStr = new Date().toISOString();
+    const lead: EZLead = {
+      id: Math.random().toString(36).substr(2,9),
+      date: addF.date,
+      leadType: addF.leadType,
+      organization: addF.organization,
+      contactPerson: addF.contactPerson,
+      phone: addF.phone,
+      email: addF.email,
+      source: addF.source,
+      requirement: addF.requirement,
+      status: addF.status,
+      nextAction: addF.nextAction,
+      followUpDate: addF.followUpDate,
+      expectedRevenue: Number(addF.expectedRevenue)||0,
+      actualRevenue: Number(addF.actualRevenue)||0,
+      remarks: addF.remarks,
+      history: [mkEntry('Lead created', addF)],
+      createdAt: nowStr,
+      updatedAt: nowStr
+    };
     setDocumentNonBlocking(profileRef, { ezLeads:[...leads,lead] }, { merge:true });
     setAddF(blank(today)); setShowAdd(false);
   };
@@ -558,13 +590,32 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                       </TableCell>
                       <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{fmtDateWithDay(l.date)}</TableCell>
                       <TableCell><Badge className={`border text-[9px] font-black uppercase ${TYPE_CLR[l.leadType]}`}>{l.leadType}</Badge></TableCell>
-                      <TableCell className="font-bold py-3 max-w-[130px]"><div className="text-slate-900 truncate">{l.organization}</div><div className="text-[10px] text-muted-foreground truncate">{l.requirement}</div></TableCell>
+                      <TableCell className="font-bold py-3 max-w-[130px]">
+                        <div className="text-slate-900 truncate">{l.organization}</div>
+                        <div className="text-[10px] text-muted-foreground truncate">{l.requirement}</div>
+                        {(l.createdAt || (l.history && l.history.length > 0 ? l.history[0].timestamp : null)) && (
+                          <div className="text-[9px] text-slate-400 font-medium">
+                            Created: {new Date(l.createdAt || l.history[0].timestamp).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })} at {formatTime(l.createdAt || l.history[0].timestamp)}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-xs text-slate-600 max-w-[100px]"><div className="font-medium truncate">{l.contactPerson||'—'}</div>{l.phone&&<div className="flex items-center gap-0.5 text-[10px] text-slate-400"><Phone className="w-2.5 h-2.5"/>{l.phone}</div>}{l.email&&<div className="flex items-center gap-0.5 text-[10px] text-slate-400 truncate"><Mail className="w-2.5 h-2.5"/>{l.email}</div>}</TableCell>
                       <TableCell><Badge className={`border text-[9px] font-black whitespace-nowrap ${STAT_CLR[l.status]}`}>{STAT_LABELS[l.status]}</Badge></TableCell>
                       <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{l.followUpDate?<div className="flex items-center gap-0.5"><Calendar className="w-3 h-3 text-amber-500"/>{fmtDateWithDay(l.followUpDate)}</div>:'—'}</TableCell>
                       <TableCell className="font-code font-bold text-indigo-700 whitespace-nowrap">{l.expectedRevenue>0?fmtINR(l.expectedRevenue):'—'}</TableCell>
                       <TableCell className="font-code font-bold text-emerald-700 whitespace-nowrap">{l.actualRevenue>0?fmtINR(l.actualRevenue):'—'}</TableCell>
-                      <TableCell className="text-xs text-slate-500 max-w-[100px]"><div className="truncate">{l.remarks||'—'}</div>{(l.history||[]).length>0&&<div className="text-[9px] text-indigo-400 flex items-center gap-0.5 mt-0.5"><History className="w-2.5 h-2.5"/>{l.history.length} updates</div>}</TableCell>
+                      <TableCell className="text-xs text-slate-500 max-w-[100px]">
+                        <div className="truncate">{l.remarks||'—'}</div>
+                        {(l.history||[]).length>0&& (
+                          <div className="text-[9px] text-indigo-400 flex items-center gap-0.5 mt-0.5 flex-wrap">
+                            <History className="w-2.5 h-2.5 shrink-0"/>
+                            <span>{l.history.length} updates</span>
+                            <span className="text-slate-400 text-[8px] ml-1">
+                              (Mod: {new Date(l.updatedAt || l.history[l.history.length - 1].timestamp).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })} at {formatTime(l.updatedAt || l.history[l.history.length - 1].timestamp)})
+                            </span>
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
