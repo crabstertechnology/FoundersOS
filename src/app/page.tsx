@@ -8,7 +8,7 @@ import {
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
   Menu, X, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
-  ShieldAlert, Calendar, Box, Megaphone
+  ShieldAlert, Calendar, Box, Megaphone, Pin, PinOff
 } from 'lucide-react';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
@@ -45,6 +45,22 @@ export default function FounderOSPage() {
   const [isOperationsExpanded, setIsOperationsExpanded] = useState(true);
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarAutoHide, setIsSidebarAutoHide] = useState(false);
+  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+
+  // Load sidebar auto-hide preference on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem('sidebarAutoHidePreference');
+    if (saved === 'true') {
+      setIsSidebarAutoHide(true);
+    }
+  }, []);
+
+  const toggleSidebarAutoHide = () => {
+    const newVal = !isSidebarAutoHide;
+    setIsSidebarAutoHide(newVal);
+    localStorage.setItem('sidebarAutoHidePreference', String(newVal));
+  };
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -270,8 +286,25 @@ export default function FounderOSPage() {
 
   return (
     <div className="min-h-screen flex bg-slate-50/30">
+      {/* Auto-hide Sidebar Hover Trigger Zone */}
+      {isSidebarAutoHide && (
+        <div 
+          className="fixed left-0 top-0 bottom-0 w-2.5 z-40 bg-transparent" 
+          onMouseEnter={() => setIsSidebarHovered(true)}
+        />
+      )}
+
       {/* Desktop Left Sidebar */}
-      <aside className={`hidden md:flex ${isSidebarMinimized ? 'w-[76px]' : 'w-72'} bg-[#090d16] border-r border-slate-800 text-slate-300 flex-col h-screen sticky top-0 shrink-0 select-none transition-all duration-300`}>
+      <aside 
+        onMouseEnter={() => isSidebarAutoHide && setIsSidebarHovered(true)}
+        onMouseLeave={() => isSidebarAutoHide && setIsSidebarHovered(false)}
+        className={`hidden md:flex flex-col h-screen select-none bg-[#090d16] border-r border-slate-800 text-slate-300 transition-all duration-300 ease-in-out shrink-0
+          ${isSidebarAutoHide 
+            ? `fixed left-0 top-0 z-50 shadow-2xl ${isSidebarMinimized ? 'w-[76px]' : 'w-72'} ${isSidebarHovered ? 'translate-x-0' : '-translate-x-full'}` 
+            : `sticky top-0 ${isSidebarMinimized ? 'w-[76px]' : 'w-72'}`
+          }
+        `}
+      >
         {/* Brand Header */}
         <div className={`h-16 border-b border-slate-800/80 flex items-center justify-between ${isSidebarMinimized ? 'px-3 justify-center' : 'px-6'} transition-all duration-300`}>
           <div className="flex items-center gap-3 overflow-hidden">
@@ -280,13 +313,31 @@ export default function FounderOSPage() {
               <span className="font-headline font-black text-xl tracking-tight text-white animate-in fade-in duration-200">FOUNDER<span className="text-primary">OS</span></span>
             )}
           </div>
-          <button
-            onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
-            className={`text-slate-400 hover:text-white p-1 hover:bg-slate-850 rounded-lg hidden md:block shrink-0 ${isSidebarMinimized ? 'mt-0.5' : ''}`}
-            title={isSidebarMinimized ? "Expand Sidebar" : "Minimize Sidebar"}
-          >
-            {isSidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
+          
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Auto-hide toggle (Pin/Unpin) */}
+            {!isSidebarMinimized && (
+              <button
+                onClick={toggleSidebarAutoHide}
+                className="text-slate-400 hover:text-white p-1.5 hover:bg-slate-800/60 rounded-lg transition-all"
+                title={isSidebarAutoHide ? "Pin Sidebar (Disable Auto-hide)" : "Unpin Sidebar (Enable Auto-hide)"}
+              >
+                {isSidebarAutoHide ? (
+                  <PinOff className="w-4 h-4 text-primary" />
+                ) : (
+                  <Pin className="w-4 h-4" />
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
+              className={`text-slate-400 hover:text-white p-1 hover:bg-slate-850 rounded-lg hidden md:block shrink-0 ${isSidebarMinimized ? 'mt-0.5' : ''}`}
+              title={isSidebarMinimized ? "Expand Sidebar" : "Minimize Sidebar"}
+            >
+              {isSidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Navigation List */}
