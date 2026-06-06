@@ -78,8 +78,10 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
   const [expandedScriptId, setExpandedScriptId] = useState<string | null>(null);
   const [selectedHistoryScript, setSelectedHistoryScript] = useState<ColdCallScriptHistoryItem | null>(null);
 
-  // Performance Tracker Logs
-  const logs: PerformanceLog[] = useMemo(() => profile?.ezSalesPerformanceLogs || [], [profile]);
+  const [isCustomerTypesOpen, setIsCustomerTypesOpen] = useState(false);
+  const [isObjectionSolverOpen, setIsObjectionSolverOpen] = useState(false);
+  const [isScriptHistoryOpen, setIsScriptHistoryOpen] = useState(false);
+  const [isBlueprintHistoryOpen, setIsBlueprintHistoryOpen] = useState(false);
 
   // Custom Pitch Formula state
   const savedPitch = useMemo(() => profile?.ezCustomPitchFormula || {
@@ -311,17 +313,6 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
     }
   };
 
-  // Form states for logging new sales activity
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [leadsContacted, setLeadsContacted] = useState(20);
-  const [conversationsDone, setConversationsDone] = useState(10);
-  const [painPointsIdentified, setPainPointsIdentified] = useState(8);
-  const [pitchesDelivered, setPitchesDelivered] = useState(5);
-  const [objectionsHandled, setObjectionsHandled] = useState(4);
-  const [salesClosed, setSalesClosed] = useState(2);
-  const [notes, setNotes] = useState('');
-  const [isLogging, setIsLogging] = useState(false);
-
   // Copy helper
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -343,74 +334,6 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
       setIsSavingPitch(false);
     }
   };
-
-  // Add a new performance log
-  const handleAddLog = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profileRef || readOnly) return;
-    setIsLogging(true);
-
-    const newLog: PerformanceLog = {
-      id: Math.random().toString(36).substring(2, 9),
-      date,
-      leadsContacted: Number(leadsContacted),
-      conversationsDone: Number(conversationsDone),
-      painPointsIdentified: Number(painPointsIdentified),
-      pitchesDelivered: Number(pitchesDelivered),
-      objectionsHandled: Number(objectionsHandled),
-      salesClosed: Number(salesClosed),
-      notes: notes.trim()
-    };
-
-    try {
-      const updatedLogs = [newLog, ...logs].sort((a, b) => b.date.localeCompare(a.date));
-      await setDocumentNonBlocking(profileRef, {
-        ezSalesPerformanceLogs: updatedLogs
-      }, { merge: true });
-
-      // Reset log form (keep numbers at targets, clear notes, default to current date)
-      setDate(new Date().toISOString().split('T')[0]);
-      setNotes('');
-    } catch (err) {
-      console.error('Error adding sales performance log:', err);
-    } finally {
-      setIsLogging(false);
-    }
-  };
-
-  // Delete a performance log
-  const handleDeleteLog = async (id: string) => {
-    if (!profileRef || readOnly) return;
-    if (!confirm('Are you sure you want to delete this log?')) return;
-
-    try {
-      const updatedLogs = logs.filter(l => l.id !== id);
-      await setDocumentNonBlocking(profileRef, {
-        ezSalesPerformanceLogs: updatedLogs
-      }, { merge: true });
-    } catch (err) {
-      console.error('Error deleting sales performance log:', err);
-    }
-  };
-
-  // Aggregate stats
-  const aggregateStats = useMemo(() => {
-    if (logs.length === 0) return {
-      totalLeads: 0,
-      totalConversations: 0,
-      totalPitches: 0,
-      totalSales: 0,
-      avgConversion: 0
-    };
-
-    const totalLeads = logs.reduce((sum, l) => sum + l.leadsContacted, 0);
-    const totalConversations = logs.reduce((sum, l) => sum + l.conversationsDone, 0);
-    const totalPitches = logs.reduce((sum, l) => sum + l.pitchesDelivered, 0);
-    const totalSales = logs.reduce((sum, l) => sum + l.salesClosed, 0);
-    const avgConversion = totalConversations > 0 ? Math.round((totalSales / totalConversations) * 100) : 0;
-
-    return { totalLeads, totalConversations, totalPitches, totalSales, avgConversion };
-  }, [logs]);
 
   // Selected script templates for customer types
   const [selectedCustType, setSelectedCustType] = useState('price');
@@ -677,15 +600,52 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
             Use this interactive guide to train, build pitch scripts, and track team conversion performance.
           </p>
         </div>
-        <div className="flex gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
-          <div className="text-center bg-indigo-900/40 border border-indigo-500/20 rounded-xl px-4 py-2 flex-1 md:flex-none min-w-24 md:min-w-28">
-            <div className="text-xl font-black text-indigo-400">{aggregateStats.totalSales}</div>
-            <div className="text-[10px] text-slate-400 font-bold uppercase">Deals Closed</div>
-          </div>
-          <div className="text-center bg-indigo-900/40 border border-indigo-500/20 rounded-xl px-4 py-2 flex-1 md:flex-none min-w-24 md:min-w-28">
-            <div className="text-xl font-black text-emerald-450">{aggregateStats.avgConversion}%</div>
-            <div className="text-[10px] text-slate-400 font-bold uppercase">Avg Conv. Rate</div>
-          </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <Button
+            size="icon"
+            onClick={() => setIsCustomerTypesOpen(true)}
+            title="Customer Types"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center"
+          >
+            <User className="w-5 h-5 text-indigo-300" />
+          </Button>
+
+          <Button
+            size="icon"
+            onClick={() => setIsObjectionSolverOpen(true)}
+            title="Objection Solver"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center"
+          >
+            <ShieldAlert className="w-5 h-5 text-amber-300" />
+          </Button>
+
+          <Button
+            size="icon"
+            onClick={() => setIsScriptHistoryOpen(true)}
+            title="Script History"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center relative"
+          >
+            <History className="w-5 h-5 text-emerald-300" />
+            {scriptHistory.length > 0 && (
+              <Badge className="absolute -top-1 -right-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[8px] h-4 w-4 flex items-center justify-center p-0 rounded-full border-none">
+                {scriptHistory.length}
+              </Badge>
+            )}
+          </Button>
+
+          <Button
+            size="icon"
+            onClick={() => setIsBlueprintHistoryOpen(true)}
+            title="Blueprint History"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center relative"
+          >
+            <BookOpen className="w-5 h-5 text-sky-300" />
+            {history.length > 0 && (
+              <Badge className="absolute -top-1 -right-1 bg-sky-500 hover:bg-sky-600 text-white font-black text-[8px] h-4 w-4 flex items-center justify-center p-0 rounded-full border-none">
+                {history.length}
+              </Badge>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -697,9 +657,6 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
             </TabsTrigger>
             <TabsTrigger value="scripts" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <PhoneCall className="w-3.5 h-3.5" /> Cold Call & Pitch Templates
-            </TabsTrigger>
-            <TabsTrigger value="tracker" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
-              <BarChart3 className="w-3.5 h-3.5" /> Sales Tracker Sub-Logs
             </TabsTrigger>
             <TabsTrigger value="mentor" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <Award className="w-3.5 h-3.5" /> Mentor Coaching Guide
@@ -1439,112 +1396,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>If you give up on the first No → You lose.</span>
                   </div>
-                  <div className="text-[11px] text-slate-800 font-black border-t border-rose-100 pt-2 mt-3">
+                  <div className="text-[11px] text-slate-805 font-black border-t border-rose-100 pt-2 mt-3">
                     Sales is not luck. It is a repeatable system. Follow it.
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* AI Blueprint History Card */}
-              <Card className="border-2 border-indigo-150 shadow-sm bg-white overflow-hidden">
-                <CardHeader className="pb-3 border-b bg-indigo-50/10 flex flex-row items-center justify-between gap-3">
-                  <CardTitle className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-indigo-600 animate-pulse" />
-                    AI Blueprint History
-                  </CardTitle>
-                  <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
-                    {history.length} Saved
-                  </Badge>
-                </CardHeader>
-                <CardContent className="p-4">
-                  {history.length === 0 ? (
-                    <div className="py-6 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
-                      <Sparkles className="w-8 h-8 text-indigo-200" />
-                      <div className="text-[11px] font-extrabold text-slate-500">No blueprints saved yet</div>
-                      <p className="text-[10px] text-slate-400 font-semibold leading-relaxed max-w-xs">
-                        Click <strong className="text-indigo-600 font-black">"Map My Product"</strong> inside any of the syllabus steps to generate and auto-save a custom guide!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 scrollbar-none">
-                      {history.map((item) => {
-                        const isExpanded = expandedHistoryId === item.id;
-                        return (
-                          <div 
-                            key={item.id} 
-                            className={`border rounded-xl transition-all duration-200 overflow-hidden ${
-                              isExpanded 
-                                ? 'bg-indigo-50/30 border-indigo-200 shadow-sm' 
-                                : 'bg-slate-50/40 hover:bg-slate-50 border-slate-200'
-                            }`}
-                          >
-                            {/* Summary Header */}
-                            <div className="p-3 flex items-start justify-between gap-2.5">
-                              <button
-                                type="button"
-                                onClick={() => setExpandedHistoryId(isExpanded ? null : item.id)}
-                                className="flex-1 text-left space-y-1"
-                              >
-                                <div className="flex items-center gap-1 flex-wrap">
-                                  <Badge className="bg-indigo-100 text-indigo-800 text-[9px] font-black uppercase px-1.5 border-none h-4">
-                                    Step {item.stepNumber}
-                                  </Badge>
-                                  <span className="text-[9px] font-bold text-slate-400 font-mono">
-                                    {item.timestamp}
-                                  </span>
-                                </div>
-                                <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-600 transition-colors pt-0.5">
-                                  {item.stepTitle.replace(/^\d+\.\s*/, '')}
-                                </h5>
-                              </button>
-                              
-                              <Button
-                                size="icon"
-                                type="button"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteHistoryItem(item.id);
-                                }}
-                                className="h-6 w-6 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-
-                            {/* Collapsible Expanded Content */}
-                            {isExpanded && (
-                              <div className="px-3 pb-3 border-t border-indigo-100/60 pt-3 bg-white space-y-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                <div className="space-y-1 text-[10.5px] leading-relaxed text-slate-700 font-medium">
-                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">B2B Strategy:</span>
-                                  <p className="whitespace-pre-line bg-slate-50/50 p-2 border rounded-lg">{item.explanation}</p>
-                                </div>
-
-                                <div className="space-y-1">
-                                  <span className="text-[9px] uppercase font-black text-indigo-900 block">Context Dialogue Example:</span>
-                                  <p className="text-[10.5px] leading-relaxed text-slate-800 italic bg-amber-50/30 border border-amber-100/60 rounded-lg p-2.5 font-semibold font-mono">
-                                    "{item.concreteExample}"
-                                  </p>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                  <span className="text-[9px] uppercase font-black text-slate-500 block">Action Checklist:</span>
-                                  <div className="space-y-1 flex flex-col">
-                                    {item.actionableTasks.map((task, idx) => (
-                                      <label key={idx} className="flex items-start gap-2 text-[10px] font-semibold text-slate-750 cursor-pointer select-none">
-                                        <input type="checkbox" className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3" />
-                                        <span>{task}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
@@ -1552,12 +1406,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
           </div>
         </TabsContent>
 
-        {/* ================= TAB 2: COLD CALL & PITCH TEMPLATES ================= */}
         <TabsContent value="scripts" className="focus-visible:outline-none animate-in fade-in duration-300">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* Interactive Pitch Formula Builder (col-span-2) */}
-            <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 max-w-5xl mx-auto">
 
               {/* AI Value-Driven Script Generator */}
               <Card className="border-2 border-indigo-100 bg-indigo-50/10 shadow-sm bg-white overflow-hidden">
@@ -1799,505 +1649,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   )}
                 </CardContent>
               </Card>
-
-              {/* Customer Types Interactive Solver */}
-              <Card className="border-2 border-indigo-50 shadow-sm bg-white overflow-hidden">
-                <CardHeader className="border-b bg-indigo-50/10 pb-4">
-                  <CardTitle className="text-base font-black text-slate-800">Customer Types Script Selector</CardTitle>
-                  <CardDescription className="text-xs">
-                    Select a buyer profile to view personalized signals, approaches, scripts, and rules.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  {/* Selector Tabs */}
-                  <div className="flex flex-wrap gap-2 pb-4 border-b">
-                    {[
-                      { id: 'price', label: '💰 Price-Focused' },
-                      { id: 'quality', label: '🏆 Quality-Focused' },
-                      { id: 'urgent', label: '⚡ Urgent Buyer' },
-                      { id: 'curious', label: '🔍 Curious Learner' }
-                    ].map(type => (
-                      <Button
-                        key={type.id}
-                        size="sm"
-                        variant={selectedCustType === type.id ? 'default' : 'outline'}
-                        onClick={() => setSelectedCustType(type.id)}
-                        className={`text-xs font-bold h-8 rounded-full ${
-                          selectedCustType === type.id ? 'bg-indigo-600 hover:bg-indigo-750 text-white' : ''
-                        }`}
-                      >
-                        {type.label}
-                      </Button>
-                    ))}
-                  </div>
-
-                  {/* Render active customer type info */}
-                  {(() => {
-                    const ct = customerTypes[selectedCustType as keyof typeof customerTypes];
-                    return (
-                      <div className="pt-4 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <span className="text-[10px] uppercase font-black text-indigo-650">Signal / Buying Cue:</span>
-                            <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-lg">{ct.signal}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <span className="text-[10px] uppercase font-black text-indigo-650">Strategic Approach:</span>
-                            <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-lg">{ct.approach}</p>
-                          </div>
-                        </div>
-
-                        {/* Copy Script Container */}
-                        <div className="bg-indigo-50/20 border border-indigo-100 rounded-xl p-4 space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] uppercase font-black text-indigo-800">Exact Script to Use:</span>
-                            {copiedText === `ct-${selectedCustType}` ? (
-                              <Badge className="bg-emerald-500 text-white border-none py-0.5 px-2">Copied!</Badge>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleCopy(ct.script, `ct-${selectedCustType}`)}
-                                className="h-6 text-[9px] font-bold border border-indigo-200/50 bg-white"
-                              >
-                                <Copy className="w-3 h-3" /> Copy
-                              </Button>
-                            )}
-                          </div>
-                          <p className="text-xs font-bold text-slate-800 italic leading-relaxed">
-                            {ct.script}
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                          <div className="bg-emerald-50/20 border border-emerald-100 rounded-lg p-3">
-                            <div className="text-[10px] font-black text-emerald-800 uppercase mb-1.5 flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Do This
-                            </div>
-                            <ul className="space-y-1 text-slate-700 text-[10.5px] font-semibold list-disc list-inside">
-                              {ct.dos.map((d, i) => <li key={i}>{d}</li>)}
-                            </ul>
-                          </div>
-                          <div className="bg-rose-50/20 border border-rose-100 rounded-lg p-3">
-                            <div className="text-[10px] font-black text-rose-800 uppercase mb-1.5 flex items-center gap-1">
-                              <XCircle className="w-3.5 h-3.5 text-rose-600" /> Never Do This
-                            </div>
-                            <ul className="space-y-1 text-slate-700 text-[10.5px] font-semibold list-disc list-inside">
-                              {ct.donts.map((d, i) => <li key={i}>{d}</li>)}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
             </div>
-
-            {/* Objection Solver Panel (col-span-1) */}
-            <div className="space-y-6">
-              
-              <Card className="border-2 border-indigo-50 shadow-sm bg-white overflow-hidden">
-                <CardHeader className="border-b bg-indigo-50/10 pb-4">
-                  <div className="flex items-center gap-2 text-indigo-650">
-                    <ShieldAlert className="w-5 h-5" />
-                    <CardTitle className="text-base font-black text-slate-805">Objection Handling Solver</CardTitle>
-                  </div>
-                  <CardDescription className="text-xs">
-                    Choose a typical customer objection to see the root cause, strategy, and reframe script instantly.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                  {/* Objection List */}
-                  <div className="flex flex-col gap-1.5">
-                    {[
-                      { id: 'expensive', label: '💸 "Too Expensive"' },
-                      { id: 'timing', label: '⏳ "Not Needed Now"' },
-                      { id: 'checking', label: '🔍 "Just Checking"' },
-                      { id: 'competitor', label: '🤝 "Already Have a Solution"' },
-                      { id: 'think', label: '🤔 "Let Me Think About It"' }
-                    ].map(obj => (
-                      <button
-                        key={obj.id}
-                        onClick={() => setSelectedObjection(obj.id)}
-                        className={`text-left text-xs font-bold p-2.5 rounded-lg border transition-all ${
-                          selectedObjection === obj.id 
-                            ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-sm font-extrabold'
-                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {obj.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Render active objection info */}
-                  {(() => {
-                    const obj = objections[selectedObjection as keyof typeof objections];
-                    return (
-                      <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
-                        <h4 className="font-black text-xs text-indigo-950 uppercase border-b pb-2 flex items-center justify-between">
-                          <span>{obj.title} solver</span>
-                          <Badge className="bg-indigo-100 text-indigo-850 hover:bg-indigo-200 text-[8px] font-black uppercase">Objection</Badge>
-                        </h4>
-                        
-                        <div className="space-y-1">
-                          <span className="text-[9px] uppercase font-black text-slate-400">Root Cause:</span>
-                          <p className="text-[11px] font-semibold text-slate-700 leading-normal">{obj.root}</p>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <span className="text-[9px] uppercase font-black text-slate-400">Reframe Strategy:</span>
-                          <p className="text-[11px] font-semibold text-slate-700 leading-normal">{obj.strategy}</p>
-                        </div>
-
-                        <div className="bg-white border rounded-lg p-3 space-y-2 mt-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[9px] uppercase font-black text-indigo-800">Exact Script to Use:</span>
-                            {copiedText === `obj-${selectedObjection}` ? (
-                              <Badge className="bg-emerald-500 text-white border-none py-0.5 px-2">Copied!</Badge>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleCopy(obj.script, `obj-${selectedObjection}`)}
-                                className="h-6 text-[8px] font-bold border"
-                              >
-                                <Copy className="w-2.5 h-2.5" />
-                              </Button>
-                            )}
-                          </div>
-                          <p className="text-xs font-bold text-slate-805 leading-relaxed italic">
-                            {obj.script}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Cold Call Script History Card */}
-              <Card className="border-2 border-indigo-150 shadow-sm bg-white overflow-hidden">
-                <CardHeader className="pb-3 border-b bg-indigo-50/10 flex flex-row items-center justify-between gap-3">
-                  <CardTitle className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                    <History className="w-4 h-4 text-indigo-650" />
-                    Script History
-                  </CardTitle>
-                  <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
-                    {scriptHistory.length} Saved
-                  </Badge>
-                </CardHeader>
-                <CardContent className="p-4">
-                  {scriptHistory.length === 0 ? (
-                    <div className="py-6 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
-                      <Sparkles className="w-8 h-8 text-indigo-200" />
-                      <div className="text-[11px] font-extrabold text-slate-500">No scripts generated yet</div>
-                      <p className="text-[10px] text-slate-400 font-semibold leading-relaxed max-w-xs text-center">
-                        Input details and click <strong className="text-indigo-600 font-black">"Generate"</strong> to create and auto-save a script!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 scrollbar-none">
-                      {scriptHistory.map((item) => {
-                        return (
-                          <div 
-                            key={item.id} 
-                            onClick={() => setSelectedHistoryScript(item)}
-                            className="border rounded-xl transition-all duration-200 overflow-hidden bg-slate-50/40 hover:bg-slate-50 border-slate-200 group cursor-pointer"
-                          >
-                            {/* Summary Header */}
-                            <div className="p-3 flex items-start justify-between gap-2.5">
-                              <div className="flex-1 text-left space-y-1">
-                                <div className="flex items-center gap-1 flex-wrap">
-                                  <Badge className="bg-indigo-100 text-indigo-800 text-[9px] font-black uppercase px-1.5 border-none h-4">
-                                    {item.buyerType}-focused
-                                  </Badge>
-                                  <span className="text-[9px] font-bold text-slate-400 font-mono">
-                                    {item.timestamp}
-                                  </span>
-                                </div>
-                                <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-650 transition-colors pt-0.5 flex items-center justify-between gap-1">
-                                  <span>{item.productName} for {item.targetAudience}</span>
-                                  <Maximize2 className="w-3.5 h-3.5 text-slate-450 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
-                                </h5>
-                              </div>
-                              
-                              <Button
-                                size="icon"
-                                type="button"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteScriptItem(item.id);
-                                }}
-                                className="h-6 w-6 text-slate-405 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none animate-in fade-in"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* ================= TAB 3: PERFORMANCE TRACKER SUB-LOGS ================= */}
-        <TabsContent value="tracker" className="focus-visible:outline-none animate-in fade-in duration-300">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* Historical tracker logs (col-span-2) */}
-            <div className="lg:col-span-2 space-y-6">
-              
-              {/* Tracker Metrics table */}
-              <Card className="border-2 border-indigo-50 shadow-sm bg-white overflow-hidden">
-                <CardHeader className="pb-3 border-b bg-indigo-50/5 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-indigo-600" />
-                      Sales Conversion Sub-Logs
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Logged sales activity metrics, call results, and custom pitch conversions.
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {logs.length === 0 ? (
-                    <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center gap-3">
-                      <BarChart3 className="w-10 h-10 text-indigo-200" />
-                      <div>
-                        <p className="text-xs font-bold">Your Sales Sub-Logs are empty.</p>
-                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">Use the "Log Sales Session" form to track calls, pitches, and closed deals.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto scrollbar-none">
-                      <Table className="text-[11px] font-medium text-slate-700 min-w-[750px]">
-                        <TableHeader className="bg-slate-50 text-[10px] uppercase font-black text-slate-500">
-                          <TableRow>
-                            <TableHead className="py-2.5">Date</TableHead>
-                            <TableHead className="py-2.5 text-center">Leads</TableHead>
-                            <TableHead className="py-2.5 text-center">Conv. Done</TableHead>
-                            <TableHead className="py-2.5 text-center">Pains Found</TableHead>
-                            <TableHead className="py-2.5 text-center">Pitches</TableHead>
-                            <TableHead className="py-2.5 text-center">Obj. Handled</TableHead>
-                            <TableHead className="py-2.5 text-center">Closed</TableHead>
-                            <TableHead className="py-2.5 text-center">Conv. %</TableHead>
-                            {!readOnly && <TableHead className="py-2.5 text-right w-12"></TableHead>}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {logs.map((log) => {
-                            const convRate = log.conversationsDone > 0 ? Math.round((log.salesClosed / log.conversationsDone) * 100) : 0;
-                            return (
-                              <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                                <TableCell className="py-2.5 font-bold">{log.date}</TableCell>
-                                <TableCell className="py-2.5 text-center font-bold text-slate-800">{log.leadsContacted}</TableCell>
-                                <TableCell className="py-2.5 text-center font-bold text-slate-850">{log.conversationsDone}</TableCell>
-                                <TableCell className="py-2.5 text-center">{log.painPointsIdentified}</TableCell>
-                                <TableCell className="py-2.5 text-center">{log.pitchesDelivered}</TableCell>
-                                <TableCell className="py-2.5 text-center">{log.objectionsHandled}</TableCell>
-                                <TableCell className="py-2.5 text-center font-bold text-emerald-650">{log.salesClosed}</TableCell>
-                                <TableCell className="py-2.5 text-center">
-                                  <Badge className={`border text-[9px] uppercase font-black px-1.5 ${
-                                    convRate >= 20 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                    convRate >= 10 ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                    'bg-rose-50 text-rose-700 border-rose-100'
-                                  }`}>
-                                    {convRate}%
-                                  </Badge>
-                                </TableCell>
-                                {!readOnly && (
-                                  <TableCell className="py-2.5 text-right">
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      onClick={() => handleDeleteLog(log.id)}
-                                      className="h-6 w-6 text-slate-400 hover:text-rose-600 rounded-md"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                  </TableCell>
-                                )}
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-            </div>
-
-            {/* Form to log new daily sales session (col-span-1) */}
-            <div className="space-y-6">
-              
-              <Card className="border-2 border-indigo-150 shadow-sm bg-white overflow-hidden">
-                <CardHeader className="border-b bg-indigo-50/15 pb-4">
-                  <div className="flex items-center gap-1.5 text-indigo-705">
-                    <Plus className="w-4.5 h-4.5" />
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider">Log Sales Session</CardTitle>
-                  </div>
-                  <CardDescription className="text-xs">
-                    Log daily outreach calls to update team KPIs and calculate conversions.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <form onSubmit={handleAddLog} className="space-y-3.5">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-700 uppercase">Log Date</label>
-                      <Input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="text-xs font-semibold h-8"
-                        required
-                        disabled={readOnly}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center justify-between">
-                          <span>Leads Call</span>
-                          <span className="text-[8px] text-slate-400">Target: 20</span>
-                        </label>
-                        <Input
-                          type="number"
-                          value={leadsContacted}
-                          onChange={(e) => setLeadsContacted(Number(e.target.value))}
-                          className="text-xs font-bold h-8"
-                          min={0}
-                          required
-                          disabled={readOnly}
-                        />
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center justify-between">
-                          <span>Talk Done</span>
-                          <span className="text-[8px] text-slate-400">Target: 10</span>
-                        </label>
-                        <Input
-                          type="number"
-                          value={conversationsDone}
-                          onChange={(e) => setConversationsDone(Number(e.target.value))}
-                          className="text-xs font-bold h-8"
-                          min={0}
-                          required
-                          disabled={readOnly}
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center justify-between">
-                          <span>Pains Found</span>
-                          <span className="text-[8px] text-slate-400">Target: 8</span>
-                        </label>
-                        <Input
-                          type="number"
-                          value={painPointsIdentified}
-                          onChange={(e) => setPainPointsIdentified(Number(e.target.value))}
-                          className="text-xs font-bold h-8"
-                          min={0}
-                          required
-                          disabled={readOnly}
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center justify-between">
-                          <span>Pitches</span>
-                          <span className="text-[8px] text-slate-400">Target: 5</span>
-                        </label>
-                        <Input
-                          type="number"
-                          value={pitchesDelivered}
-                          onChange={(e) => setPitchesDelivered(Number(e.target.value))}
-                          className="text-xs font-bold h-8"
-                          min={0}
-                          required
-                          disabled={readOnly}
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center justify-between">
-                          <span>Obj Handled</span>
-                          <span className="text-[8px] text-slate-400">Target: 4</span>
-                        </label>
-                        <Input
-                          type="number"
-                          value={objectionsHandled}
-                          onChange={(e) => setObjectionsHandled(Number(e.target.value))}
-                          className="text-xs font-bold h-8"
-                          min={0}
-                          required
-                          disabled={readOnly}
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center justify-between">
-                          <span>Sales Closed</span>
-                          <span className="text-[8px] text-slate-400">Target: 2</span>
-                        </label>
-                        <Input
-                          type="number"
-                          value={salesClosed}
-                          onChange={(e) => setSalesClosed(Number(e.target.value))}
-                          className="text-xs font-bold h-8 text-emerald-650"
-                          min={0}
-                          required
-                          disabled={readOnly}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-700 uppercase">Notes / Call Insights</label>
-                      <Input
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="e.g. Price was issue for 2 leads; pitched EZCirkit ROI successfully"
-                        className="text-xs font-semibold h-8"
-                        disabled={readOnly}
-                      />
-                    </div>
-
-                    {/* Dynamic conversion rate box */}
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-indigo-900 uppercase">Rate for this log:</span>
-                      <Badge className="bg-indigo-600 text-white font-black text-xs border-none py-0.5 px-2">
-                        {conversationsDone > 0 ? Math.round((salesClosed / conversationsDone) * 100) : 0}% Conv.
-                      </Badge>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={isLogging || readOnly}
-                      className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-9 text-xs rounded-lg shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 mr-1.5" />
-                      {isLogging ? 'Logging Session...' : 'Log Sales Session'}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-            </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
         {/* ================= TAB 4: MENTOR COACHING GUIDE ================= */}
         <TabsContent value="mentor" className="focus-visible:outline-none animate-in fade-in duration-300">
@@ -2521,6 +1874,373 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Customer Types Script Selector Dialog */}
+      <Dialog open={isCustomerTypesOpen} onOpenChange={setIsCustomerTypesOpen}>
+        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+          <DialogHeader className="p-6 border-b bg-indigo-50/15 text-left">
+            <DialogTitle className="text-base font-black text-slate-900">Customer Types Script Selector</DialogTitle>
+            <DialogDescription className="text-xs">
+              Select a buyer profile to view personalized signals, approaches, scripts, and rules.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6 space-y-6">
+            {/* Selector Tabs */}
+            <div className="flex flex-wrap gap-2 pb-4 border-b">
+              {[
+                { id: 'price', label: '💰 Price-Focused' },
+                { id: 'quality', label: '🏆 Quality-Focused' },
+                { id: 'urgent', label: '⚡ Urgent Buyer' },
+                { id: 'curious', label: '🔍 Curious Learner' }
+              ].map(type => (
+                <Button
+                  key={type.id}
+                  size="sm"
+                  variant={selectedCustType === type.id ? 'default' : 'outline'}
+                  onClick={() => setSelectedCustType(type.id)}
+                  className={`text-xs font-bold h-8 rounded-full ${
+                    selectedCustType === type.id ? 'bg-indigo-600 hover:bg-indigo-750 text-white border-none' : ''
+                  }`}
+                >
+                  {type.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Render active customer type info */}
+            {(() => {
+              const ct = customerTypes[selectedCustType as keyof typeof customerTypes];
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] uppercase font-black text-indigo-650">Signal / Buying Cue:</span>
+                      <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-lg">{ct.signal}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] uppercase font-black text-indigo-650">Strategic Approach:</span>
+                      <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-lg">{ct.approach}</p>
+                    </div>
+                  </div>
+
+                  {/* Copy Script Container */}
+                  <div className="bg-indigo-50/20 border border-indigo-100 rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] uppercase font-black text-indigo-850">Exact Script to Use:</span>
+                      {copiedText === `ct-${selectedCustType}` ? (
+                        <Badge className="bg-emerald-500 text-white border-none py-0.5 px-2">Copied!</Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleCopy(ct.script, `ct-${selectedCustType}`)}
+                          className="h-6 text-[9px] font-bold border border-indigo-200/50 bg-white"
+                        >
+                          <Copy className="w-3 h-3 mr-1" /> Copy
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 italic leading-relaxed">
+                      {ct.script}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="bg-emerald-50/20 border border-emerald-100 rounded-lg p-3">
+                      <div className="text-[10px] font-black text-emerald-800 uppercase mb-1.5 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Do This
+                      </div>
+                      <ul className="space-y-1 text-slate-700 text-[10.5px] font-semibold list-disc list-inside">
+                        {ct.dos.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                    <div className="bg-rose-50/20 border border-rose-100 rounded-lg p-3">
+                      <div className="text-[10px] font-black text-rose-800 uppercase mb-1.5 flex items-center gap-1">
+                        <XCircle className="w-3.5 h-3.5 text-rose-600" /> Never Do This
+                      </div>
+                      <ul className="space-y-1 text-slate-700 text-[10.5px] font-semibold list-disc list-inside">
+                        {ct.donts.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Objection Handling Solver Dialog */}
+      <Dialog open={isObjectionSolverOpen} onOpenChange={setIsObjectionSolverOpen}>
+        <DialogContent className="max-w-[95vw] w-full md:max-w-4xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+          <DialogHeader className="p-6 border-b bg-indigo-50/15 text-left">
+            <div className="flex items-center gap-2 text-indigo-650">
+              <ShieldAlert className="w-5 h-5 text-indigo-600" />
+              <DialogTitle className="text-base font-black text-slate-900">Objection Handling Solver</DialogTitle>
+            </div>
+            <DialogDescription className="text-xs">
+              Choose a typical customer objection to see the root cause, strategy, and reframe script instantly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+              {/* Left Column: Objection List (col-span-4) */}
+              <div className="md:col-span-4 flex flex-col gap-1.5">
+                <span className="text-[10px] uppercase font-black text-slate-450 mb-1">Select Objection:</span>
+                {[
+                  { id: 'expensive', label: '💸 "Too Expensive"' },
+                  { id: 'timing', label: '⏳ "Not Needed Now"' },
+                  { id: 'checking', label: '🔍 "Just Checking"' },
+                  { id: 'competitor', label: '🤝 "Already Have a Solution"' },
+                  { id: 'think', label: '🤔 "Let Me Think About It"' }
+                ].map(obj => (
+                  <button
+                    key={obj.id}
+                    onClick={() => setSelectedObjection(obj.id)}
+                    className={`text-left text-xs font-bold p-3 rounded-xl border transition-all ${
+                      selectedObjection === obj.id 
+                        ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-sm font-extrabold'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {obj.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Right Column: Objection Details Solver (col-span-8) */}
+              <div className="md:col-span-8">
+                {(() => {
+                  const obj = objections[selectedObjection as keyof typeof objections];
+                  return (
+                    <div className="bg-slate-55 border border-slate-200/60 rounded-xl p-5 space-y-4 animate-in fade-in duration-200">
+                      <h4 className="font-black text-xs text-indigo-950 uppercase border-b pb-2 flex items-center justify-between">
+                        <span>{obj.title} solver</span>
+                        <Badge className="bg-indigo-100 text-indigo-850 hover:bg-indigo-200 text-[8px] font-black uppercase">Objection</Badge>
+                      </h4>
+                      
+                      <div className="space-y-1">
+                        <span className="text-[9px] uppercase font-black text-slate-400">Root Cause:</span>
+                        <p className="text-xs font-semibold text-slate-700 leading-relaxed">{obj.root}</p>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <span className="text-[9px] uppercase font-black text-slate-400">Reframe Strategy:</span>
+                        <p className="text-xs font-semibold text-slate-705 leading-relaxed">{obj.strategy}</p>
+                      </div>
+
+                      <div className="bg-white border rounded-xl p-4 space-y-3 mt-2 shadow-inner">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[9px] uppercase font-black text-indigo-800">Exact Script to Use:</span>
+                          {copiedText === `obj-${selectedObjection}` ? (
+                            <Badge className="bg-emerald-500 text-white border-none py-0.5 px-2">Copied!</Badge>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleCopy(obj.script, `obj-${selectedObjection}`)}
+                              className="h-7 text-[9px] font-bold border bg-slate-50 hover:bg-slate-100"
+                            >
+                              <Copy className="w-3.5 h-3.5 mr-1" /> Copy
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs font-bold text-slate-805 leading-relaxed italic">
+                          {obj.script}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Script History Dialog */}
+      <Dialog open={isScriptHistoryOpen} onOpenChange={setIsScriptHistoryOpen}>
+        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+          <DialogHeader className="p-6 border-b bg-indigo-50/15 flex flex-row items-center justify-between gap-3 text-left">
+            <div>
+              <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-1.5">
+                <History className="w-4 h-4 text-indigo-650" />
+                Script History
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                History of all generated Value-Driven cold calling scripts.
+              </DialogDescription>
+            </div>
+            <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
+              {scriptHistory.length} Saved
+            </Badge>
+          </DialogHeader>
+          <div className="p-6">
+            {scriptHistory.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                <Sparkles className="w-10 h-10 text-indigo-200" />
+                <div className="text-[11px] font-extrabold text-slate-500">No scripts generated yet</div>
+                <p className="text-[10px] text-slate-400 font-semibold leading-relaxed max-w-xs text-center">
+                  Input details and click <strong className="text-indigo-600 font-black">"Generate"</strong> to create and auto-save a script!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-none">
+                {scriptHistory.map((item) => (
+                  <div 
+                    key={item.id} 
+                    onClick={() => {
+                      setSelectedHistoryScript(item);
+                    }}
+                    className="border rounded-xl transition-all duration-200 overflow-hidden bg-slate-50/40 hover:bg-slate-50 border-slate-200 group cursor-pointer"
+                  >
+                    <div className="p-3.5 flex items-start justify-between gap-2.5">
+                      <div className="flex-1 text-left space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge className="bg-indigo-100 text-indigo-805 text-[9px] font-black uppercase px-2 border-none h-4">
+                            {item.buyerType}-focused
+                          </Badge>
+                          <span className="text-[9px] font-bold text-slate-400 font-mono">
+                            {item.timestamp}
+                          </span>
+                        </div>
+                        <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-650 transition-colors pt-0.5 flex items-center justify-between gap-2">
+                          <span>{item.productName} for {item.targetAudience}</span>
+                          <Maximize2 className="w-3.5 h-3.5 text-slate-450 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
+                        </h5>
+                      </div>
+                      
+                      <Button
+                        size="icon"
+                        type="button"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteScriptItem(item.id);
+                        }}
+                        className="h-7 w-7 text-slate-405 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none animate-in fade-in"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Blueprint History Dialog */}
+      <Dialog open={isBlueprintHistoryOpen} onOpenChange={setIsBlueprintHistoryOpen}>
+        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+          <DialogHeader className="p-6 border-b bg-indigo-50/15 flex flex-row items-center justify-between gap-3 text-left">
+            <div>
+              <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-indigo-650" />
+                AI Blueprint History
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                History of all your Map My Product blueprints.
+              </DialogDescription>
+            </div>
+            <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
+              {history.length} Saved
+            </Badge>
+          </DialogHeader>
+          <div className="p-6">
+            {history.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                <Sparkles className="w-10 h-10 text-indigo-200" />
+                <div className="text-[11px] font-extrabold text-slate-505">No blueprints saved yet</div>
+                <p className="text-[10px] text-slate-400 font-semibold leading-relaxed max-w-xs text-center">
+                  Click <strong className="text-indigo-600 font-black">"Map My Product"</strong> inside the complete teaching syllabus steps to generate and auto-save a custom blueprint!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-none">
+                {history.map((item) => {
+                  const isExpanded = expandedHistoryId === item.id;
+                  return (
+                    <div 
+                      key={item.id} 
+                      className={`border rounded-xl transition-all duration-200 overflow-hidden ${
+                        isExpanded 
+                          ? 'bg-indigo-50/30 border-indigo-200 shadow-sm' 
+                          : 'bg-slate-50/40 hover:bg-slate-50 border-slate-200'
+                      }`}
+                    >
+                      {/* Summary Header */}
+                      <div className="p-3.5 flex items-start justify-between gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedHistoryId(isExpanded ? null : item.id)}
+                          className="flex-1 text-left space-y-1"
+                        >
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <Badge className="bg-indigo-100 text-indigo-808 text-[9px] font-black uppercase px-2 border-none h-4">
+                              Step {item.stepNumber}
+                            </Badge>
+                            <span className="text-[9px] font-bold text-slate-400 font-mono">
+                              {item.timestamp}
+                            </span>
+                          </div>
+                          <h5 className="text-[11px] font-extrabold text-slate-850 leading-snug hover:text-indigo-605 transition-colors pt-0.5 flex items-center justify-between gap-2">
+                            <span>{item.stepTitle.replace(/^\d+\.\s*/, '')}</span>
+                            <Maximize2 className="w-3.5 h-3.5 text-slate-450 opacity-50 shrink-0" />
+                          </h5>
+                        </button>
+                        
+                        <Button
+                          size="icon"
+                          type="button"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteHistoryItem(item.id);
+                          }}
+                          className="h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+
+                      {/* Collapsible Expanded Content */}
+                      {isExpanded && (
+                        <div className="px-4 pb-4 border-t border-indigo-100/60 pt-4 bg-white space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <div className="space-y-1 text-[11px] leading-relaxed text-slate-705 font-medium">
+                            <span className="text-[9px] uppercase font-black text-indigo-905 block">B2B Strategy:</span>
+                            <p className="whitespace-pre-line bg-slate-50/50 p-3 border rounded-xl">{item.explanation}</p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <span className="text-[9px] uppercase font-black text-indigo-905 block">Context Dialogue Example:</span>
+                            <p className="text-[11px] leading-relaxed text-slate-808 italic bg-amber-50/30 border border-amber-100/60 rounded-xl p-3 font-semibold font-mono">
+                              "{item.concreteExample}"
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <span className="text-[9px] uppercase font-black text-slate-500 block">Action Checklist:</span>
+                            <div className="space-y-1.5 flex flex-col">
+                              {item.actionableTasks.map((task, idx) => (
+                                <label key={idx} className="flex items-start gap-2 text-[10.5px] font-semibold text-slate-755 cursor-pointer select-none">
+                                  <input type="checkbox" className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3" />
+                                  <span>{task}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
