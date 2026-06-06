@@ -13,3 +13,16 @@ export function fmtPct(n: number): string {
 export function fmtMult(n: number): string {
   return (Math.round(n * 10) / 10).toFixed(1) + 'x';
 }
+
+export function fmtDateWithDay(dateStr: string | undefined): string {
+  if (!dateStr) return '—';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  const d = new Date(year, month, day);
+  if (isNaN(d.getTime())) return dateStr;
+  const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+  return `${dateStr} (${dayName})`;
+}

@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { fmtINR } from '@/lib/utils/formatters';
-import { Trash2, AlertCircle, Phone, Mail, Calendar, Target, TrendingUp, Users, IndianRupee, Plus, X, Clock, History } from 'lucide-react';
+import { fmtINR, fmtDateWithDay } from '@/lib/utils/formatters';
+import { Trash2, AlertCircle, Phone, Mail, Calendar, Target, TrendingUp, Users, IndianRupee, Plus, X, Clock, History, Download } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useFirebase } from '@/firebase';
 import type { DocumentReference } from 'firebase/firestore';
+import * as XLSX from 'xlsx';
 
 export type LeadType = 'school' | 'college' | 'student' | 'other';
 export type LeadStatus = 'new-lead' | 'contacted' | 'meeting-scheduled' | 'proposal-sent' | 'follow-up' | 'negotiation' | 'won' | 'lost' | 'on-hold';
@@ -82,7 +83,11 @@ function LeadForm({ f, setF, onSubmit, onCancel, isEdit, readOnly }: { f:F; setF
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="font-bold text-xs">Date</Label><Input type="date" value={f.date} onChange={e=>s('date')(e.target.value)} disabled={readOnly}/></div>
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Date</Label>
+          <Input type="date" value={f.date} onChange={e=>s('date')(e.target.value)} disabled={readOnly}/>
+          {f.date && <div className="text-[10px] text-indigo-650 font-bold mt-0.5">{fmtDateWithDay(f.date)}</div>}
+        </div>
         <div className="space-y-1"><Label className="font-bold text-xs">Lead Type</Label><Select value={f.leadType} onValueChange={s('leadType')} disabled={readOnly}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="school">School</SelectItem><SelectItem value="college">College</SelectItem><SelectItem value="student">Student</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></div>
       </div>
       <div className="space-y-1"><Label className="font-bold text-xs">Organization / Person Name</Label><Input placeholder="e.g. ABC Matric School" value={f.organization} onChange={e=>s('organization')(e.target.value)} required disabled={readOnly}/></div>
@@ -97,7 +102,11 @@ function LeadForm({ f, setF, onSubmit, onCancel, isEdit, readOnly }: { f:F; setF
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1"><Label className="font-bold text-xs">Status</Label><Select value={f.status} onValueChange={s('status')} disabled={readOnly}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{(Object.keys(STAT_LABELS) as LeadStatus[]).map(k=><SelectItem key={k} value={k}>{STAT_LABELS[k]}</SelectItem>)}</SelectContent></Select></div>
-        <div className="space-y-1"><Label className="font-bold text-xs">Follow-up Date</Label><Input type="date" value={f.followUpDate} onChange={e=>s('followUpDate')(e.target.value)} disabled={readOnly}/></div>
+        <div className="space-y-1">
+          <Label className="font-bold text-xs">Follow-up Date</Label>
+          <Input type="date" value={f.followUpDate} onChange={e=>s('followUpDate')(e.target.value)} disabled={readOnly}/>
+          {f.followUpDate && <div className="text-[10px] text-amber-655 font-bold mt-0.5">{fmtDateWithDay(f.followUpDate)}</div>}
+        </div>
       </div>
       <div className="space-y-1"><Label className="font-bold text-xs">Next Action</Label><Input placeholder="e.g. Send Proposal" value={f.nextAction} onChange={e=>s('nextAction')(e.target.value)} disabled={readOnly}/></div>
       <div className="grid grid-cols-2 gap-3">
@@ -120,9 +129,277 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
   const [addF, setAddF] = useState<F>(blank(today));
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState('date-desc');
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
 
   const kpis = useMemo(() => ({ total:leads.length, won:leads.filter(l=>l.status==='won').length, schools:leads.filter(l=>l.leadType==='school').length, colleges:leads.filter(l=>l.leadType==='college').length, students:leads.filter(l=>l.leadType==='student').length, totalExpected:leads.reduce((s,l)=>s+(Number(l.expectedRevenue)||0),0), totalActual:leads.reduce((s,l)=>s+(Number(l.actualRevenue)||0),0) }), [leads]);
-  const filtered = useMemo(() => leads.filter(l=>(filterStatus==='all'||l.status===filterStatus)&&(filterType==='all'||l.leadType===filterType)), [leads,filterStatus,filterType]);
+  
+  const sortedAndFiltered = useMemo(() => {
+    const res = leads.filter(l => 
+      (filterStatus === 'all' || l.status === filterStatus) && 
+      (filterType === 'all' || l.leadType === filterType)
+    );
+    
+    if (sortBy === 'date-desc') {
+      return [...res].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+    }
+    if (sortBy === 'date-asc') {
+      return [...res].sort((a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime());
+    }
+    if (sortBy === 'name') {
+      return [...res].sort((a, b) => (a.organization || '').localeCompare(b.organization || ''));
+    }
+    if (sortBy === 'revenue') {
+      return [...res].sort((a, b) => (b.expectedRevenue || 0) - (a.expectedRevenue || 0));
+    }
+    return res;
+  }, [leads, filterStatus, filterType, sortBy]);
+
+  const toggleSelectLead = (id: string) => {
+    setSelectedLeadIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const allDisplayedSelected = sortedAndFiltered.every(l => selectedLeadIds.includes(l.id));
+    if (allDisplayedSelected) {
+      const displayedIds = sortedAndFiltered.map(l => l.id);
+      setSelectedLeadIds(prev => prev.filter(id => !displayedIds.includes(id)));
+    } else {
+      const newSelections = new Set([...selectedLeadIds, ...sortedAndFiltered.map(l => l.id)]);
+      setSelectedLeadIds(Array.from(newSelections));
+    }
+  };
+
+  const exportToExcel = (selectedLeads: EZLead[]) => {
+
+    const getDayName = (dateStr: string) => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return '';
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { weekday: 'long' });
+    };
+
+    const titleCase = (s: string) => s.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    // ── Column definitions ─────────────────────────────────────────────────
+    const COLS = [
+      { header: 'Date',                   key: 'date',     wch: 13 },
+      { header: 'Day',                    key: 'day',      wch: 11 },
+      { header: 'Lead Type',              key: 'type',     wch: 11 },
+      { header: 'Organization',           key: 'org',      wch: 26 },
+      { header: 'Contact Person',         key: 'contact',  wch: 18 },
+      { header: 'Phone',                  key: 'phone',    wch: 14 },
+      { header: 'Email',                  key: 'email',    wch: 26 },
+      { header: 'Source',                 key: 'source',   wch: 13 },
+      { header: 'Requirement',            key: 'req',      wch: 22 },
+      { header: 'Status',                 key: 'status',   wch: 14 },
+      { header: 'Next Action',            key: 'action',   wch: 22 },
+      { header: 'Follow-up Date',         key: 'fud',      wch: 15 },
+      { header: 'Follow-up Day',          key: 'fuday',    wch: 13 },
+      { header: 'Expected Revenue (INR)', key: 'exp',      wch: 20 },
+      { header: 'Actual Revenue (INR)',   key: 'act',      wch: 18 },
+      { header: 'Remarks',               key: 'remarks',  wch: 30 },
+      { header: 'History & Activity Logs', key: 'history', wch: 55 },
+    ];
+
+    // ── Build data rows ────────────────────────────────────────────────────
+    const dataRows = selectedLeads.map(l => {
+      const historyStr = (l.history || [])
+        .map((h, i) =>
+          `${i + 1}. [${h.timestamp.split('T')[0]} ${getDayName(h.timestamp.split('T')[0]).slice(0, 3)}] ${h.changedBy}: ${h.note}`
+        )
+        .join('\n');
+
+      return {
+        date:    l.date || '',
+        day:     getDayName(l.date),
+        type:    titleCase(l.leadType || ''),
+        org:     l.organization || '',
+        contact: l.contactPerson || '',
+        phone:   l.phone || '',
+        email:   l.email || '',
+        source:  titleCase(l.source || ''),
+        req:     l.requirement || '',
+        status:  titleCase(l.status || ''),
+        action:  l.nextAction || '',
+        fud:     l.followUpDate || '',
+        fuday:   getDayName(l.followUpDate),
+        exp:     l.expectedRevenue || 0,
+        act:     l.actualRevenue || 0,
+        remarks: l.remarks || '',
+        history: historyStr || '',
+      };
+    });
+
+    // ── Build worksheet manually for full control ──────────────────────────
+    const wb = XLSX.utils.book_new();
+    const ws: XLSX.WorkSheet = {};
+
+    const numCols = COLS.length;
+    const lastColLetter = XLSX.utils.encode_col(numCols - 1);
+
+    // Row 1 – Report title
+    ws['A1'] = { v: 'FoundersOS – Leads Pipeline Report', t: 's' };
+    // Row 2 – Metadata subtitle
+    ws['A2'] = {
+      v: `Generated: ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}   |   Total Leads: ${selectedLeads.length}`,
+      t: 's'
+    };
+    // Row 3 – blank spacer
+    ws['A3'] = { v: '', t: 's' };
+
+    // Row 4 – Column headers
+    COLS.forEach((col, ci) => {
+      const addr = XLSX.utils.encode_cell({ r: 3, c: ci });
+      ws[addr] = { v: col.header, t: 's' };
+    });
+
+    // Rows 5+ – Data
+    dataRows.forEach((row, ri) => {
+      COLS.forEach((col, ci) => {
+        const addr = XLSX.utils.encode_cell({ r: ri + 4, c: ci });
+        const val = row[col.key as keyof typeof row];
+        ws[addr] = {
+          v: val,
+          t: typeof val === 'number' ? 'n' : 's',
+        };
+      });
+    });
+
+    // Sheet range
+    ws['!ref'] = `A1:${lastColLetter}${dataRows.length + 4}`;
+
+    // Column widths
+    ws['!cols'] = COLS.map(c => ({ wch: c.wch }));
+
+    // Freeze rows 1-4 (keep header row visible while scrolling)
+    ws['!freeze'] = { xSplit: 0, ySplit: 4 };
+
+    // Merges: title and subtitle span all columns
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }, // title row
+      { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } }, // subtitle row
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Leads Report');
+
+    // Download
+    XLSX.writeFile(wb, `FoundersOS_Leads_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = (selectedLeads: EZLead[]) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    const html = `
+      <html>
+        <head>
+          <title>FoundersOS - Leads Report</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1e293b; padding: 24px; }
+            h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; color: #0f172a; }
+            .subtitle { font-size: 11px; color: #64748b; margin-bottom: 24px; font-weight: 600; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 11px; }
+            th, td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; vertical-align: top; }
+            th { background-color: #f8fafc; font-weight: 700; text-transform: uppercase; font-size: 9px; color: #475569; }
+            .org { font-weight: 700; color: #0f172a; }
+            .history-item { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; }
+            .history-item:last-child { border-bottom: none; }
+            .history-meta { font-size: 9px; font-weight: bold; color: #6366f1; }
+            .history-note { margin-top: 2px; color: #334155; }
+            .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+            .status-won { background-color: #ecfdf5; color: #047857; }
+            .status-lost { background-color: #fff1f2; color: #be123c; }
+            .status-other { background-color: #f1f5f9; color: #475569; }
+            
+            @media print {
+              @page {
+                margin: 0;
+              }
+              body {
+                margin: 1.6cm;
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px;">
+            <div>
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Leads Pipeline Report</h1>
+              <div class="subtitle" style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600;">
+                Generated on ${new Date().toLocaleDateString()} · Total Selected: ${selectedLeads.length} leads
+              </div>
+            </div>
+            <div style="font-size: 10px; font-weight: 900; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.1em; padding-top: 4px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+              FoundersOS
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 80px;">Date</th>
+                <th>Organization & Contact</th>
+                <th>Status & Type</th>
+                <th style="width: 100px;">Revenue</th>
+                <th>Next Action & Remarks</th>
+                <th>History & Activity Logs</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${selectedLeads.map(l => `
+                <tr>
+                  <td><strong>${fmtDateWithDay(l.date)}</strong><br/><span style="color:#64748b; font-size:9px;">Source: ${l.source}</span></td>
+                  <td>
+                    <div class="org">${l.organization}</div>
+                    <div style="font-size: 10px; color:#475569; margin-top:2px;">${l.requirement || ''}</div>
+                    <div style="font-size: 9px; color:#64748b; margin-top:4px;">
+                      ${l.contactPerson ? `Contact: ${l.contactPerson}` : ''}
+                      ${l.phone ? ` · Phone: ${l.phone}` : ''}
+                      ${l.email ? ` · Email: ${l.email}` : ''}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge ${l.status === 'won' ? 'status-won' : l.status === 'lost' ? 'status-lost' : 'status-other'}">${l.status.replace('-', ' ')}</span>
+                    <br/>
+                    <span style="font-size: 9px; font-weight: 700; color:#475569; display:block; margin-top:4px;">Type: ${l.leadType}</span>
+                  </td>
+                  <td>
+                    <span style="color:#4f46e5; font-weight:bold;">Exp: ${l.expectedRevenue > 0 ? '₹' + Number(l.expectedRevenue).toLocaleString('en-IN') : '—'}</span>
+                    <br/>
+                    <span style="color:#059669; font-weight:bold;">Act: ${l.actualRevenue > 0 ? '₹' + Number(l.actualRevenue).toLocaleString('en-IN') : '—'}</span>
+                  </td>
+                  <td>
+                    ${l.nextAction ? `<div style="margin-bottom: 4px;"><strong>Next Action:</strong> ${l.nextAction}</div>` : ''}
+                    ${l.followUpDate ? `<div style="margin-bottom: 4px;"><strong>Follow-up Date:</strong> <span style="color: #b45309; font-weight: 600;">${fmtDateWithDay(l.followUpDate)}</span></div>` : ''}
+                    ${l.remarks ? `<div style="margin-top: 6px; padding-top: 6px; border-top: 1px dotted #e2e8f0; font-style: italic; color: #475569;">${l.remarks}</div>` : ''}
+                  </td>
+                  <td>
+                    ${(l.history || []).length === 0 ? '<span style="color:#94a3b8;">No history logs</span>' : (l.history || []).map(h => `
+                      <div class="history-item">
+                        <span class="history-meta">${h.timestamp.split('T')[0]} by ${h.changedBy}</span>
+                        <div class="history-note">${h.note}</div>
+                      </div>
+                    `).join('')}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.document.title = "FoundersOS - Leads Report";
+  };
 
   const mkSnap = (f: F) => ({
     date: f.date,
@@ -179,28 +456,92 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div><CardTitle className="text-base font-black text-slate-900">Lead Pipeline</CardTitle><CardDescription>Click any lead to view details, edit, and see version history.</CardDescription></div>
             <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex gap-1.5 items-center mr-1">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50/50 h-8 font-bold text-xs gap-1"
+                  onClick={() => {
+                    const targets = selectedLeadIds.length > 0 
+                      ? leads.filter(l => selectedLeadIds.includes(l.id)) 
+                      : sortedAndFiltered;
+                    if (targets.length === 0) return alert('No leads to export');
+                    exportToPDF(targets);
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  PDF {selectedLeadIds.length > 0 ? `(${selectedLeadIds.length})` : '(All)'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="border-emerald-250 text-emerald-750 hover:bg-emerald-50/50 h-8 font-bold text-xs gap-1"
+                  onClick={() => {
+                    const targets = selectedLeadIds.length > 0 
+                      ? leads.filter(l => selectedLeadIds.includes(l.id)) 
+                      : sortedAndFiltered;
+                    if (targets.length === 0) return alert('No leads to export');
+                    exportToExcel(targets);
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Excel {selectedLeadIds.length > 0 ? `(${selectedLeadIds.length})` : '(All)'}
+                </Button>
+              </div>
+              <div className="h-6 w-px bg-slate-200 hidden sm:block mx-1" />
               <Select value={filterType} onValueChange={setFilterType}><SelectTrigger className="h-8 text-xs w-28"><SelectValue placeholder="All Types"/></SelectTrigger><SelectContent><SelectItem value="all">All Types</SelectItem><SelectItem value="school">School</SelectItem><SelectItem value="college">College</SelectItem><SelectItem value="student">Student</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="h-8 text-xs w-32"><SelectValue placeholder="All Status"/></SelectTrigger><SelectContent><SelectItem value="all">All Status</SelectItem>{(Object.keys(STAT_LABELS) as LeadStatus[]).map(s=><SelectItem key={s} value={s}>{STAT_LABELS[s]}</SelectItem>)}</SelectContent></Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="h-8 text-xs w-36">
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date-desc">Date (Newest)</SelectItem>
+                  <SelectItem value="date-asc">Date (Oldest)</SelectItem>
+                  <SelectItem value="name">Name (A-Z)</SelectItem>
+                  <SelectItem value="revenue">Expected Rev (High)</SelectItem>
+                </SelectContent>
+              </Select>
               {!readOnly&&<Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5 h-8" onClick={()=>setShowAdd(true)}><Plus className="w-3.5 h-3.5"/>Add Lead</Button>}
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {filtered.length===0?(
+          {sortedAndFiltered.length===0?(
             <div className="p-10 text-center text-muted-foreground flex flex-col items-center gap-3"><AlertCircle className="w-9 h-9 text-indigo-200"/><p className="text-sm font-semibold">No leads found. {!readOnly&&'Click "Add Lead" to get started.'}</p></div>
           ):(
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader><TableRow className="bg-slate-50">{['Date','Type','Organization','Contact','Status','Follow-up','Exp. Rev','Act. Rev','Remarks'].map(h=><TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>)}</TableRow></TableHeader>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="w-10 text-center">
+                      <input 
+                        type="checkbox" 
+                        checked={sortedAndFiltered.length > 0 && sortedAndFiltered.every(l => selectedLeadIds.includes(l.id))}
+                        onChange={toggleSelectAll}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer mt-1"
+                      />
+                    </TableHead>
+                    {['Date','Type','Organization','Contact','Status','Follow-up','Exp. Rev','Act. Rev','Remarks'].map(h=><TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>)}
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
-                  {filtered.map(l=>(
+                  {sortedAndFiltered.map(l=>(
                     <TableRow key={l.id} className="hover:bg-indigo-50/30 cursor-pointer transition-colors" onClick={()=>router.push(`/lead/${l.id}`)}>
-                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{l.date||'—'}</TableCell>
+                      <TableCell className="w-10 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedLeadIds.includes(l.id)}
+                          onChange={() => toggleSelectLead(l.id)}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer mt-1"
+                        />
+                      </TableCell>
+                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{fmtDateWithDay(l.date)}</TableCell>
                       <TableCell><Badge className={`border text-[9px] font-black uppercase ${TYPE_CLR[l.leadType]}`}>{l.leadType}</Badge></TableCell>
                       <TableCell className="font-bold py-3 max-w-[130px]"><div className="text-slate-900 truncate">{l.organization}</div><div className="text-[10px] text-muted-foreground truncate">{l.requirement}</div></TableCell>
                       <TableCell className="text-xs text-slate-600 max-w-[100px]"><div className="font-medium truncate">{l.contactPerson||'—'}</div>{l.phone&&<div className="flex items-center gap-0.5 text-[10px] text-slate-400"><Phone className="w-2.5 h-2.5"/>{l.phone}</div>}{l.email&&<div className="flex items-center gap-0.5 text-[10px] text-slate-400 truncate"><Mail className="w-2.5 h-2.5"/>{l.email}</div>}</TableCell>
                       <TableCell><Badge className={`border text-[9px] font-black whitespace-nowrap ${STAT_CLR[l.status]}`}>{STAT_LABELS[l.status]}</Badge></TableCell>
-                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{l.followUpDate?<div className="flex items-center gap-0.5"><Calendar className="w-3 h-3 text-amber-500"/>{l.followUpDate}</div>:'—'}</TableCell>
+                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{l.followUpDate?<div className="flex items-center gap-0.5"><Calendar className="w-3 h-3 text-amber-500"/>{fmtDateWithDay(l.followUpDate)}</div>:'—'}</TableCell>
                       <TableCell className="font-code font-bold text-indigo-700 whitespace-nowrap">{l.expectedRevenue>0?fmtINR(l.expectedRevenue):'—'}</TableCell>
                       <TableCell className="font-code font-bold text-emerald-700 whitespace-nowrap">{l.actualRevenue>0?fmtINR(l.actualRevenue):'—'}</TableCell>
                       <TableCell className="text-xs text-slate-500 max-w-[100px]"><div className="truncate">{l.remarks||'—'}</div>{(l.history||[]).length>0&&<div className="text-[9px] text-indigo-400 flex items-center gap-0.5 mt-0.5"><History className="w-2.5 h-2.5"/>{l.history.length} updates</div>}</TableCell>

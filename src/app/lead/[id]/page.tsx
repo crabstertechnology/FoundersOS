@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { fmtINR } from '@/lib/utils/formatters';
+import { fmtINR, fmtDateWithDay } from '@/lib/utils/formatters';
 import { 
   ArrowLeft, Trash2, AlertCircle, Phone, Mail, Calendar, Target, 
   TrendingUp, Users, IndianRupee, Plus, X, Clock, History, Save,
@@ -490,6 +490,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                         onChange={e => setFormKey('date')(e.target.value)} 
                         disabled={isReadOnly}
                       />
+                      {form.date && (
+                        <div className="text-[10px] text-indigo-650 font-bold mt-0.5">
+                          {fmtDateWithDay(form.date)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -570,6 +575,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                           disabled={isReadOnly}
                         />
                       </div>
+                      {form.followUpDate && (
+                        <div className="text-[10px] text-amber-650 font-bold mt-0.5">
+                          {fmtDateWithDay(form.followUpDate)}
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="font-bold text-xs text-slate-600">Next Action Description</Label>
@@ -856,8 +866,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                               <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
                                 <Clock className="w-3 h-3 text-slate-400" />
                                 {new Date(h.timestamp).toLocaleString('en-IN', {
-                                  dateStyle: 'medium',
-                                  timeStyle: 'short',
+                                  weekday: 'short',
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true
                                 })}
                               </span>
                               <span className="text-slate-300">•</span>
@@ -940,7 +955,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                                         <div><span className="text-slate-400">Actual:</span> <span className="font-bold text-emerald-600">{fmtINR(h.snapshot.actualRevenue)}</span></div>
                                       )}
                                       {h.snapshot.followUpDate && (
-                                        <div><span className="text-slate-400">Follow-up:</span> <span className="text-amber-600 font-mono">{h.snapshot.followUpDate}</span></div>
+                                        <div><span className="text-slate-400">Follow-up:</span> <span className="text-amber-600 font-mono">{fmtDateWithDay(h.snapshot.followUpDate)}</span></div>
                                       )}
                                       {h.snapshot.nextAction && (
                                         <div className="md:col-span-2"><span className="text-slate-400">Next Action:</span> <span className="text-slate-700 font-bold">{h.snapshot.nextAction}</span></div>
