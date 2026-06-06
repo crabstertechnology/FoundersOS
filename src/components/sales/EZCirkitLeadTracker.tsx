@@ -127,18 +127,23 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
   const today = new Date().toISOString().split('T')[0];
   const [showAdd, setShowAdd] = useState(false);
   const [addF, setAddF] = useState<F>(blank(today));
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterType, setFilterType] = useState('all');
+  const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
 
   const kpis = useMemo(() => ({ total:leads.length, won:leads.filter(l=>l.status==='won').length, schools:leads.filter(l=>l.leadType==='school').length, colleges:leads.filter(l=>l.leadType==='college').length, students:leads.filter(l=>l.leadType==='student').length, totalExpected:leads.reduce((s,l)=>s+(Number(l.expectedRevenue)||0),0), totalActual:leads.reduce((s,l)=>s+(Number(l.actualRevenue)||0),0) }), [leads]);
   
   const sortedAndFiltered = useMemo(() => {
-    const res = leads.filter(l => 
-      (filterStatus === 'all' || l.status === filterStatus) && 
-      (filterType === 'all' || l.leadType === filterType)
-    );
+    const res = leads.filter(l => {
+      if (filter === 'all') return true;
+      if (filter.startsWith('type-')) {
+        return l.leadType === filter.replace('type-', '');
+      }
+      if (filter.startsWith('status-')) {
+        return l.status === filter.replace('status-', '');
+      }
+      return true;
+    });
     
     if (sortBy === 'date-desc') {
       return [...res].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
@@ -153,7 +158,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
       return [...res].sort((a, b) => (b.expectedRevenue || 0) - (a.expectedRevenue || 0));
     }
     return res;
-  }, [leads, filterStatus, filterType, sortBy]);
+  }, [leads, filter, sortBy]);
 
   const toggleSelectLead = (id: string) => {
     setSelectedLeadIds(prev => 
@@ -489,8 +494,23 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                 </Button>
               </div>
               <div className="h-6 w-px bg-slate-200 hidden sm:block mx-1" />
-              <Select value={filterType} onValueChange={setFilterType}><SelectTrigger className="h-8 text-xs w-28"><SelectValue placeholder="All Types"/></SelectTrigger><SelectContent><SelectItem value="all">All Types</SelectItem><SelectItem value="school">School</SelectItem><SelectItem value="college">College</SelectItem><SelectItem value="student">Student</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
-              <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="h-8 text-xs w-32"><SelectValue placeholder="All Status"/></SelectTrigger><SelectContent><SelectItem value="all">All Status</SelectItem>{(Object.keys(STAT_LABELS) as LeadStatus[]).map(s=><SelectItem key={s} value={s}>{STAT_LABELS[s]}</SelectItem>)}</SelectContent></Select>
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="h-8 text-xs w-44">
+                  <SelectValue placeholder="All Leads" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Leads</SelectItem>
+                  <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 my-1 select-none">Lead Type</div>
+                  <SelectItem value="type-school">School</SelectItem>
+                  <SelectItem value="type-college">College</SelectItem>
+                  <SelectItem value="type-student">Student</SelectItem>
+                  <SelectItem value="type-other">Other</SelectItem>
+                  <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 my-1 select-none">Lead Status</div>
+                  {(Object.keys(STAT_LABELS) as LeadStatus[]).map(s => (
+                    <SelectItem key={s} value={`status-${s}`}>{STAT_LABELS[s]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="h-8 text-xs w-36">
                   <SelectValue placeholder="Sort By" />
