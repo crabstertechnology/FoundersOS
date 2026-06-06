@@ -132,15 +132,17 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   // Reset initialization when switching leads
   useEffect(() => {
     setIsInitialized(false);
+    setIsDirty(false);
   }, [id]);
 
-  // Sync form state when lead data is loaded (only once per lead to prevent overwriting user typing)
+  // Sync form state when lead data is loaded or updated from database, unless user has made edits
   useEffect(() => {
-    if (lead && !isInitialized) {
+    if (lead && (!isInitialized || !isDirty)) {
       setForm({
         date: lead.date || '',
         leadType: lead.leadType || 'school',
@@ -159,9 +161,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       });
       setIsInitialized(true);
     }
-  }, [lead, isInitialized]);
+  }, [lead, isInitialized, isDirty]);
 
   const setFormKey = (key: keyof F) => (val: any) => {
+    setIsDirty(true);
     setForm(prev => ({ ...prev, [key]: val }));
   };
 
@@ -235,6 +238,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       ezLeads: leads.map(l => l.id === lead.id ? updated : l)
     }, { merge: true });
 
+    setIsDirty(false); // Reset dirty state since changes are successfully saved
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
   };

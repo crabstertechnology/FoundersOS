@@ -136,6 +136,14 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
     const d = new Date(ts);
     return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
+  const fmtShortDate = (dateStr: string | undefined): string => {
+    if (!dateStr) return '—';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
+  };
 
   const kpis = useMemo(() => ({ total:leads.length, won:leads.filter(l=>l.status==='won').length, schools:leads.filter(l=>l.leadType==='school').length, colleges:leads.filter(l=>l.leadType==='college').length, students:leads.filter(l=>l.leadType==='student').length, totalExpected:leads.reduce((s,l)=>s+(Number(l.expectedRevenue)||0),0), totalActual:leads.reduce((s,l)=>s+(Number(l.actualRevenue)||0),0) }), [leads]);
   
@@ -574,7 +582,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                         className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer mt-1"
                       />
                     </TableHead>
-                    {['Date','Type','Organization','Contact','Status','Follow-up','Exp. Rev','Act. Rev','Remarks'].map(h=><TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>)}
+                    {['Date','Type','Organization','Contact','Status','Remarks','Exp. Rev','Act. Rev','Follow-up'].map(h=><TableHead key={h} className="font-black text-[10px] uppercase text-slate-500 whitespace-nowrap">{h}</TableHead>)}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -588,7 +596,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                           className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer mt-1"
                         />
                       </TableCell>
-                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{fmtDateWithDay(l.date)}</TableCell>
+                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{fmtShortDate(l.date)}</TableCell>
                       <TableCell><Badge className={`border text-[9px] font-black uppercase ${TYPE_CLR[l.leadType]}`}>{l.leadType}</Badge></TableCell>
                       <TableCell className="font-bold py-3 max-w-[130px]">
                         <div className="text-slate-900 truncate">{l.organization}</div>
@@ -601,21 +609,21 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                       </TableCell>
                       <TableCell className="text-xs text-slate-600 max-w-[100px]"><div className="font-medium truncate">{l.contactPerson||'—'}</div>{l.phone&&<div className="flex items-center gap-0.5 text-[10px] text-slate-400"><Phone className="w-2.5 h-2.5"/>{l.phone}</div>}{l.email&&<div className="flex items-center gap-0.5 text-[10px] text-slate-400 truncate"><Mail className="w-2.5 h-2.5"/>{l.email}</div>}</TableCell>
                       <TableCell><Badge className={`border text-[9px] font-black whitespace-nowrap ${STAT_CLR[l.status]}`}>{STAT_LABELS[l.status]}</Badge></TableCell>
-                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{l.followUpDate?<div className="flex items-center gap-0.5"><Calendar className="w-3 h-3 text-amber-500"/>{fmtDateWithDay(l.followUpDate)}</div>:'—'}</TableCell>
-                      <TableCell className="font-code font-bold text-indigo-700 whitespace-nowrap">{l.expectedRevenue>0?fmtINR(l.expectedRevenue):'—'}</TableCell>
-                      <TableCell className="font-code font-bold text-emerald-700 whitespace-nowrap">{l.actualRevenue>0?fmtINR(l.actualRevenue):'—'}</TableCell>
-                      <TableCell className="text-xs text-slate-500 max-w-[100px]">
-                        <div className="truncate">{l.remarks||'—'}</div>
+                      <TableCell className="text-xs text-slate-500 max-w-[250px] min-w-[200px]">
+                        <div className="break-words whitespace-normal font-medium text-slate-700 leading-normal">{l.remarks||'—'}</div>
                         {(l.history||[]).length>0&& (
-                          <div className="text-[9px] text-indigo-400 flex items-center gap-0.5 mt-0.5 flex-wrap">
+                          <div className="text-[9px] text-indigo-400 flex items-center gap-0.5 mt-1 flex-wrap font-semibold">
                             <History className="w-2.5 h-2.5 shrink-0"/>
                             <span>{l.history.length} updates</span>
-                            <span className="text-slate-400 text-[8px] ml-1">
+                            <span className="text-slate-400 text-[8px] ml-1 font-medium">
                               (Mod: {new Date(l.updatedAt || l.history[l.history.length - 1].timestamp).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })} at {formatTime(l.updatedAt || l.history[l.history.length - 1].timestamp)})
                             </span>
                           </div>
                         )}
                       </TableCell>
+                      <TableCell className="font-code font-bold text-indigo-700 whitespace-nowrap">{l.expectedRevenue>0?fmtINR(l.expectedRevenue):'—'}</TableCell>
+                      <TableCell className="font-code font-bold text-emerald-700 whitespace-nowrap">{l.actualRevenue>0?fmtINR(l.actualRevenue):'—'}</TableCell>
+                      <TableCell className="text-xs font-mono text-slate-500 whitespace-nowrap">{l.followUpDate?<div className="flex items-center gap-0.5"><Calendar className="w-3 h-3 text-amber-500"/>{fmtShortDate(l.followUpDate)}</div>:'—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
