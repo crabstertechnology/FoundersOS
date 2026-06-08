@@ -164,9 +164,33 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
       if (l.history && l.history.length > 0) return new Date(l.history[0].timestamp).getTime();
       return new Date(l.date || 0).getTime();
     };
+
+    const getLastActiveTime = (l: EZLead) => {
+      const times: number[] = [];
+      if (l.updatedAt) {
+        const t = new Date(l.updatedAt).getTime();
+        if (!isNaN(t)) times.push(t);
+      }
+      if (l.createdAt) {
+        const t = new Date(l.createdAt).getTime();
+        if (!isNaN(t)) times.push(t);
+      }
+      if (l.history && l.history.length > 0) {
+        const lastEntry = l.history[l.history.length - 1];
+        if (lastEntry && lastEntry.timestamp) {
+          const t = new Date(lastEntry.timestamp).getTime();
+          if (!isNaN(t)) times.push(t);
+        }
+      }
+      if (l.date) {
+        const t = new Date(l.date).getTime();
+        if (!isNaN(t)) times.push(t);
+      }
+      return times.length > 0 ? Math.max(...times) : 0;
+    };
     
     if (sortBy === 'date-desc') {
-      return [...res].sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
+      return [...res].sort((a, b) => getLastActiveTime(b) - getLastActiveTime(a));
     }
     if (sortBy === 'date-asc') {
       return [...res].sort((a, b) => getCreatedTime(a) - getCreatedTime(b));
