@@ -342,6 +342,14 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
   const exportToPDF = (selectedLeads: EZLead[]) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    const formatHistoryTimestamp = (ts: string) => {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return ts;
+      const datePart = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timePart = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+      return `${datePart} at ${timePart}`;
+    };
     
     const html = `
       <html>
@@ -429,7 +437,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                   <td>
                     ${(l.history || []).length === 0 ? '<span style="color:#94a3b8;">No history logs</span>' : (l.history || []).map(h => `
                       <div class="history-item">
-                        <span class="history-meta">${h.timestamp.split('T')[0]} by ${h.changedBy}</span>
+                        <span class="history-meta">${formatHistoryTimestamp(h.timestamp)} by ${h.changedBy}</span>
                         <div class="history-note">${h.note}</div>
                       </div>
                     `).join('')}
@@ -535,7 +543,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                   className="border-indigo-200 text-indigo-700 hover:bg-indigo-50/50 h-8 font-bold text-xs gap-1"
                   onClick={() => {
                     const targets = selectedLeadIds.length > 0 
-                      ? leads.filter(l => selectedLeadIds.includes(l.id)) 
+                      ? sortedAndFiltered.filter(l => selectedLeadIds.includes(l.id)) 
                       : sortedAndFiltered;
                     if (targets.length === 0) return alert('No leads to export');
                     exportToPDF(targets);
@@ -550,7 +558,7 @@ export function EZCirkitLeadTracker({ profileRef, leads, readOnly }: Props) {
                   className="border-emerald-250 text-emerald-750 hover:bg-emerald-50/50 h-8 font-bold text-xs gap-1"
                   onClick={() => {
                     const targets = selectedLeadIds.length > 0 
-                      ? leads.filter(l => selectedLeadIds.includes(l.id)) 
+                      ? sortedAndFiltered.filter(l => selectedLeadIds.includes(l.id)) 
                       : sortedAndFiltered;
                     if (targets.length === 0) return alert('No leads to export');
                     exportToExcel(targets);
