@@ -15,7 +15,8 @@ import ReactMarkdown from 'react-markdown';
 import { 
   Megaphone, Sparkles, Loader2, 
   Instagram, Youtube, Linkedin, Copy, Check, Clock, 
-  Zap
+  Zap, Calendar, CheckCircle2, Circle, ChevronDown, ChevronRight, Target, Award, Flame, Lightbulb, Sliders,
+  ChevronUp, Video, ArrowUpRight, X
 } from 'lucide-react';
 
 interface DigitalMarketingHubProps {
@@ -52,6 +53,9 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
   const [activeTab, setActiveTab] = useState<'ai-planner' | 'history'>('ai-planner');
   const [activeScriptTab, setActiveScriptTab] = useState<'instagram' | 'youtube' | 'linkedin'>('instagram');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [expandedDay, setExpandedDay] = useState<number | null>(0);
+  const [showParams, setShowParams] = useState(false);
+  const [selectedScriptDayIdx, setSelectedScriptDayIdx] = useState<number>(0);
 
   // Set default values when profile loads
   useEffect(() => {
@@ -97,6 +101,58 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
     navigator.clipboard.writeText(text);
     setCopiedId(elementId);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleUpdateDayStatus = async (dayIndex: number, newStatus: string) => {
+    if (!localActivePlan || !profileRef) return;
+
+    const updatedWeeklyCalendar = [...(localActivePlan.calendar?.weeklyCalendar || [])];
+    updatedWeeklyCalendar[dayIndex] = {
+      ...updatedWeeklyCalendar[dayIndex],
+      status: newStatus
+    };
+
+    const updatedActivePlan = {
+      ...localActivePlan,
+      calendar: {
+        ...localActivePlan.calendar,
+        weeklyCalendar: updatedWeeklyCalendar
+      }
+    };
+
+    setLocalActivePlan(updatedActivePlan);
+
+    const updatedHistory = localPlanHistory.map(plan => 
+      plan.id === localActivePlan.id ? updatedActivePlan : plan
+    );
+    setLocalPlanHistory(updatedHistory);
+
+    try {
+      await setDocumentNonBlocking(profileRef, {
+        dmActivePlan: updatedActivePlan,
+        dmPlanHistory: updatedHistory
+      }, { merge: true });
+    } catch (err) {
+      console.warn("Firestore status write failed:", err);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const s = status || 'Not Started';
+    switch (s) {
+      case 'Draft':
+        return <Badge variant="outline" className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 font-bold text-[10px] px-2 py-0.5 rounded-full">📝 Draft</Badge>;
+      case 'Filming':
+        return <Badge variant="outline" className="bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 font-bold text-[10px] px-2 py-0.5 rounded-full">🎥 Filming</Badge>;
+      case 'Editing':
+        return <Badge variant="outline" className="bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 font-bold text-[10px] px-2 py-0.5 rounded-full">🎬 Editing</Badge>;
+      case 'Scheduled':
+        return <Badge variant="outline" className="bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200 font-bold text-[10px] px-2 py-0.5 rounded-full">📅 Scheduled</Badge>;
+      case 'Published':
+        return <Badge variant="outline" className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-250 font-bold text-[10px] px-2 py-0.5 rounded-full">✅ Published</Badge>;
+      default:
+        return <Badge variant="outline" className="bg-slate-100/60 hover:bg-slate-200/50 text-slate-500 border-slate-200 font-bold text-[10px] px-2 py-0.5 rounded-full">Not Started</Badge>;
+    }
   };
 
   // Generate marketing campaign
@@ -197,27 +253,47 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
         </div>
 
         {/* Tab switcher */}
-        <div className="bg-slate-100 p-1 rounded-xl flex gap-1 border overflow-x-auto whitespace-nowrap scrollbar-none shrink-0">
-          <Button
-            variant={activeTab === 'ai-planner' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('ai-planner')}
-            className={`font-bold text-xs h-9 px-4 rounded-lg ${activeTab === 'ai-planner' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-650'}`}
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-            AI Script Planner
-          </Button>
-          {localPlanHistory.length > 0 && (
+        <div className="flex items-center gap-2.5 shrink-0">
+          {/* Toggle Parameters Button in Header */}
+          {activeTab === 'ai-planner' && (
             <Button
-              variant={activeTab === 'history' ? 'default' : 'ghost'}
+              type="button"
+              variant="outline"
               size="sm"
-              onClick={() => setActiveTab('history')}
-              className={`font-bold text-xs h-9 px-4 rounded-lg ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-650'}`}
+              onClick={() => setShowParams(!showParams)}
+              className={`font-bold text-xs h-9 px-4 rounded-xl transition-all shadow-2xs ${
+                showParams 
+                  ? 'bg-indigo-55 border-indigo-250 text-indigo-755 hover:bg-indigo-100/70' 
+                  : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
+              }`}
             >
-              <Clock className="w-3.5 h-3.5 mr-1.5" />
-              History
+              <span>Parameters</span>
             </Button>
           )}
+
+          {/* Tab switcher */}
+          <div className="bg-slate-100 p-1 rounded-xl flex gap-1 border overflow-x-auto whitespace-nowrap scrollbar-none">
+            <Button
+              variant={activeTab === 'ai-planner' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('ai-planner')}
+              className={`font-bold text-xs h-9 px-4 rounded-lg ${activeTab === 'ai-planner' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-650'}`}
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              AI Script Planner
+            </Button>
+            {localPlanHistory.length > 0 && (
+              <Button
+                variant={activeTab === 'history' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('history')}
+                className={`font-bold text-xs h-9 px-4 rounded-lg ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-650'}`}
+              >
+                <Clock className="w-3.5 h-3.5 mr-1.5" />
+                History
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -236,168 +312,80 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
         </Card>
       )}
 
-      {!loading && activeTab === 'ai-planner' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Form settings column */}
-          <div className={`space-y-6 ${localActivePlan ? 'lg:col-span-5' : 'lg:col-span-8 lg:col-start-2'}`}>
-            <Card className="border-2 border-slate-200">
-              <CardHeader className="bg-slate-50/60 border-b">
-                <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-indigo-600" />
-                  AI Campaign Parameters
-                </CardTitle>
-                <CardDescription>
-                  Configure details to build platform-native short-form video hooks, scripts, and posting calendars.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <form onSubmit={handleGenerateCampaign} className="space-y-5">
-                  
-                  {/* Name */}
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase text-slate-500">Product Title</Label>
-                    <Input
-                      placeholder="e.g. EZCirkit STEM Kit"
-                      value={productName}
-                      onChange={e => setProductName(e.target.value)}
-                      required
-                      className="font-semibold h-10 border-slate-200"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase text-slate-500">Product Description & Specs</Label>
-                    <textarea
-                      rows={4}
-                      placeholder="e.g. Solderless circuit board kit for students, interactive coding guide, drag-and-drop IDE interface..."
-                      value={productDescription}
-                      onChange={e => setProductDescription(e.target.value)}
-                      required
-                      className="w-full text-sm font-medium p-3 rounded-lg border border-slate-250 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                    />
-                  </div>
-
-                  {/* Audience */}
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase text-slate-500">Target ICP / User Persona</Label>
-                    <Input
-                      placeholder="e.g. High school tech mentors, teachers, makers"
-                      value={targetAudience}
-                      onChange={e => setTargetAudience(e.target.value)}
-                      required
-                      className="font-semibold h-10 border-slate-200"
-                    />
-                  </div>
-
-                  {/* Config Row */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="font-black text-xs uppercase text-slate-500">Brand Voice/Tone</Label>
-                      <Select value={brandTone} onValueChange={(val: any) => setBrandTone(val)}>
-                        <SelectTrigger className="font-semibold border-slate-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="professional">Professional / Tech</SelectItem>
-                          <SelectItem value="casual">Casual / Conversational</SelectItem>
-                          <SelectItem value="educational">Informative / Academic</SelectItem>
-                          <SelectItem value="inspirational">Motivational / Growth</SelectItem>
-                          <SelectItem value="bold">Punchy / Bold</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="font-black text-xs uppercase text-slate-500">Campaign Goal</Label>
-                      <Select value={contentGoal} onValueChange={(val: any) => setContentGoal(val)}>
-                        <SelectTrigger className="font-semibold border-slate-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="awareness">Brand Reach / Awareness</SelectItem>
-                          <SelectItem value="leads">Lead Gen (Book Demos)</SelectItem>
-                          <SelectItem value="sales">Product Conversions</SelectItem>
-                          <SelectItem value="community">Foster STEM Community</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Platforms selection checkboxes */}
-                  <div className="space-y-2">
-                    <Label className="font-black text-xs uppercase text-slate-500">Select Channels</Label>
-                    <div className="flex flex-wrap gap-3">
-                      {['instagram', 'youtube', 'linkedin'].map((plat: any) => {
-                        const isChecked = selectedPlatforms.includes(plat);
-                        return (
-                          <button
-                            key={plat}
-                            type="button"
-                            onClick={() => {
-                              if (isChecked) {
-                                setSelectedPlatforms(selectedPlatforms.filter(p => p !== plat));
-                              } else {
-                                setSelectedPlatforms([...selectedPlatforms, plat]);
-                              }
-                            }}
-                            className={`flex items-center gap-2 px-3 py-2 border rounded-lg font-bold text-xs capitalize transition-all ${
-                              isChecked ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-extrabold shadow-sm' : 'bg-white hover:bg-slate-55 border-slate-200 text-slate-600'
-                            }`}
-                          >
-                            {renderPlatformIcon(plat, "w-4 h-4")}
-                            {plat}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Custom Angle Focus */}
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase text-slate-500 flex items-center gap-1">
-                      Custom Script Theme Focus
-                      <span className="text-[10px] text-slate-400 lowercase font-normal">(optional)</span>
-                    </Label>
-                    <Input
-                      placeholder="e.g. Focus on low cost, or showcase the drag-and-drop IDE ease"
-                      value={customFocus}
-                      onChange={e => setCustomFocus(e.target.value)}
-                      className="font-semibold h-10 border-slate-200"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={selectedPlatforms.length === 0 || !productName || !productDescription}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Generate Campaign Strategy & Scripts
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+      {!loading && activeTab === 'ai-planner' && !localActivePlan && (
+        <div className="text-center py-24 bg-gradient-to-br from-indigo-50/20 via-purple-50/10 to-white rounded-3xl border border-dashed border-indigo-100 max-w-2xl mx-auto shadow-3xs p-8 mt-6">
+          <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-purple-650 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20 mx-auto mb-6">
+            <Megaphone className="w-8 h-8" />
           </div>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-3">
+            Launch Your AI Campaign
+          </h2>
+          <p className="text-slate-500 font-semibold text-sm max-w-md mx-auto mb-8 leading-relaxed">
+            Generate platform-native short-form video hooks, scripts, CTAs, and a structured 7-day posting calendar tailored specifically to your target ICP.
+          </p>
+          <Button
+            onClick={() => setShowParams(true)}
+            className="px-8 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-sm rounded-xl shadow-lg shadow-indigo-600/20 flex items-center gap-2.5 mx-auto transition-all transform hover:scale-[1.02]"
+          >
+            <Sparkles className="w-4.5 h-4.5" />
+            Configure Campaign Parameters
+          </Button>
+        </div>
+      )}
 
+      {!loading && activeTab === 'ai-planner' && localActivePlan && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Campaign details column */}
           {localActivePlan && (
-            <div className="lg:col-span-7 space-y-6">
-              
-              {/* Campaign Plan Calendar & Info */}
-              <Card className="border-2 border-indigo-100 shadow-sm">
-                <CardHeader className="bg-indigo-50/15 border-b py-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <CardTitle className="text-base font-black text-slate-900">
-                        7-Day Campaign Calendar
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Platform distribution for: <span className="font-bold text-indigo-700">{localActivePlan.productName}</span>
-                      </CardDescription>
+            <div className="space-y-6 lg:col-span-12">
+                {/* 90-Day Channel Targets */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {localActivePlan.platforms.map((plat: string) => {
+                  let metricName = "Estimated Reach";
+                  let targetVal = "25.5K";
+                  let gradient = "from-rose-500/10 via-pink-500/5 to-transparent border-rose-100 text-rose-700";
+                  if (plat === 'youtube') {
+                    metricName = "Target Views";
+                    targetVal = "15K";
+                    gradient = "from-red-500/10 via-amber-500/5 to-transparent border-red-100 text-red-700";
+                  } else if (plat === 'linkedin') {
+                    metricName = "Impressions Target";
+                    targetVal = "50K";
+                    gradient = "from-blue-500/10 via-indigo-500/5 to-transparent border-blue-100 text-blue-700";
+                  }
+                  return (
+                    <div key={plat} className={`p-4 rounded-2xl border bg-gradient-to-br ${gradient} flex items-center justify-between shadow-2xs`}>
+                      <div>
+                        <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400">{plat} Target</span>
+                        <span className="text-xl font-black text-slate-800 tracking-tight mt-1 block">{targetVal}</span>
+                        <span className="text-[10px] font-semibold text-slate-500">{metricName}</span>
+                      </div>
+                      <div className="p-3 bg-white border border-slate-100 rounded-xl shadow-2xs">
+                        {renderPlatformIcon(plat, "w-6 h-6")}
+                      </div>
                     </div>
-                    <Badge variant="outline" className="font-code font-bold uppercase tracking-wider text-[10px] border-indigo-200 text-indigo-700 bg-indigo-50/50">
+                  );
+                })}
+              </div>
+
+              {/* Campaign Plan Calendar & Info */}
+              <Card className="border border-indigo-100 shadow-lg shadow-indigo-100/5 rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="bg-gradient-to-r from-indigo-50/70 to-purple-50/50 border-b py-5 px-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/25 shrink-0">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base font-black text-slate-900 tracking-tight">
+                          7-Day Campaign Calendar
+                        </CardTitle>
+                        <CardDescription className="text-xs text-indigo-700/80 font-semibold mt-0.5">
+                          Strategy Calendar for: <span className="font-extrabold text-indigo-900">{localActivePlan.productName}</span>
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Badge className="font-black uppercase tracking-wider text-[10px] px-3 py-1 bg-indigo-100 text-indigo-755 border border-indigo-200 shadow-2xs">
                       Goal: {localActivePlan.contentGoal}
                     </Badge>
                   </div>
@@ -405,157 +393,311 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
                 <CardContent className="p-0">
                   
                   {/* Pillars */}
-                  <div className="p-4 border-b bg-slate-50/50">
-                    <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-black mb-2">Organic Content Pillars</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-5 border-b bg-slate-50/30">
+                    <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-black mb-3">Organic Content Pillars</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       {localActivePlan.calendar?.contentPillars?.map((pillar: string, idx: number) => (
-                        <div key={idx} className="p-2 border rounded-lg bg-white shadow-2xs text-center">
-                           <span className="text-[11px] font-bold text-slate-700">{pillar}</span>
+                        <div key={idx} className="p-2.5 border border-slate-100 rounded-xl bg-white shadow-3xs text-center flex items-center justify-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                          <span className="text-xs font-extrabold text-slate-700">{pillar}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Calendar Row list */}
-                  <div className="divide-y max-h-[300px] overflow-y-auto">
-                    {localActivePlan.calendar?.weeklyCalendar?.map((dayPlan: any, idx: number) => (
-                      <div key={idx} className="p-3.5 hover:bg-slate-50/40 transition-colors flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 text-center text-xs font-black uppercase text-indigo-600 bg-indigo-50 py-1 rounded">
-                            {dayPlan.day.slice(0, 3)}
+                  {/* Calendar Accordion List */}
+                  <div className="divide-y border-b">
+                    {localActivePlan.calendar?.weeklyCalendar?.map((dayPlan: any, idx: number) => {
+                      const isExpanded = expandedDay === idx;
+                      const status = dayPlan.status || 'Not Started';
+                      
+                      return (
+                        <div key={idx} className={`transition-all ${isExpanded ? 'bg-indigo-50/15' : 'hover:bg-slate-50/30'}`}>
+                          {/* Accordion Header */}
+                          <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer" onClick={() => {
+                            setExpandedDay(isExpanded ? null : idx);
+                            if (!isExpanded) {
+                              setSelectedScriptDayIdx(idx);
+                            }
+                          }}>
+                            <div className="flex items-center gap-3.5">
+                              <div className="w-14 text-center text-[11px] font-black uppercase text-indigo-700 bg-indigo-50 py-1.5 px-2.5 rounded-xl border border-indigo-100 shrink-0">
+                                {dayPlan.day.slice(0, 3)}
+                              </div>
+                              <div>
+                                <span className="text-sm font-black text-slate-800 tracking-tight flex items-center gap-1.5">
+                                  {dayPlan.topic}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400 capitalize flex items-center gap-1.5 mt-1">
+                                  {renderPlatformIcon(dayPlan.platform, "w-3.5 h-3.5")}
+                                  {dayPlan.platform} • {dayPlan.contentType}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Dropdown status & chevron */}
+                            <div className="flex items-center gap-3 self-end sm:self-auto" onClick={e => e.stopPropagation()}>
+                              <div className="relative">
+                                <select 
+                                  value={status}
+                                  onChange={(e) => handleUpdateDayStatus(idx, e.target.value)}
+                                  className={`appearance-none font-bold text-[10px] px-3.5 py-1.5 pr-8 border rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/10 cursor-pointer shadow-3xs ${
+                                    status === 'Published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                    status === 'Scheduled' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                    status === 'Editing' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                    status === 'Filming' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                                    status === 'Draft' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                    'bg-slate-50 text-slate-500 border-slate-200'
+                                  }`}
+                                >
+                                  <option value="Not Started">⚪ Not Started</option>
+                                  <option value="Draft">📝 Draft Plan</option>
+                                  <option value="Filming">🎥 In Filming</option>
+                                  <option value="Editing">🎬 Editing Cut</option>
+                                  <option value="Scheduled">📅 Scheduled</option>
+                                  <option value="Published">✅ Published</option>
+                                </select>
+                                <ChevronDown className="w-3 h-3 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              </div>
+
+                              <button 
+                                onClick={() => {
+                                  setExpandedDay(isExpanded ? null : idx);
+                                  if (!isExpanded) {
+                                    setSelectedScriptDayIdx(idx);
+                                  }
+                                }}
+                                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition-all"
+                              >
+                                {isExpanded ? <ChevronUp className="w-4 h-4 text-indigo-600" /> : <ChevronDown className="w-4 h-4" />}
+                              </button>
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-xs font-black text-slate-800 line-clamp-1">{dayPlan.topic}</span>
-                            <span className="text-[10px] font-semibold text-slate-500 capitalize flex items-center gap-1.5 mt-0.5">
-                              {renderPlatformIcon(dayPlan.platform, "w-3 h-3")}
-                              {dayPlan.platform} â€¢ {dayPlan.contentType}
-                            </span>
-                          </div>
+
+                          {/* Accordion Body */}
+                          {isExpanded && (
+                            <div className="px-5 pb-5 pt-1.5 border-t border-indigo-50/50 bg-indigo-50/5 grid grid-cols-1 md:grid-cols-2 gap-5 animate-fadeIn">
+                              <div className="space-y-3">
+                                <div>
+                                  <span className="block text-[9px] uppercase tracking-widest text-slate-400 font-black mb-1">Detailed Hook Angle</span>
+                                  <p className="text-xs font-semibold text-indigo-755 bg-indigo-50/25 p-3 border border-indigo-100/50 rounded-xl leading-relaxed italic">
+                                    "{dayPlan.hook || dayPlan.topicFocus || "Configure a high-impact opening that addresses direct visitor pain points or answers key ICP concerns immediately."}"
+                                  </p>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <span className="block text-[9px] uppercase tracking-widest text-slate-400 font-black">Content Creation Checklist</span>
+                                  <div className="space-y-1.5">
+                                    {[
+                                      "Draft/Refine final copywriting hook",
+                                      "Record visual overlay or talk-head footage",
+                                      "Verify platform aspect ratios (9:16 / 1:1)",
+                                      "Insert relevant custom hashtags & CTAs"
+                                    ].map((checkItem, checkIdx) => (
+                                      <div key={checkIdx} className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 bg-white/50 px-2.5 py-1.5 border border-slate-100/50 rounded-lg">
+                                        <input type="checkbox" id={`chk-${idx}-${checkIdx}`} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer" />
+                                        <label htmlFor={`chk-${idx}-${checkIdx}`} className="cursor-pointer select-none">{checkItem}</label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col justify-between space-y-4">
+                                <div className="space-y-2.5">
+                                  <div>
+                                    <span className="block text-[9px] uppercase tracking-widest text-slate-400 font-black">Platform Target Format</span>
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-indigo-755 mt-1">
+                                      <Video className="w-4 h-4 text-indigo-550" />
+                                      {dayPlan.platform === 'youtube' ? 'YouTube Shorts (Vertical Video)' :
+                                       dayPlan.platform === 'instagram' ? 'Instagram Reel / Story' :
+                                       'LinkedIn Carousel & Narrative'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="block text-[9px] uppercase tracking-widest text-slate-400 font-black">Call to Action Objective</span>
+                                    <span className="text-xs font-bold text-slate-600 mt-1 block">
+                                      Redirect users to your CRM lead captures or FoundersOS profile links.
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedScriptDayIdx(idx);
+                                    const element = document.getElementById("marketing-scripts-card");
+                                    if (element) {
+                                      element.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                  }}
+                                  className="w-full h-10 border-indigo-100 hover:border-indigo-300 text-indigo-650 hover:text-indigo-700 bg-white shadow-3xs rounded-xl flex items-center justify-center gap-2 mt-2 font-bold text-xs"
+                                >
+                                  View Script Assets
+                                  <ArrowUpRight className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Organic reach tips */}
                   {localActivePlan.calendar?.reachTips && (
-                    <div className="p-4 bg-slate-50/40 border-t space-y-2">
-                      <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-black">AI DM Distribution Playbook</span>
-                      <ul className="space-y-1.5">
+                    <div className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/10 border-t space-y-3">
+                      <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-black flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-amber-500 animate-pulse" />
+                        AI DM Distribution Playbook
+                      </span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                         {localActivePlan.calendar.reachTips.map((tip: string, idx: number) => (
-                          <li key={idx} className="text-xs font-semibold text-slate-650 flex items-start gap-2">
-                            <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                            <span>{tip}</span>
-                          </li>
+                          <div key={idx} className="p-3 border border-slate-100 bg-white rounded-xl shadow-3xs flex items-start gap-2.5">
+                            <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                            <span className="text-xs font-semibold text-slate-650 leading-relaxed">{tip}</span>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Script assets tabs card */}
-              <Card className="border-2 border-indigo-100 shadow-sm">
-                <CardHeader className="border-b py-3 flex flex-col sm:flex-row sm:items-center justify-between px-6 gap-3">
-                  <span className="text-sm font-black text-slate-800">Generated AI Marketing Scripts</span>
+              <Card id="marketing-scripts-card" className="border border-indigo-100 shadow-lg shadow-indigo-100/5 rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="bg-gradient-to-r from-indigo-50/70 to-purple-50/50 border-b py-4 px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/25 shrink-0">
+                      <Sparkles className="w-4.5 h-4.5" />
+                    </div>
+                    <span className="text-sm font-black text-slate-900 tracking-tight">Generated AI Marketing Scripts</span>
+                  </div>
                   
-                  {/* Internal tabs select */}
-                  <div className="flex border rounded-lg overflow-hidden bg-slate-50">
-                    {localActivePlan.platforms.map((plat: string) => (
+                  {/* Internal tabs select - Days of the Week */}
+                  <div className="flex border border-slate-200 rounded-xl overflow-hidden bg-white p-1 gap-1 shadow-3xs overflow-x-auto whitespace-nowrap scrollbar-none max-w-full">
+                    {localActivePlan.calendar?.weeklyCalendar?.map((dayPlan: any, idx: number) => (
                       <button
-                        key={plat}
-                        onClick={() => setActiveScriptTab(plat as any)}
-                        className={`px-3 py-1.5 text-xs font-bold capitalize flex items-center gap-1 ${
-                          activeScriptTab === plat ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                        key={idx}
+                        onClick={() => setSelectedScriptDayIdx(idx)}
+                        className={`px-3.5 py-1.5 text-xs font-extrabold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
+                          selectedScriptDayIdx === idx 
+                            ? 'bg-indigo-600 text-white shadow-sm font-black' 
+                            : 'text-slate-600 hover:bg-slate-50'
                         }`}
                       >
-                        {plat}
+                        <span className="uppercase">{dayPlan.day.slice(0, 3)}</span>
+                        {renderPlatformIcon(dayPlan.platform, "w-3 h-3")}
                       </button>
                     ))}
                   </div>
                 </CardHeader>
-                <CardContent className="pt-6">
+                <CardContent className="p-6">
                   {(() => {
-                    const scriptObj = localActivePlan.scripts?.[activeScriptTab];
-                    if (!scriptObj) {
+                    const dayPlan = localActivePlan.calendar?.weeklyCalendar?.[selectedScriptDayIdx];
+                    if (!dayPlan) {
                       return (
-                        <div className="text-center py-8 text-slate-400 font-semibold text-sm">
-                          No script generated for {activeScriptTab}. Please select it in parameters and regenerate.
+                        <div className="text-center py-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                          <Sliders className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                          <div className="text-slate-450 font-bold text-sm">
+                            No content strategy active for this day.
+                          </div>
                         </div>
                       );
                     }
+
+                    // Fallback to platform-wide script if day-specific script does not exist (for backwards compatibility)
+                    const fallbackObj = localActivePlan.scripts?.[dayPlan.platform] || {};
+                    const hook = dayPlan.hook || fallbackObj.hook || "";
+                    const script = dayPlan.script || fallbackObj.script || "";
+                    const callToAction = dayPlan.callToAction || fallbackObj.callToAction || "";
+                    const hashtags = dayPlan.hashtags || fallbackObj.hashtags || [];
+                    const postingSchedule = fallbackObj.postingSchedule || "Daily";
+                    const contentIdeas = fallbackObj.contentIdeas || [];
+
                     return (
-                      <div className="space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         
-                        {/* Script block details */}
-                        <div className="bg-slate-100/70 p-4 border rounded-xl space-y-4">
-                          
-                          <div className="flex justify-between items-center border-b pb-2.5">
-                            <div>
-                              <span className="text-xs font-black text-slate-800">Organic Caption & Script Copy</span>
-                              <span className="block text-[10px] text-slate-500 font-semibold mt-0.5">
-                                Optimal Posting frequency: {scriptObj.postingSchedule || 'Not specified'}
-                              </span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 border-slate-200 text-slate-650 hover:text-indigo-600 hover:bg-indigo-50"
-                              onClick={() => handleCopy(`${scriptObj.hook}\n\n${scriptObj.script}\n\n#${scriptObj.hashtags.join(' #')}`, `script-${activeScriptTab}`)}
-                            >
-                              {copiedId === `script-${activeScriptTab}` ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5 mr-1 text-green-600" />
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3.5 h-3.5 mr-1" />
-                                  Copy Script
-                                </>
-                              )}
-                            </Button>
-                          </div>
-
-                          <div className="space-y-3 font-semibold text-xs leading-relaxed text-slate-700">
-                            <div>
-                              <span className="block font-black text-[10px] uppercase text-indigo-700 tracking-wider mb-1">Hook Opening line</span>
-                              <p className="bg-indigo-50/50 p-2 border border-indigo-100 rounded-lg text-indigo-950 font-black italic">
-                                "{scriptObj.hook}"
-                              </p>
-                            </div>
+                        {/* High Fidelity Mockup/Viewer Frame (Left Side) */}
+                        <div className="lg:col-span-6 space-y-4">
+                          <div className="bg-slate-900/95 border border-slate-800 p-5 rounded-2xl shadow-xl shadow-slate-900/10 text-white relative overflow-hidden">
+                            {/* Camera notch mockup */}
+                            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-3.5 bg-black rounded-full z-10 opacity-70" />
                             
-                            <div>
-                              <span className="block font-black text-[10px] uppercase text-slate-400 tracking-wider mb-1">Script / Caption Body</span>
-                              <p className="bg-white p-3 border rounded-lg whitespace-pre-wrap font-mono">
-                                {scriptObj.script}
-                              </p>
+                            <div className="flex justify-between items-center border-b border-slate-800 pb-3 mb-4 mt-2">
+                              <div>
+                                <span className="text-xs font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                                  {renderPlatformIcon(dayPlan.platform, "w-3.5 h-3.5 text-white")}
+                                  {dayPlan.day} • {dayPlan.platform}
+                                </span>
+                                <span className="block text-[9px] text-slate-400 font-semibold mt-0.5">
+                                  Topic: {dayPlan.topic} | Format: {dayPlan.contentType}
+                                </span>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 border-slate-800 bg-slate-800 hover:bg-slate-700 text-white hover:text-white rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all"
+                                onClick={() => handleCopy(`${hook}\n\n${script}\n\n#${hashtags.join(' #')}`, `script-day-${selectedScriptDayIdx}`)}
+                              >
+                                {copiedId === `script-day-${selectedScriptDayIdx}` ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-green-400" />
+                                    Copied
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    Copy Text
+                                  </>
+                                )}
+                              </Button>
                             </div>
 
-                            <div>
-                              <span className="block font-black text-[10px] uppercase text-slate-400 tracking-wider mb-1">Suggested CTA</span>
-                              <p className="bg-white p-2 border rounded-lg">
-                                {scriptObj.callToAction}
-                              </p>
-                            </div>
+                            <div className="space-y-4 font-semibold text-xs leading-relaxed text-slate-300">
+                              <div>
+                                <span className="block font-black text-[9px] uppercase text-indigo-400 tracking-wider mb-1">Hook Opening (First 3s)</span>
+                                <p className="bg-indigo-950/80 p-3.5 border border-indigo-800/60 rounded-xl text-indigo-200 font-black italic shadow-inner">
+                                  "{hook}"
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <span className="block font-black text-[9px] uppercase text-slate-550 tracking-wider mb-1">Body Strategy Copy</span>
+                                <p className="bg-slate-950/80 p-4 border border-slate-850 rounded-xl whitespace-pre-wrap font-mono text-slate-200 shadow-inner max-h-[200px] overflow-y-auto leading-relaxed">
+                                  {script}
+                                </p>
+                              </div>
 
-                            <div>
-                              <span className="block font-black text-[10px] uppercase text-slate-400 tracking-wider mb-1">Hashtags</span>
-                              <p className="bg-white p-2 border rounded-lg text-indigo-600 font-mono text-[11px] leading-normal">
-                                #{scriptObj.hashtags?.join(' #')}
-                              </p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <span className="block font-black text-[9px] uppercase text-slate-550 tracking-wider mb-1">Call to Action</span>
+                                  <p className="bg-slate-950/40 p-2.5 border border-slate-850 rounded-lg text-[11px] font-bold text-slate-350">
+                                    {callToAction}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className="block font-black text-[9px] uppercase text-slate-550 tracking-wider mb-1">Optimal Hashtags</span>
+                                  <p className="bg-slate-950/40 p-2.5 border border-slate-850 rounded-lg text-indigo-400 font-mono text-[10px] truncate">
+                                    #{hashtags?.join(' #')}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Secondary Content ideas */}
-                        <div className="space-y-3">
-                          <span className="block text-xs font-black text-slate-800 uppercase tracking-widest">
-                            Alternative {activeScriptTab} Content Ideas
+                        {/* Alternative Content ideas & Angles (Right Side) */}
+                        <div className="lg:col-span-6 space-y-4">
+                          <span className="block text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <Lightbulb className="w-4 h-4 text-indigo-500" />
+                            Alternative {dayPlan.platform} Ideas
                           </span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {scriptObj.contentIdeas?.map((idea: string, i: number) => (
-                              <div key={i} className="p-3 border rounded-lg bg-slate-50/30 flex gap-2 items-start">
-                                <div className="w-5 h-5 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[11px] text-indigo-650 font-bold shrink-0 mt-0.5">
+                          <div className="grid grid-cols-1 gap-2.5">
+                            {contentIdeas?.map((idea: string, i: number) => (
+                              <div key={i} className="p-3.5 border border-slate-100 rounded-xl bg-slate-50/20 hover:bg-slate-50/50 transition-colors flex gap-3 items-start shadow-3xs">
+                                <div className="w-6 h-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xs text-indigo-650 font-bold shrink-0 mt-0.5">
                                   {i + 1}
                                 </div>
                                 <span className="text-xs font-semibold text-slate-650 leading-relaxed">{idea}</span>
@@ -639,6 +781,201 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
               )}
             </CardContent>
           </Card>
+        </div>
+      )}
+      {/* AI Campaign Parameters Modal Popup */}
+      {showParams && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div 
+            className="absolute inset-0" 
+            onClick={() => setShowParams(false)} 
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl border border-indigo-100 w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10 animate-in zoom-in-95 duration-200">
+            {/* Top Accent Gradient Line */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+            
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowParams(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors z-20"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 px-6 py-6 text-white border-b border-indigo-900/40 relative">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl text-white shadow-lg shadow-indigo-500/35 shrink-0">
+                  <Sparkles className="w-5.5 h-5.5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black tracking-tight text-white">
+                    AI Campaign Parameters
+                  </h2>
+                  <p className="text-[11px] text-indigo-200/80 font-semibold mt-1">
+                    Configure details to build video hooks, scripts, and posting calendars.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Form Content */}
+            <div className="p-6">
+              <form 
+                onSubmit={async (e) => {
+                  await handleGenerateCampaign(e);
+                  setShowParams(false);
+                }} 
+                className="space-y-5"
+              >
+                
+                {/* Name */}
+                <div className="space-y-1.5">
+                  <Label className="font-black text-xs uppercase text-slate-500 flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-indigo-500" />
+                    Product Title
+                  </Label>
+                  <Input
+                    placeholder="e.g. EZCirkit STEM Kit"
+                    value={productName}
+                    onChange={e => setProductName(e.target.value)}
+                    required
+                    className="font-semibold h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-xl transition-all"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <Label className="font-black text-xs uppercase text-slate-500 flex items-center gap-1.5">
+                    <Lightbulb className="w-3.5 h-3.5 text-indigo-500" />
+                    Product Description &amp; Specs
+                  </Label>
+                  <textarea
+                    rows={4}
+                    placeholder="e.g. Solderless circuit board kit for students, interactive coding guide, drag-and-drop IDE interface..."
+                    value={productDescription}
+                    onChange={e => setProductDescription(e.target.value)}
+                    required
+                    className="w-full text-sm font-semibold p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500 transition-all resize-none shadow-2xs"
+                  />
+                </div>
+
+                {/* Audience */}
+                <div className="space-y-1.5">
+                  <Label className="font-black text-xs uppercase text-slate-500 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-indigo-500" />
+                    Target ICP / User Persona
+                  </Label>
+                  <Input
+                    placeholder="e.g. High school tech mentors, teachers, makers"
+                    value={targetAudience}
+                    onChange={e => setTargetAudience(e.target.value)}
+                    required
+                    className="font-semibold h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-xl transition-all"
+                  />
+                </div>
+
+                {/* Config Row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="font-black text-xs uppercase text-slate-500">Brand Voice/Tone</Label>
+                    <Select value={brandTone} onValueChange={(val: any) => setBrandTone(val)}>
+                      <SelectTrigger className="font-semibold h-11 border-slate-200 focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500 rounded-xl transition-all">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="professional">Professional / Tech</SelectItem>
+                        <SelectItem value="casual">Casual / Conversational</SelectItem>
+                        <SelectItem value="educational">Informative / Academic</SelectItem>
+                        <SelectItem value="inspirational">Motivational / Growth</SelectItem>
+                        <SelectItem value="bold">Punchy / Bold</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="font-black text-xs uppercase text-slate-550">Campaign Goal</Label>
+                    <Select value={contentGoal} onValueChange={(val: any) => setContentGoal(val)}>
+                      <SelectTrigger className="font-semibold h-11 border-slate-200 focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-500 rounded-xl transition-all">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="awareness">Brand Reach / Awareness</SelectItem>
+                        <SelectItem value="leads">Lead Gen (Book Demos)</SelectItem>
+                        <SelectItem value="sales">Product Conversions</SelectItem>
+                        <SelectItem value="community">Foster STEM Community</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Channels selection checkboxes */}
+                <div className="space-y-2">
+                  <Label className="font-black text-xs uppercase text-slate-500">Select Channels</Label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {['instagram', 'youtube', 'linkedin'].map((plat: any) => {
+                      const isChecked = selectedPlatforms.includes(plat);
+                      return (
+                        <button
+                          key={plat}
+                          type="button"
+                          onClick={() => {
+                            if (isChecked) {
+                              setSelectedPlatforms(selectedPlatforms.filter(p => p !== plat));
+                            } else {
+                              setSelectedPlatforms([...selectedPlatforms, plat]);
+                            }
+                          }}
+                          className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl font-extrabold text-xs capitalize transition-all ${
+                            isChecked 
+                              ? 'bg-indigo-50 border-indigo-400 text-indigo-755 shadow-sm' 
+                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {renderPlatformIcon(plat, "w-4 h-4")}
+                          {plat}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Angle Focus */}
+                <div className="space-y-1.5">
+                  <Label className="font-black text-xs uppercase text-slate-500 flex items-center gap-1">
+                    Custom Script Theme Focus
+                    <span className="text-[10px] text-slate-400 lowercase font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    placeholder="e.g. Focus on low cost, or showcase the drag-and-drop IDE ease"
+                    value={customFocus}
+                    onChange={e => setCustomFocus(e.target.value)}
+                    className="font-semibold h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-xl transition-all"
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowParams(false)}
+                    className="flex-1 font-bold h-12 rounded-xl border-slate-200 text-slate-700"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={selectedPlatforms.length === 0 || !productName || !productDescription || loading}
+                    className="flex-[2] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold h-12 rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Flame className="w-4.5 h-4.5 text-amber-300 animate-pulse" />
+                    Generate Campaign Strategy
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 

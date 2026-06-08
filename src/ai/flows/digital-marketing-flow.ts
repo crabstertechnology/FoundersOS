@@ -85,6 +85,10 @@ const DMCalendarOutputSchema = z.object({
     platform: z.string(),
     contentType: z.string(),
     topic: z.string(),
+    hook: z.string().describe('One punchy 3-second opening hook tailored specifically to this day\'s topic and platform.'),
+    script: z.string().describe('Short-form video script or post caption copy (50-80 words) tailored specifically to this day\'s topic and platform.'),
+    callToAction: z.string().describe('Clear CTA tailored to this day\'s topic.'),
+    hashtags: z.array(z.string()).describe('Exactly 5 relevant hashtags.'),
   })).describe('Exactly 7 rows, Mon–Sun.'),
   kpiTargets: z.record(z.string()).describe('Object with platform keys and 90-day KPI strings.'),
   reachTips: z.array(z.string()).describe('Exactly 3 organic reach tips.'),
@@ -95,15 +99,23 @@ const dmCalendarPrompt = ai.definePrompt({
   name: 'dmCalendarPrompt',
   input: { schema: DMCalendarInputSchema },
   output: { schema: DMCalendarOutputSchema },
-  prompt: `You are a social media strategist. Create a compact content plan.
-
+  prompt: `You are a social media strategist. Create a detailed weekly content plan.
+ 
 Product: {{{productName}}} | Company: {{{companyName}}}
 Audience: {{{targetAudience}}} | Goal: {{{contentGoal}}}
 Platforms: {{#each platforms}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
 Return ONLY:
 1. contentPillars: exactly 4 short theme titles
-2. weeklyCalendar: exactly 7 rows (Mon–Sun). Each: day, platform, contentType, topic (≤8 words)
+2. weeklyCalendar: exactly 7 rows (Mon–Sun). For each row:
+   - day: e.g. "Monday"
+   - platform: e.g. "instagram" (must be one of the selected platforms)
+   - contentType: e.g. "Reel"
+   - topic: e.g. "STEM setup tutorial" (≤8 words)
+   - hook: a punchy opening line tailored to this topic
+   - script: a short script or caption body (50-80 words) tailored to this topic (use [scene:] brackets if platform is instagram/youtube short-form reels/shorts)
+   - callToAction: a short CTA
+   - hashtags: exactly 5 hashtags (no # symbol in strings)
 3. kpiTargets: for each platform, one short 90-day KPI sentence
 4. reachTips: exactly 3 tips (one sentence each)`,
 });
