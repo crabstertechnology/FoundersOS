@@ -243,17 +243,17 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
       {/* Top Heading */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2 mt-4">
         <div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.1] mb-2 flex items-center gap-3">
-            <Megaphone className="w-10 h-10 text-indigo-600" />
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.1] mb-2 flex items-center gap-2 sm:gap-3">
+            <Megaphone className="w-8 h-8 sm:w-10 sm:h-10 text-indigo-600 shrink-0" />
             Digital Marketing Hub
           </h1>
-          <p className="text-muted-foreground font-medium text-lg">
+          <p className="text-muted-foreground font-medium text-sm sm:text-base md:text-lg">
             Track organic platform reach, schedule content, and launch platform-native AI script assets.
           </p>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
           {/* Toggle Parameters Button in Header */}
           {activeTab === 'ai-planner' && (
             <Button
@@ -670,7 +670,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
                                 </p>
                               </div>
 
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                   <span className="block font-black text-[9px] uppercase text-slate-550 tracking-wider mb-1">Call to Action</span>
                                   <p className="bg-slate-950/40 p-2.5 border border-slate-850 rounded-lg text-[11px] font-bold text-slate-350">
@@ -790,7 +790,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
             className="absolute inset-0" 
             onClick={() => setShowParams(false)} 
           />
-          <div className="relative bg-white rounded-2xl shadow-2xl border border-indigo-100 w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10 animate-in zoom-in-95 duration-200">
+          <div className="relative bg-white rounded-2xl shadow-2xl border border-indigo-100 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto z-10 animate-in zoom-in-95 duration-200">
             {/* Top Accent Gradient Line */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
             
@@ -798,22 +798,22 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
             <button
               type="button"
               onClick={() => setShowParams(false)}
-              className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors z-20"
+              className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full text-slate-450 hover:text-slate-600 transition-colors z-20"
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 px-6 py-6 text-white border-b border-indigo-900/40 relative">
-              <div className="flex items-center gap-4">
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 px-4 sm:px-6 py-5 sm:py-6 text-white border-b border-indigo-900/40 relative">
+              <div className="flex items-center gap-3.5 sm:gap-4">
                 <div className="p-2.5 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl text-white shadow-lg shadow-indigo-500/35 shrink-0">
-                  <Sparkles className="w-5.5 h-5.5 text-white" />
+                  <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-white">
+                  <h2 className="text-base sm:text-lg font-black tracking-tight text-white">
                     AI Campaign Parameters
                   </h2>
-                  <p className="text-[11px] text-indigo-200/80 font-semibold mt-1">
+                  <p className="text-[10px] sm:text-[11px] text-indigo-200/80 font-semibold mt-1">
                     Configure details to build video hooks, scripts, and posting calendars.
                   </p>
                 </div>
@@ -821,7 +821,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
             </div>
 
             {/* Modal Form Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <form 
                 onSubmit={async (e) => {
                   await handleGenerateCampaign(e);
@@ -877,7 +877,7 @@ export function DigitalMarketingHub({ userId, companyProfileId, readOnly }: Digi
                 </div>
 
                 {/* Config Row */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label className="font-black text-xs uppercase text-slate-500">Brand Voice/Tone</Label>
                     <Select value={brandTone} onValueChange={(val: any) => setBrandTone(val)}>
