@@ -117,17 +117,17 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D16),
+        backgroundColor: const Color(0xFFF8FAFC),
         title: const Text(
           'PRODUCT & MARKETING',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+          style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w900, letterSpacing: 1.5),
         ),
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF06B6D4),
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Color(0xFF64748B),
           indicatorColor: const Color(0xFF06B6D4),
           tabs: const [
             Tab(text: 'PRD Creator', icon: Icon(LucideIcons.fileText)),
@@ -181,7 +181,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                       : const Text('Generate User Stories & Scope'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4F46E5),
-                    foregroundColor: Colors.white,
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -201,36 +201,36 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                   const SizedBox(height: 8),
                   ...(_generatedPrd!['userStories'] as List? ?? []).map((us) => Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Text("• As a ${us['role']}, I want to ${us['action']} so that ${us['benefit']}.", style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+                        child: Text("• As a ${us['role']}, I want to ${us['action']} so that ${us['benefit']}.", style: const TextStyle(color: Color(0xFF475569), fontSize: 12, height: 1.4)),
                       )),
                   const SizedBox(height: 16),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
                   const Text('ACCEPTANCE CRITERIA (GIVEN-WHEN-THEN)', style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   ...(_generatedPrd!['acceptanceCriteria'] as List? ?? []).map((ac) => Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.01), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(color: const Color(0xFF64748B).withOpacity(0.04), borderRadius: BorderRadius.circular(8)),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(ac['scenario'] ?? 'Scenario', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                            Text(ac['scenario'] ?? 'Scenario', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 11)),
                             const SizedBox(height: 4),
-                            Text("Given: ${ac['given']}\nWhen: ${ac['when']}\nThen: ${ac['then']}", style: const TextStyle(color: Colors.white60, fontSize: 11, height: 1.3)),
+                            Text("Given: ${ac['given']}\nWhen: ${ac['when']}\nThen: ${ac['then']}", style: const TextStyle(color: Color(0xFF64748B), fontSize: 11, height: 1.3)),
                           ],
                         ),
                       )),
                   const SizedBox(height: 16),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
                   const Text('TECHNICAL IMPLEMENTATION SCOPE', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
-                  Text(_generatedPrd!['techImplementationNotes'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+                  Text(_generatedPrd!['techImplementationNotes'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12, height: 1.4)),
                   const SizedBox(height: 16),
                   const Text('RISKS & MITIGATION STRATEGIES', style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
-                  Text(_generatedPrd!['risksAndMitigation'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+                  Text(_generatedPrd!['risksAndMitigation'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12, height: 1.4)),
                 ],
               ),
             ),
@@ -265,7 +265,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
           ...nextItems.map((item) => _buildRoadmapCard(item)),
 
           const SizedBox(height: 20),
-          const Text('LATER (Future Vision & Backlog)', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+          const Text('LATER (Future Vision & Backlog)', style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
           const SizedBox(height: 8),
           ...laterItems.map((item) => _buildRoadmapCard(item)),
 
@@ -275,8 +275,8 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
             icon: const Icon(LucideIcons.plus, size: 16),
             label: const Text('Add Product Milestone'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.05),
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF64748B).withOpacity(0.08),
+              foregroundColor: Color(0xFF0F172A),
               minimumSize: const Size(double.infinity, 44),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -294,7 +294,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.015),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -303,9 +303,9 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['title'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(item['title'] ?? '', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 4),
-                Text(item['desc'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                Text(item['desc'] ?? '', style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
               ],
             ),
           ),
@@ -357,7 +357,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                       : const Text('Generate Marketing Campaign'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0F766E),
-                    foregroundColor: Colors.white,
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -375,13 +375,13 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                 children: [
                   const Text('VIRAL LOOP MECHANIC', style: TextStyle(color: Color(0xFF06B6D4), fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_generatedCampaign!['viralLoopMechanic'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+                  Text(_generatedCampaign!['viralLoopMechanic'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12, height: 1.4)),
                   const SizedBox(height: 16),
                   const Text('RECOMMENDED SEO KEYWORDS', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text((_generatedCampaign!['seoKeywords'] as List? ?? []).join(', '), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text((_generatedCampaign!['seoKeywords'] as List? ?? []).join(', '), style: const TextStyle(color: Color(0xFF475569), fontSize: 12)),
                   const SizedBox(height: 16),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
                   const Text('AD COPY SAMPLES', style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
@@ -391,18 +391,18 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.01),
+                        color: const Color(0xFF64748B).withOpacity(0.04),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                        border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Channel: ${a['channel']}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          Text("Channel: ${a['channel']}", style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 12)),
                           const SizedBox(height: 4),
                           Text("Hook: ${a['hook']}", style: const TextStyle(color: Colors.amberAccent, fontSize: 11)),
                           const SizedBox(height: 4),
-                          Text("Body: ${a['body']}", style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.3)),
+                          Text("Body: ${a['body']}", style: const TextStyle(color: Color(0xFF475569), fontSize: 11, height: 1.3)),
                           const SizedBox(height: 4),
                           Text("CTA: ${a['cta']}", style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
                         ],
@@ -410,7 +410,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                     );
                   }),
                   const SizedBox(height: 10),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
                   const Text('CAMPAIGN EXECUTION CHECKLIST', style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -421,7 +421,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                           children: [
                             const Icon(Icons.check_box_outline_blank, color: Colors.orangeAccent, size: 14),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(chk.toString(), style: const TextStyle(color: Colors.white70, fontSize: 12))),
+                            Expanded(child: Text(chk.toString(), style: const TextStyle(color: Color(0xFF475569), fontSize: 12))),
                           ],
                         ),
                       )),
@@ -445,8 +445,8 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF090D16),
-              title: const Text('Add Roadmap Milestone', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: const Color(0xFFF8FAFC),
+              title: const Text('Add Roadmap Milestone', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -455,7 +455,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                   _buildFieldInput('Description', _roadmapDescController),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    dropdownColor: const Color(0xFF090D16),
+                    dropdownColor: const Color(0xFFF8FAFC),
                     value: _roadmapTimeframe,
                     items: const [
                       DropdownMenuItem(value: 'now', child: Text('NOW (Active Quarter)', style: TextStyle(color: Colors.white))),
@@ -463,14 +463,14 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
                       DropdownMenuItem(value: 'later', child: Text('LATER (Backlog)', style: TextStyle(color: Colors.white))),
                     ],
                     onChanged: (v) => setStateDialog(() => _roadmapTimeframe = v!),
-                    decoration: const InputDecoration(labelText: 'Timeframe', labelStyle: TextStyle(color: Colors.grey, fontSize: 10)),
+                    decoration: const InputDecoration(labelText: 'Timeframe', labelStyle: TextStyle(color: Color(0xFF64748B), fontSize: 10)),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                  child: const Text('Cancel', style: TextStyle(color: const Color(0xFF64748B))),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -508,7 +508,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.015),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,7 +519,7 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
               const SizedBox(width: 8),
               Text(
                 title.toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                style: const TextStyle(color: Color(0xFF0F172A), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
               ),
             ],
           ),
@@ -534,14 +534,14 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontSize: 13),
+      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+        labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.01),
+        fillColor: const Color(0xFF64748B).withOpacity(0.04),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white10)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
       ),
     );
@@ -549,19 +549,24 @@ class _ProductSuiteTabState extends State<ProductSuiteTab> with SingleTickerProv
 
   Widget _buildDropdown({required String label, required String value, required List<String> items, required void Function(String?) onChanged}) {
     return DropdownButtonFormField<String>(
-      dropdownColor: const Color(0xFF090D16),
+      dropdownColor: const Color(0xFFF8FAFC),
       value: value,
-      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i, style: const TextStyle(color: Colors.white, fontSize: 12)))).toList(),
+      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12)))).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+        labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.01),
+        fillColor: const Color(0xFF64748B).withOpacity(0.04),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white10)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
       ),
     );
   }
 }
+
+
+
+
+

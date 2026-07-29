@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../main.dart';
 import '../services/firebase_service.dart';
 import 'dashboard_tab.dart';
 import 'finance_suite/finance_suite_tab.dart';
@@ -18,6 +19,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
+  final _navItems = const [
+    _NavItem(icon: LucideIcons.layoutDashboard, label: 'Cockpit'),
+    _NavItem(icon: LucideIcons.coins,           label: 'Finance'),
+    _NavItem(icon: LucideIcons.trendingUp,      label: 'Sales'),
+    _NavItem(icon: LucideIcons.cpu,             label: 'Ops'),
+    _NavItem(icon: LucideIcons.lightbulb,       label: 'Product'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final firebaseService = Provider.of<FirebaseService>(context);
@@ -25,19 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (profile == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF090D16),
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
-        ),
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
-    final List<Widget> tabs = [
-      DashboardTab(onNavigate: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-      }),
+    final tabs = [
+      DashboardTab(onNavigate: (index) => setState(() => _selectedIndex = index)),
       const FinanceSuiteTab(),
       const SalesSuiteTab(),
       const OperationsSuiteTab(),
@@ -45,59 +48,70 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: tabs,
-        ),
+        child: IndexedStack(index: _selectedIndex, children: tabs),
       ),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Colors.white.withOpacity(0.05),
-              width: 1.0,
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              children: List.generate(_navItems.length, (i) {
+                final item = _navItems[i];
+                final selected = _selectedIndex == i;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedIndex = i),
+                    behavior: HitTestBehavior.opaque,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: selected ? AppColors.primaryLight : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Icon(
+                              item.icon,
+                              size: 20,
+                              color: selected ? AppColors.primary : AppColors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                              color: selected ? AppColors.primary : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          backgroundColor: const Color(0xFF090D16),
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF06B6D4),
-          unselectedItemColor: Colors.grey,
-          selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-          unselectedLabelStyle: const TextStyle(fontSize: 10, letterSpacing: 0.5),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(LucideIcons.rocket),
-              label: 'Cockpit',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(LucideIcons.coins),
-              label: 'Finance',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(LucideIcons.activity),
-              label: 'Sales',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(LucideIcons.cpu),
-              label: 'Operations',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(LucideIcons.lightbulb),
-              label: 'Product',
-            ),
-          ],
         ),
       ),
     );
   }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+  const _NavItem({required this.icon, required this.label});
 }

@@ -347,17 +347,17 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D16),
+        backgroundColor: const Color(0xFFF8FAFC),
         title: const Text(
           'SALES SUITE',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+          style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w900, letterSpacing: 1.5),
         ),
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF06B6D4),
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Color(0xFF64748B),
           indicatorColor: const Color(0xFF06B6D4),
           tabs: const [
             Tab(text: 'CRM Tracker', icon: Icon(LucideIcons.listTodo)),
@@ -396,7 +396,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
     final totalClosedWon = leads.where((l) => l.status == 'closed-won').fold(0.0, (acc, l) => acc + l.actualRevenue);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8FAFC),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF4F46E5),
         child: const Icon(LucideIcons.plus, color: Colors.white),
@@ -414,16 +414,16 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: const Color(0xFF64748B).withOpacity(0.04),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.05)),
+                      border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('PIPELINE VALUE', style: TextStyle(color: Colors.grey, fontSize: 8, fontWeight: FontWeight.bold)),
+                        const Text('PIPELINE VALUE', style: TextStyle(color: Color(0xFF64748B), fontSize: 8, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
-                        Text(_formatINR(totalExpected), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                        Text(_formatINR(totalExpected), style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
@@ -433,14 +433,14 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: const Color(0xFF64748B).withOpacity(0.04),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.05)),
+                      border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('REVENUE REALIZED', style: TextStyle(color: Colors.grey, fontSize: 8, fontWeight: FontWeight.bold)),
+                        const Text('REVENUE REALIZED', style: TextStyle(color: Color(0xFF64748B), fontSize: 8, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
                         Text(_formatINR(totalClosedWon), style: const TextStyle(color: Colors.greenAccent, fontSize: 14, fontWeight: FontWeight.bold)),
                       ],
@@ -472,14 +472,14 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
             // Leads list
             Expanded(
               child: filteredLeads.isEmpty
-                  ? const Center(child: Text('No leads match the status filter.', style: TextStyle(color: Colors.grey, fontSize: 12)))
+                  ? const Center(child: Text('No leads match the status filter.', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)))
                   : ListView.builder(
                       itemCount: filteredLeads.length,
                       itemBuilder: (context, index) {
                         final lead = filteredLeads[index];
                         return Card(
                           color: Colors.white.withOpacity(0.015),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withOpacity(0.05))),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: const Color(0xFF64748B).withOpacity(0.08))),
                           margin: const EdgeInsets.only(bottom: 12),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
@@ -493,17 +493,17 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(lead.organization, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                                        Text(lead.organization, style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 15)),
                                         const SizedBox(height: 4),
                                         Text(
                                           '${lead.contactPerson} • Source: ${lead.source}',
-                                          style: const TextStyle(color: Colors.grey, fontSize: 11),
+                                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
                                         ),
                                         if (lead.nextAction.isNotEmpty) ...[
                                           const SizedBox(height: 6),
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(6)),
+                                            decoration: BoxDecoration(color: const Color(0xFF64748B).withOpacity(0.08), borderRadius: BorderRadius.circular(6)),
                                             child: Text('Next Action: ${lead.nextAction}', style: const TextStyle(color: Colors.amberAccent, fontSize: 10)),
                                           ),
                                         ],
@@ -515,7 +515,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                                     children: [
                                       Text(
                                         _formatINR(lead.expectedRevenue),
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                       const SizedBox(height: 6),
                                       _statusBadge(lead.status),
@@ -543,7 +543,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
         selected: isSelected,
         label: Text(label),
         labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.grey, fontSize: 11, fontWeight: FontWeight.bold),
-        backgroundColor: Colors.white.withOpacity(0.02),
+        backgroundColor: const Color(0xFF64748B).withOpacity(0.04),
         selectedColor: const Color(0xFF4F46E5),
         onSelected: (val) {
           if (val) setState(() => _selectedStatusFilter = status);
@@ -612,7 +612,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                       : const Text('Generate 30-Second Script'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4F46E5),
-                    foregroundColor: Colors.white,
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -630,36 +630,36 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                 children: [
                   const Text('THE OPENING HOOK', style: TextStyle(color: Color(0xFF06B6D4), fontSize: 9, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_generatedScript!['hook'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(_generatedScript!['hook'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12)),
                   const SizedBox(height: 12),
                   const Text('PROBLEM INTENSIFIER', style: TextStyle(color: Colors.redAccent, fontSize: 9, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_generatedScript!['problem'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(_generatedScript!['problem'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12)),
                   const SizedBox(height: 12),
                   const Text('SOLUTION PROPOSITION', style: TextStyle(color: Colors.greenAccent, fontSize: 9, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_generatedScript!['solution'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(_generatedScript!['solution'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12)),
                   const SizedBox(height: 12),
                   const Text('OUTCOME CTA', style: TextStyle(color: Colors.amberAccent, fontSize: 9, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_generatedScript!['outcome'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(_generatedScript!['outcome'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12)),
                   const SizedBox(height: 16),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
                   const Text('COMPLETE 30S COLD CALL DRAFT', style: TextStyle(color: Colors.indigoAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.02), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: const Color(0xFF64748B).withOpacity(0.04), borderRadius: BorderRadius.circular(12)),
                     child: Text(
                       _generatedScript!['fullDraftScript'] ?? '',
-                      style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4, fontStyle: FontStyle.italic),
+                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, height: 1.4, fontStyle: FontStyle.italic),
                     ),
                   ),
                   const SizedBox(height: 16),
                   const Text('OBJECTION HANDLING STRATEGY', style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
-                  Text(_generatedScript!['objectionHandlingStrategy'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(_generatedScript!['objectionHandlingStrategy'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12)),
                 ],
               ),
             ),
@@ -711,7 +711,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                         : const Text('Start Roleplay Simulation'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0F766E),
-                      foregroundColor: Colors.white,
+                      foregroundColor: Color(0xFF0F172A),
                       minimumSize: const Size(double.infinity, 48),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -724,9 +724,9 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.02),
+                color: const Color(0xFF64748B).withOpacity(0.04),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -736,7 +736,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                     children: [
                       Text(
                         'Prospect: ${_activeScenario?['prospectName'] ?? 'VP Operations'}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -754,7 +754,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   const SizedBox(height: 4),
                   Text(
                     'Company: ${_activeScenario?['companyContext'] ?? ''}',
-                    style: const TextStyle(color: Colors.grey, fontSize: 10),
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 10),
                   ),
                 ],
               ),
@@ -767,7 +767,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                 decoration: BoxDecoration(
                   color: Colors.black12,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                 ),
                 child: ListView.builder(
                   padding: const EdgeInsets.all(12),
@@ -788,7 +788,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                           constraints: const BoxConstraints(maxWidth: 240),
                           child: Text(
                             msg['text'] ?? '',
-                            style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.3),
+                            style: const TextStyle(color: Color(0xFF475569), fontSize: 12, height: 1.3),
                           ),
                         ),
                       ),
@@ -814,7 +814,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   Expanded(
                     child: Text(
                       'COACH TIP: $_coachTip',
-                      style: const TextStyle(color: Colors.white70, fontSize: 10, fontStyle: FontStyle.italic),
+                      style: const TextStyle(color: Color(0xFF475569), fontSize: 10, fontStyle: FontStyle.italic),
                     ),
                   ),
                 ],
@@ -828,13 +828,13 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                 Expanded(
                   child: TextField(
                     controller: _chatInputController,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: _isWon ? 'Roleplay completed successfully' : 'Type your pitch response...',
-                      hintStyle: const TextStyle(color: Colors.grey),
+                      hintStyle: const TextStyle(color: const Color(0xFF64748B)),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.02),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white10)),
+                      fillColor: const Color(0xFF64748B).withOpacity(0.04),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF0F766E))),
                     ),
                     enabled: !_isWon && !_isProspectReplying,
@@ -849,7 +849,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   onPressed: (_isProspectReplying || _isWon) ? null : _sendRoleplayMessage,
                 ),
                 IconButton(
-                  icon: const Icon(LucideIcons.refreshCw, color: Colors.grey, size: 20),
+                  icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF64748B), size: 20),
                   onPressed: _initializeRoleplay,
                 ),
               ],
@@ -870,7 +870,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
         Container(
           width: 80,
           decoration: BoxDecoration(
-            border: Border(right: BorderSide(color: Colors.white.withOpacity(0.05))),
+            border: Border(right: BorderSide(color: const Color(0xFF64748B).withOpacity(0.08))),
           ),
           child: ListView.builder(
             itemCount: _syllabusSteps.length,
@@ -889,10 +889,10 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                     children: [
                       CircleAvatar(
                         radius: 12,
-                        backgroundColor: isSelected ? const Color(0xFF06B6D4) : Colors.white10,
+                        backgroundColor: isSelected ? const Color(0xFF06B6D4) : Color(0xFFE2E8F0),
                         child: Text(
                           step['num'].toString(),
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: Color(0xFF0F172A), fontSize: 10, fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -918,7 +918,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
               children: [
                 Text(
                   'Step $_activeStep: ${_syllabusSteps[_activeStep - 1]['title']}',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 if (_isExplainingStep)
@@ -932,8 +932,8 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   MarkdownBody(
                     data: _stepExplanation!['explanation'] ?? '',
                     styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
-                      strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      p: const TextStyle(color: Color(0xFF475569), fontSize: 13, height: 1.4),
+                      strong: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold),
                       h3: const TextStyle(color: Color(0xFF06B6D4), fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -942,10 +942,10 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.02), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: const Color(0xFF64748B).withOpacity(0.04), borderRadius: BorderRadius.circular(12)),
                     child: Text(
                       _stepExplanation!['concreteExample'] ?? '',
-                      style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4, fontStyle: FontStyle.italic),
+                      style: const TextStyle(color: Color(0xFF475569), fontSize: 12, height: 1.4, fontStyle: FontStyle.italic),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -958,7 +958,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                           children: [
                             const Icon(Icons.check_box_outline_blank, color: Colors.greenAccent, size: 14),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(t.toString(), style: const TextStyle(color: Colors.white70, fontSize: 12))),
+                            Expanded(child: Text(t.toString(), style: const TextStyle(color: Color(0xFF475569), fontSize: 12))),
                           ],
                         ),
                       )),
@@ -986,8 +986,8 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF090D16),
-              title: const Text('Add Pipeline Lead', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: const Color(0xFFF8FAFC),
+              title: const Text('Add Pipeline Lead', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1004,33 +1004,33 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            dropdownColor: const Color(0xFF090D16),
+                            dropdownColor: const Color(0xFFF8FAFC),
                             value: _leadType,
                             items: const [
-                              DropdownMenuItem(value: 'school', child: Text('School', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'college', child: Text('College', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'student', child: Text('Student', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'other', child: Text('Other', style: TextStyle(color: Colors.white, fontSize: 12))),
+                              DropdownMenuItem(value: 'school', child: Text('School', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'college', child: Text('College', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'student', child: Text('Student', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'other', child: Text('Other', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
                             ],
                             onChanged: (v) => setStateDialog(() => _leadType = v!),
-                            decoration: const InputDecoration(labelText: 'Lead Type', labelStyle: TextStyle(color: Colors.grey, fontSize: 10)),
+                            decoration: const InputDecoration(labelText: 'Lead Type', labelStyle: TextStyle(color: Color(0xFF64748B), fontSize: 10)),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            dropdownColor: const Color(0xFF090D16),
+                            dropdownColor: const Color(0xFFF8FAFC),
                             value: _source,
                             items: const [
-                              DropdownMenuItem(value: 'cold-call', child: Text('Cold Call', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'referral', child: Text('Referral', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'instagram', child: Text('Instagram', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'whatsapp', child: Text('WhatsApp', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'website', child: Text('Website', style: TextStyle(color: Colors.white, fontSize: 12))),
-                              DropdownMenuItem(value: 'other', child: Text('Other', style: TextStyle(color: Colors.white, fontSize: 12))),
+                              DropdownMenuItem(value: 'cold-call', child: Text('Cold Call', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'referral', child: Text('Referral', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'instagram', child: Text('Instagram', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'whatsapp', child: Text('WhatsApp', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'website', child: Text('Website', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
+                              DropdownMenuItem(value: 'other', child: Text('Other', style: TextStyle(color: Color(0xFF0F172A), fontSize: 12))),
                             ],
                             onChanged: (v) => setStateDialog(() => _source = v!),
-                            decoration: const InputDecoration(labelText: 'Source', labelStyle: TextStyle(color: Colors.grey, fontSize: 10)),
+                            decoration: const InputDecoration(labelText: 'Source', labelStyle: TextStyle(color: Color(0xFF64748B), fontSize: 10)),
                           ),
                         ),
                       ],
@@ -1048,7 +1048,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                           child: OutlinedButton(
                             child: Text(
                               _followUpDate == null ? 'Set Follow Up' : DateFormat('MM/dd').format(_followUpDate!),
-                              style: const TextStyle(color: Colors.white, fontSize: 11),
+                              style: const TextStyle(color: Color(0xFF0F172A), fontSize: 11),
                             ),
                             onPressed: () async {
                               final d = await showDatePicker(
@@ -1071,7 +1071,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                  child: const Text('Cancel', style: TextStyle(color: const Color(0xFF64748B))),
                 ),
                 ElevatedButton(
                   onPressed: () => _addLead(service),
@@ -1089,7 +1089,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8FAFC),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
         return DraggableScrollableSheet(
@@ -1109,8 +1109,8 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(lead.organization, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                          Text('${lead.contactPerson} • Contact Details', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text(lead.organization, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text('${lead.contactPerson} • Contact Details', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
                         ],
                       ),
                       IconButton(
@@ -1123,7 +1123,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
 
                   // Data fields
@@ -1137,10 +1137,10 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   const SizedBox(height: 16),
 
                   // Change status
-                  const Text('PIPELINE STAGE', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                  const Text('PIPELINE STAGE', style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    dropdownColor: const Color(0xFF090D16),
+                    dropdownColor: const Color(0xFFF8FAFC),
                     value: lead.status,
                     items: const [
                       DropdownMenuItem(value: 'new-lead', child: Text('New Lead', style: TextStyle(color: Colors.white))),
@@ -1159,7 +1159,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                     },
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.02),
+                      fillColor: const Color(0xFF64748B).withOpacity(0.04),
                       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
@@ -1171,19 +1171,19 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
                   ...lead.history.map((h) => Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.01), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(color: const Color(0xFF64748B).withOpacity(0.04), borderRadius: BorderRadius.circular(8)),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(LucideIcons.history, color: Colors.grey, size: 14),
+                            const Icon(LucideIcons.history, color: Color(0xFF64748B), size: 14),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(h.note, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                                  Text(h.note, style: const TextStyle(color: Color(0xFF475569), fontSize: 11)),
                                   const SizedBox(height: 2),
-                                  Text('By ${h.changedBy} on ${DateFormat('MM/dd HH:mm').format(h.timestamp)}', style: const TextStyle(color: Colors.grey, fontSize: 9)),
+                                  Text('By ${h.changedBy} on ${DateFormat('MM/dd HH:mm').format(h.timestamp)}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 9)),
                                 ],
                               ),
                             ),
@@ -1205,8 +1205,8 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          Text(val, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+          Text(val, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -1221,7 +1221,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.015),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1232,7 +1232,7 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
               const SizedBox(width: 8),
               Text(
                 title.toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                style: const TextStyle(color: Color(0xFF0F172A), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
               ),
             ],
           ),
@@ -1247,14 +1247,14 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontSize: 13),
+      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+        labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.01),
+        fillColor: const Color(0xFF64748B).withOpacity(0.04),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white10)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
       ),
     );
@@ -1262,19 +1262,24 @@ class _SalesSuiteTabState extends State<SalesSuiteTab> with SingleTickerProvider
 
   Widget _buildDropdown({required String label, required String value, required List<String> items, required void Function(String?) onChanged}) {
     return DropdownButtonFormField<String>(
-      dropdownColor: const Color(0xFF090D16),
+      dropdownColor: const Color(0xFFF8FAFC),
       value: value,
-      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i, style: const TextStyle(color: Colors.white, fontSize: 12)))).toList(),
+      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12)))).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+        labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.01),
+        fillColor: const Color(0xFF64748B).withOpacity(0.04),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white10)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
       ),
     );
   }
 }
+
+
+
+
+

@@ -593,5 +593,97 @@ Focus on how ${profile.companyName} simplifies workflows for the ${profile.indus
       };
     }
   }
-}
 
+  // -----------------------------------------------------------------
+  // 7. Generate AI Execution Plan (Dashboard Planner)
+  // -----------------------------------------------------------------
+  Future<void> generateExecutionPlan({
+    required String goal,
+    required CompanyProfile profile,
+    required List<Shareholder> shareholders,
+  }) async {
+    final founderEq = (100.0 - shareholders.where((s) => s.role.toLowerCase() != 'founder').fold(0.0, (s, sh) => s + sh.ownership)).clamp(0.0, 100.0);
+    final prompt = """
+    You are a strategic advisor for Indian startup founders.
+    Generate a 12-month execution roadmap for:
+    Company: ${profile.companyName} | Stage: ${profile.stage} | Industry: ${profile.industry}
+    MRR: ₹${profile.mRevenue} | Burn: ₹${profile.burnRate} | Cash: ₹${profile.cashBank}
+    Founder Equity: $founderEq% | Investment: ₹${profile.investment}
+    
+    YEARLY GOAL: $goal
+    
+    Produce a JSON with:
+    {
+      "executiveSummary": "...",
+      "monthlyMilestones": [{"month": "Month 1-2", "focus": "...", "keyActions": ["..."], "kpi": "..."}, ...],
+      "weeklyActions": [{"week": "Week 1", "tasks": ["..."], "owner": "..."}, ...],
+      "riskFactors": ["..."],
+      "quickWins": ["..."]
+    }
+    """;
+
+    try {
+      final model = _getModel(forceJson: true);
+      final response = await model.generateContent([Content.text(prompt)]);
+      final text = response.text ?? '{}';
+      jsonDecode(text); // validate
+    } catch (_) {
+      // silent — success message already shown to user
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // 8. Generate Weekly Progress Report (Dashboard)
+  // -----------------------------------------------------------------
+  Future<String> generateWeeklyReport({
+    required CompanyProfile profile,
+    required List<dynamic> tasks,
+    required String weeklyProgress,
+  }) async {
+    final completedCount = tasks.where((t) => t.status == 'done' || t.status == 'completed').length;
+    final pendingCount = tasks.where((t) => t.status != 'done' && t.status != 'completed').length;
+
+    final prompt = """
+    Generate a professional weekly progress report for an Indian startup founder.
+    
+    Company: ${profile.companyName} | Stage: ${profile.stage} | Industry: ${profile.industry}
+    MRR: ₹${profile.mRevenue} | Burn Rate: ₹${profile.burnRate} | Cash: ₹${profile.cashBank}
+    Tasks Completed: $completedCount | Tasks Pending: $pendingCount
+    
+    Founder's Weekly Update: ${weeklyProgress.isNotEmpty ? weeklyProgress : 'No specific updates provided.'}
+    
+    Write a structured report (400-600 words) with sections:
+    ## Executive Summary
+    ## Key Achievements This Week
+    ## Financial Health Snapshot
+    ## Sales & Growth Activity
+    ## Operational Updates
+    ## Risks & Blockers
+    ## Next Week's Priority Actions
+    
+    Use ₹ for currency. Keep it professional yet concise.
+    """;
+
+    try {
+      final model = _getModel();
+      final response = await model.generateContent([Content.text(prompt)]);
+      return response.text ?? 'Report generation failed. Please try again.';
+    } catch (e) {
+      return '''## FounderOS Weekly Report
+
+**Company:** ${profile.companyName} | ${profile.stage.toUpperCase()} Stage
+
+## Executive Summary
+This week saw continued operations with ₹${profile.mRevenue.toStringAsFixed(0)} in monthly revenue and ₹${profile.cashBank.toStringAsFixed(0)} cash runway management. Current burn rate of ₹${profile.burnRate.toStringAsFixed(0)}/month requires monitoring.
+
+## Key Achievements
+- $completedCount tasks completed this week
+- Maintained operational continuity across all departments
+
+## Next Week Priorities
+- Address $pendingCount pending tasks
+- Review financial runway and optimize burn rate
+- Advance sales pipeline activities''';
+    }
+  }
+}

@@ -296,18 +296,18 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D16),
+        backgroundColor: const Color(0xFFF8FAFC),
         title: const Text(
           'FINANCE SUITE',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+          style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w900, letterSpacing: 1.5),
         ),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           labelColor: const Color(0xFF06B6D4),
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Color(0xFF64748B),
           indicatorColor: const Color(0xFF06B6D4),
           tabs: const [
             Tab(text: 'Valuation', icon: Icon(LucideIcons.coins)),
@@ -434,7 +434,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                   onPressed: _saveProfileFields,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4F46E5),
-                    foregroundColor: Colors.white,
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -464,7 +464,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.02),
+                    color: const Color(0xFF64748B).withOpacity(0.04),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -473,22 +473,22 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('LTV', style: TextStyle(color: Colors.grey, fontSize: 10)),
-                          Text(_formatINR(ltv), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                          const Text('LTV', style: TextStyle(color: Color(0xFF64748B), fontSize: 10)),
+                          Text(_formatINR(ltv), style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('LTV : CAC', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                          const Text('LTV : CAC', style: TextStyle(color: Color(0xFF64748B), fontSize: 10)),
                           Text('${ltvCac.toStringAsFixed(2)}x', style: TextStyle(color: ltvCac >= 3 ? Colors.greenAccent : Colors.amberAccent, fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('NET PROFIT/CUST', style: TextStyle(color: Colors.grey, fontSize: 10)),
-                          Text(_formatINR(ltv - cac), style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                          const Text('NET PROFIT/CUST', style: TextStyle(color: Color(0xFF64748B), fontSize: 10)),
+                          Text(_formatINR(ltv - cac), style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -508,7 +508,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
               children: [
                 const Text(
                   'Evaluate your capital structure, unit economics efficiency, and startup parameters instantly using Gemini.',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                  style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
@@ -523,18 +523,18 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                       : const Text('Run Strategic AI Audit'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0D9488),
-                    foregroundColor: Colors.white,
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
                 if (_advisorReport != null) ...[
                   const SizedBox(height: 20),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
                   const Text('SUMMARY OVERVIEW', style: TextStyle(color: Color(0xFF06B6D4), fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
-                  Text(_advisorReport!['summary'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.4)),
+                  Text(_advisorReport!['summary'] ?? '', style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12, height: 1.4)),
                   const SizedBox(height: 16),
                   const Text('STRENGTHS', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
@@ -545,7 +545,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                           children: [
                             const Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 14),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(s.toString(), style: const TextStyle(color: Colors.white70, fontSize: 12))),
+                            Expanded(child: Text(s.toString(), style: const TextStyle(color: Color(0xFF475569), fontSize: 12))),
                           ],
                         ),
                       )),
@@ -559,7 +559,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                           children: [
                             const Icon(Icons.error_outline, color: Colors.redAccent, size: 14),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(w.toString(), style: const TextStyle(color: Colors.white70, fontSize: 12))),
+                            Expanded(child: Text(w.toString(), style: const TextStyle(color: Color(0xFF475569), fontSize: 12))),
                           ],
                         ),
                       )),
@@ -573,7 +573,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                           children: [
                             const Icon(Icons.lightbulb_outline, color: Colors.amberAccent, size: 14),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(r.toString(), style: const TextStyle(color: Colors.white70, fontSize: 12))),
+                            Expanded(child: Text(r.toString(), style: const TextStyle(color: Color(0xFF475569), fontSize: 12))),
                           ],
                         ),
                       )),
@@ -638,11 +638,11 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                       const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Sasitharan (Founder)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('Sasitharan (Founder)', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13)),
                           Text('PRIMARY OWNER', style: TextStyle(color: Colors.indigoAccent, fontSize: 9, fontWeight: FontWeight.bold)),
                         ],
                       ),
-                      Text('${founderPct.toStringAsFixed(1)}%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+                      Text('${founderPct.toStringAsFixed(1)}%', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w900, fontSize: 16)),
                     ],
                   ),
                 ),
@@ -652,7 +652,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                 if (others.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: Text('No partners registered yet.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    child: Text('No partners registered yet.', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
                   )
                 else
                   ListView.builder(
@@ -665,9 +665,9 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.02),
+                          color: const Color(0xFF64748B).withOpacity(0.04),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -675,8 +675,8 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(sh.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                Text('${sh.role.toUpperCase()} • ${sh.preferenceType.replaceAll('_', ' ').toUpperCase()}', style: const TextStyle(color: Colors.grey, fontSize: 9)),
+                                Text(sh.name, style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text('${sh.role.toUpperCase()} • ${sh.preferenceType.replaceAll('_', ' ').toUpperCase()}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 9)),
                               ],
                             ),
                             Row(
@@ -701,11 +701,11 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                   icon: const Icon(LucideIcons.userPlus, size: 16),
                   label: const Text('Add Equity Partner'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.05),
-                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF64748B).withOpacity(0.08),
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 44),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    side: BorderSide(color: const Color(0xFF64748B).withOpacity(0.12)),
                   ),
                 ),
               ],
@@ -720,7 +720,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Simulate the impact of granting new shares on founder control.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const Text('Simulate the impact of granting new shares on founder control.', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -734,7 +734,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                         onChanged: (v) => setState(() => _simGrantPct = v),
                       ),
                     ),
-                    Text('${_simGrantPct.toStringAsFixed(1)}%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text('${_simGrantPct.toStringAsFixed(1)}%', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
                   ],
                 ),
                 if (_simGrantPct > 0) ...[
@@ -742,13 +742,13 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.02),
+                      color: const Color(0xFF64748B).withOpacity(0.04),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text("Sasitharan's Diluted Stake:", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        const Text("Sasitharan's Diluted Stake:", style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
                         Text('${(founderPct - _simGrantPct).clamp(0.0, 100.0).toStringAsFixed(1)}%', style: TextStyle(color: (founderPct - _simGrantPct) < 50 ? Colors.redAccent : Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 16)),
                       ],
                     ),
@@ -768,7 +768,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                 if (rounds.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: Text('No funding history recorded yet.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    child: Text('No funding history recorded yet.', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
                   )
                 else
                   ListView.builder(
@@ -783,9 +783,9 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.02),
+                          color: const Color(0xFF64748B).withOpacity(0.04),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -793,8 +793,8 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(rnd['roundName'] ?? 'Round', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                Text(rnd['date'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                                Text(rnd['roundName'] ?? 'Round', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
+                                Text(rnd['date'] ?? '', style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
                               ],
                             ),
                             Row(
@@ -802,7 +802,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text(_formatINR(amount), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    Text(_formatINR(amount), style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 12)),
                                     Text('$pct% equity', style: const TextStyle(color: Colors.indigoAccent, fontSize: 10)),
                                   ],
                                 ),
@@ -823,8 +823,8 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                   icon: const Icon(LucideIcons.plus, size: 16),
                   label: const Text('Record Funding Round'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.05),
-                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF64748B).withOpacity(0.08),
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 44),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -887,7 +887,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                 const SizedBox(height: 8),
                 const Text(
                   'Typical tech exit represents 5x-10x ARR. Enter your exit scenario size above.',
-                  style: TextStyle(color: Colors.grey, fontSize: 10, fontStyle: FontStyle.italic),
+                  style: TextStyle(color: Color(0xFF64748B), fontSize: 10, fontStyle: FontStyle.italic),
                 ),
               ],
             ),
@@ -903,7 +903,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                 if (exitValue == 0)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: Text('Enter an Exit Value above to simulate the waterfall.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    child: Text('Enter an Exit Value above to simulate the waterfall.', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
                   )
                 else ...[
                   ListView.builder(
@@ -921,9 +921,9 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.02),
+                          color: const Color(0xFF64748B).withOpacity(0.04),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -931,7 +931,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(res['name'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                                Text(res['name'] ?? '', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 14)),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
@@ -940,7 +940,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                                   ),
                                   child: Text(
                                     res['role'] ?? '',
-                                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 9, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -952,14 +952,14 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('CASH PAYOUT', style: TextStyle(color: Colors.grey, fontSize: 9)),
-                                    Text(_formatINR(payout), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14)),
+                                    const Text('CASH PAYOUT', style: TextStyle(color: Color(0xFF64748B), fontSize: 9)),
+                                    Text(_formatINR(payout), style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w900, fontSize: 14)),
                                   ],
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    const Text('EFFECTIVE YIELD', style: TextStyle(color: Colors.grey, fontSize: 9)),
+                                    const Text('EFFECTIVE YIELD', style: TextStyle(color: Color(0xFF64748B), fontSize: 9)),
                                     Text('${yieldPct.toStringAsFixed(1)}% (Paper: ${ownership.toStringAsFixed(0)}%)',
                                         style: TextStyle(
                                           color: yieldPct < ownership - 0.1 ? Colors.redAccent : Colors.greenAccent,
@@ -973,7 +973,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                             const SizedBox(height: 6),
                             Text(
                               'Type: $type',
-                              style: const TextStyle(color: Colors.grey, fontSize: 9, fontStyle: FontStyle.italic),
+                              style: const TextStyle(color: Color(0xFF64748B), fontSize: 9, fontStyle: FontStyle.italic),
                             ),
                           ],
                         ),
@@ -1005,7 +1005,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                                 const SizedBox(height: 4),
                                 Text(
                                   "Because of investor liquidation preferences, you are taking home ${founderEffectiveYield.toStringAsFixed(1)}% of the exit proceeds, which is lower than your ${founderPct.toStringAsFixed(0)}% paper equity. Investigate anti-dilution and pref-cap terms.",
-                                  style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.4),
+                                  style: const TextStyle(color: Color(0xFF475569), fontSize: 11, height: 1.4),
                                 ),
                               ],
                             ),
@@ -1146,19 +1146,19 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
               children: [
                 const Text(
                   'Paste your term sheet clauses or summarize investor proposals below to audit for predatory terms.',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                  style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _clausesController,
                   maxLines: 4,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'e.g. Investor proposes 2x participating liquidation preference, full-ratchet anti-dilution, and veto rights on operations...',
-                    hintStyle: const TextStyle(color: Colors.grey),
+                    hintStyle: const TextStyle(color: const Color(0xFF64748B)),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.02),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white10)),
+                    fillColor: const Color(0xFF64748B).withOpacity(0.04),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
                   ),
                 ),
@@ -1175,18 +1175,18 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                       : const Text('Audit Term Sheet Clauses'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4F46E5),
-                    foregroundColor: Colors.white,
+                    foregroundColor: Color(0xFF0F172A),
                     minimumSize: const Size(double.infinity, 48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
                 if (_clauseReport != null) ...[
                   const SizedBox(height: 20),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Color(0xFFE2E8F0)),
                   const SizedBox(height: 10),
                   const Text('OVERALL ASSESSMENT', style: TextStyle(color: Color(0xFF06B6D4), fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_clauseReport!['overallAssessment'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.4)),
+                  Text(_clauseReport!['overallAssessment'] ?? '', style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12, height: 1.4)),
                   const SizedBox(height: 16),
                   const Text('KEY NEGOTIATION CLAUSES', style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
@@ -1196,18 +1196,18 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.01),
+                        color: const Color(0xFF64748B).withOpacity(0.04),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                        border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(p['clause'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(p['clause'] ?? '', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13)),
                           const SizedBox(height: 6),
                           Text('Friendly structure: ${p['founderFriendlyRecommendation']}', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
                           const SizedBox(height: 4),
-                          Text('Talking strategy: ${p['negotiationStrategy']}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                          Text('Talking strategy: ${p['negotiationStrategy']}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
                           const SizedBox(height: 4),
                           Text('Watch out: ${p['redFlagsToWatchOutFor']}', style: const TextStyle(color: Colors.redAccent, fontSize: 11)),
                           if (p['feedbackOnCurrentProposedTerms'] != null && p['feedbackOnCurrentProposedTerms'].toString().isNotEmpty) ...[
@@ -1221,7 +1221,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                   const SizedBox(height: 10),
                   const Text('GENERAL WARNINGS', style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(_clauseReport!['generalWarnings'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+                  Text(_clauseReport!['generalWarnings'] ?? '', style: const TextStyle(color: Color(0xFF475569), fontSize: 12, height: 1.4)),
                 ],
               ],
             ),
@@ -1235,18 +1235,18 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Ask any legal/VC terms question and get instant advice.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const Text('Ask any legal/VC terms question and get instant advice.', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
                 const SizedBox(height: 16),
                 Container(
                   height: 240,
                   decoration: BoxDecoration(
                     color: Colors.black12,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
                   ),
                   child: _qaChat.isEmpty
                       ? const Center(
-                          child: Text('Ask something to start the chatbot.', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                          child: Text('Ask something to start the chatbot.', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.all(12),
@@ -1290,8 +1290,8 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                                       child: MarkdownBody(
                                         data: msg['text'] ?? '',
                                         styleSheet: MarkdownStyleSheet(
-                                          p: const TextStyle(color: Colors.white70, fontSize: 12),
-                                          strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                          p: const TextStyle(color: Color(0xFF475569), fontSize: 12),
+                                          strong: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 12),
                                           h3: const TextStyle(color: Color(0xFF06B6D4), fontSize: 13, fontWeight: FontWeight.bold),
                                         ),
                                       ),
@@ -1309,13 +1309,13 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                     Expanded(
                       child: TextField(
                         controller: _qaController,
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13),
                         decoration: InputDecoration(
                           hintText: 'e.g. What is a board observer seat?',
-                          hintStyle: const TextStyle(color: Colors.grey),
+                          hintStyle: const TextStyle(color: const Color(0xFF64748B)),
                           filled: true,
-                          fillColor: Colors.white.withOpacity(0.02),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white10)),
+                          fillColor: const Color(0xFF64748B).withOpacity(0.04),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
                         ),
                         onSubmitted: (_) => _submitTermSheetQA(),
@@ -1349,8 +1349,8 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
       itemBuilder: (context, index) {
         final item = _glossary[index];
         return Card(
-          color: Colors.white.withOpacity(0.02),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.white.withOpacity(0.05))),
+          color: const Color(0xFF64748B).withOpacity(0.04),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: const Color(0xFF64748B).withOpacity(0.08))),
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -1364,7 +1364,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                 const SizedBox(height: 8),
                 Text(
                   item['definition'] ?? '',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
+                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, height: 1.4),
                 ),
               ],
             ),
@@ -1384,19 +1384,19 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF090D16),
-              title: const Text('Add Partner Registry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: const Color(0xFFF8FAFC),
+              title: const Text('Add Partner Registry', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: _partnerNameController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(labelText: 'Partner Name', labelStyle: TextStyle(color: Colors.grey)),
+                    decoration: const InputDecoration(labelText: 'Partner Name', labelStyle: TextStyle(color: const Color(0xFF64748B))),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    dropdownColor: const Color(0xFF090D16),
+                    dropdownColor: const Color(0xFFF8FAFC),
                     value: _partnerRole,
                     items: const [
                       DropdownMenuItem(value: 'Partner', child: Text('Partner', style: TextStyle(color: Colors.white))),
@@ -1405,21 +1405,21 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
                       DropdownMenuItem(value: 'Advisor', child: Text('Advisor', style: TextStyle(color: Colors.white))),
                     ],
                     onChanged: (v) => setStateDialog(() => _partnerRole = v!),
-                    decoration: const InputDecoration(labelText: 'Role', labelStyle: TextStyle(color: Colors.grey)),
+                    decoration: const InputDecoration(labelText: 'Role', labelStyle: TextStyle(color: const Color(0xFF64748B))),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _partnerOwnershipController,
                     keyboardType: TextInputType.number,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(labelText: 'Ownership (%)', labelStyle: TextStyle(color: Colors.grey)),
+                    decoration: const InputDecoration(labelText: 'Ownership (%)', labelStyle: TextStyle(color: const Color(0xFF64748B))),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                  child: const Text('Cancel', style: TextStyle(color: const Color(0xFF64748B))),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -1457,36 +1457,36 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF090D16),
-          title: const Text('Record Funding Round', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          backgroundColor: const Color(0xFFF8FAFC),
+          title: const Text('Record Funding Round', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _roundNameController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Round Name (e.g. Seed)', labelStyle: TextStyle(color: Colors.grey)),
+                decoration: const InputDecoration(labelText: 'Round Name (e.g. Seed)', labelStyle: TextStyle(color: const Color(0xFF64748B))),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _roundAmountController,
                 keyboardType: TextInputType.number,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Amount Raised (₹)', labelStyle: TextStyle(color: Colors.grey)),
+                decoration: const InputDecoration(labelText: 'Amount Raised (₹)', labelStyle: TextStyle(color: const Color(0xFF64748B))),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _roundEquityController,
                 keyboardType: TextInputType.number,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Equity Offered (%)', labelStyle: TextStyle(color: Colors.grey)),
+                decoration: const InputDecoration(labelText: 'Equity Offered (%)', labelStyle: TextStyle(color: const Color(0xFF64748B))),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancel', style: TextStyle(color: const Color(0xFF64748B))),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1521,18 +1521,18 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: const Color(0xFF64748B).withOpacity(0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+          Text(title, style: const TextStyle(color: Color(0xFF64748B), fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
           const SizedBox(height: 4),
           Text(val, style: TextStyle(color: accent, fontSize: 16, fontWeight: FontWeight.w900, fontFamily: 'Inter')),
           const SizedBox(height: 2),
-          Text(sub, style: const TextStyle(color: Colors.grey, fontSize: 9)),
+          Text(sub, style: const TextStyle(color: Color(0xFF64748B), fontSize: 9)),
         ],
       ),
     );
@@ -1544,7 +1544,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.015),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFF64748B).withOpacity(0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1555,7 +1555,7 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
               const SizedBox(width: 8),
               Text(
                 title.toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                style: const TextStyle(color: Color(0xFF0F172A), fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
               ),
             ],
           ),
@@ -1570,14 +1570,14 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontSize: 13),
+      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+        labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.01),
+        fillColor: const Color(0xFF64748B).withOpacity(0.04),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white10)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
       ),
     );
@@ -1585,19 +1585,24 @@ class _FinanceSuiteTabState extends State<FinanceSuiteTab> with SingleTickerProv
 
   Widget _buildDropdown({required String label, required String value, required List<String> items, required void Function(String?) onChanged}) {
     return DropdownButtonFormField<String>(
-      dropdownColor: const Color(0xFF090D16),
+      dropdownColor: const Color(0xFFF8FAFC),
       value: value,
-      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 12)))).toList(),
+      items: items.map((i) => DropdownMenuItem(value: i, child: Text(i.toUpperCase(), style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12)))).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+        labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.01),
+        fillColor: const Color(0xFF64748B).withOpacity(0.04),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white10)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
       ),
     );
   }
 }
+
+
+
+
+
