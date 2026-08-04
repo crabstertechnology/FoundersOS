@@ -3,6 +3,8 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
+import { StrategicCopilotWidget } from '@/components/ai-advisor/StrategicCopilotWidget';
+
 export const metadata: Metadata = {
   title: 'FounderOS — Startup Toolkit for Indian Founders',
   description: 'Valuation calculators, cap table management, and AI strategic advice for modern startups.',
@@ -24,9 +26,11 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <TooltipProvider>
             {children}
+            <StrategicCopilotWidget />
           </TooltipProvider>
         </FirebaseClientProvider>
       </body>
     </html>
   );
 }
+

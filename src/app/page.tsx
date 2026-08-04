@@ -1265,15 +1265,53 @@ export default function FounderOSPage() {
 
             {/* Finance Suite Content */}
             <TabsContent value="finance" className="mt-0 focus-visible:outline-none">
+              {/* Sub-suite Segmented Navigation Bar */}
+              <div className="mb-6 overflow-x-auto pb-2 scrollbar-none">
+                <div className="inline-flex items-center gap-1.5 p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl backdrop-blur-md shadow-lg">
+                  {[
+                    { id: 'calc', label: 'Valuation Calculator', icon: Calculator },
+                    { id: 'tracker', label: 'Cap Table Tracker', icon: PieChart },
+                    { id: 'exit', label: 'Exit Simulator', icon: TrendingUp },
+                    { id: 'negotiate', label: 'Term Sheet Assistant', icon: Gavel },
+                    { id: 'qa', label: 'Term Sheet Q&A', icon: MessageSquare },
+                    { id: 'glossary', label: 'Glossary', icon: BookOpen },
+                    { id: 'weekly', label: 'Weekly Dashboard', icon: LayoutDashboard },
+                    { id: 'activity', label: 'Daily Activity', icon: Activity },
+                  ].map((subItem) => {
+                    const SubIcon = subItem.icon;
+                    const isActive = financeTab === subItem.id;
+                    return (
+                      <button
+                        key={subItem.id}
+                        onClick={() => setFinanceTab(subItem.id)}
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                          isActive
+                            ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                        }`}
+                      >
+                        <SubIcon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                        <span>{subItem.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <Tabs value={financeTab} className="w-full animate-in fade-in duration-300">
                 <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Finance <span className="text-primary">Weekly</span> Dashboard
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      Monitor your funding progress, valuation targets, burn rate limit, and capital runway metrics.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <LayoutDashboard className="w-3.5 h-3.5" /> Finance Suite / Weekly Dashboard
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Finance Weekly Dashboard
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        Monitor your funding progress, valuation targets, burn rate limits, and capital runway metrics.
+                      </p>
+                    </div>
                   </div>
                   <FinanceWeeklyDashboard
                     profileRef={profileRef}
@@ -1288,13 +1326,18 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Finance <span className="text-primary">Daily</span> Activity
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      Log daily cash transactions, categorize software spend, and audit your assigned strategic execution.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <Activity className="w-3.5 h-3.5" /> Finance Suite / Daily Audit
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Finance Daily Activity Log
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        Log daily cash transactions, categorize software spend, and audit your assigned strategic execution.
+                      </p>
+                    </div>
                   </div>
                   <FinanceDailyActivity
                     profileRef={profileRef}
@@ -1304,73 +1347,103 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Startup <span className="text-primary">Valuation</span> Calculator
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      Model your funding rounds, track unit economics, and get AI-powered strategic advice instantly.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <Calculator className="w-3.5 h-3.5" /> Finance Suite / Valuation Engine
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Startup Valuation Calculator
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        Model your funding rounds, track unit economics, and get AI-powered strategic advice instantly.
+                      </p>
+                    </div>
                   </div>
                   <ValuationCalculator userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="tracker" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Cap <span className="text-primary">Table</span> Tracker
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      Track ownership percentages, share types, and board control health checks.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <PieChart className="w-3.5 h-3.5" /> Finance Suite / Equity Governance
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Cap Table Tracker
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        Track ownership percentages, share types, and board control health checks.
+                      </p>
+                    </div>
                   </div>
                   <CapTableTracker userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="exit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Exit <span className="text-primary">Waterfall</span> Simulator
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <TrendingUp className="w-3.5 h-3.5" /> Finance Suite / M&A Simulation
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Exit Waterfall Simulator
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
+                      </p>
+                    </div>
                   </div>
                   <ExitSimulator userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Term Sheet <span className="text-primary">Assistant</span>
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <Gavel className="w-3.5 h-3.5" /> Finance Suite / Deal Legal AI
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Term Sheet AI Assistant
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
+                      </p>
+                    </div>
                   </div>
                   <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="qa" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Term Sheet <span className="text-primary">Q&A</span>
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <MessageSquare className="w-3.5 h-3.5" /> Finance Suite / Advisory Q&A
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Term Sheet Q&A Assistant
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
+                      </p>
+                    </div>
                   </div>
                   <TermSheetAnalyzer userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="glossary" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-10 text-center space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
-                      Founder's <span className="text-primary">Glossary</span>
-                    </h1>
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium opacity-85">
-                      Master the jargon of VC funding with plain-English explanations and real-world examples.
-                    </p>
+                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                        <BookOpen className="w-3.5 h-3.5" /> Finance Suite / VC Knowledge
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Founder's Glossary
+                      </h1>
+                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                        Master the jargon of VC funding with plain-English explanations and real-world examples.
+                      </p>
+                    </div>
                   </div>
                   <GlossarySection />
                 </TabsContent>
