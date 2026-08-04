@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { goalAdvisorAssistant } from '@/ai/flows/goal-advisor-flow';
 import { roadmapChatAssistant } from '@/ai/flows/roadmap-chat-flow';
 import { 
@@ -96,6 +97,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [reportSavedSuccess, setReportSavedSuccess] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
+  const [isSavingGoals, setIsSavingGoals] = useState(false);
+  const [goalsSavedSuccess, setGoalsSavedSuccess] = useState(false);
   const [assignedTasks, setAssignedTasks] = useState<Record<string, boolean>>({});
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
   const [missingInfoAnswers, setMissingInfoAnswers] = useState<Record<string, string>>({});
@@ -503,6 +507,31 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     setTimeout(() => setIsCopied(false), 2000);
   };
 
+  const handleSaveGoals = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!profileRef || isSavingGoals) return;
+
+    setIsSavingGoals(true);
+    try {
+      await setDocumentNonBlocking(profileRef, {
+        yearlyGoal,
+        companyStage: stage,
+        missingInfoContext,
+        attachedDocName: attachedDocName || null,
+        attachedDocText: attachedDocText || null,
+      }, { merge: true });
+
+      setGoalsSavedSuccess(true);
+      setTimeout(() => {
+        setGoalsSavedSuccess(false);
+      }, 3000);
+    } catch (err) {
+      console.error('Error saving startup strategy & goals to DB:', err);
+    } finally {
+      setIsSavingGoals(false);
+    }
+  };
+
   const handleGeneratePlan = async (e?: React.FormEvent, progressText?: string, modSuggestion?: string) => {
     if (e) e.preventDefault();
     if (!profileRef || !yearlyGoal) return;
@@ -767,15 +796,15 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             Aligning your yearly goals with automated roadmaps, milestones, and actionable tasks.
           </p>
         </div>
-        {hasPlan && !readOnly && (
+        {!readOnly && (
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setIsEditingGoal(true)}
-            className="border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg font-bold gap-1.5 h-9"
+            onClick={() => setIsGoalsModalOpen(true)}
+            className="border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg font-bold gap-1.5 h-10 px-4 shadow-sm"
           >
-            <Edit className="w-4 h-4" />
-            Edit Goals & Stage
+            <Sparkles className="w-4 h-4 text-indigo-600" />
+            {hasPlan ? 'Edit Goals & Strategy' : 'Setup Goals & Strategy'}
           </Button>
         )}
       </div>
@@ -811,191 +840,29 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         </div>
       )}
 
-      {/* SETUP FORM - hidden for visitors/read-only users */}
+      {/* SETUP CTA CARD & Live Feed - triggers Popup Modal */}
       {!aiLoading && !hasPlan && !readOnly && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Setup Fields */}
-          <Card className="lg:col-span-2 border-2 border-slate-200 hover:border-indigo-200 transition-all shadow-sm">
-            <CardHeader className="bg-slate-50/50 border-b">
-              <CardTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
-                <Target className="w-5 h-5 text-indigo-600" />
-                Define Startup Strategy
-              </CardTitle>
-              <CardDescription>
-                Provide your yearly roadmap objectives. The AI will cross-reference this with your CRM, Runway, and SaaS subscriptions.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={(e) => handleGeneratePlan(e)} className="space-y-6">
-                
-                {/* Stage selection */}
-                <div className="space-y-2">
-                  <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Startup Stage</Label>
-                  <Select value={stage} onValueChange={setStage}>
-                    <SelectTrigger className="w-full h-10 border-slate-200 font-semibold">
-                      <SelectValue placeholder="Select current stage..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mvp">Pre-revenue / MVP (Product Development)</SelectItem>
-                      <SelectItem value="seed">Early Traction / Seed (Validating Product-Market Fit)</SelectItem>
-                      <SelectItem value="scaling">Scaling / Growth (Acquiring Market Share)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Yearly Goal text input */}
-                <div className="space-y-2">
-                  <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Startup Yearly Goal</Label>
-                  <textarea
-                    className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                    rows={4}
-                    placeholder="Describe your primary targets for the next 12 months (e.g. key revenue milestones, funding milestones, customer numbers)..."
-                    value={yearlyGoal}
-                    onChange={e => setYearlyGoal(e.target.value)}
-                    required
-                  />
-                  
-                  {/*Presets*/}
-                  <div className="pt-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Preset Templates (Click to fill)</span>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {goalPresets.map((preset, idx) => {
-                        const Icon = preset.icon;
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setYearlyGoal(preset.text)}
-                            className="p-3 text-left text-xs bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 transition-all border rounded-lg font-medium text-slate-600 flex flex-col justify-between"
-                          >
-                            <Icon className="w-4 h-4 text-indigo-500 mb-2 shrink-0" />
-                            <p className="line-clamp-3 leading-relaxed">{preset.text}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Strategy Document Section */}
-                <div className="space-y-2 pt-2">
-                  <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    Attach Strategy Document / Pitch Deck (PDF, TXT, MD, CSV, JSON)
-                    <Paperclip className="w-3.5 h-3.5 text-indigo-500" />
-                  </Label>
-                  
-                  {attachedDocName ? (
-                    <div className="flex items-center justify-between p-3.5 rounded-lg border-2 border-indigo-50 bg-indigo-50/10 hover:bg-indigo-50/20 transition-all">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-8 h-8 text-indigo-600 shrink-0" />
-                        <div className="space-y-0.5">
-                          <p className="text-xs font-bold text-slate-800">{attachedDocName}</p>
-                          <p className="text-[10px] text-slate-400 font-semibold">
-                            {attachedDocText ? `${(attachedDocText.length / 1024).toFixed(1)} KB text extracted` : 'Extracting text...'}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full hover:bg-rose-50/50"
-                        onClick={async () => {
-                          setAttachedDocName('');
-                          setAttachedDocText('');
-                          if (profileRef) {
-                            await setDocumentNonBlocking(profileRef, {
-                              attachedDocName: null,
-                              attachedDocText: null
-                            }, { merge: true });
-                          }
-                        }}
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="relative group border-2 border-dashed border-slate-200 hover:border-indigo-300 transition-all rounded-lg p-5 bg-slate-50/30 text-center cursor-pointer">
-                      <input
-                        type="file"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".txt,.md,.json,.csv,.pdf"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          setUploadingDoc(true);
-                          try {
-                            setAttachedDocName(file.name);
-                            let text = '';
-                            if (file.name.endsWith('.pdf')) {
-                              text = await extractTextFromPdf(file);
-                            } else {
-                              text = await extractTextFromFile(file);
-                            }
-                            setAttachedDocText(text);
-                          } catch (err) {
-                            console.error('Error reading file:', err);
-                          } finally {
-                            setUploadingDoc(false);
-                          }
-                        }}
-                      />
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        {uploadingDoc ? (
-                          <>
-                            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-                            <p className="text-xs font-bold text-indigo-600">Extracting content...</p>
-                          </>
-                        ) : (
-                          <>
-                            <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-                            <div className="space-y-0.5">
-                              <p className="text-xs font-bold text-slate-700">Attach strategy file or business plan</p>
-                              <p className="text-[10px] text-muted-foreground font-semibold">Click or drag here to upload (PDF, TXT, MD, CSV, JSON)</p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Qualitative Context / Missing Info */}
-                <div className="space-y-2 pt-2">
-                  <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    Additional Context / Missing Business Information
-                    <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-                  </Label>
-                  <textarea
-                    className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                    rows={2}
-                    placeholder="Provide context like sales channels, target audience, roadblocks, or details not logged in Sales/Finance trackers..."
-                    value={missingInfoContext}
-                    onChange={e => setMissingInfoContext(e.target.value)}
-                  />
-                </div>
-
-                <div className="pt-4 border-t flex gap-3">
-                  <Button 
-                    type="submit" 
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 text-sm gap-2"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Generate 12-Month Plan & Roadmap
-                  </Button>
-                  {isEditingGoal && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsEditingGoal(false)}
-                      className="h-11 px-5 font-bold"
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-
-              </form>
+          {/* Main Setup CTA Card */}
+          <Card className="lg:col-span-2 border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center shadow-sm flex flex-col justify-center items-center">
+            <CardContent className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
+              <div className="p-4 bg-indigo-50 rounded-full border border-indigo-100">
+                <Target className="w-8 h-8 text-indigo-600" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-black text-slate-900">Define Your Startup Strategy & Goals</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  Configure your 12-month targets, stage, and attached documents in the pop-up modal to generate an automated AI roadmap.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setIsGoalsModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 gap-2 mt-2 shadow-sm"
+              >
+                <Sparkles className="w-4 h-4 text-indigo-200" />
+                Setup Goals & Strategy
+              </Button>
             </CardContent>
           </Card>
 
@@ -1786,6 +1653,217 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         </div>
       )}
 
+      {/* AI Strategic Planner Setup & Goals Popup Modal */}
+      <Dialog 
+        open={isGoalsModalOpen || isEditingGoal} 
+        onOpenChange={(open) => { 
+          setIsGoalsModalOpen(open); 
+          setIsEditingGoal(open); 
+        }}
+      >
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto p-6 border border-slate-200 shadow-2xl rounded-2xl">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <Target className="w-6 h-6 text-indigo-600" />
+              Define Startup Strategy & Goals
+            </DialogTitle>
+            <DialogDescription className="text-xs font-semibold text-slate-500">
+              Provide your yearly roadmap objectives, stage, and attached documents. Save to DB or run AI analysis to generate a 12-month roadmap.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form 
+            onSubmit={(e) => {
+              handleGeneratePlan(e);
+              setIsGoalsModalOpen(false);
+              setIsEditingGoal(false);
+            }} 
+            className="space-y-5 pt-4"
+          >
+            {/* Stage selection */}
+            <div className="space-y-2">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Startup Stage</Label>
+              <Select value={stage} onValueChange={setStage} disabled={readOnly}>
+                <SelectTrigger className="w-full h-10 border-slate-200 font-semibold">
+                  <SelectValue placeholder="Select current stage..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mvp">Pre-revenue / MVP (Product Development)</SelectItem>
+                  <SelectItem value="seed">Early Traction / Seed (Validating Product-Market Fit)</SelectItem>
+                  <SelectItem value="scaling">Scaling / Growth (Acquiring Market Share)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Yearly Goal text input */}
+            <div className="space-y-2">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Startup Yearly Goal</Label>
+              <textarea
+                className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                rows={4}
+                placeholder="Describe your primary targets for the next 12 months (e.g. key revenue milestones, funding milestones, customer numbers)..."
+                value={yearlyGoal}
+                onChange={e => setYearlyGoal(e.target.value)}
+                required
+                disabled={readOnly}
+              />
+              
+              {/* Presets */}
+              <div className="pt-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Preset Templates (Click to fill)</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {goalPresets.map((preset, idx) => {
+                    const Icon = preset.icon;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setYearlyGoal(preset.text)}
+                        disabled={readOnly}
+                        className="p-3 text-left text-xs bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 transition-all border rounded-lg font-medium text-slate-600 flex flex-col justify-between"
+                      >
+                        <Icon className="w-4 h-4 text-indigo-500 mb-2 shrink-0" />
+                        <p className="line-clamp-3 leading-relaxed">{preset.text}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Strategy Document Section */}
+            <div className="space-y-2 pt-2">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                Attach Strategy Document / Pitch Deck (PDF, TXT, MD, CSV, JSON)
+                <Paperclip className="w-3.5 h-3.5 text-indigo-500" />
+              </Label>
+              
+              {attachedDocName ? (
+                <div className="flex items-center justify-between p-3.5 rounded-lg border-2 border-indigo-50 bg-indigo-50/10 hover:bg-indigo-50/20 transition-all">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-8 h-8 text-indigo-600 shrink-0" />
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-slate-800">{attachedDocName}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold">
+                        {attachedDocText ? `${(attachedDocText.length / 1024).toFixed(1)} KB text extracted` : 'Extracting text...'}
+                      </p>
+                    </div>
+                  </div>
+                  {!readOnly && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-rose-600 rounded-full hover:bg-rose-50/50"
+                      onClick={async () => {
+                        setAttachedDocName('');
+                        setAttachedDocText('');
+                        if (profileRef) {
+                          await setDocumentNonBlocking(profileRef, {
+                            attachedDocName: null,
+                            attachedDocText: null
+                          }, { merge: true });
+                        }
+                      }}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="relative group border-2 border-dashed border-slate-200 hover:border-indigo-300 transition-all rounded-lg p-5 bg-slate-50/30 text-center cursor-pointer">
+                  <input
+                    type="file"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    accept=".txt,.md,.json,.csv,.pdf"
+                    disabled={readOnly}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingDoc(true);
+                      try {
+                        setAttachedDocName(file.name);
+                        let text = '';
+                        if (file.name.endsWith('.pdf')) {
+                          text = await extractTextFromPdf(file);
+                        } else {
+                          text = await extractTextFromFile(file);
+                        }
+                        setAttachedDocText(text);
+                      } catch (err) {
+                        console.error('Error reading file:', err);
+                      } finally {
+                        setUploadingDoc(false);
+                      }
+                    }}
+                  />
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    {uploadingDoc ? (
+                      <>
+                        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                        <p className="text-xs font-bold text-indigo-600">Extracting content...</p>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-bold text-slate-700">Attach strategy file or business plan</p>
+                          <p className="text-[10px] text-muted-foreground font-semibold">Click or drag here to upload (PDF, TXT, MD, CSV, JSON)</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Qualitative Context / Missing Info */}
+            <div className="space-y-2 pt-2">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                Additional Context / Missing Business Information
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+              </Label>
+              <textarea
+                className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                rows={2}
+                placeholder="Provide context like sales channels, target audience, roadblocks, or details not logged in Sales/Finance trackers..."
+                value={missingInfoContext}
+                onChange={e => setMissingInfoContext(e.target.value)}
+                disabled={readOnly}
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+              <Button
+                type="button"
+                onClick={handleSaveGoals}
+                disabled={readOnly || !yearlyGoal || isSavingGoals}
+                variant="outline"
+                className="flex-1 border-slate-300 font-bold h-11 gap-2 text-slate-700 hover:bg-slate-50"
+              >
+                {isSavingGoals ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                ) : goalsSavedSuccess ? (
+                  <Check className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Save className="w-4 h-4 text-indigo-600" />
+                )}
+                {goalsSavedSuccess ? 'Saved!' : 'Save'}
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={readOnly || !yearlyGoal}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 text-sm gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Generate 12-Month Plan & Roadmap
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
