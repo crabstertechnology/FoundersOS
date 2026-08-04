@@ -14,7 +14,7 @@ import ReactMarkdown from 'react-markdown';
 import { 
   Box, Sparkles, Loader2, Code, TrendingUp, DollarSign, ListTodo, AlertTriangle, 
   HelpCircle, ChevronRight, FileText, CheckCircle2, Mic, Presentation,
-  History, Clock, Trash2, RotateCcw
+  History, Clock, Trash2, RotateCcw, Save, Check, Maximize2, ExternalLink
 } from 'lucide-react';
 import {
   Dialog,
@@ -42,6 +42,11 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [historyActiveTab, setHistoryActiveTab] = useState<'review' | 'gtm' | 'dev' | 'finance' | 'steps' | 'pitch'>('review');
   const [historyActivePitchType, setHistoryActivePitchType] = useState<'elevator' | 'normal' | 'layperson' | 'deck' | 'objections'>('elevator');
+  
+  const [isSpecsModalOpen, setIsSpecsModalOpen] = useState(false);
+  const [isHistoryListModalOpen, setIsHistoryListModalOpen] = useState(false);
+  const [isSavingSpecs, setIsSavingSpecs] = useState(false);
+  const [specsSavedSuccess, setSpecsSavedSuccess] = useState(false);
 
   const firestore = useFirestore();
   const profileRef = useMemoFirebase(() => {
@@ -211,6 +216,31 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
     setCustomQuestion(item.prodQuestion || '');
   };
 
+  const handleSaveSpecs = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!profileRef || !productName || isSavingSpecs) return;
+
+    setIsSavingSpecs(true);
+    try {
+      await setDocumentNonBlocking(profileRef, {
+        prodName: productName,
+        prodDesc: productDescription,
+        prodTarget: targetAudience,
+        prodPricing: pricingModel,
+        prodQuestion: customQuestion,
+      }, { merge: true });
+
+      setSpecsSavedSuccess(true);
+      setTimeout(() => {
+        setSpecsSavedSuccess(false);
+      }, 3000);
+    } catch (err) {
+      console.error('Error saving product specifications to DB:', err);
+    } finally {
+      setIsSavingSpecs(false);
+    }
+  };
+
   const aiPlan = profile?.prodAIPlan;
   const hasPlan = aiPlan && !loading;
 
@@ -226,6 +256,32 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
           <p className="text-muted-foreground font-medium text-lg">
             Review your product specs, plan developer scopes, and model go-to-market strategies aligned with your runway.
           </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {profile?.prodAIPlanHistory && profile.prodAIPlanHistory.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsHistoryListModalOpen(true)}
+              className="border-slate-200 hover:bg-indigo-50 font-bold h-11 px-4 gap-2 text-slate-700 shadow-sm"
+              title="Saved Strategy History"
+            >
+              <History className="w-4 h-4 text-indigo-600" />
+              <span className="hidden sm:inline">History</span>
+              <span className="bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-xs font-black">
+                {profile.prodAIPlanHistory.length}
+              </span>
+            </Button>
+          )}
+
+          <Button
+            type="button"
+            onClick={() => setIsSpecsModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-5 gap-2 shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-indigo-200" />
+            Product Specifications
+          </Button>
         </div>
       </div>
 
@@ -244,194 +300,34 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
         </Card>
       )}
 
-      {/* Main layout: split column when plan is available */}
+      {/* Main Content Area */}
       {!loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Inputs Section (always visible or collapses, here we show left side/top side) */}
-          <div className={`${hasPlan ? 'lg:col-span-5' : 'lg:col-span-8 lg:col-start-2'} space-y-6`}>
-            <Card className="border-2 border-slate-200 hover:border-indigo-200 transition-all shadow-sm">
-              <CardHeader className="bg-slate-50/50 border-b">
-                <CardTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-indigo-600" />
-                  Product Specifications
-                </CardTitle>
-                <CardDescription>
-                  Enter your product details to receive a strategic sales and engineering validation blueprint.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <form onSubmit={handleGenerate} className="space-y-5">
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Product Name</Label>
-                    <Input
-                      placeholder="e.g. EZCirkit Block IDE"
-                      value={productName}
-                      onChange={e => setProductName(e.target.value)}
-                      required
-                      disabled={readOnly}
-                      className="border-slate-200 font-semibold h-10"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Product Description</Label>
-                    <textarea
-                      rows={5}
-                      placeholder="Describe the product, its key features, value proposition, and how it solves user problems..."
-                      value={productDescription}
-                      onChange={e => setProductDescription(e.target.value)}
-                      required
-                      disabled={readOnly}
-                      className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Target Audience / ICP</Label>
-                    <Input
-                      placeholder="e.g. Hardware engineering students, STEM schools, makers"
-                      value={targetAudience}
-                      onChange={e => setTargetAudience(e.target.value)}
-                      required
-                      disabled={readOnly}
-                      className="border-slate-200 font-semibold h-10"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Pricing Model</Label>
-                    <Select value={pricingModel} onValueChange={setPricingModel} disabled={readOnly}>
-                      <SelectTrigger className="w-full h-10 border-slate-200 font-semibold">
-                        <SelectValue placeholder="Select pricing strategy..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="freemium">Freemium (Free Basic tier, paid upgrades)</SelectItem>
-                        <SelectItem value="saas_subscription">SaaS Subscription (Monthly / Yearly plan)</SelectItem>
-                        <SelectItem value="one_time">One-time Purchase (LTD / perpetual license)</SelectItem>
-                        <SelectItem value="usage_based">Usage-based / Pay-as-you-go</SelectItem>
-                        <SelectItem value="enterprise">Enterprise Custom Pricing</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                      Founder's Custom Focus Inquiry
-                      <span className="text-[10px] text-slate-400 lowercase font-normal">(optional)</span>
-                    </Label>
-                    <textarea
-                      rows={2}
-                      placeholder="Ask anything specific (e.g. 'Is pricing too high for Indian engineering students?', 'Should I build web IDE or desktop IDE?')..."
-                      value={customQuestion}
-                      onChange={e => setCustomQuestion(e.target.value)}
-                      disabled={readOnly}
-                      className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                    />
-                  </div>
-
-                  {profile?.attachedDocName && (
-                    <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
-                      <div className="text-[11px] font-semibold text-slate-600 truncate">
-                        Cross-referencing Attached Strategy: <span className="text-slate-800 font-bold">{profile.attachedDocName}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={readOnly || !productName || !productDescription}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 gap-2"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Analyze Specs & Generate Strategy
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Saved Strategy Versions */}
-            {profile?.prodAIPlanHistory && profile.prodAIPlanHistory.length > 0 && (
-              <Card className="border-2 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-                <CardHeader className="bg-slate-50/50 border-b py-4">
-                  <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                    <History className="w-5 h-5 text-indigo-600" />
-                    Saved Strategy Versions ({profile.prodAIPlanHistory.length})
+        <div className="w-full space-y-6">
+          {hasPlan ? (
+            <Card className="border-2 border-indigo-100 shadow-md flex flex-col min-h-[600px]">
+              <CardHeader className="border-b bg-indigo-50/10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <CardTitle className="text-base font-black text-slate-900 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    AI Strategic Product Blueprint
                   </CardTitle>
-                  <CardDescription>
-                    Access your previously generated AI strategies and product specifications.
+                  <CardDescription className="text-xs font-medium">
+                    Synchronized recommendations mapping features to runway for <span className="font-bold text-slate-800">{productName || 'your product'}</span>.
                   </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0 divide-y divide-slate-100 max-h-[350px] overflow-y-auto">
-                  {profile.prodAIPlanHistory.map((item: any, idx: number) => {
-                    const formattedDate = new Date(item.timestamp).toLocaleString(undefined, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short'
-                    });
-                    return (
-                      <div key={idx} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="text-xs font-bold text-slate-600">{formattedDate}</span>
-                          </div>
-                          <h4 className="text-sm font-bold text-slate-900 truncate">
-                            {item.prodName || 'Unnamed Product'}
-                          </h4>
-                          <p className="text-xs text-slate-500 line-clamp-1">
-                            {item.prodPricing ? `Pricing: ${item.prodPricing}` : ''}
-                            {item.prodTarget ? ` • Audience: ${item.prodTarget}` : ''}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedHistoryItem(item);
-                              setHistoryActiveTab('review');
-                              setHistoryActivePitchType('elevator');
-                            }}
-                            className="h-8 font-semibold text-xs border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200"
-                          >
-                            View
-                          </Button>
-                          {!readOnly && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteHistoryItem(idx)}
-                              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* AI Outputs Section */}
-          <div className={`${hasPlan ? 'lg:col-span-7' : 'hidden'} space-y-6`}>
-            {hasPlan && (
-              <Card className="border-2 border-indigo-100 shadow-md flex flex-col min-h-[600px]">
-                <CardHeader className="border-b bg-indigo-50/10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <CardTitle className="text-base font-black text-slate-900 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      AI Strategic Product Blueprint
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Synchronized recommendations mapping features to runway.
-                    </CardDescription>
-                  </div>
-                </CardHeader>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsSpecsModalOpen(true)}
+                    className="font-bold text-xs gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Product Specifications
+                  </Button>
+                </div>
+              </CardHeader>
 
                 {/* Sub Tab selection */}
                 <div className="flex border-b divide-x overflow-x-auto bg-slate-50/50">
@@ -659,8 +555,29 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
                   )}
                 </CardContent>
               </Card>
-            )}
-          </div>
+          ) : (
+            <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
+                <div className="p-4 bg-indigo-50 rounded-full border border-indigo-100">
+                  <Sparkles className="w-8 h-8 text-indigo-600" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-xl font-black text-slate-900">No Product Strategy Blueprint Generated Yet</h3>
+                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                    Click below to open the Product Specifications popup modal, enter your product details, and generate your strategic AI roadmap.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => setIsSpecsModalOpen(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 gap-2 mt-2 shadow-sm"
+                >
+                  <Sparkles className="w-4 h-4 text-indigo-200" />
+                  Product Specifications
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
@@ -919,6 +836,198 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Specifications Popup Modal */}
+      <Dialog open={isSpecsModalOpen} onOpenChange={setIsSpecsModalOpen}>
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto p-6 border border-slate-200 shadow-2xl rounded-2xl">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-indigo-600" />
+              Product Specifications & Details
+            </DialogTitle>
+            <DialogDescription className="text-xs font-semibold text-slate-500">
+              Fill in your product specifications to save directly to database or run strategic AI analysis.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={(e) => {
+            handleGenerate(e);
+            setIsSpecsModalOpen(false);
+          }} className="space-y-5 pt-4">
+            <div className="space-y-1.5">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Product Name</Label>
+              <Input
+                placeholder="e.g. EZCirkit Block IDE"
+                value={productName}
+                onChange={e => setProductName(e.target.value)}
+                required
+                disabled={readOnly}
+                className="border-slate-200 font-semibold h-10"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Product Description</Label>
+              <textarea
+                rows={5}
+                placeholder="Describe the product, its key features, value proposition, and how it solves user problems..."
+                value={productDescription}
+                onChange={e => setProductDescription(e.target.value)}
+                required
+                disabled={readOnly}
+                className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Target Audience / ICP</Label>
+              <Input
+                placeholder="e.g. Hardware engineering students, STEM schools, makers"
+                value={targetAudience}
+                onChange={e => setTargetAudience(e.target.value)}
+                required
+                disabled={readOnly}
+                className="border-slate-200 font-semibold h-10"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Pricing Model</Label>
+              <Select value={pricingModel} onValueChange={setPricingModel} disabled={readOnly}>
+                <SelectTrigger className="w-full h-10 border-slate-200 font-semibold">
+                  <SelectValue placeholder="Select pricing strategy..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="freemium">Freemium (Free Basic tier, paid upgrades)</SelectItem>
+                  <SelectItem value="saas_subscription">SaaS Subscription (Monthly / Yearly plan)</SelectItem>
+                  <SelectItem value="one_time">One-time Purchase (LTD / perpetual license)</SelectItem>
+                  <SelectItem value="usage_based">Usage-based / Pay-as-you-go</SelectItem>
+                  <SelectItem value="enterprise">Enterprise Custom Pricing</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="font-black text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                Founder's Custom Focus Inquiry
+                <span className="text-[10px] text-slate-400 lowercase font-normal">(optional)</span>
+              </Label>
+              <textarea
+                rows={2}
+                placeholder="Ask anything specific (e.g. 'Is pricing too high for Indian engineering students?', 'Should I build web IDE or desktop IDE?')..."
+                value={customQuestion}
+                onChange={e => setCustomQuestion(e.target.value)}
+                disabled={readOnly}
+                className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+              <Button
+                type="button"
+                onClick={handleSaveSpecs}
+                disabled={readOnly || !productName || isSavingSpecs}
+                variant="outline"
+                className="flex-1 border-slate-300 font-bold h-11 gap-2 text-slate-700 hover:bg-slate-50"
+              >
+                {isSavingSpecs ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                ) : specsSavedSuccess ? (
+                  <Check className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Save className="w-4 h-4 text-indigo-600" />
+                )}
+                {specsSavedSuccess ? 'Saved!' : 'Save'}
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={readOnly || !productName || !productDescription}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Analyze Specs & Generate Strategy
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {/* Saved Strategy History List Popup Modal */}
+      <Dialog open={isHistoryListModalOpen} onOpenChange={setIsHistoryListModalOpen}>
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto p-6 border border-slate-200 shadow-2xl rounded-2xl">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <History className="w-6 h-6 text-indigo-600" />
+              Saved Strategy Versions
+            </DialogTitle>
+            <DialogDescription className="text-xs font-semibold text-slate-500">
+              Browse and restore previously generated AI strategy blueprints and product specifications.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="pt-4">
+            {profile?.prodAIPlanHistory && profile.prodAIPlanHistory.length > 0 ? (
+              <div className="divide-y divide-slate-100 border rounded-xl overflow-hidden">
+                {profile.prodAIPlanHistory.map((item: any, idx: number) => {
+                  const formattedDate = new Date(item.timestamp).toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                  });
+                  return (
+                    <div key={idx} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="text-xs font-bold text-slate-600">{formattedDate}</span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 truncate">
+                          {item.prodName || 'Unnamed Product'}
+                        </h4>
+                        <p className="text-xs text-slate-500 line-clamp-1">
+                          {item.prodPricing ? `Pricing: ${item.prodPricing}` : ''}
+                          {item.prodTarget ? ` • Audience: ${item.prodTarget}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedHistoryItem(item);
+                            setHistoryActiveTab('review');
+                            setHistoryActivePitchType('elevator');
+                            setIsHistoryListModalOpen(false);
+                          }}
+                          className="h-8 font-bold text-xs border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200"
+                        >
+                          View Version
+                        </Button>
+                        {!readOnly && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteHistoryItem(idx)}
+                            className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <History className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-600">No strategy history saved yet.</p>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
