@@ -285,7 +285,7 @@ export default function FounderOSPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50/30">
+    <div className="min-h-screen flex bg-[#f6f7f9]">
       {/* Auto-hide Sidebar Hover Trigger Zone */}
       {isSidebarAutoHide && (
         <div 
@@ -298,139 +298,87 @@ export default function FounderOSPage() {
       <aside 
         onMouseEnter={() => isSidebarAutoHide && setIsSidebarHovered(true)}
         onMouseLeave={() => isSidebarAutoHide && setIsSidebarHovered(false)}
-        className={`hidden md:flex flex-col h-screen select-none bg-[#090d16] border-r border-slate-800 text-slate-300 transition-all duration-300 ease-in-out shrink-0
+        className={`hidden md:flex flex-col h-screen select-none bg-[#07090f] border-r border-[rgba(255,255,255,0.06)] text-slate-400 transition-all duration-300 ease-spring shrink-0
           ${isSidebarAutoHide 
-            ? `fixed left-0 top-0 z-50 shadow-2xl ${isSidebarMinimized ? 'w-[76px]' : 'w-72'} ${isSidebarHovered ? 'translate-x-0' : '-translate-x-full'}` 
-            : `sticky top-0 ${isSidebarMinimized ? 'w-[76px]' : 'w-72'}`
+            ? `fixed left-0 top-0 z-50 shadow-[20px_0_60px_-10px_rgba(0,0,0,0.5)] ${isSidebarMinimized ? 'w-[72px]' : 'w-[270px]'} ${isSidebarHovered ? 'translate-x-0' : '-translate-x-full'}` 
+            : `sticky top-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[270px]'}`
           }
         `}
       >
         {/* Brand Header */}
-        <div className={`h-16 border-b border-slate-800/80 flex items-center justify-between ${isSidebarMinimized ? 'px-3 justify-center' : 'px-6'} transition-all duration-300`}>
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="bg-primary text-white font-headline font-black text-lg w-8 h-8 flex items-center justify-center rounded-lg shadow-sm shrink-0">F</div>
+        <div className={`h-14 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between ${isSidebarMinimized ? 'px-3 justify-center' : 'px-4'} transition-all duration-300`}>
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(99,102,241,0.5)]">
+              <span className="text-white font-black text-sm" style={{fontFamily:'Inter,sans-serif'}}>F</span>
+            </div>
             {!isSidebarMinimized && (
-              <span className="font-headline font-black text-xl tracking-tight text-white animate-in fade-in duration-200">FOUNDER<span className="text-primary">OS</span></span>
+              <span className="font-extrabold text-[15px] tracking-tight text-white animate-in fade-in duration-200" style={{letterSpacing:'-0.02em',fontFamily:'Inter,sans-serif'}}>Founder<span className="text-indigo-400">OS</span></span>
             )}
           </div>
           
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Auto-hide toggle (Pin/Unpin) */}
+          <div className="flex items-center gap-1 shrink-0">
             {!isSidebarMinimized && (
               <button
                 onClick={toggleSidebarAutoHide}
-                className="text-slate-400 hover:text-white p-1.5 hover:bg-slate-800/60 rounded-lg transition-all"
-                title={isSidebarAutoHide ? "Pin Sidebar (Disable Auto-hide)" : "Unpin Sidebar (Enable Auto-hide)"}
+                className="text-slate-600 hover:text-slate-300 p-1.5 hover:bg-white/8 rounded-lg transition-all duration-150"
+                title={isSidebarAutoHide ? 'Pin Sidebar' : 'Enable Auto-hide'}
               >
                 {isSidebarAutoHide ? (
-                  <PinOff className="w-4 h-4 text-primary" />
+                  <PinOff className="w-3.5 h-3.5 text-indigo-400" />
                 ) : (
-                  <Pin className="w-4 h-4" />
+                  <Pin className="w-3.5 h-3.5" />
                 )}
               </button>
             )}
-
             <button
               onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
-              className={`text-slate-400 hover:text-white p-1 hover:bg-slate-850 rounded-lg hidden md:block shrink-0 ${isSidebarMinimized ? 'mt-0.5' : ''}`}
-              title={isSidebarMinimized ? "Expand Sidebar" : "Minimize Sidebar"}
+              className="text-slate-600 hover:text-slate-300 p-1.5 hover:bg-white/8 rounded-lg hidden md:flex items-center justify-center shrink-0 transition-all duration-150"
+              title={isSidebarMinimized ? 'Expand Sidebar' : 'Minimize Sidebar'}
             >
-              {isSidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              {isSidebarMinimized ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>
 
         {/* Scrollable Navigation List */}
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
           {isSidebarMinimized ? (
-            <div className="flex flex-col items-center gap-4">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
-                  activeTab === 'dashboard'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400'
-                }`}
-                title="Central Console"
-              >
-                <Home className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => setActiveTab('product')}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
-                  activeTab === 'product'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400'
-                }`}
-                title="Product Suite"
-              >
-                <Box className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => setActiveTab('dm')}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
-                  activeTab === 'dm'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400'
-                }`}
-                title="Digital Marketing"
-              >
-                <Megaphone className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTab('sales'); }}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
-                  activeTab === 'sales'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400'
-                }`}
-                title="Sales Tracker"
-              >
-                <TrendingUp className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTab('finance'); }}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
-                  activeTab === 'finance'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400'
-                }`}
-                title="Finance Suite"
-              >
-                <Calculator className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => { setActiveTab('operations'); }}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${
-                  activeTab === 'operations'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100 text-slate-400'
-                }`}
-                title="Operations Hub"
-              >
-                <ListChecks className="w-5 h-5" />
-              </button>
+            <div className="flex flex-col items-center gap-1">
+              {[
+                { tab: 'dashboard', icon: Home, label: 'Console' },
+                { tab: 'product', icon: Box, label: 'Product' },
+                { tab: 'dm', icon: Megaphone, label: 'Marketing' },
+                { tab: 'sales', icon: TrendingUp, label: 'Sales' },
+                { tab: 'finance', icon: Calculator, label: 'Finance' },
+                { tab: 'operations', icon: ListChecks, label: 'Ops' },
+              ].map(({ tab, icon: Icon, label }) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-150 ${
+                    activeTab === tab
+                      ? 'bg-indigo-600 text-white shadow-[0_0_12px_rgba(99,102,241,0.4)]'
+                      : 'hover:bg-white/8 hover:text-slate-200 text-slate-500'
+                  }`}
+                  title={label}
+                >
+                  <Icon className="w-4.5 h-4.5" />
+                </button>
+              ))}
             </div>
           ) : (
             <>
               {/* Central Console */}
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
                   activeTab === 'dashboard'
-                    ? 'bg-primary text-white shadow-md shadow-primary/15'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-[0_0_12px_rgba(99,102,241,0.35)]'
+                    : 'text-slate-400 hover:bg-white/6 hover:text-slate-100'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Home className="w-4 h-4" />
-                  <span>Central Console</span>
-                </div>
+                <Home className="w-4 h-4 shrink-0" />
+                <span>Central Console</span>
               </button>
 
               {/* Product Suite */}
