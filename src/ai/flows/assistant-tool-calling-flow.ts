@@ -106,7 +106,7 @@ export type FounderOSAssistantOutput = z.infer<typeof FounderOSAssistantOutputSc
 
 export async function askFounderOSAssistant(input: FounderOSAssistantInput): Promise<FounderOSAssistantOutput> {
   const response = await ai.generate({
-    model: 'googleai/gemini-2.5-flash',
+    model: 'googleai/gemini-2.0-flash',
     prompt: `You are the FounderOS Strategic AI Copilot for Indian startup founders.
 Answer the founder's prompt accurately. Use tools whenever calculation or cap table evaluation is needed.
 
