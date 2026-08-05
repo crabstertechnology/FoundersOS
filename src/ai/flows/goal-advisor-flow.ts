@@ -257,15 +257,25 @@ Please output:
 `
 });
 
-async function retryWithBackoff<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+async function retryWithBackoff<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
   try {
     return await fn();
-  } catch (err) {
+  } catch (err: any) {
     if (retries <= 0) {
       throw err;
     }
-    console.warn(`Genkit call failed with: ${err}. Retrying in ${delay}ms...`);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    let waitMs = delay;
+    const errStr = String(err?.message || err);
+    if (errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED')) {
+      const match = errStr.match(/retry in (\d+(?:\.\d+)?)s/i);
+      if (match && match[1]) {
+        waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 1000;
+      } else {
+        waitMs = Math.max(delay, 5000);
+      }
+    }
+    console.warn(`Genkit call failed with: ${errStr}. Retrying in ${waitMs}ms...`);
+    await new Promise(resolve => setTimeout(resolve, waitMs));
     return retryWithBackoff(fn, retries - 1, delay * 2);
   }
 }
