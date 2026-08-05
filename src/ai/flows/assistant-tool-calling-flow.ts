@@ -7,7 +7,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { gpt4oMini } from 'genkitx-openai';
 
 // -----------------------------------------------------------------
 // 1. Tool Definitions (Option 14 Architecture)
@@ -107,7 +106,7 @@ export type FounderOSAssistantOutput = z.infer<typeof FounderOSAssistantOutputSc
 
 export async function askFounderOSAssistant(input: FounderOSAssistantInput): Promise<FounderOSAssistantOutput> {
   const response = await ai.generate({
-    model: gpt4oMini,
+    model: 'googleai/gemini-2.5-flash',
     prompt: `You are the FounderOS Strategic AI Copilot for Indian startup founders.
 Answer the founder's prompt accurately. Use tools whenever calculation or cap table evaluation is needed.
 
