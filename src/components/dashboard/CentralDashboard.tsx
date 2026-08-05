@@ -657,16 +657,55 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         attachedDocText: attachedDocText || null,
       };
 
-      // If doing a fresh plan generation/regeneration (not weekly adaptation or chat modification), reset progress tracking
+      // If doing a fresh plan generation/regeneration (not weekly adaptation or chat modification), reset progress tracking & old reports
       if (!progressText && !modSuggestion) {
         profileUpdates.completedMonthlyMilestones = [];
         profileUpdates.currentMonthIndex = 0;
         profileUpdates.currentWeekIndex = 0;
         profileUpdates.completedWeeklyActions = [];
+        profileUpdates.weeklyProgressReport = null;
+        profileUpdates.weeklyProgressReportGeneratedAt = null;
+        setWeeklyReport('');
       }
 
       // Save strategic plan directly inside the profile document
       await setDocumentNonBlocking(profileRef, profileUpdates, { merge: true });
+
+      // Sync new daily tasks to tasks subcollection & clear stale AI tasks
+      if (tasksRef && Array.isArray(result.dailyTasks)) {
+        try {
+          const { getDocs, deleteDoc } = await import('firebase/firestore');
+          
+          if (!progressText && !modSuggestion) {
+            const oldTasksSnap = await getDocs(tasksRef);
+            const deletePromises: Promise<void>[] = [];
+            oldTasksSnap.forEach((taskDoc) => {
+              const d = taskDoc.data();
+              if (d.isAiGenerated || !d.assignedToUid || d.assignedToUid === userId) {
+                deletePromises.push(deleteDoc(taskDoc.ref));
+              }
+            });
+            await Promise.all(deletePromises);
+          }
+
+          for (const task of result.dailyTasks) {
+            await addDocumentNonBlocking(tasksRef, {
+              title: task.title,
+              description: task.description || '',
+              category: task.category || 'General',
+              priority: task.priority || 'medium',
+              status: 'todo',
+              assignedToUid: userId || '',
+              assignedToName: 'Founder',
+              assignedToEmail: user?.email || '',
+              isAiGenerated: true,
+              createdAt: serverTimestamp(),
+            });
+          }
+        } catch (err) {
+          console.error("Error syncing regenerated daily tasks to tasks subcollection:", err);
+        }
+      }
 
       // Save in history subcollection
       if (firestore && userId && companyProfileId) {
