@@ -53,6 +53,28 @@ const GoalAdvisorInputSchema = z.object({
     salesWeekly: z.string().optional(),
     salesDaily: z.string().optional(),
   }).optional().describe('Feedback notes written by the user on the weekly/daily dashboards of each sector.'),
+  productData: z.object({
+    productName: z.string().optional(),
+    productDescription: z.string().optional(),
+    targetAudience: z.string().optional(),
+    pricingModel: z.string().optional(),
+    blueprintSummary: z.string().optional(),
+  }).optional().describe('Data from the Product Suite module.'),
+  marketingData: z.object({
+    productName: z.string().optional(),
+    brandTone: z.string().optional(),
+    contentGoal: z.string().optional(),
+    platforms: z.array(z.string()).optional(),
+    calendarSummary: z.string().optional(),
+  }).optional().describe('Data from the Digital Marketing module.'),
+  salesTrackerData: z.object({
+    workshopsCount: z.number().optional(),
+    leadsCount: z.number().optional(),
+    bdLeadsCount: z.number().optional(),
+    productSalesCount: z.number().optional(),
+    networkingEventsCount: z.number().optional(),
+    recentActivitiesSummary: z.string().optional(),
+  }).optional().describe('Detailed activity and lead tracking data from the Sales Tracker module.'),
   attachedDocText: z.string().optional().describe('Contents of the strategy document attached by the user.'),
   attachedDocName: z.string().optional().describe('Name of the attached strategy document.'),
   planModificationRequest: z.string().optional().describe('Details of user chat discussion and AI suggestion for modifying the plan.'),
@@ -107,7 +129,7 @@ const goalAdvisorPrompt = ai.definePrompt({
   output: { schema: GoalAdvisorOutputSchema },
   prompt: `You are a professional chief-of-staff and startup growth consultant advising founders in India.
 Provide an objective and critical analysis of the startup's plans. Evaluate assumptions, review calculations, and identify potential blind spots or operational risks. If the runway is tight or the operational plan lacks discipline, highlight these concerns directly.
-Your mission is to analyze their current condition based on Sales, Finance, and Operations metrics, identify missing information, and construct a realistic execution architecture.
+Your mission is to analyze their current condition based on Product Suite specs, Digital Marketing plans, Sales Tracker activities, Finance Suite metrics, and Operations Hub status, identify missing information, and construct a realistic execution architecture.
 
 Current Context:
 - Current Date/Time: {{{currentDate}}}
@@ -131,6 +153,46 @@ Operations Metrics Snapshot:
 - Team Size: {{{opsData.teamSize}}} active members
 - Monthly SaaS Spend: ₹{{{opsData.saasCost}}}
 - Monthly Salaries: ₹{{{opsData.salaries}}}
+
+{{#if productData}}
+Product Suite Snapshot:
+- Product Name: {{{productData.productName}}}
+- Target Audience: {{{productData.targetAudience}}}
+- Pricing Model: {{{productData.pricingModel}}}
+- Product Description: {{{productData.productDescription}}}
+{{#if productData.blueprintSummary}}
+- AI Product Strategy Blueprint Summary:
+"""
+{{{productData.blueprintSummary}}}
+"""
+{{/if}}
+{{/if}}
+
+{{#if marketingData}}
+Digital Marketing Suite Snapshot:
+- Campaign Product: {{{marketingData.productName}}}
+- Brand Tone: {{{marketingData.brandTone}}} | Content Goal: {{{marketingData.contentGoal}}}
+- Active Platforms: {{#each marketingData.platforms}}{{{this}}}, {{/each}}
+{{#if marketingData.calendarSummary}}
+- Content Calendar Outline:
+"""
+{{{marketingData.calendarSummary}}}
+"""
+{{/if}}
+{{/if}}
+
+{{#if salesTrackerData}}
+Sales & Lead Generation Tracker Snapshot:
+- Workshops Logged: {{{salesTrackerData.workshopsCount}}}
+- CRM Leads: {{{salesTrackerData.leadsCount}}} student/client leads, {{{salesTrackerData.bdLeadsCount}}} BD leads
+- Product Sales & Networking: {{{salesTrackerData.productSalesCount}}} product sales transactions, {{{salesTrackerData.networkingEventsCount}}} networking events
+{{#if salesTrackerData.recentActivitiesSummary}}
+- Sales & Customer Outreach Log Summary:
+"""
+{{{salesTrackerData.recentActivitiesSummary}}}
+"""
+{{/if}}
+{{/if}}
 
 Additional User Context / Missing Info Filled:
 """{{{missingInfo}}}"""

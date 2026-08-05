@@ -536,6 +536,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     if (e) e.preventDefault();
     if (!profileRef || !yearlyGoal) return;
     setAiLoading(true);
+    setSelectedHistoricalPlan(null);
 
     try {
       // Build additional info payload including Q&A answers
@@ -547,6 +548,47 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             .join('\n');
       }
 
+      // 1. Product Suite Data
+      const prodAIPlan = profile?.prodAIPlan;
+      const productBlueprintSummary = prodAIPlan ? [
+        prodAIPlan.review ? `Evaluation: ${prodAIPlan.review.slice(0, 300)}...` : '',
+        prodAIPlan.howToSell ? `GTM Strategy: ${prodAIPlan.howToSell.slice(0, 300)}...` : '',
+        prodAIPlan.whatToDevelop ? `Dev Priorities: ${prodAIPlan.whatToDevelop.slice(0, 300)}...` : '',
+        prodAIPlan.immediateSteps ? `Action Steps: ${prodAIPlan.immediateSteps.join(', ')}` : ''
+      ].filter(Boolean).join('\n') : undefined;
+
+      const productData = (profile?.prodName || profile?.prodDesc) ? {
+        productName: profile?.prodName || '',
+        productDescription: profile?.prodDesc || '',
+        targetAudience: profile?.prodTarget || '',
+        pricingModel: profile?.prodPricing || '',
+        blueprintSummary: productBlueprintSummary
+      } : undefined;
+
+      // 2. Digital Marketing Data
+      const marketingData = profile?.dmActivePlan ? {
+        productName: profile.dmActivePlan.productName,
+        brandTone: profile.dmActivePlan.brandTone,
+        contentGoal: profile.dmActivePlan.contentGoal,
+        platforms: profile.dmActivePlan.platforms || [],
+        calendarSummary: (profile.dmActivePlan.calendar?.weeklyCalendar || [])
+          .map((c: any) => `${c.day}: ${c.platform} ${c.contentType} - ${c.topic}`)
+          .join('\n')
+      } : undefined;
+
+      // 3. Sales Tracker & Activity Data
+      const workshops = profile?.workshops || [];
+      const productSales = profile?.ezProductSales || [];
+      const ezLeads = profile?.ezLeads || [];
+      const bdLeads = profile?.bdLeads || [];
+      const networkingEvents = profile?.networkingEvents || [];
+      const dailyActivities = profile?.ezDailyActivities || [];
+
+      const recentActivitiesSummary = dailyActivities.length > 0 ? dailyActivities
+        .slice(-10)
+        .map((a: any) => `${a.date || ''}: ${a.activityType || 'Activity'} - ${a.description || ''}`)
+        .join('\n') : undefined;
+
       const sectorFeedback = {
         financeWeekly: profile?.financeWeeklyFeedback || '',
         financeDaily: profile?.financeDailyFeedback || '',
@@ -555,6 +597,15 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         salesWeekly: profile?.salesWeeklyFeedback || '',
         salesDaily: profile?.salesDailyFeedback || '',
       };
+
+      const salesTrackerData = (workshops.length || ezLeads.length || bdLeads.length || productSales.length || networkingEvents.length || dailyActivities.length) ? {
+        workshopsCount: workshops.length,
+        leadsCount: ezLeads.length,
+        bdLeadsCount: bdLeads.length,
+        productSalesCount: productSales.length,
+        networkingEventsCount: networkingEvents.length,
+        recentActivitiesSummary
+      } : undefined;
 
       const input = {
         companyName,
@@ -578,6 +629,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           saasCost: opsKPIs.monthlySaaS,
           salaries: opsKPIs.monthlySalaries,
         },
+        productData,
+        marketingData,
+        salesTrackerData,
         missingInfo: refinedMissingInfo,
         weeklyProgress: progressText || undefined,
         planModificationRequest: modSuggestion || undefined,
@@ -593,15 +647,26 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
       const result = await goalAdvisorAssistant(input);
 
-      // Save strategic plan directly inside the profile document
-      await setDocumentNonBlocking(profileRef, {
+      // Construct profile update payload
+      const profileUpdates: any = {
         yearlyGoal,
         companyStage: stage,
         missingInfoContext: refinedMissingInfo,
         strategicPlan: result,
         attachedDocName: attachedDocName || null,
         attachedDocText: attachedDocText || null,
-      }, { merge: true });
+      };
+
+      // If doing a fresh plan generation/regeneration (not weekly adaptation or chat modification), reset progress tracking
+      if (!progressText && !modSuggestion) {
+        profileUpdates.completedMonthlyMilestones = [];
+        profileUpdates.currentMonthIndex = 0;
+        profileUpdates.currentWeekIndex = 0;
+        profileUpdates.completedWeeklyActions = [];
+      }
+
+      // Save strategic plan directly inside the profile document
+      await setDocumentNonBlocking(profileRef, profileUpdates, { merge: true });
 
       // Save in history subcollection
       if (firestore && userId && companyProfileId) {
@@ -797,15 +862,29 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           </p>
         </div>
         {!readOnly && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setIsGoalsModalOpen(true)}
-            className="border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg font-bold gap-1.5 h-10 px-4 shadow-sm"
-          >
-            <Sparkles className="w-4 h-4 text-indigo-600" />
-            {hasPlan ? 'Edit Goals & Strategy' : 'Setup Goals & Strategy'}
-          </Button>
+          <div className="flex items-center gap-2">
+            {hasPlan && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={(e) => handleGeneratePlan(e)}
+                disabled={aiLoading}
+                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold gap-1.5 h-10 px-4 shadow-sm"
+              >
+                <RefreshCw className={`w-4 h-4 text-indigo-600 ${aiLoading ? 'animate-spin' : ''}`} />
+                Regenerate Plan
+              </Button>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsGoalsModalOpen(true)}
+              className="border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg font-bold gap-1.5 h-10 px-4 shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              {hasPlan ? 'Edit Goals & Strategy' : 'Setup Goals & Strategy'}
+            </Button>
+          </div>
         )}
       </div>
 
