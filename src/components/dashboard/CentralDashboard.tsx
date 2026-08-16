@@ -115,6 +115,59 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [latestModSuggestion, setLatestModSuggestion] = useState('');
   
+  // Draggable Roadmap Co-Pilot Bot state
+  const [botPos, setBotPos] = useState<{ x: number; y: number } | null>(null);
+  const isDraggingRef = React.useRef(false);
+  const dragStartRef = React.useRef({ mouseX: 0, mouseY: 0, posX: 0, posY: 0 });
+  const hasMovedRef = React.useRef(false);
+
+  // Initialize position on mount: positioned visibly above the global AI Copilot widget
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const defaultX = Math.max(20, window.innerWidth - 80);
+      const defaultY = Math.max(80, window.innerHeight - 170);
+      setBotPos({ x: defaultX, y: defaultY });
+    }
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    isDraggingRef.current = true;
+    hasMovedRef.current = false;
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      posX: botPos ? botPos.x : (typeof window !== 'undefined' ? window.innerWidth - 80 : 0),
+      posY: botPos ? botPos.y : (typeof window !== 'undefined' ? window.innerHeight - 170 : 0),
+    };
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    const deltaX = e.clientX - dragStartRef.current.mouseX;
+    const deltaY = e.clientY - dragStartRef.current.mouseY;
+    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      hasMovedRef.current = true;
+    }
+    const newX = Math.min(Math.max(10, dragStartRef.current.posX + deltaX), (typeof window !== 'undefined' ? window.innerWidth - 70 : 1000));
+    const newY = Math.min(Math.max(10, dragStartRef.current.posY + deltaY), (typeof window !== 'undefined' ? window.innerHeight - 70 : 1000));
+    setBotPos({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
+    if (!hasMovedRef.current) {
+      setIsChatOpen(true);
+    }
+  };
+  
   // Loading messages loop
   const [loadingMessageIdx, setLoadingMessageIdx] = useState(0);
   const loadingMessages = [
@@ -1792,20 +1845,41 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         </DialogContent>
       </Dialog>
 
-      {/* Floating Circle Bot Button for Roadmap Co-Pilot (Only visible in Central Console) */}
-      {!readOnly && strategicPlan && (
-        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Movable Floating Circle Bot Button for Roadmap Co-Pilot (Visible in Central Console) */}
+      {!readOnly && strategicPlan && botPos && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${botPos.x}px`,
+            top: `${botPos.y}px`,
+            zIndex: 49,
+            touchAction: 'none',
+            userSelect: 'none',
+          }}
+          className="animate-in fade-in slide-in-from-bottom-4 duration-300 select-none"
+        >
           <button
             type="button"
-            onClick={() => setIsChatOpen(true)}
-            className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-300"
-            title="Open Roadmap Co-Pilot Chat"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            style={{ borderRadius: '9999px !important' }}
+            className="group relative flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-2xl hover:scale-110 active:scale-95 transition-transform duration-150 focus:outline-none cursor-grab active:cursor-grabbing border-2 border-indigo-300/60 ring-4 ring-indigo-500/20"
+            title="Roadmap Co-Pilot (Click to chat, drag to move)"
           >
-            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 pointer-events-none">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
             </span>
-            <Sparkles className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
+            <Sparkles className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200 pointer-events-none" />
+            
+            {/* Hover Tooltip Pill */}
+            <span
+              style={{ borderRadius: '4px' }}
+              className="absolute -top-7 right-0 px-2.5 py-0.5 bg-slate-950/95 text-indigo-200 text-[10px] font-bold tracking-tight whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-indigo-500/40"
+            >
+              Roadmap Co-Pilot (Drag me)
+            </span>
           </button>
         </div>
       )}
