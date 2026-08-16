@@ -103,8 +103,10 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [assignedTasks, setAssignedTasks] = useState<Record<string, boolean>>({});
   const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
   const [missingInfoAnswers, setMissingInfoAnswers] = useState<Record<string, string>>({});
-  const [activePlannerTab, setActivePlannerTab] = useState<'roadmap' | 'milestones' | 'chat' | 'history'>('roadmap');
+  const [activePlannerTab, setActivePlannerTab] = useState<'roadmap' | 'history'>('roadmap');
   const [selectedHistoricalPlan, setSelectedHistoricalPlan] = useState<any | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [openQuarters, setOpenQuarters] = useState<Record<number, boolean>>({0: true});
   const [attachedDocName, setAttachedDocName] = useState('');
   const [attachedDocText, setAttachedDocText] = useState('');
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -1138,13 +1140,11 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             {/* Left Strategic Content Column (Roadmap Tabs) */}
             <div className="xl:col-span-2 space-y-8">
               
-              {/* Tab Selector */}
+              {/* Tab Selector - only Roadmap (merged) and History */}
               <div className="border-b flex justify-between items-center pb-2">
-                <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                <div className="flex gap-2 p-1 bg-slate-100">
                   {[
-                    { id: 'roadmap', label: 'Quarterly Roadmap', icon: Map },
-                    { id: 'milestones', label: 'Monthly Milestones', icon: Calendar },
-                    ...(!selectedHistoricalPlan && !readOnly ? [{ id: 'chat', label: 'Discuss & Modify Plan', icon: MessageSquare }] : []),
+                    { id: 'roadmap', label: 'Quarterly Roadmap & Monthly Milestones', icon: Map },
                     { id: 'history', label: 'Plan History', icon: History }
                   ].map(item => {
                     const Icon = item.icon;
@@ -1152,9 +1152,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                       <button
                         key={item.id}
                         onClick={() => setActivePlannerTab(item.id as any)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all ${
                           activePlannerTab === item.id 
-                            ? 'bg-white text-indigo-700 shadow-sm'
+                            ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                         }`}
                       >
@@ -1168,253 +1168,298 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
               {/* TABS CONTENT */}
 
-              {/* 1. Quarterly Roadmap Tab */}
+              {/* 1. Combined Quarterly Roadmap + Monthly Milestones Tab */}
               {activePlannerTab === 'roadmap' && (
-                <Card className="border shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-base font-black text-slate-900">12-Month Roadmaps & Focus Areas</CardTitle>
-                    <CardDescription>Strategic priorities divided into quarterly focus areas to achieve target milestones.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-2 space-y-6">
-                    <div className="relative border-l border-slate-200 ml-4 pl-6 space-y-8">
+                <div className="space-y-8">
+                  {/* Quarterly Roadmap Section */}
+                  <Card className="border shadow-sm">
+                    <CardHeader className="border-b pb-4">
+                      <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                        <Map className="w-4 h-4 text-indigo-600" />
+                        12-Month Roadmap &amp; Focus Areas
+                      </CardTitle>
+                      <CardDescription>Click each quarter heading to expand or collapse the objectives.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-3">
                       {strategicPlan.yearlyRoadmap?.map((quarter: any, idx: number) => (
-                        <div key={idx} className="relative group">
-                          {/* Bullet marker */}
-                          <div className="absolute -left-[31px] top-1 bg-white border-2 border-indigo-600 w-4 h-4 rounded-full flex items-center justify-center group-hover:scale-110 transition-all">
-                            <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full" />
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 block mb-0.5">{quarter.period}</span>
-                            <h4 className="font-extrabold text-sm text-slate-800 mb-1">{quarter.focus}</h4>
-                            <ul className="space-y-1">
-                              {quarter.objectives?.map((obj: string, oIdx: number) => (
-                                <li key={oIdx} className="text-xs text-slate-600 font-medium flex items-start gap-2">
-                                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
-                                  <span>{obj}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* 2. Monthly Milestones Tab */}
-              {activePlannerTab === 'milestones' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {strategicPlan.monthlyMilestones?.map((milestone: any, idx: number) => {
-                    const isCompleted = completedMonthlyMilestones.includes(milestone.month);
-                    const isActive = idx === currentMonthIndex;
-                    return (
-                      <Card key={idx} className={`border-2 shadow-sm flex flex-col justify-between hover:border-indigo-200 transition-all ${
-                        isCompleted ? 'border-emerald-200 bg-emerald-50/5' : 
-                        isActive ? 'border-indigo-300 bg-indigo-50/5' : 'border-slate-200'
-                      }`}>
-                        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-row items-center justify-between gap-2">
-                          <div className="space-y-1">
-                            <Badge className={`${
-                              isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
-                              isActive ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
-                              'bg-slate-100 text-slate-800 border-slate-200'
-                            } text-[10px] uppercase font-bold w-fit`}>
-                              {milestone.month}
-                            </Badge>
-                            {isCompleted && (
-                              <Badge className="bg-emerald-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5">
-                                Achieved
-                              </Badge>
-                            )}
-                            {isActive && !isCompleted && (
-                              <Badge className="bg-indigo-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5 animate-pulse">
-                                Current
-                              </Badge>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-4 flex-1 space-y-4 flex flex-col justify-between">
-                          <div className="space-y-4">
-                            <div>
-                              <CardTitle className="text-sm font-bold text-slate-800 leading-snug">{milestone.milestone}</CardTitle>
+                        <div key={idx} className="border border-slate-200 overflow-hidden">
+                          {/* Clickable Quarter Header */}
+                          <button
+                            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-indigo-50 transition-colors text-left"
+                            onClick={() => setOpenQuarters(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-2 h-2 bg-indigo-600 flex-shrink-0" />
+                              <div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 block">{quarter.period}</span>
+                                <h4 className="font-extrabold text-sm text-slate-800">{quarter.focus}</h4>
+                              </div>
                             </div>
-                            
-                            <div>
-                              <span className="text-[9px] uppercase font-black tracking-widest text-slate-400 block mb-2">KEY METRICS TO MONITOR</span>
-                              <ul className="space-y-1.5">
-                                {milestone.keyMetrics?.map((metric: string, mIdx: number) => (
-                                  <li key={mIdx} className="text-xs text-slate-650 font-semibold flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
-                                    <span>{metric}</span>
+                            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${openQuarters[idx] ? 'rotate-90' : ''}`} />
+                          </button>
+                          {/* Collapsible Content */}
+                          {openQuarters[idx] && (
+                            <div className="px-6 py-4 bg-white border-t border-slate-100">
+                              <ul className="space-y-2">
+                                {quarter.objectives?.map((obj: string, oIdx: number) => (
+                                  <li key={oIdx} className="text-xs text-slate-600 font-medium flex items-start gap-2">
+                                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                                    <span>{obj}</span>
                                   </li>
                                 ))}
                               </ul>
                             </div>
-                          </div>
-
-                          {!readOnly && (
-                            <div className="pt-2 mt-auto">
-                              <Button
-                                size="sm"
-                                variant={isCompleted ? "outline" : "default"}
-                                onClick={() => handleToggleMonthlyMilestone(milestone.month, idx)}
-                                className={`w-full text-xs font-bold ${
-                                  isCompleted ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                                }`}
-                              >
-                                {isCompleted ? 'Mark as Incomplete' : 'Mark Milestone Achieved'}
-                              </Button>
-                            </div>
                           )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Divider between sections */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t-2 border-slate-200" />
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="bg-[#f6f7f9] px-4 text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5" />
+                        Monthly Milestones
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Monthly Milestones Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {strategicPlan.monthlyMilestones?.map((milestone: any, idx: number) => {
+                      const isCompleted = completedMonthlyMilestones.includes(milestone.month);
+                      const isActive = idx === currentMonthIndex;
+                      return (
+                        <Card key={idx} className={`border-2 shadow-sm flex flex-col justify-between hover:border-indigo-200 transition-all ${
+                          isCompleted ? 'border-emerald-200 bg-emerald-50/5' : 
+                          isActive ? 'border-indigo-300 bg-indigo-50/5' : 'border-slate-200'
+                        }`}>
+                          <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-row items-center justify-between gap-2">
+                            <div className="space-y-1">
+                              <Badge className={`${
+                                isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                                isActive ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
+                                'bg-slate-100 text-slate-800 border-slate-200'
+                              } text-[10px] uppercase font-bold w-fit`}>
+                                {milestone.month}
+                              </Badge>
+                              {isCompleted && (
+                                <Badge className="bg-emerald-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5">
+                                  Achieved
+                                </Badge>
+                              )}
+                              {isActive && !isCompleted && (
+                                <Badge className="bg-indigo-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5 animate-pulse">
+                                  Current
+                                </Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-4 flex-1 space-y-4 flex flex-col justify-between">
+                            <div className="space-y-4">
+                              <div>
+                                <CardTitle className="text-sm font-bold text-slate-800 leading-snug">{milestone.milestone}</CardTitle>
+                              </div>
+                              
+                              <div>
+                                <span className="text-[9px] uppercase font-black tracking-widest text-slate-400 block mb-2">KEY METRICS TO MONITOR</span>
+                                <ul className="space-y-1.5">
+                                  {milestone.keyMetrics?.map((metric: string, mIdx: number) => (
+                                    <li key={mIdx} className="text-xs text-slate-650 font-semibold flex items-center gap-1.5">
+                                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
+                                      <span>{metric}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+
+                            {!readOnly && (
+                              <div className="pt-2 mt-auto">
+                                <Button
+                                  size="sm"
+                                  variant={isCompleted ? "outline" : "default"}
+                                  onClick={() => handleToggleMonthlyMilestone(milestone.month, idx)}
+                                  className={`w-full text-xs font-bold ${
+                                    isCompleted ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                  }`}
+                                >
+                                  {isCompleted ? 'Mark as Incomplete' : 'Mark Milestone Achieved'}
+                                </Button>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Investor Weekly Report Generator - moved here */}
+                  {!readOnly && (
+                    <Card className="border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/10 via-white to-slate-50 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
+                      <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
+                      
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                          <Mail className="w-5 h-5 text-indigo-600" />
+                          Investor Weekly Report Generator
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          Analyze all logs from the last 7 days (CRM, workshops, sales, operations, tasks, feedback) and compile an executive progress report for mentors &amp; investors.
+                        </CardDescription>
+                      </CardHeader>
+                      
+                      <CardContent className="space-y-4">
+                        {weeklyReportLoading ? (
+                          <div className="py-12 text-center space-y-4 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border rounded-none animate-in fade-in duration-300">
+                            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+                            <div className="space-y-1">
+                              <h4 className="text-xs font-black text-slate-800">Compiling and Analyzing Week's Activities</h4>
+                              <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
+                                Evaluating customer discovery, sales metrics, product milestones, and feedback logs...
+                              </p>
+                            </div>
+                          </div>
+                        ) : weeklyReport ? (
+                          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="flex justify-between items-center bg-indigo-50/30 p-2.5 border border-indigo-100">
+                              <span className="text-[10px] font-black text-indigo-950 flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                                {showHistory ? "Viewing Saved Report History" : "Report Editor (Save your edits below)"}
+                              </span>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setShowHistory(!showHistory)}
+                                  className="h-8 text-xs font-bold text-indigo-700 hover:bg-indigo-50/50 animate-in fade-in"
+                                >
+                                  {showHistory ? "Back to Editor" : `History (${(weeklyReportsHistory || []).length})`}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={handleCopyReport}
+                                  className="h-8 text-xs font-bold gap-1.5 bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
+                                >
+                                  {isCopied ? (
+                                    <><Check className="w-3.5 h-3.5 text-emerald-600" />Copied</>
+                                  ) : (
+                                    <><Copy className="w-3.5 h-3.5" />Copy</>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {showHistory ? (
+                              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 animate-in fade-in duration-200">
+                                {(!weeklyReportsHistory || weeklyReportsHistory.length === 0) ? (
+                                  <div className="p-8 text-center text-muted-foreground font-semibold text-xs bg-white border border-dashed border-slate-200">
+                                    No saved weekly report history found.
+                                  </div>
+                                ) : (
+                                  weeklyReportsHistory.map((histReport: any) => {
+                                    const date = histReport.createdAt ? new Date(histReport.createdAt.seconds * 1000) : new Date();
+                                    const formattedDate = date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                                    return (
+                                      <div key={histReport.id} className="p-3 bg-white border border-slate-100 hover:border-indigo-100 transition-all space-y-2">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-[10px] font-bold text-slate-500 font-mono">{formattedDate}</span>
+                                          <div className="flex gap-1.5">
+                                            <Button size="sm" variant="outline" onClick={() => { setWeeklyReport(histReport.report); setShowHistory(false); }} className="h-6 text-[9px] font-bold px-2 py-0">Restore</Button>
+                                            <Button size="sm" variant="ghost" onClick={async () => { if (window.confirm("Delete this saved report from history?")) { try { await deleteDocumentNonBlocking(doc(weeklyReportsRef!, histReport.id)); } catch (err) { console.error("Error deleting report:", err); } } }} className="h-6 text-[9px] font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-0">Delete</Button>
+                                          </div>
+                                        </div>
+                                        <div className="bg-slate-50 text-slate-700 p-3 font-mono text-[10px] whitespace-pre-wrap leading-relaxed max-h-[120px] overflow-y-auto border border-slate-100 select-all">
+                                          {histReport.report}
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            ) : (
+                              <>
+                                <textarea
+                                  className="w-full bg-slate-900 text-slate-100 p-5 border border-slate-800 font-mono text-xs leading-relaxed min-h-[300px] max-h-[400px] focus:outline-none focus:ring-2 focus:ring-indigo-500 select-text"
+                                  value={weeklyReport}
+                                  onChange={(e) => setWeeklyReport(e.target.value)}
+                                  placeholder="Type or edit your weekly update here..."
+                                />
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                  <Button onClick={handleSaveWeeklyReport} disabled={isSavingReport} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 text-xs gap-1.5 transition-all px-6 shrink-0">
+                                    {reportSavedSuccess ? (<><Check className="w-3.5 h-3.5 text-white animate-in zoom-in-50 duration-150" />Saved to History!</>) : (<><Save className="w-3.5 h-3.5" />Save Report</>)}
+                                  </Button>
+                                  <Button onClick={handleGenerateWeeklyReport} variant="outline" className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold h-10 text-xs gap-1.5 transition-all">
+                                    <RefreshCw className="w-3.5 h-3.5" />Regenerate Update
+                                  </Button>
+                                  <Button variant="ghost" onClick={() => { if (window.confirm("Are you sure you want to clear the generated report?")) { setWeeklyReport(''); if (profileRef) { setDocumentNonBlocking(profileRef, { weeklyProgressReport: null, weeklyProgressReportGeneratedAt: null, weeklyProgressReportSavedAt: null }, { merge: true }); } } }} className="text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-bold h-10 text-xs transition-all px-4">Clear</Button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center border-2 border-dashed border-slate-200 bg-white/50 space-y-4 hover:border-indigo-200 hover:bg-indigo-50/5 transition-all">
+                            <div className="w-12 h-12 bg-indigo-50 flex items-center justify-center mx-auto text-indigo-600 shadow-sm">
+                              <Mail className="w-6 h-6" />
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-xs font-bold text-slate-800">No Weekly Update Compiled Yet</h4>
+                              <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
+                                Click below to analyze the last 7 days of raw workspace data and generate a mentor-ready progress report.
+                              </p>
+                            </div>
+                            <Button onClick={handleGenerateWeeklyReport} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-6 gap-1.5 shadow-sm hover:shadow-md transition-all">
+                              <Sparkles className="w-3.5 h-3.5" />Generate Weekly Update
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Weekly Adaptation Hub - moved here */}
+                  {!readOnly && (
+                    <Card className="border-2 border-indigo-100 bg-indigo-50/5 shadow-sm">
+                      <CardHeader>
+                        <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                          <RefreshCw className="w-5 h-5 text-indigo-600" />
+                          Weekly Adaptation Hub
+                        </CardTitle>
+                        <CardDescription>
+                          Log your startup progress, milestones completed, or roadblocks faced. FounderOS AI will dynamically adapt your roadmaps, monthly targets, and daily actionable tasks.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="font-bold text-xs uppercase tracking-wider text-slate-500">Weekly Progress Update</Label>
+                          <textarea
+                            className="w-full text-sm font-medium p-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white"
+                            rows={3}
+                            placeholder="e.g. Completed CRM pilots setup. Delayed MVP dashboard coding due to API bugs. Closed ₹100k ARR SaaS deal..."
+                            value={weeklyProgress}
+                            onChange={e => setWeeklyProgress(e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          onClick={() => handleGeneratePlan(undefined, weeklyProgress)}
+                          disabled={!weeklyProgress || aiLoading}
+                          className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-10 gap-2"
+                        >
+                          <Sparkles className="w-4 h-4 text-indigo-400" />
+                          Adapt Future Plans Dynamically
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
 
-              {/* 3. Discuss & Modify Plan Chatbot Tab */}
-              {activePlannerTab === 'chat' && (
-                <Card className="border-2 border-indigo-100 shadow-lg min-h-[500px] flex flex-col">
-                  <CardHeader className="border-b bg-indigo-50/10 py-3.5 flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-sm font-black text-slate-900 flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-indigo-600" />
-                        Roadmap Co-Pilot Chat
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Discuss changes, constraints, or custom strategies with your growth advisor.
-                      </CardDescription>
-                    </div>
-                    {chatMessages.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={async () => {
-                          setChatMessages([]);
-                          setLatestModSuggestion('');
-                          if (roadmapChatRef) {
-                            await deleteDoc(roadmapChatRef).catch(() => {});
-                          }
-                        }}
-                        className="text-slate-400 hover:text-rose-600 text-[10px] font-bold"
-                      >
-                        Reset Chat
-                      </Button>
-                    )}
-                  </CardHeader>
-                  
-                  <CardContent className="flex-1 flex flex-col p-0">
-                    {/* Chat Messages List */}
-                    <div className="flex-1 p-4 space-y-4 max-h-[350px] overflow-y-auto bg-slate-50/30">
-                      {chatMessages.length === 0 ? (
-                        <div className="py-12 text-center space-y-3">
-                          <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto animate-bounce">
-                            <Sparkles className="w-6 h-6 text-indigo-600" />
-                          </div>
-                          <div className="space-y-1">
-                            <h4 className="text-xs font-bold text-slate-800">What would you like to discuss?</h4>
-                            <p className="text-[11px] text-slate-400 font-semibold max-w-xs mx-auto leading-relaxed">
-                              Ask the AI to change dates, focus areas, adjust targets, or add custom priorities.
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap gap-2 justify-center pt-2">
-                            <button
-                              type="button"
-                              onClick={() => handleSendChatMessage(undefined, "I want to prioritize product development over sales outreach in Q2.")}
-                              className="px-2.5 py-1.5 border border-slate-200 bg-white hover:bg-indigo-50/20 hover:border-indigo-200 rounded-full text-[10px] font-semibold text-slate-600 transition-all shadow-sm"
-                            >
-                              "Prioritize dev over sales in Q2"
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSendChatMessage(undefined, "We are short on runway, adjust the monthly milestones to be more conservative.")}
-                              className="px-2.5 py-1.5 border border-slate-200 bg-white hover:bg-indigo-50/20 hover:border-indigo-200 rounded-full text-[10px] font-semibold text-slate-600 transition-all shadow-sm"
-                            >
-                              "Short on runway, make milestones conservative"
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        chatMessages.map((msg, index) => (
-                          <div key={index} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`p-3 rounded-xl text-xs leading-relaxed max-w-[85%] ${
-                              msg.role === 'user'
-                                ? 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
-                                : 'bg-white border rounded-tl-none text-slate-700 shadow-sm'
-                            }`}>
-                              {msg.role === 'assistant' ? (
-                                <div className="prose prose-slate prose-xs max-w-none">
-                                  {renderMarkdown(msg.content)}
-                                </div>
-                              ) : (
-                                msg.content
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-
-                      {chatLoading && (
-                        <div className="flex gap-2 justify-start items-center">
-                          <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
-                          <span className="text-[10px] font-bold text-slate-400">Co-pilot is thinking...</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Modification Suggestion Alert & Modify Button */}
-                    {latestModSuggestion && (
-                      <div className="p-3.5 bg-amber-50 border-t border-b border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-black tracking-widest text-amber-850 uppercase block">RECOMMENDED REVISION SUGGESTION</span>
-                          <p className="text-xs font-bold text-slate-700 leading-normal">{latestModSuggestion}</p>
-                        </div>
-                        <Button
-                          onClick={() => handleGeneratePlan(undefined, undefined, latestModSuggestion)}
-                          disabled={aiLoading}
-                          className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold h-9 gap-1.5 shrink-0 px-4"
-                        >
-                          {aiLoading ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          )}
-                          Modify Plan
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Chat Input Field */}
-                    <div className="p-3 bg-slate-50 border-t flex gap-2">
-                      <Input
-                        placeholder="Discuss plan adjustments (e.g. shift priorities, change timeline)..."
-                        value={chatMessage}
-                        onChange={e => setChatMessage(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleSendChatMessage();
-                          }
-                        }}
-                        disabled={chatLoading}
-                        className="bg-white border-slate-200 text-xs h-9"
-                      />
-                      <Button
-                        size="icon"
-                        disabled={chatLoading || !chatMessage.trim()}
-                        onClick={() => handleSendChatMessage()}
-                        className="h-9 w-9 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
-                      >
-                        <Send className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* 4. Plan History Tab */}
+              {/* 2. Plan History Tab */}
               {activePlannerTab === 'history' && (
                 <Card className="border shadow-sm">
                   <CardHeader>
@@ -1427,7 +1472,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                         No plan history found. Any new plans you generate will appear here.
                       </div>
                     ) : (
-                      <div className="divide-y border rounded-xl overflow-hidden bg-white">
+                      <div className="divide-y border overflow-hidden bg-white">
                       {planHistory.map((histPlan: any) => {
                           const date = histPlan.createdAt ? new Date(histPlan.createdAt.seconds * 1000) : new Date();
                           const formattedDate = date.toLocaleString();
@@ -1495,7 +1540,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                                           }
                                         }
                                       }}
-                                      className="text-xs font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 h-9 w-9 p-0 rounded-lg"
+                                      className="text-xs font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 h-9 w-9 p-0"
                                     >
                                       <Trash className="w-4 h-4" />
                                     </Button>
@@ -1507,242 +1552,6 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                         })}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Weekly Founder Update Report Generator */}
-              {!readOnly && (
-                <Card className="border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/10 via-white to-slate-50 shadow-sm mt-8 relative overflow-hidden transition-all hover:shadow-md">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
-                  
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                      <Mail className="w-5 h-5 text-indigo-600" />
-                      Investor Weekly Report Generator
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Analyze all logs from the last 7 days (CRM, workshops, sales, operations, tasks, feedback) and compile an executive progress report for mentors & investors.
-                    </CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    {weeklyReportLoading ? (
-                      <div className="py-12 text-center space-y-4 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border rounded-xl animate-in fade-in duration-300">
-                        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                        <div className="space-y-1">
-                          <h4 className="text-xs font-black text-slate-800">Compiling and Analyzing Week's Activities</h4>
-                          <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
-                            Evaluating customer discovery, sales metrics, product milestones, and feedback logs...
-                          </p>
-                        </div>
-                      </div>
-                    ) : weeklyReport ? (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="flex justify-between items-center bg-indigo-50/30 p-2.5 rounded-lg border border-indigo-100">
-                          <span className="text-[10px] font-black text-indigo-950 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                            {showHistory ? "Viewing Saved Report History" : "Report Editor (Save your edits below)"}
-                          </span>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setShowHistory(!showHistory)}
-                              className="h-8 text-xs font-bold text-indigo-700 hover:bg-indigo-50/50 animate-in fade-in"
-                            >
-                              {showHistory ? "Back to Editor" : `History (${(weeklyReportsHistory || []).length})`}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={handleCopyReport}
-                              className="h-8 text-xs font-bold gap-1.5 bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
-                            >
-                              {isCopied ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3.5 h-3.5" />
-                                  Copy
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {showHistory ? (
-                          <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 animate-in fade-in duration-200">
-                            {(!weeklyReportsHistory || weeklyReportsHistory.length === 0) ? (
-                              <div className="p-8 text-center text-muted-foreground font-semibold text-xs bg-white rounded-xl border border-dashed border-slate-200">
-                                No saved weekly report history found.
-                              </div>
-                            ) : (
-                              weeklyReportsHistory.map((histReport: any) => {
-                                const date = histReport.createdAt ? new Date(histReport.createdAt.seconds * 1000) : new Date();
-                                const formattedDate = date.toLocaleString('en-IN', {
-                                  dateStyle: 'medium',
-                                  timeStyle: 'short'
-                                });
-                                return (
-                                  <div key={histReport.id} className="p-3 bg-white border border-slate-100 rounded-xl hover:border-indigo-100 transition-all space-y-2">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-[10px] font-bold text-slate-500 font-mono">{formattedDate}</span>
-                                      <div className="flex gap-1.5">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => {
-                                            setWeeklyReport(histReport.report);
-                                            setShowHistory(false);
-                                          }}
-                                          className="h-6 text-[9px] font-bold px-2 py-0"
-                                        >
-                                          Restore
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={async () => {
-                                            if (window.confirm("Delete this saved report from history?")) {
-                                              try {
-                                                await deleteDocumentNonBlocking(doc(weeklyReportsRef!, histReport.id));
-                                              } catch (err) {
-                                                console.error("Error deleting report:", err);
-                                              }
-                                            }
-                                          }}
-                                          className="h-6 text-[9px] font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-0"
-                                        >
-                                          Delete
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    <div className="bg-slate-50 text-slate-700 p-3 rounded-lg font-mono text-[10px] whitespace-pre-wrap leading-relaxed max-h-[120px] overflow-y-auto border border-slate-100 select-all">
-                                      {histReport.report}
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        ) : (
-                          <>
-                            <textarea
-                              className="w-full bg-slate-900 text-slate-100 p-5 rounded-xl border border-slate-800 font-mono text-xs leading-relaxed min-h-[300px] max-h-[400px] focus:outline-none focus:ring-2 focus:ring-indigo-500 select-text"
-                              value={weeklyReport}
-                              onChange={(e) => setWeeklyReport(e.target.value)}
-                              placeholder="Type or edit your weekly update here..."
-                            />
-                            
-                            <div className="flex flex-col sm:flex-row gap-3">
-                              <Button
-                                onClick={handleSaveWeeklyReport}
-                                disabled={isSavingReport}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 text-xs gap-1.5 transition-all px-6 shrink-0"
-                              >
-                                {reportSavedSuccess ? (
-                                  <>
-                                    <Check className="w-3.5 h-3.5 text-white animate-in zoom-in-50 duration-150" />
-                                    Saved to History!
-                                  </>
-                                ) : (
-                                  <>
-                                    <Save className="w-3.5 h-3.5" />
-                                    Save Report
-                                  </>
-                                )}
-                              </Button>
-                              
-                              <Button
-                                onClick={handleGenerateWeeklyReport}
-                                variant="outline"
-                                className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold h-10 text-xs gap-1.5 transition-all"
-                              >
-                                <RefreshCw className="w-3.5 h-3.5" />
-                                Regenerate Update
-                              </Button>
-                              
-                              <Button
-                                variant="ghost"
-                                onClick={() => {
-                                  if (window.confirm("Are you sure you want to clear the generated report?")) {
-                                    setWeeklyReport('');
-                                    if (profileRef) {
-                                      setDocumentNonBlocking(profileRef, {
-                                        weeklyProgressReport: null,
-                                        weeklyProgressReportGeneratedAt: null,
-                                        weeklyProgressReportSavedAt: null
-                                      }, { merge: true });
-                                    }
-                                  }
-                                }}
-                                className="text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-bold h-10 text-xs transition-all px-4"
-                              >
-                                Clear
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl bg-white/50 space-y-4 hover:border-indigo-200 hover:bg-indigo-50/5 transition-all">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto text-indigo-600 shadow-sm">
-                          <Mail className="w-6 h-6" />
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="text-xs font-bold text-slate-800">No Weekly Update Compiled Yet</h4>
-                          <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
-                            Click below to analyze the last 7 days of raw workspace data and generate a mentor-ready progress report.
-                          </p>
-                        </div>
-                        <Button
-                          onClick={handleGenerateWeeklyReport}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-6 rounded-lg gap-1.5 shadow-sm hover:shadow-md transition-all"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Generate Weekly Update
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Weekly Progress Logger / Adaptation Section - hidden for visitors */}
-              {!readOnly && (
-                <Card className="border-2 border-indigo-100 bg-indigo-50/5 shadow-sm mt-8">
-                  <CardHeader>
-                    <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                      <RefreshCw className="w-5 h-5 text-indigo-600" />
-                      Weekly Adaptation Hub
-                    </CardTitle>
-                    <CardDescription>
-                      Log your startup progress, milestones completed, or roadblocks faced. FounderOS AI will dynamically adapt your roadmaps, monthly targets, and daily actionable tasks.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="font-bold text-xs uppercase tracking-wider text-slate-500">Weekly Progress Update</Label>
-                      <textarea
-                        className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white"
-                        rows={3}
-                        placeholder="e.g. Completed CRM pilots setup. Delayed MVP dashboard coding due to API bugs. Closed ₹100k ARR SaaS deal..."
-                        value={weeklyProgress}
-                        onChange={e => setWeeklyProgress(e.target.value)}
-                      />
-                    </div>
-                    <Button
-                      onClick={() => handleGeneratePlan(undefined, weeklyProgress)}
-                      disabled={!weeklyProgress || aiLoading}
-                      className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-10 gap-2"
-                    >
-                      <Sparkles className="w-4 h-4 text-indigo-400" />
-                      Adapt Future Plans Dynamically
-                    </Button>
                   </CardContent>
                 </Card>
               )}
@@ -1980,6 +1789,169 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Floating Circle Bot Button for Roadmap Co-Pilot (Only visible in Central Console) */}
+      {!readOnly && strategicPlan && (
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <button
+            type="button"
+            onClick={() => setIsChatOpen(true)}
+            className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-300"
+            title="Open Roadmap Co-Pilot Chat"
+          >
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+            </span>
+            <Sparkles className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
+          </button>
+        </div>
+      )}
+
+      {/* Roadmap Co-Pilot Chat Dialog Modal */}
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogContent className="max-w-2xl w-[95vw] h-[85vh] max-h-[700px] flex flex-col p-0 border border-slate-200 shadow-2xl overflow-hidden rounded-none">
+          <DialogHeader className="border-b bg-indigo-50/20 px-5 py-4 flex flex-row items-center justify-between shrink-0">
+            <div>
+              <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                Roadmap Co-Pilot
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500 font-medium">
+                Discuss roadmap changes, constraints, or custom strategies with your growth advisor.
+              </DialogDescription>
+            </div>
+            {chatMessages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  setChatMessages([]);
+                  setLatestModSuggestion('');
+                  if (roadmapChatRef) {
+                    await deleteDoc(roadmapChatRef).catch(() => {});
+                  }
+                }}
+                className="text-slate-400 hover:text-rose-600 text-xs font-bold"
+              >
+                Reset Chat
+              </Button>
+            )}
+          </DialogHeader>
+
+          <div className="flex-1 flex flex-col min-h-0 bg-slate-50/40">
+            {/* Chat Messages List */}
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+              {chatMessages.length === 0 ? (
+                <div className="py-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mx-auto text-indigo-600">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-slate-800">How can I help with your roadmap?</h4>
+                    <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto leading-relaxed">
+                      Ask to change dates, focus areas, adjust targets, or customize priorities.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center pt-2 max-w-md mx-auto">
+                    <button
+                      type="button"
+                      onClick={() => handleSendChatMessage(undefined, "I want to prioritize product development over sales outreach in Q2.")}
+                      className="px-3 py-2 border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs font-semibold text-slate-700 transition-all shadow-sm text-left"
+                    >
+                      "Prioritize dev over sales in Q2"
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSendChatMessage(undefined, "We are short on runway, adjust the monthly milestones to be more conservative.")}
+                      className="px-3 py-2 border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs font-semibold text-slate-700 transition-all shadow-sm text-left"
+                    >
+                      "Short on runway, make milestones conservative"
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                chatMessages.map((msg, index) => (
+                  <div key={index} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`p-3 text-xs leading-relaxed max-w-[85%] ${
+                      msg.role === 'user'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-800 shadow-sm'
+                    }`}>
+                      {msg.role === 'assistant' ? (
+                        <div className="prose prose-slate prose-xs max-w-none">
+                          {renderMarkdown(msg.content)}
+                        </div>
+                      ) : (
+                        msg.content
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {chatLoading && (
+                <div className="flex gap-2 justify-start items-center p-2">
+                  <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
+                  <span className="text-xs font-bold text-slate-500">Co-pilot is thinking...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modification Suggestion Alert & Modify Button */}
+            {latestModSuggestion && (
+              <div className="p-3.5 bg-amber-50 border-t border-b border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black tracking-widest text-amber-900 uppercase block">RECOMMENDED REVISION</span>
+                  <p className="text-xs font-bold text-slate-800 leading-normal">{latestModSuggestion}</p>
+                </div>
+                <Button
+                  onClick={() => {
+                    handleGeneratePlan(undefined, undefined, latestModSuggestion);
+                    setIsChatOpen(false);
+                  }}
+                  disabled={aiLoading}
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold h-9 gap-1.5 shrink-0 px-4"
+                >
+                  {aiLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  )}
+                  Modify Plan
+                </Button>
+              </div>
+            )}
+
+            {/* Chat Input Field */}
+            <div className="p-3 bg-white border-t flex gap-2">
+              <Input
+                placeholder="Discuss plan adjustments (e.g. shift priorities, change timeline)..."
+                value={chatMessage}
+                onChange={e => setChatMessage(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendChatMessage();
+                  }
+                }}
+                disabled={chatLoading}
+                className="bg-slate-50 border-slate-200 text-xs h-10 rounded-none focus-visible:ring-indigo-500"
+              />
+              <Button
+                size="icon"
+                disabled={chatLoading || !chatMessage.trim()}
+                onClick={() => handleSendChatMessage()}
+                className="h-10 w-10 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-none"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

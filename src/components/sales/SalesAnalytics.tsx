@@ -91,7 +91,7 @@ export function SalesAnalytics({
   }, [reports]);
 
   // Tab States
-  const [localActiveTab, setLocalActiveTab] = useState('crm');
+  const [localActiveTab, setLocalActiveTab] = useState('ezcirkit');
   const activeTab = activeSubTab !== undefined ? activeSubTab : localActiveTab;
   const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
 
@@ -470,9 +470,6 @@ export function SalesAnalytics({
         {activeSubTab === undefined && (
           <div className="flex items-center justify-between border-b pb-3 mb-6 gap-4 flex-wrap">
             <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
-              <TabsTrigger value="crm" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
-                <BarChart3 className="w-3.5 h-3.5" /> CRM Pipeline
-              </TabsTrigger>
               <TabsTrigger value="ezcirkit" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
                 <Zap className="w-3.5 h-3.5" /> EZCirkit Sales Tracker
               </TabsTrigger>

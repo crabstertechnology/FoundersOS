@@ -35,7 +35,7 @@ import { DigitalMarketingHub } from '@/components/sales/DigitalMarketingHub';
 export default function FounderOSPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [salesTab, setSalesTab] = useState('crm');
+  const [salesTab, setSalesTab] = useState('ezcirkit');
   const [ezCirkitTab, setEzCirkitTab] = useState('strategy');
   const [financeTab, setFinanceTab] = useState('calc');
   const [operationsTab, setOperationsTab] = useState('ops');
@@ -167,7 +167,7 @@ export default function FounderOSPage() {
     if (['calc', 'tracker', 'exit', 'negotiate', 'qa', 'glossary'].includes(tab)) {
       setActiveTab('finance');
       setFinanceTab(tab);
-    } else if (['crm', 'ezcirkit'].includes(tab)) {
+    } else if (['ezcirkit'].includes(tab)) {
       setActiveTab('sales');
       setSalesTab(tab);
     } else if (['weekly', 'strategy', 'leads', 'workshops', 'products', 'activity'].includes(tab)) {
@@ -187,7 +187,6 @@ export default function FounderOSPage() {
       case 'dm': return 'Digital Marketing Hub';
       case 'sales':
         switch (salesTab) {
-          case 'crm': return 'CRM Pipeline';
           case 'ezcirkit':
             switch (ezCirkitTab) {
               case 'weekly': return 'Weekly Dashboard';
@@ -432,17 +431,6 @@ export default function FounderOSPage() {
                   )}
                 </button>                {isSalesExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('crm'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'crm'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      CRM Pipeline
-                    </button>
-
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -845,17 +833,6 @@ export default function FounderOSPage() {
                   )}
                 </button>                {isSalesExpanded && (
                   <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('crm'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'crm'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
-                      }`}
-                    >
-                      CRM Pipeline
-                    </button>
-
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); setIsMobileSidebarOpen(false); }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${

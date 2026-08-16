@@ -496,7 +496,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
     return (
       <div className="mt-4 border-t border-slate-100 pt-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-none-none border border-slate-200">
           <div className="flex items-center gap-1.5 text-slate-800">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
             <span className="text-[10.5px] font-black uppercase tracking-wide">AI Co-Pilot for Step {stepNum}</span>
@@ -526,7 +526,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
               size="sm"
               type="button"
               onClick={() => handleInitializeRoleplay(area)}
-              className="h-7 text-[10px] font-extrabold gap-1 rounded-md px-3 border-none hover:opacity-90 transition-all shadow-sm shrink-0"
+              className="h-7 text-[10px] font-extrabold gap-1 rounded-none-none px-3 border-none hover:opacity-90 transition-all shadow-sm shrink-0"
               style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
             >
               <Sparkles className="w-3.5 h-3.5 text-white/80 animate-bounce" />
@@ -537,7 +537,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
         {/* Display Explanation Output */}
         {explanation && (
-          <div className="bg-gradient-to-r from-indigo-50/30 to-slate-50/30 border border-indigo-100 rounded-xl p-4 space-y-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="bg-gradient-to-r from-indigo-50/30 to-slate-50/30 border border-indigo-100 rounded-none-none p-4 space-y-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
             <div className="flex justify-between items-center border-b border-indigo-100 pb-1.5">
               <span className="text-[10px] uppercase font-black text-indigo-900">Custom B2B Application Blueprint:</span>
               <Button
@@ -558,7 +558,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
               {explanation.explanation}
             </div>
 
-            <div className="bg-white border border-indigo-100/60 rounded-lg p-3 space-y-1">
+            <div className="bg-white border border-indigo-100/60 rounded-none-none p-3 space-y-1">
               <span className="text-[9px] uppercase font-black text-indigo-805 block">Product Context Dialogue Example:</span>
               <p className="text-[11px] leading-relaxed text-slate-850 italic font-semibold whitespace-pre-line font-mono">
                 {explanation.concreteExample}
@@ -570,7 +570,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
               <div className="space-y-1 flex flex-col">
                 {explanation.actionableTasks.map((task, idx) => (
                   <label key={idx} className="flex items-start gap-2 text-[10.5px] font-semibold text-slate-750 cursor-pointer select-none">
-                    <input type="checkbox" className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3" />
+                    <input type="checkbox" className="mt-0.5 rounded-none-none border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3" />
                     <span>{task}</span>
                   </label>
                 ))}
@@ -583,10 +583,10 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 [&_*]:!rounded-none">
       
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-950 p-6 rounded-2xl border border-indigo-500/20 text-white shadow-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-950 p-6 rounded-none border border-indigo-500/20 text-white shadow-md">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
@@ -605,7 +605,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
             size="icon"
             onClick={() => setIsCustomerTypesOpen(true)}
             title="Customer Types"
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center"
+            className="w-10 h-10 rounded-none bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center"
           >
             <User className="w-5 h-5 text-indigo-300" />
           </Button>
@@ -614,7 +614,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
             size="icon"
             onClick={() => setIsObjectionSolverOpen(true)}
             title="Objection Solver"
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center"
+            className="w-10 h-10 rounded-none bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center"
           >
             <ShieldAlert className="w-5 h-5 text-amber-300" />
           </Button>
@@ -623,11 +623,11 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
             size="icon"
             onClick={() => setIsScriptHistoryOpen(true)}
             title="Script History"
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center relative"
+            className="w-10 h-10 rounded-none bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center relative"
           >
             <History className="w-5 h-5 text-emerald-300" />
             {scriptHistory.length > 0 && (
-              <Badge className="absolute -top-1 -right-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[8px] h-4 w-4 flex items-center justify-center p-0 rounded-full border-none">
+              <Badge className="absolute -top-1 -right-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[8px] h-4 w-4 flex items-center justify-center p-0 rounded-none border-none">
                 {scriptHistory.length}
               </Badge>
             )}
@@ -637,11 +637,11 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
             size="icon"
             onClick={() => setIsBlueprintHistoryOpen(true)}
             title="Blueprint History"
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center relative"
+            className="w-10 h-10 rounded-none bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all duration-200 shadow-sm shrink-0 flex items-center justify-center relative"
           >
             <BookOpen className="w-5 h-5 text-sky-300" />
             {history.length > 0 && (
-              <Badge className="absolute -top-1 -right-1 bg-sky-500 hover:bg-sky-600 text-white font-black text-[8px] h-4 w-4 flex items-center justify-center p-0 rounded-full border-none">
+              <Badge className="absolute -top-1 -right-1 bg-sky-500 hover:bg-sky-600 text-white font-black text-[8px] h-4 w-4 flex items-center justify-center p-0 rounded-none border-none">
                 {history.length}
               </Badge>
             )}
@@ -651,14 +651,14 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
       <Tabs defaultValue="syllabus" className="w-full">
         <div className="border-b pb-3 mb-6 w-full overflow-hidden">
-          <TabsList className="flex w-full overflow-x-auto whitespace-nowrap bg-slate-100/80 p-1 rounded-xl md:rounded-full gap-1 md:gap-0.5 border-none h-auto md:h-10 scrollbar-none select-none">
-            <TabsTrigger value="syllabus" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
+          <TabsList className="flex w-full overflow-x-auto whitespace-nowrap bg-slate-100/80 p-1 rounded-none-none md:rounded-none-none gap-1 md:gap-0.5 border-none h-auto md:h-10 scrollbar-none select-none">
+            <TabsTrigger value="syllabus" className="rounded-none-none px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <GraduationCap className="w-3.5 h-3.5" /> Complete Teaching Syllabus
             </TabsTrigger>
-            <TabsTrigger value="scripts" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
+            <TabsTrigger value="scripts" className="rounded-none-none px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <PhoneCall className="w-3.5 h-3.5" /> Cold Call & Pitch Templates
             </TabsTrigger>
-            <TabsTrigger value="mentor" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
+            <TabsTrigger value="mentor" className="rounded-none-none px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5 shrink-0">
               <Award className="w-3.5 h-3.5" /> Mentor Coaching Guide
             </TabsTrigger>
           </TabsList>
@@ -754,7 +754,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         <strong className="text-white block font-black uppercase text-[9px] tracking-wide mb-0.5">Call Trigger Event:</strong>
                         {aiScenario.triggerEvent}
                       </div>
-                      <div className="md:col-span-2 bg-indigo-950 border border-indigo-500/20 rounded-xl p-3 text-indigo-200 mt-1">
+                      <div className="md:col-span-2 bg-indigo-950 border border-indigo-500/20 rounded-none-none p-3 text-indigo-200 mt-1">
                         <strong className="text-white block font-black uppercase text-[9px] tracking-wide mb-1">Active Scenario Rules & Obstacles:</strong>
                         <ul className="list-disc list-inside space-y-0.5 font-semibold text-[10px]">
                           {aiScenario.scenarioRules.map((rule, idx) => (
@@ -771,10 +771,10 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       {chatMessages.map((msg, i) => (
                         <div
                           key={i}
-                          className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs font-semibold leading-relaxed shadow-sm ${
+                          className={`max-w-[85%] rounded-none-none px-3 py-2 text-xs font-semibold leading-relaxed shadow-sm ${
                             msg.role === 'user'
-                              ? 'bg-indigo-650 text-white self-end rounded-tr-none'
-                              : 'bg-white text-slate-800 border border-slate-200 self-start rounded-tl-none'
+                              ? 'bg-indigo-650 text-white self-end rounded-none-none'
+                              : 'bg-white text-slate-800 border border-slate-200 self-start rounded-none-none'
                           }`}
                         >
                           <div className="text-[9px] font-black uppercase mb-0.5 tracking-wider opacity-60">
@@ -784,7 +784,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         </div>
                       ))}
                       {chatHistoryLoading && (
-                        <div className="bg-white text-slate-800 border border-slate-200 self-start rounded-2xl rounded-tl-none px-3 py-2 text-xs font-semibold shadow-sm flex items-center gap-2">
+                        <div className="bg-white text-slate-800 border border-slate-200 self-start rounded-none-none rounded-none-none px-3 py-2 text-xs font-semibold shadow-sm flex items-center gap-2">
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-650" />
                           <span>Prospect is talking...</span>
                         </div>
@@ -807,12 +807,12 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                             ? "Outcome reached. Click Exit above to end practice." 
                             : "Type your pitch or question to the prospect..."
                         }
-                        className="text-xs font-semibold h-9 rounded-lg"
+                        className="text-xs font-semibold h-9 rounded-none-none"
                       />
                       <Button
                         type="submit"
                         disabled={chatHistoryLoading || prospectEnded || !userChatMessage.trim()}
-                        className="bg-indigo-600 hover:bg-indigo-750 text-white px-4 h-9 rounded-lg shrink-0 border-none"
+                        className="bg-indigo-600 hover:bg-indigo-750 text-white px-4 h-9 rounded-none-none shrink-0 border-none"
                       >
                         <Send className="w-3.5 h-3.5 text-white" />
                       </Button>
@@ -845,7 +845,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                 <CardContent className="p-6">
                   <Accordion type="single" defaultValue="framework" collapsible className="w-full space-y-3">
                     
-                    <AccordionItem value="framework" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="framework" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         01. The Core Framework — How It All Connects
                       </AccordionTrigger>
@@ -857,28 +857,28 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         
                         {/* Visual Flow diagram */}
                         <div className="flex sm:grid sm:grid-cols-5 overflow-x-auto gap-2 text-center pt-2 scrollbar-none pb-1">
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-none-none p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 1</span>
                             <span className="text-[11px] font-bold text-slate-700">Know Customer</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-none-none p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 2</span>
                             <span className="text-[11px] font-bold text-slate-700">Discover Pain</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-none-none p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 3a</span>
                             <span className="text-[11px] font-bold text-slate-700">Address Pain</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-none-none p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 3b</span>
                             <span className="text-[11px] font-bold text-slate-700">Give Value</span>
                           </div>
-                          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
+                          <div className="bg-indigo-50 border border-indigo-100 rounded-none-none p-2 flex flex-col justify-between shrink-0 w-28 sm:w-auto">
                             <span className="text-[10px] font-black text-indigo-800 uppercase block mb-1">Step 4</span>
                             <span className="text-[11px] font-bold text-slate-700">Handle Obj & Close</span>
                           </div>
                         </div>
-                        <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg p-2.5 mt-2 text-center">
+                        <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 text-[11px] font-bold rounded-none-none p-2.5 mt-2 text-center">
                           Result: Customer buys because they feel understood and helped — not sold to.
                         </div>
 
@@ -887,7 +887,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
  
-                    <AccordionItem value="rules" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="rules" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         02. The 6 Golden Rules of Value-Driven Selling
                       </AccordionTrigger>
@@ -901,8 +901,8 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                             { num: '05', title: 'If You Don\'t Ask, You Don\'t Close', desc: 'Many sales die because no one asked for the order. Ask clearly, confidently, and without apology.' },
                             { num: '06', title: 'Talk Less. Listen More.', desc: 'The customer should speak at least 60% of the time. Your job is to understand, not to perform.' },
                           ].map((rule, idx) => (
-                            <div key={idx} className="p-3 bg-slate-50 border rounded-lg flex items-start gap-2.5">
-                              <span className="text-xs font-black text-indigo-650 bg-indigo-50 border border-indigo-150 rounded px-1.5 py-0.5">{rule.num}</span>
+                            <div key={idx} className="p-3 bg-slate-50 border rounded-none-none flex items-start gap-2.5">
+                              <span className="text-xs font-black text-indigo-650 bg-indigo-50 border border-indigo-150 rounded-none-none px-1.5 py-0.5">{rule.num}</span>
                               <div className="space-y-0.5">
                                 <h5 className="text-[11px] font-extrabold text-slate-800 leading-snug">{rule.title}</h5>
                                 <p className="text-[10px] text-slate-500 font-medium leading-relaxed">{rule.desc}</p>
@@ -916,7 +916,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
  
-                    <AccordionItem value="know" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="know" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         03. Step 1 — Know the Customer
                       </AccordionTrigger>
@@ -924,19 +924,19 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         <div className="space-y-2">
                            <h4 className="font-extrabold text-slate-800 text-[11px] uppercase tracking-wider">What You Need to Find Out First:</h4>
                           <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] font-medium">
-                            <li className="bg-slate-55 border rounded p-2.5">
+                            <li className="bg-slate-55 border rounded-none-none p-2.5">
                               <strong className="text-slate-900 block mb-0.5">Why do they need it?</strong>
                               Not features — outcomes. E.g., 'Finish PCB by Friday' rather than 'Need a resistor'.
                             </li>
-                            <li className="bg-slate-55 border rounded p-2.5">
+                            <li className="bg-slate-55 border rounded-none-none p-2.5">
                               <strong className="text-slate-900 block mb-0.5">What are they working on?</strong>
                               Their current project/challenge reveals context and urgency immediately.
                             </li>
-                            <li className="bg-slate-55 border rounded p-2.5">
+                            <li className="bg-slate-55 border rounded-none-none p-2.5">
                               <strong className="text-slate-900 block mb-0.5">What are they using now?</strong>
                               Current solution or competitor reveals gaps you can fill and what they value.
                             </li>
-                            <li className="bg-slate-55 border rounded p-2.5">
+                            <li className="bg-slate-55 border rounded-none-none p-2.5">
                               <strong className="text-slate-900 block mb-0.5">What is slowing them down?</strong>
                               Friction in current process. Their slowdown is your sales opportunity.
                             </li>
@@ -944,7 +944,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         </div>
  
                         {/* Customer Type Quick Nav */}
-                        <div className="bg-indigo-50/30 border border-indigo-100/50 rounded-xl p-3 space-y-2">
+                        <div className="bg-indigo-50/30 border border-indigo-100/50 rounded-none-none p-3 space-y-2">
                           <h4 className="font-extrabold text-indigo-900 text-[11px] uppercase tracking-wider flex items-center gap-1">
                             <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                             The 4 Customer Types & Selling Approaches:
@@ -957,7 +957,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
  
                         {/* Dos & Donts */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                          <div className="bg-emerald-50/40 border border-emerald-100 rounded-lg p-3">
+                          <div className="bg-emerald-50/40 border border-emerald-100 rounded-none-none p-3">
                             <h5 className="font-extrabold text-emerald-800 text-[11px] uppercase tracking-wider flex items-center gap-1 mb-2">
                               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> DO THIS
                             </h5>
@@ -968,7 +968,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                               <li>Confirm: 'So the main issue is X?'</li>
                             </ul>
                           </div>
-                          <div className="bg-rose-50/40 border border-rose-100 rounded-lg p-3">
+                          <div className="bg-rose-50/40 border border-rose-100 rounded-none-none p-3">
                             <h5 className="font-extrabold text-rose-800 text-[11px] uppercase tracking-wider flex items-center gap-1 mb-2">
                               <XCircle className="w-4 h-4 text-rose-600" /> NEVER DO THIS
                             </h5>
@@ -986,7 +986,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
 
-                    <AccordionItem value="discover" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="discover" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         04. Step 2 — Discover the Pain Point
                       </AccordionTrigger>
@@ -996,7 +996,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           Find the pain, name it clearly, and show them you understand it better than they do.
                         </p>
 
-                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                        <div className="border border-slate-100 rounded-none-none overflow-x-auto scrollbar-none">
                           <Table className="text-[11px] min-w-[600px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
@@ -1030,16 +1030,16 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           </Table>
                         </div>
 
-                        <div className="bg-indigo-50/50 border border-indigo-100 rounded-lg p-3.5 space-y-1">
+                        <div className="bg-indigo-50/50 border border-indigo-100 rounded-none-none p-3.5 space-y-1">
                           <div className="flex items-center gap-1.5 font-extrabold text-[11px] text-indigo-900 uppercase">
                             <Info className="w-4 h-4 text-indigo-650" /> Reframing the Pain
                           </div>
                           <p className="text-[11px] font-medium leading-relaxed">
                             Once you understand their pain, reflect it back at a deeper level. Don't just repeat what they said — show them the true scale of the problem.
                           </p>
-                          <div className="bg-white border rounded p-2.5 mt-2 flex flex-col gap-1">
-                            <div className="text-[10px] font-bold text-rose-600"><span className="uppercase text-[9px] px-1 border border-rose-250 bg-rose-50 rounded mr-1">Customer Says</span> "I can't find the right component."</div>
-                            <div className="text-[10px] font-bold text-emerald-700"><span className="uppercase text-[9px] px-1 border border-emerald-250 bg-emerald-50 rounded mr-1">You Reframe</span> "So the real issue isn't the component itself — it's the time delay and uncertainty that's slowing down your entire project?"</div>
+                          <div className="bg-white border rounded-none-none p-2.5 mt-2 flex flex-col gap-1">
+                            <div className="text-[10px] font-bold text-rose-600"><span className="uppercase text-[9px] px-1 border border-rose-250 bg-rose-50 rounded-none-none mr-1">Customer Says</span> "I can't find the right component."</div>
+                            <div className="text-[10px] font-bold text-emerald-700"><span className="uppercase text-[9px] px-1 border border-emerald-250 bg-emerald-50 rounded-none-none mr-1">You Reframe</span> "So the real issue isn't the component itself — it's the time delay and uncertainty that's slowing down your entire project?"</div>
                           </div>
                         </div>
 
@@ -1048,7 +1048,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
 
-                    <AccordionItem value="address" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="address" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         05. Step 3 — Address the Pain with Value
                       </AccordionTrigger>
@@ -1058,7 +1058,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           Your pitch should feel like a solution to their specific problem — not a product presentation.
                         </p>
 
-                        <div className="bg-indigo-50/30 border border-indigo-100/50 rounded-xl p-3 space-y-2">
+                        <div className="bg-indigo-50/30 border border-indigo-100/50 rounded-none-none p-3 space-y-2">
                           <h5 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider">The Pitch Formula Elements:</h5>
                           <ul className="space-y-2 text-[11px]">
                             <li><strong className="text-indigo-805">1. Connect:</strong> Reference exactly what they told you (e.g. <em>"Since you mentioned component delays are slowing you down..."</em>)</li>
@@ -1071,7 +1071,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           </p>
                         </div>
 
-                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                        <div className="border border-slate-100 rounded-none-none overflow-x-auto scrollbar-none">
                           <Table className="text-[11px] min-w-[650px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
@@ -1121,13 +1121,13 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
 
-                    <AccordionItem value="yesno" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="yesno" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         06. Step 4a — What Happens on Yes or No
                       </AccordionTrigger>
                       <AccordionContent className="pt-2 pb-4 text-xs text-slate-600 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-emerald-50/40 border border-emerald-150 rounded-xl p-3.5 space-y-2">
+                          <div className="bg-emerald-50/40 border border-emerald-150 rounded-none-none p-3.5 space-y-2">
                             <h5 className="font-black text-emerald-800 text-[11px] uppercase tracking-wider flex items-center gap-1">
                               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> THEY SAY YES — What to Do
                             </h5>
@@ -1139,12 +1139,12 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                               <li>Move to logistics / next steps immediately</li>
                               <li>Stop selling. They already bought.</li>
                             </ul>
-                            <div className="bg-white border border-emerald-100 rounded p-2 text-[10px] font-bold text-emerald-800 mt-2">
+                            <div className="bg-white border border-emerald-100 rounded-none-none p-2 text-[10px] font-bold text-emerald-800 mt-2">
                               Script: "Great! Let's get this sorted for you right now."
                             </div>
                           </div>
 
-                          <div className="bg-rose-50/30 border border-rose-150 rounded-xl p-3.5 space-y-2">
+                          <div className="bg-rose-50/30 border border-rose-150 rounded-none-none p-3.5 space-y-2">
                             <h5 className="font-black text-rose-800 text-[11px] uppercase tracking-wider flex items-center gap-1">
                               <ShieldAlert className="w-4 h-4 text-rose-600" /> THEY SAY NO — What to Do
                             </h5>
@@ -1156,13 +1156,13 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                               <li>"Is it the timing?" → Urgency conversation</li>
                               <li>"Is it the fit?" → Understanding conversation</li>
                             </ul>
-                            <div className="bg-white border border-rose-100 rounded p-2 text-[10px] font-bold text-rose-800 mt-2">
+                            <div className="bg-white border border-rose-100 rounded-none-none p-2 text-[10px] font-bold text-rose-800 mt-2">
                               Script: "I appreciate that — can I ask what's the main reason?"
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-indigo-50/35 border border-indigo-100 rounded-lg p-3">
+                        <div className="bg-indigo-50/35 border border-indigo-100 rounded-none-none p-3">
                           <p className="font-semibold text-indigo-950 text-[11px]">
                             💡 Strategic Leverage:
                           </p>
@@ -1177,12 +1177,12 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
 
-                    <AccordionItem value="objections" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="objections" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         07. Step 4b — Objection Handling System
                       </AccordionTrigger>
                       <AccordionContent className="pt-2 pb-4 text-xs text-slate-600 space-y-4">
-                        <div className="bg-amber-50/40 border border-amber-100 rounded-xl p-3.5 space-y-1">
+                        <div className="bg-amber-50/40 border border-amber-100 rounded-none-none p-3.5 space-y-1">
                           <strong className="text-amber-900 text-[11px] uppercase tracking-wider block">🔑 KEY INSIGHT:</strong>
                           <p className="font-semibold text-amber-800">
                             Never accept rejection at face value. "No" is an objection that requires understanding and reframing.
@@ -1199,7 +1199,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                               { step: '3. Reframe', desc: 'Change how they see the problem. Show a new helpful angle.', no: 'Arguing or defending points' },
                               { step: '4. Re-present', desc: 'Return to their pain and reconnect the solution with new clarity.', no: 'Giving up or discounting price' }
                             ].map((o, idx) => (
-                              <div key={idx} className="bg-slate-50 border border-slate-100 rounded-lg p-2.5 flex flex-col justify-between">
+                              <div key={idx} className="bg-slate-50 border border-slate-100 rounded-none-none p-2.5 flex flex-col justify-between">
                                 <div>
                                   <span className="text-[11px] font-black text-indigo-700 block mb-1">{o.step}</span>
                                   <p className="text-[10px] text-slate-605 font-medium leading-normal">{o.desc}</p>
@@ -1221,7 +1221,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
 
-                    <AccordionItem value="closing" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="closing" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         08. Closing Strategies — How to Ask for the Sale
                       </AccordionTrigger>
@@ -1230,7 +1230,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           Many sales die because no one asked for the order. Ask clearly, confidently, and without apology. Select the close type that fits the situation:
                         </p>
 
-                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                        <div className="border border-slate-100 rounded-none-none overflow-x-auto scrollbar-none">
                           <Table className="text-[11px] min-w-[600px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
@@ -1274,7 +1274,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       </AccordionContent>
                     </AccordionItem>
 
-                    <AccordionItem value="followup" className="border border-slate-100 rounded-xl px-4 py-1 hover:bg-slate-50/50 transition-all">
+                    <AccordionItem value="followup" className="border border-slate-100 rounded-none-none px-4 py-1 hover:bg-slate-50/50 transition-all">
                       <AccordionTrigger className="text-sm font-black text-slate-850 hover:no-underline">
                         09. Follow-Up System — Day 1 to Day 5
                       </AccordionTrigger>
@@ -1283,7 +1283,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           Follow up systematically without looking desperate. Offer value at each touchpoint.
                         </p>
                         
-                        <div className="border border-slate-100 rounded-lg overflow-x-auto scrollbar-none">
+                        <div className="border border-slate-100 rounded-none-none overflow-x-auto scrollbar-none">
                           <Table className="text-[11px] min-w-[600px]">
                             <TableHeader className="bg-slate-50">
                               <TableRow>
@@ -1340,28 +1340,28 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                 <CardContent className="p-4 space-y-4 text-xs font-semibold text-slate-700">
                   <div className="space-y-3">
                     <div className="flex gap-2">
-                      <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
+                      <div className="w-5 h-5 rounded-none-none bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
                       <div>
                         <div className="font-bold text-slate-850">Know Customer</div>
                         <div className="text-[10px] text-slate-500 font-medium">Read context & buyer signal first.</div>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">2</div>
+                      <div className="w-5 h-5 rounded-none-none bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">2</div>
                       <div>
                         <div className="font-bold text-slate-850">Discover Pain</div>
                         <div className="text-[10px] text-slate-500 font-medium">Ask discovery questions to find root issues.</div>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">3</div>
+                      <div className="w-5 h-5 rounded-none-none bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">3</div>
                       <div>
                         <div className="font-bold text-slate-850">Address with Value</div>
                         <div className="text-[10px] text-slate-500 font-medium">Connect pitch outcome to customer pain.</div>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">4</div>
+                      <div className="w-5 h-5 rounded-none-none bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">4</div>
                       <div>
                         <div className="font-bold text-slate-850">Resolve & Close</div>
                         <div className="text-[10px] text-slate-500 font-medium">Handle objections & ask for order clearly.</div>
@@ -1459,7 +1459,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       <select
                         value={aiBuyerType}
                         onChange={(e: any) => setAiBuyerType(e.target.value as any)}
-                        className="w-full text-xs font-semibold h-8 rounded-lg border border-slate-200 bg-white px-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-full text-xs font-semibold h-8 rounded-none-none border border-slate-200 bg-white px-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                       >
                         <option value="price">💰 Price-Focused (ROI, Cost Savings)</option>
                         <option value="quality">🏆 Quality-Focused (Specs, Performance)</option>
@@ -1473,7 +1473,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     type="button"
                     onClick={handleGenerateColdCall}
                     disabled={aiScriptLoading}
-                    className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-9 text-xs rounded-lg shadow-sm border-none"
+                    className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-9 text-xs rounded-none-none shadow-sm border-none"
                   >
                     {aiScriptLoading ? (
                       <>
@@ -1490,14 +1490,14 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
                   {/* Generator Output Display */}
                   {aiGeneratedScript && (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="bg-slate-50 border border-slate-200 rounded-none-none p-4 space-y-4 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                       <div className="flex justify-between items-center border-b pb-2">
                         <div className="text-[10px] uppercase font-black tracking-wider text-indigo-900">Generated Script Output:</div>
                         <Button
                           size="sm"
                           type="button"
                           onClick={handleApplyAIScript}
-                          className="h-7 text-[10px] font-bold bg-indigo-650 hover:bg-indigo-700 text-white rounded-lg px-3 border-none"
+                          className="h-7 text-[10px] font-bold bg-indigo-650 hover:bg-indigo-700 text-white rounded-none-none px-3 border-none"
                         >
                           Use as Custom Pitch Formula
                         </Button>
@@ -1505,26 +1505,26 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
                       {/* Display custom parts */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] font-medium text-slate-700">
-                        <div className="bg-white border rounded p-2.5 space-y-0.5">
+                        <div className="bg-white border rounded-none-none p-2.5 space-y-0.5">
                           <span className="text-[9px] uppercase font-black text-indigo-650">Part 1: Connect Hook</span>
                           <p>{aiGeneratedScript.hook}</p>
                         </div>
-                        <div className="bg-white border rounded p-2.5 space-y-0.5">
+                        <div className="bg-white border rounded-none-none p-2.5 space-y-0.5">
                           <span className="text-[9px] uppercase font-black text-indigo-650">Part 2: Problem Definition</span>
                           <p>{aiGeneratedScript.problem}</p>
                         </div>
-                        <div className="bg-white border rounded p-2.5 space-y-0.5">
+                        <div className="bg-white border rounded-none-none p-2.5 space-y-0.5">
                           <span className="text-[9px] uppercase font-black text-indigo-650">Part 3: Solution Value</span>
                           <p>{aiGeneratedScript.solution}</p>
                         </div>
-                        <div className="bg-white border rounded p-2.5 space-y-0.5">
+                        <div className="bg-white border rounded-none-none p-2.5 space-y-0.5">
                           <span className="text-[9px] uppercase font-black text-indigo-650">Part 4: Desired Outcome</span>
                           <p>{aiGeneratedScript.outcome}</p>
                         </div>
                       </div>
 
                       {/* Complete Script Draft */}
-                      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3.5 space-y-1">
+                      <div className="bg-indigo-50 border border-indigo-100 rounded-none-none p-3.5 space-y-1">
                         <div className="flex justify-between items-center">
                           <span className="text-[10px] uppercase font-black text-indigo-900">Draft Cold Call Flow:</span>
                           {copiedText === 'ai-draft' ? (
@@ -1540,13 +1540,13 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                             </Button>
                           )}
                         </div>
-                        <p className="text-xs font-bold text-slate-800 leading-relaxed italic bg-white p-3 border border-indigo-105 rounded-lg shadow-inner">
+                        <p className="text-xs font-bold text-slate-800 leading-relaxed italic bg-white p-3 border border-indigo-105 rounded-none-none shadow-inner">
                           "{aiGeneratedScript.fullDraftScript}"
                         </p>
                       </div>
 
                       {/* Objection Strategy */}
-                      <div className="bg-rose-50 border border-rose-100 rounded-xl p-3.5 space-y-1.5">
+                      <div className="bg-rose-50 border border-rose-100 rounded-none-none p-3.5 space-y-1.5">
                         <span className="text-[10px] uppercase font-black text-rose-800 block">Objection Reframe Strategy:</span>
                         <p className="text-xs font-bold text-slate-700 leading-relaxed whitespace-pre-line">
                           {aiGeneratedScript.objectionHandlingStrategy}
@@ -1627,9 +1627,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   </div>
 
                   {/* Script Preview Box */}
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-2 mt-4">
+                  <div className="bg-slate-50 border border-slate-100 rounded-none-none p-4 space-y-2 mt-4">
                     <div className="text-[10px] uppercase font-black tracking-widest text-slate-400">Live Cold Call Script Preview:</div>
-                    <p className="text-xs font-bold text-slate-805 leading-relaxed bg-white border border-slate-150 rounded-lg p-3 shadow-inner">
+                    <p className="text-xs font-bold text-slate-805 leading-relaxed bg-white border border-slate-150 rounded-none-none p-3 shadow-inner">
                       "{compiledCustomPitch}"
                     </p>
                   </div>
@@ -1640,7 +1640,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         size="sm"
                         onClick={handleSavePitch}
                         disabled={isSavingPitch}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-xs rounded-lg shadow-sm"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-xs rounded-none-none shadow-sm"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                         {isSavingPitch ? 'Saving...' : 'Save Pitch to Profile'}
@@ -1665,7 +1665,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="overflow-x-auto border rounded-xl scrollbar-none">
+              <div className="overflow-x-auto border rounded-none-none scrollbar-none">
                 <Table className="text-xs font-medium text-slate-700 min-w-[600px]">
                   <TableHeader className="bg-slate-50 text-[10px] font-black uppercase text-slate-500">
                     <TableRow>
@@ -1728,13 +1728,13 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
         open={!!selectedHistoryScript} 
         onOpenChange={(open) => !open && setSelectedHistoryScript(null)}
       >
-        <DialogContent className="max-w-[95vw] w-full md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[1200px] max-h-[90vh] overflow-y-auto p-0 bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl shadow-2xl scrollbar-none">
+        <DialogContent className="max-w-[95vw] w-full md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[1200px] max-h-[90vh] overflow-y-auto p-0 bg-slate-900 text-slate-100 border border-slate-800 rounded-none-none shadow-2xl scrollbar-none">
           {selectedHistoryScript && (
             <div className="flex flex-col">
               <DialogHeader className="p-6 border-b border-slate-850 bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 space-y-0 text-left">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className="bg-indigo-900/60 text-indigo-300 border border-indigo-850/50 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                    <Badge className="bg-indigo-900/60 text-indigo-300 border border-indigo-850/50 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-none-none">
                       {selectedHistoryScript.buyerType}-focused Value Script
                     </Badge>
                     <span className="text-[11px] font-bold text-slate-500 font-mono">
@@ -1756,7 +1756,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       handleLoadScriptFromHistory(selectedHistoryScript);
                       setSelectedHistoryScript(null);
                     }}
-                    className="h-9 px-4 text-xs font-black bg-indigo-650 hover:bg-indigo-750 text-white rounded-lg border-none shadow-sm transition-all"
+                    className="h-9 px-4 text-xs font-black bg-indigo-650 hover:bg-indigo-750 text-white rounded-none-none border-none shadow-sm transition-all"
                   >
                     Load into Editor
                   </Button>
@@ -1766,7 +1766,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     onClick={() => {
                       handleCopy(selectedHistoryScript.script.fullDraftScript, `modal-copy-${selectedHistoryScript.id}`);
                     }}
-                    className="h-9 px-4 text-xs font-black border-slate-700 bg-slate-850 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg transition-all"
+                    className="h-9 px-4 text-xs font-black border-slate-700 bg-slate-850 hover:bg-slate-700 text-slate-200 hover:text-white rounded-none-none transition-all"
                   >
                     {copiedText === `modal-copy-${selectedHistoryScript.id}` ? (
                       <>
@@ -1794,9 +1794,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     </h4>
 
                     {/* Hook Section */}
-                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-none-none p-4.5 space-y-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-indigo-950 border border-indigo-850 flex items-center justify-center text-[11px] font-black text-indigo-400 shrink-0">1</div>
+                        <div className="w-5 h-5 rounded-none-none bg-indigo-950 border border-indigo-850 flex items-center justify-center text-[11px] font-black text-indigo-400 shrink-0">1</div>
                         <span className="text-[10px] uppercase font-black tracking-widest text-indigo-400">Step 1: The Hook (Attention)</span>
                       </div>
                       <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
@@ -1805,9 +1805,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     </div>
 
                     {/* Problem Section */}
-                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-none-none p-4.5 space-y-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-amber-950 border border-amber-850 flex items-center justify-center text-[11px] font-black text-amber-400 shrink-0">2</div>
+                        <div className="w-5 h-5 rounded-none-none bg-amber-950 border border-amber-850 flex items-center justify-center text-[11px] font-black text-amber-400 shrink-0">2</div>
                         <span className="text-[10px] uppercase font-black tracking-widest text-amber-400">Step 2: The Problem (Agitation)</span>
                       </div>
                       <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
@@ -1816,9 +1816,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     </div>
 
                     {/* Solution Section */}
-                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-none-none p-4.5 space-y-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-850 flex items-center justify-center text-[11px] font-black text-emerald-400 shrink-0">3</div>
+                        <div className="w-5 h-5 rounded-none-none bg-emerald-950 border border-emerald-850 flex items-center justify-center text-[11px] font-black text-emerald-400 shrink-0">3</div>
                         <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400">Step 3: The Solution (Value)</span>
                       </div>
                       <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
@@ -1827,9 +1827,9 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     </div>
 
                     {/* Outcome Section */}
-                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4.5 space-y-2">
+                    <div className="bg-slate-950/40 border border-slate-800/80 rounded-none-none p-4.5 space-y-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-blue-950 border border-blue-850 flex items-center justify-center text-[11px] font-black text-blue-400 shrink-0">4</div>
+                        <div className="w-5 h-5 rounded-none-none bg-blue-950 border border-blue-850 flex items-center justify-center text-[11px] font-black text-blue-400 shrink-0">4</div>
                         <span className="text-[10px] uppercase font-black tracking-widest text-blue-400">Step 4: The Outcome (Call to Action)</span>
                       </div>
                       <p className="text-sm font-semibold text-slate-200 leading-relaxed pl-7">
@@ -1845,7 +1845,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         <span>Unified Delivery Script</span>
                         <Badge className="bg-slate-800 text-indigo-405 border border-slate-700 text-[9px] font-black uppercase px-2 py-0.5">30-Second Pitch</Badge>
                       </h4>
-                      <div className="bg-gradient-to-br from-indigo-950/50 to-slate-950 border border-indigo-900/40 rounded-2xl p-5 shadow-inner">
+                      <div className="bg-gradient-to-br from-indigo-950/50 to-slate-950 border border-indigo-900/40 rounded-none-none p-5 shadow-inner">
                         <p className="text-sm md:text-base font-bold text-slate-100 leading-relaxed italic relative">
                           <span className="absolute -top-3 -left-2 text-4xl text-indigo-850 opacity-40 select-none">“</span>
                           {selectedHistoryScript.script.fullDraftScript}
@@ -1858,7 +1858,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                       <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-800/80 pb-2">
                         Tailored Objection Handling Strategy
                       </h4>
-                      <div className="bg-rose-950/20 border border-rose-900/30 rounded-2xl p-5 space-y-3">
+                      <div className="bg-rose-950/20 border border-rose-900/30 rounded-none-none p-5 space-y-3">
                         <div className="flex items-center gap-2 border-b border-rose-900/30 pb-2">
                           <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
                           <span className="text-[10px] uppercase font-black tracking-widest text-rose-450">Rebuttal Guide</span>
@@ -1879,7 +1879,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
       {/* Customer Types Script Selector Dialog */}
       <Dialog open={isCustomerTypesOpen} onOpenChange={setIsCustomerTypesOpen}>
-        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-none-none shadow-2xl scrollbar-none">
           <DialogHeader className="p-6 border-b bg-indigo-50/15 text-left">
             <DialogTitle className="text-base font-black text-slate-900">Customer Types Script Selector</DialogTitle>
             <DialogDescription className="text-xs">
@@ -1900,7 +1900,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   size="sm"
                   variant={selectedCustType === type.id ? 'default' : 'outline'}
                   onClick={() => setSelectedCustType(type.id)}
-                  className={`text-xs font-bold h-8 rounded-full ${
+                  className={`text-xs font-bold h-8 rounded-none-none ${
                     selectedCustType === type.id ? 'bg-indigo-600 hover:bg-indigo-750 text-white border-none' : ''
                   }`}
                 >
@@ -1917,16 +1917,16 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <span className="text-[10px] uppercase font-black text-indigo-650">Signal / Buying Cue:</span>
-                      <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-lg">{ct.signal}</p>
+                      <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-none-none">{ct.signal}</p>
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] uppercase font-black text-indigo-650">Strategic Approach:</span>
-                      <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-lg">{ct.approach}</p>
+                      <p className="text-xs font-semibold text-slate-700 bg-slate-50 border p-2.5 rounded-none-none">{ct.approach}</p>
                     </div>
                   </div>
 
                   {/* Copy Script Container */}
-                  <div className="bg-indigo-50/20 border border-indigo-100 rounded-xl p-4 space-y-2">
+                  <div className="bg-indigo-50/20 border border-indigo-100 rounded-none-none p-4 space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] uppercase font-black text-indigo-850">Exact Script to Use:</span>
                       {copiedText === `ct-${selectedCustType}` ? (
@@ -1948,7 +1948,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div className="bg-emerald-50/20 border border-emerald-100 rounded-lg p-3">
+                    <div className="bg-emerald-50/20 border border-emerald-100 rounded-none-none p-3">
                       <div className="text-[10px] font-black text-emerald-800 uppercase mb-1.5 flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Do This
                       </div>
@@ -1956,7 +1956,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         {ct.dos.map((d, i) => <li key={i}>{d}</li>)}
                       </ul>
                     </div>
-                    <div className="bg-rose-50/20 border border-rose-100 rounded-lg p-3">
+                    <div className="bg-rose-50/20 border border-rose-100 rounded-none-none p-3">
                       <div className="text-[10px] font-black text-rose-800 uppercase mb-1.5 flex items-center gap-1">
                         <XCircle className="w-3.5 h-3.5 text-rose-600" /> Never Do This
                       </div>
@@ -1974,7 +1974,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
       {/* Objection Handling Solver Dialog */}
       <Dialog open={isObjectionSolverOpen} onOpenChange={setIsObjectionSolverOpen}>
-        <DialogContent className="max-w-[95vw] w-full md:max-w-4xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+        <DialogContent className="max-w-[95vw] w-full md:max-w-4xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-none-none shadow-2xl scrollbar-none">
           <DialogHeader className="p-6 border-b bg-indigo-50/15 text-left">
             <div className="flex items-center gap-2 text-indigo-650">
               <ShieldAlert className="w-5 h-5 text-indigo-600" />
@@ -1999,7 +1999,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   <button
                     key={obj.id}
                     onClick={() => setSelectedObjection(obj.id)}
-                    className={`text-left text-xs font-bold p-3 rounded-xl border transition-all shrink-0 whitespace-nowrap md:whitespace-normal ${
+                    className={`text-left text-xs font-bold p-3 rounded-none-none border transition-all shrink-0 whitespace-nowrap md:whitespace-normal ${
                       selectedObjection === obj.id 
                         ? 'bg-indigo-55 border-indigo-300 text-indigo-900 shadow-sm font-extrabold'
                         : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
@@ -2015,7 +2015,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                 {(() => {
                   const obj = objections[selectedObjection as keyof typeof objections];
                   return (
-                    <div className="bg-slate-55 border border-slate-200/60 rounded-xl p-5 space-y-4 animate-in fade-in duration-200">
+                    <div className="bg-slate-55 border border-slate-200/60 rounded-none-none p-5 space-y-4 animate-in fade-in duration-200">
                       <h4 className="font-black text-xs text-indigo-950 uppercase border-b pb-2 flex items-center justify-between">
                         <span>{obj.title} solver</span>
                         <Badge className="bg-indigo-100 text-indigo-850 hover:bg-indigo-200 text-[8px] font-black uppercase">Objection</Badge>
@@ -2031,7 +2031,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         <p className="text-xs font-semibold text-slate-705 leading-relaxed">{obj.strategy}</p>
                       </div>
 
-                      <div className="bg-white border rounded-xl p-4 space-y-3 mt-2 shadow-inner">
+                      <div className="bg-white border rounded-none-none p-4 space-y-3 mt-2 shadow-inner">
                         <div className="flex justify-between items-center">
                           <span className="text-[9px] uppercase font-black text-indigo-800">Exact Script to Use:</span>
                           {copiedText === `obj-${selectedObjection}` ? (
@@ -2062,7 +2062,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
       {/* Script History Dialog */}
       <Dialog open={isScriptHistoryOpen} onOpenChange={setIsScriptHistoryOpen}>
-        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-none-none shadow-2xl scrollbar-none">
           <DialogHeader className="p-6 border-b bg-indigo-50/15 flex flex-row items-center justify-between gap-3 text-left">
             <div>
               <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-1.5">
@@ -2073,7 +2073,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                 History of all generated Value-Driven cold calling scripts.
               </DialogDescription>
             </div>
-            <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
+            <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-none-none shrink-0">
               {scriptHistory.length} Saved
             </Badge>
           </DialogHeader>
@@ -2094,7 +2094,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                     onClick={() => {
                       setSelectedHistoryScript(item);
                     }}
-                    className="border rounded-xl transition-all duration-200 overflow-hidden bg-slate-50/40 hover:bg-slate-50 border-slate-200 group cursor-pointer"
+                    className="border rounded-none-none transition-all duration-200 overflow-hidden bg-slate-50/40 hover:bg-slate-50 border-slate-200 group cursor-pointer"
                   >
                     <div className="p-3.5 flex items-start justify-between gap-2.5">
                       <div className="flex-1 text-left space-y-1">
@@ -2120,7 +2120,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                           e.stopPropagation();
                           handleDeleteScriptItem(item.id);
                         }}
-                        className="h-7 w-7 text-slate-405 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none animate-in fade-in"
+                        className="h-7 w-7 text-slate-405 hover:text-rose-600 hover:bg-rose-50 rounded-none-none shrink-0 border-none animate-in fade-in"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -2135,7 +2135,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
 
       {/* AI Blueprint History Dialog */}
       <Dialog open={isBlueprintHistoryOpen} onOpenChange={setIsBlueprintHistoryOpen}>
-        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-2xl shadow-2xl scrollbar-none">
+        <DialogContent className="max-w-[95vw] w-full md:max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border rounded-none-none shadow-2xl scrollbar-none">
           <DialogHeader className="p-6 border-b bg-indigo-50/15 flex flex-row items-center justify-between gap-3 text-left">
             <div>
               <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-1.5">
@@ -2146,7 +2146,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                 History of all your Map My Product blueprints.
               </DialogDescription>
             </div>
-            <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-full shrink-0">
+            <Badge className="bg-indigo-100 text-indigo-800 text-[10px] font-black border-none px-2 py-0.5 rounded-none-none shrink-0">
               {history.length} Saved
             </Badge>
           </DialogHeader>
@@ -2166,7 +2166,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                   return (
                     <div 
                       key={item.id} 
-                      className={`border rounded-xl transition-all duration-200 overflow-hidden ${
+                      className={`border rounded-none-none transition-all duration-200 overflow-hidden ${
                         isExpanded 
                           ? 'bg-indigo-50/30 border-indigo-200 shadow-sm' 
                           : 'bg-slate-50/40 hover:bg-slate-50 border-slate-200'
@@ -2201,7 +2201,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                             e.stopPropagation();
                             handleDeleteHistoryItem(item.id);
                           }}
-                          className="h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md shrink-0 border-none"
+                          className="h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-none-none shrink-0 border-none"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -2212,12 +2212,12 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                         <div className="px-4 pb-4 border-t border-indigo-100/60 pt-4 bg-white space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
                           <div className="space-y-1 text-[11px] leading-relaxed text-slate-705 font-medium">
                             <span className="text-[9px] uppercase font-black text-indigo-905 block">B2B Strategy:</span>
-                            <p className="whitespace-pre-line bg-slate-50/50 p-3 border rounded-xl">{item.explanation}</p>
+                            <p className="whitespace-pre-line bg-slate-50/50 p-3 border rounded-none-none">{item.explanation}</p>
                           </div>
 
                           <div className="space-y-1">
                             <span className="text-[9px] uppercase font-black text-indigo-905 block">Context Dialogue Example:</span>
-                            <p className="text-[11px] leading-relaxed text-slate-808 italic bg-amber-50/30 border border-amber-100/60 rounded-xl p-3 font-semibold font-mono">
+                            <p className="text-[11px] leading-relaxed text-slate-808 italic bg-amber-50/30 border border-amber-100/60 rounded-none-none p-3 font-semibold font-mono">
                               "{item.concreteExample}"
                             </p>
                           </div>
@@ -2227,7 +2227,7 @@ export function SalesStrategy({ profileRef, readOnly }: SalesStrategyProps) {
                             <div className="space-y-1.5 flex flex-col">
                               {item.actionableTasks.map((task, idx) => (
                                 <label key={idx} className="flex items-start gap-2 text-[10.5px] font-semibold text-slate-755 cursor-pointer select-none">
-                                  <input type="checkbox" className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3" />
+                                  <input type="checkbox" className="mt-0.5 rounded-none-none border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3" />
                                   <span>{task}</span>
                                 </label>
                               ))}
