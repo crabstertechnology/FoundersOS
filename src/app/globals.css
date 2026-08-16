@@ -72,7 +72,7 @@
     --ring:                241 79% 58%;
 
     /* ── Radius ── */
-    --radius:              0.625rem;
+    --radius:              0px;
 
     /* ── Shadows ── */
     --shadow-xs:   0 1px 2px 0 rgb(0 0 0 / 0.04);
@@ -148,6 +148,7 @@
   *, *::before, *::after {
     @apply border-border;
     box-sizing: border-box;
+    border-radius: 0px !important;
   }
 
   html {
