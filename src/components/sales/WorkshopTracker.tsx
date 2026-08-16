@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { fmtINR } from '@/lib/utils/formatters';
 import { BookOpen, Trash2, Users, TrendingUp, DollarSign, Lightbulb, AlertCircle, Plus, X } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -36,21 +37,21 @@ const blank = (d: string): F => ({ title: '', date: d, format: 'online', attende
 function WorkshopForm({ f, setF, onSubmit, onCancel, isEdit, readOnly }: { f: F; setF: React.Dispatch<React.SetStateAction<F>>; onSubmit: (e: React.FormEvent) => void; onCancel: () => void; isEdit: boolean; readOnly?: boolean; }) {
   const s = (k: keyof F) => (v: any) => setF(p => ({ ...p, [k]: v }));
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
+    <form onSubmit={onSubmit} className="space-y-3 [&_*]:!rounded-none">
       <div className="space-y-1">
         <Label className="font-bold text-xs">Workshop Title</Label>
-        <Input placeholder="e.g. SaaS Pricing Masterclass" value={f.title} onChange={e => s('title')(e.target.value)} required disabled={readOnly} />
+        <Input placeholder="e.g. SaaS Pricing Masterclass" value={f.title} onChange={e => s('title')(e.target.value)} required disabled={readOnly} className="rounded-none text-xs" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="font-bold text-xs">Date</Label>
-          <Input type="date" value={f.date} onChange={e => s('date')(e.target.value)} disabled={readOnly} />
+          <Input type="date" value={f.date} onChange={e => s('date')(e.target.value)} disabled={readOnly} className="rounded-none text-xs" />
         </div>
         <div className="space-y-1">
           <Label className="font-bold text-xs">Format</Label>
           <Select value={f.format} onValueChange={s('format')} disabled={readOnly}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectTrigger className="rounded-none text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-none">
               <SelectItem value="online">Online</SelectItem>
               <SelectItem value="in-person">In-Person</SelectItem>
               <SelectItem value="hybrid">Hybrid</SelectItem>
@@ -61,23 +62,23 @@ function WorkshopForm({ f, setF, onSubmit, onCancel, isEdit, readOnly }: { f: F;
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="font-bold text-xs">Attendees</Label>
-          <Input type="number" placeholder="e.g. 45" value={f.attendees} onChange={e => s('attendees')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} />
+          <Input type="number" placeholder="e.g. 45" value={f.attendees} onChange={e => s('attendees')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} className="rounded-none text-xs" />
         </div>
         <div className="space-y-1">
           <Label className="font-bold text-xs">Revenue (₹)</Label>
-          <Input type="number" placeholder="e.g. 25000" value={f.revenue} onChange={e => s('revenue')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} />
+          <Input type="number" placeholder="e.g. 25000" value={f.revenue} onChange={e => s('revenue')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} className="rounded-none text-xs" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="font-bold text-xs">Leads Generated</Label>
-          <Input type="number" placeholder="e.g. 12" value={f.leadsGenerated} onChange={e => s('leadsGenerated')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} />
+          <Input type="number" placeholder="e.g. 12" value={f.leadsGenerated} onChange={e => s('leadsGenerated')(e.target.value === '' ? '' : Number(e.target.value))} disabled={readOnly} className="rounded-none text-xs" />
         </div>
         <div className="space-y-1">
           <Label className="font-bold text-xs">Status</Label>
           <Select value={f.status} onValueChange={s('status')} disabled={readOnly}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectTrigger className="rounded-none text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent className="rounded-none">
               <SelectItem value="planned">Planned</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -87,14 +88,14 @@ function WorkshopForm({ f, setF, onSubmit, onCancel, isEdit, readOnly }: { f: F;
       </div>
       <div className="space-y-1">
         <Label className="font-bold text-xs">Notes</Label>
-        <Input placeholder="e.g. High engagement, follow-up pending..." value={f.notes} onChange={e => s('notes')(e.target.value)} disabled={readOnly} />
+        <Input placeholder="e.g. High engagement, follow-up pending..." value={f.notes} onChange={e => s('notes')(e.target.value)} disabled={readOnly} className="rounded-none text-xs" />
       </div>
       {!readOnly && (
         <div className="flex gap-2 pt-1">
-          <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs">
+          <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs rounded-none">
             {isEdit ? 'Update Workshop' : 'Add Workshop'}
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="rounded-none">Cancel</Button>
         </div>
       )}
     </form>
@@ -161,43 +162,45 @@ export function WorkshopTracker({ profileRef, workshops, readOnly }: WorkshopTra
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6">
 
       {/* Add Workshop Modal */}
-      {showAdd && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowAdd(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b">
-              <div><h2 className="text-base font-black text-slate-900">Log a Workshop</h2><p className="text-xs text-muted-foreground">Track learning sessions and generate leads.</p></div>
-              <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setShowAdd(false)}><X className="w-4 h-4" /></Button>
-            </div>
-            <div className="p-5">
-              <WorkshopForm f={addF} setF={setAddF} onSubmit={handleAdd} onCancel={() => setShowAdd(false)} isEdit={false} />
-            </div>
+      <Dialog open={showAdd} onOpenChange={setShowAdd}>
+        <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto p-0 border border-slate-200 shadow-2xl rounded-none">
+          <DialogHeader className="p-5 pb-4 border-b">
+            <DialogTitle className="text-base font-black text-slate-900">Log a Workshop</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">Track learning sessions and generate leads.</DialogDescription>
+          </DialogHeader>
+          <div className="p-5 pt-4">
+            <WorkshopForm f={addF} setF={setAddF} onSubmit={handleAdd} onCancel={() => setShowAdd(false)} isEdit={false} />
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Workshop Detail / Edit Panel */}
-      {sel && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSel(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b shrink-0">
+      <Dialog open={!!sel} onOpenChange={(open) => { if (!open) setSel(null); }}>
+        <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto p-0 border border-slate-200 shadow-2xl rounded-none">
+          <DialogHeader className="p-5 pb-4 border-b shrink-0 flex flex-row items-center justify-between gap-3">
+            {sel && (
               <div className="flex items-center gap-3">
-                <Badge className={`border text-[9px] font-black uppercase ${FORMAT_CLR[sel.format]}`}>{sel.format}</Badge>
-                <div><h2 className="text-base font-black text-slate-900">{sel.title}</h2><p className="text-xs text-muted-foreground">{sel.date}</p></div>
+                <Badge className={`border text-[9px] font-black uppercase rounded-none ${FORMAT_CLR[sel.format]}`}>{sel.format}</Badge>
+                <div>
+                  <DialogTitle className="text-base font-black text-slate-900">{sel.title}</DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">{sel.date}</DialogDescription>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                {!readOnly && <Button size="icon" variant="ghost" className="h-7 w-7 text-rose-500 hover:bg-rose-50 rounded-full" onClick={() => handleDelete(sel.id)}><Trash2 className="w-3.5 h-3.5" /></Button>}
-                <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setSel(null)}><X className="w-4 h-4" /></Button>
-              </div>
-            </div>
-            <div className="p-5">
-              <WorkshopForm f={editF} setF={setEditF} onSubmit={handleUpdate} onCancel={() => setSel(null)} isEdit={true} readOnly={readOnly} />
-            </div>
+            )}
+            {!readOnly && sel && (
+              <Button size="icon" variant="ghost" className="h-7 w-7 text-rose-500 hover:bg-rose-50 rounded-none shrink-0" onClick={() => handleDelete(sel.id)}>
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </DialogHeader>
+          <div className="p-5 pt-4">
+            <WorkshopForm f={editF} setF={setEditF} onSubmit={handleUpdate} onCancel={() => setSel(null)} isEdit={true} readOnly={readOnly} />
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* KPI Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
