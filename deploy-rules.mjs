@@ -1,7 +1,8 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 
-const PROJECT_ID = 'studio-5418824271-71a21';
+const PROJECT_ID = 'founderos-3fe3b';
+
 const RULES_CONTENT = fs.readFileSync('./firestore.rules', 'utf8');
 
 async function deployRules() {
