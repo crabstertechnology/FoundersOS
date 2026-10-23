@@ -22,11 +22,17 @@ const GoalAdvisorInputSchema = z.object({
     runway: z.number().describe('Runway in months.'),
     cash: z.number().describe('Liquid cash in bank in INR.'),
     burnRate: z.number().describe('Total monthly burn rate in INR.'),
+    founderOwnership: z.number().optional().describe('Founder equity ownership percentage.'),
+    paperNetWorth: z.number().optional().describe('Founder paper net worth in INR.'),
+    capTableSummary: z.string().optional().describe('Summary of active cap table and investor shares.'),
   }),
   opsData: z.object({
     teamSize: z.number().describe('Active team members count.'),
     saasCost: z.number().describe('Monthly SaaS subscription cost in INR.'),
     salaries: z.number().describe('Monthly salaries expense in INR.'),
+    otherBurn: z.number().optional().describe('Other monthly overhead burn in INR.'),
+    topSaaSList: z.string().optional().describe('Summary of key SaaS software subscriptions and categories.'),
+    teamRolesList: z.string().optional().describe('Summary of team members, roles, and compensation.'),
   }),
   missingInfo: z.string().optional().describe('Any extra context or missing information provided by the user.'),
   weeklyProgress: z.string().optional().describe('Weekly progress details provided by the user for adapting the plan.'),
@@ -59,7 +65,25 @@ const GoalAdvisorInputSchema = z.object({
     targetAudience: z.string().optional(),
     pricingModel: z.string().optional(),
     blueprintSummary: z.string().optional(),
-  }).optional().describe('Data from the Product Suite module.'),
+  }).optional().describe('Data from the primary product in Product Suite (legacy compatibility).'),
+  productSuiteData: z.object({
+    totalProducts: z.number().optional(),
+    combinedSuiteMrr: z.number().optional(),
+    products: z.array(z.object({
+      name: z.string(),
+      description: z.string().optional(),
+      targetAudience: z.string().optional(),
+      pricingModel: z.string().optional(),
+      stage: z.string().optional(),
+      status: z.string().optional(),
+      priority: z.string().optional(),
+      mrr: z.number().optional(),
+      usersCount: z.number().optional(),
+      techStack: z.string().optional(),
+      blueprintSummary: z.string().optional(),
+    })).optional(),
+    suiteRecommendationsSummary: z.string().optional(),
+  }).optional().describe('Full multi-product portfolio data from the Product Suite module.'),
   marketingData: z.object({
     productName: z.string().optional(),
     brandTone: z.string().optional(),
@@ -148,14 +172,51 @@ Finance Metrics Snapshot:
 - Investment Sought/Raised: ₹{{{financeData.investment}}}
 - Survival Runway: {{{financeData.runway}}} Months | Liquid Cash: ₹{{{financeData.cash}}}
 - Total Burn Rate: ₹{{{financeData.burnRate}}}/mo
+{{#if financeData.founderOwnership}}- Founder Ownership Equity: {{{financeData.founderOwnership}}}% (Paper Net Worth: ₹{{{financeData.paperNetWorth}}}){{/if}}
+{{#if financeData.capTableSummary}}
+- Cap Table & Equity Breakdown:
+{{{financeData.capTableSummary}}}
+{{/if}}
 
 Operations Metrics Snapshot:
 - Team Size: {{{opsData.teamSize}}} active members
 - Monthly SaaS Spend: ₹{{{opsData.saasCost}}}
 - Monthly Salaries: ₹{{{opsData.salaries}}}
+{{#if opsData.otherBurn}}- Other Monthly Overhead: ₹{{{opsData.otherBurn}}}{{/if}}
+{{#if opsData.teamRolesList}}
+- Headcount Breakdown:
+{{{opsData.teamRolesList}}}
+{{/if}}
+{{#if opsData.topSaaSList}}
+- Active Software & SaaS Subscriptions:
+{{{opsData.topSaaSList}}}
+{{/if}}
+
+{{#if productSuiteData}}
+Product Suite Portfolio Context:
+- Tracked Products Count: {{{productSuiteData.totalProducts}}} | Combined Suite MRR: ₹{{{productSuiteData.combinedSuiteMrr}}}
+{{#if productSuiteData.products}}
+Active Offerings in Suite:
+{{#each productSuiteData.products}}
+  * Product: {{{name}}} [Stage: {{{stage}}}, Status: {{{status}}}, Priority: {{{priority}}}]
+    - Monetization: {{{pricingModel}}} | Current MRR: ₹{{{mrr}}} | Users: {{{usersCount}}}
+    - Target ICP: {{{targetAudience}}}
+    - Value Proposition: {{{description}}}
+    {{#if techStack}}- Tech Stack: {{{techStack}}}{{/if}}
+    {{#if blueprintSummary}}- Blueprint Highlights: {{{blueprintSummary}}}{{/if}}
+{{/each}}
+{{/if}}
+{{#if productSuiteData.suiteRecommendationsSummary}}
+- Product Suite AI Recommendations & Synergy Matrix:
+"""
+{{{productSuiteData.suiteRecommendationsSummary}}}
+"""
+{{/if}}
+{{/if}}
 
 {{#if productData}}
-Product Suite Snapshot:
+{{#unless productSuiteData}}
+Primary Product Context:
 - Product Name: {{{productData.productName}}}
 - Target Audience: {{{productData.targetAudience}}}
 - Pricing Model: {{{productData.pricingModel}}}
@@ -166,6 +227,7 @@ Product Suite Snapshot:
 {{{productData.blueprintSummary}}}
 """
 {{/if}}
+{{/unless}}
 {{/if}}
 
 {{#if marketingData}}
@@ -266,13 +328,20 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, retries = 3, delay = 20
     }
     let waitMs = delay;
     const errStr = String(err?.message || err);
+    const isTransient = errStr.includes('429') || 
+                        errStr.includes('503') || 
+                        errStr.includes('RESOURCE_EXHAUSTED') || 
+                        errStr.includes('UNAVAILABLE') || 
+                        errStr.includes('high demand');
     if (errStr.includes('429') || errStr.includes('RESOURCE_EXHAUSTED')) {
       const match = errStr.match(/retry in (\d+(?:\.\d+)?)s/i);
       if (match && match[1]) {
         waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 1000;
       } else {
-        waitMs = Math.max(delay, 5000);
+        waitMs = Math.max(delay, 4000);
       }
+    } else if (isTransient) {
+      waitMs = Math.max(delay, 2500);
     }
     console.warn(`Genkit call failed with: ${errStr}. Retrying in ${waitMs}ms...`);
     await new Promise(resolve => setTimeout(resolve, waitMs));

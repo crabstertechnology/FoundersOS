@@ -406,6 +406,45 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     };
   }, [subscriptions, team, profile]);
 
+  // 4. Product Suite Pillar Metrics
+  const productKPIs = useMemo(() => {
+    let prods: any[] = [];
+    if (profile?.products && Array.isArray(profile.products) && profile.products.length > 0) {
+      prods = profile.products;
+    } else if (profile?.prodName || profile?.prodDesc) {
+      prods = [{
+        id: 'prod_default',
+        name: profile.prodName || 'Core Product',
+        description: profile.prodDesc || '',
+        targetAudience: profile.prodTarget || '',
+        pricingModel: profile.prodPricing || 'saas_subscription',
+        stage: 'mvp',
+        status: 'on_track',
+        priority: 'high',
+        mrr: Number(profile.mRevenue) || 0,
+        usersCount: 0,
+        aiPlan: profile.prodAIPlan || null,
+        aiPlanHistory: profile.prodAIPlanHistory || []
+      }];
+    }
+
+    const totalCount = prods.length;
+    const suiteMrr = prods.reduce((acc: number, p: any) => acc + (Number(p.mrr) || 0), 0);
+    const totalUsers = prods.reduce((acc: number, p: any) => acc + (Number(p.usersCount) || 0), 0);
+    const liveCount = prods.filter((p: any) => p.stage === 'launched' || p.stage === 'scaling').length;
+    const devCount = prods.filter((p: any) => p.stage === 'mvp' || p.stage === 'beta').length;
+
+    return {
+      products: prods,
+      totalCount,
+      suiteMrr,
+      totalUsers,
+      liveCount,
+      devCount,
+      suiteRecommendations: profile?.productSuiteRecommendations || null
+    };
+  }, [profile]);
+
   const handleGenerateWeeklyReport = async () => {
     if (!profileRef) return;
     setWeeklyReportLoading(true);
@@ -603,7 +642,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             .join('\n');
       }
 
-      // 1. Product Suite Data
+      // 1. Product Suite Portfolio Data
       const prodAIPlan = profile?.prodAIPlan;
       const productBlueprintSummary = prodAIPlan ? [
         prodAIPlan.review ? `Evaluation: ${prodAIPlan.review.slice(0, 300)}...` : '',
@@ -618,6 +657,43 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         targetAudience: profile?.prodTarget || '',
         pricingModel: profile?.prodPricing || '',
         blueprintSummary: productBlueprintSummary
+      } : undefined;
+
+      const suiteRec = profile?.productSuiteRecommendations;
+      const suiteRecommendationsSummary = suiteRec ? [
+        suiteRec.executiveSummary ? `Executive Diagnosis: ${suiteRec.executiveSummary.slice(0, 300)}...` : '',
+        suiteRec.resourceAllocation ? `Resource Split: ${suiteRec.resourceAllocation.slice(0, 300)}...` : '',
+        suiteRec.synergiesAndBundling ? `Synergies & Bundling: ${suiteRec.synergiesAndBundling.slice(0, 300)}...` : '',
+        suiteRec.immediateSuiteActions ? `Immediate Priorities: ${suiteRec.immediateSuiteActions.join('; ')}` : ''
+      ].filter(Boolean).join('\n') : undefined;
+
+      const productSuiteData = productKPIs.products.length > 0 ? {
+        totalProducts: productKPIs.totalCount,
+        combinedSuiteMrr: productKPIs.suiteMrr || salesKPIs.mrr,
+        products: productKPIs.products.map(p => {
+          const bp = p.aiPlan;
+          const bpSummary = bp ? [
+            bp.review ? `Eval: ${bp.review.slice(0, 180)}...` : '',
+            bp.howToSell ? `GTM: ${bp.howToSell.slice(0, 180)}...` : '',
+            bp.whatToDevelop ? `Dev: ${bp.whatToDevelop.slice(0, 180)}...` : '',
+            bp.immediateSteps ? `Actions: ${bp.immediateSteps.slice(0, 2).join(', ')}` : ''
+          ].filter(Boolean).join(' | ') : undefined;
+
+          return {
+            name: p.name,
+            description: p.description || '',
+            targetAudience: p.targetAudience || '',
+            pricingModel: p.pricingModel || '',
+            stage: p.stage || 'mvp',
+            status: p.status || 'on_track',
+            priority: p.priority || 'medium',
+            mrr: Number(p.mrr) || 0,
+            usersCount: Number(p.usersCount) || 0,
+            techStack: p.techStack || '',
+            blueprintSummary: bpSummary
+          };
+        }),
+        suiteRecommendationsSummary
       } : undefined;
 
       // 2. Digital Marketing Data
@@ -662,6 +738,17 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         recentActivitiesSummary
       } : undefined;
 
+      // 4. Finance & Operations Breakdown
+      const capTableList = (profile?.capTable || []).map((c: any) => `${c.name || 'Stakeholder'} (${c.type || 'Common'}): ${c.ownershipPct || 0}%`).join(', ');
+
+      const topSaaSList = subscriptions.length > 0 
+        ? subscriptions.slice(0, 8).map((s: any) => `${s.name || 'Tool'} (₹${s.cost || 0}/${s.billing || 'mo'})`).join(', ')
+        : undefined;
+
+      const teamRolesList = team.length > 0
+        ? team.filter((m: any) => m.status === 'active').slice(0, 8).map((m: any) => `${m.name || 'Member'} - ${m.role || 'Role'} (₹${m.salary || 0}/mo)`).join(', ')
+        : undefined;
+
       const input = {
         companyName,
         stage,
@@ -678,13 +765,20 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           runway: opsKPIs.runway === 999 ? 99 : Math.round(opsKPIs.runway),
           cash: opsKPIs.cashBank,
           burnRate: opsKPIs.totalBurn,
+          founderOwnership,
+          paperNetWorth,
+          capTableSummary: capTableList || undefined,
         },
         opsData: {
           teamSize: opsKPIs.teamSize,
           saasCost: opsKPIs.monthlySaaS,
           salaries: opsKPIs.monthlySalaries,
+          otherBurn: Number(profile?.otherBurn) || 0,
+          topSaaSList,
+          teamRolesList,
         },
         productData,
+        productSuiteData,
         marketingData,
         salesTrackerData,
         missingInfo: refinedMissingInfo,
@@ -1052,6 +1146,26 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             </CardHeader>
             <CardContent className="pt-6 space-y-4 flex-1">
               
+              {/* Product Suite Feed */}
+              <div className="space-y-1.5 pb-3 border-b">
+                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Product Suite
+                  </span>
+                  <span className="text-[9px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                    {productKPIs.totalCount} {productKPIs.totalCount === 1 ? 'Product' : 'Products'}
+                  </span>
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
+                  <div>Tracked: <span className="font-bold text-slate-900">{productKPIs.totalCount} ({productKPIs.liveCount} live)</span></div>
+                  <div>Suite MRR: <span className="font-bold text-purple-700">{fmtINR(productKPIs.suiteMrr || salesKPIs.mrr)}</span></div>
+                  <div>Users / Orgs: <span className="font-bold text-slate-900">{productKPIs.totalUsers.toLocaleString('en-IN')}</span></div>
+                  <div className="truncate" title={productKPIs.products.map(p => p.name).join(', ')}>
+                    Catalog: <span className="font-bold text-slate-800">{productKPIs.products.map(p => p.name).join(', ') || 'None'}</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Sales Feed */}
               <div className="space-y-1.5 pb-3 border-b">
                 <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
@@ -1093,7 +1207,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
             </CardContent>
             <div className="p-6 bg-slate-50 border-t text-[10px] text-muted-foreground font-semibold text-center leading-relaxed">
-              If these metrics look incomplete, navigate to the Sales, Finance, or Operations tabs to update your records.
+              If these metrics look incomplete, navigate to the Product Suite, Sales, Finance, or Operations tabs to update your records.
             </div>
           </Card>
         </div>
@@ -1660,6 +1774,41 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             }} 
             className="space-y-5 pt-4"
           >
+            {/* Live Business Context Banner */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <LineChart className="w-3.5 h-3.5 text-indigo-600" />
+                  Synchronized Live Business Feeds (All 4 Pillars Considered)
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Auto-Injected to AI
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 pt-0.5">
+                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                  <span className="text-[9px] uppercase font-bold text-purple-600 block">Product Suite</span>
+                  <span className="font-bold text-slate-900 block truncate">{productKPIs.totalCount} Products</span>
+                  <span className="text-[10px] text-slate-500 block">{fmtINR(productKPIs.suiteMrr || salesKPIs.mrr)} MRR</span>
+                </div>
+                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                  <span className="text-[9px] uppercase font-bold text-indigo-600 block">Sales Tracker</span>
+                  <span className="font-bold text-slate-900 block truncate">{fmtINR(salesKPIs.mrr)} MRR</span>
+                  <span className="text-[10px] text-slate-500 block">{salesKPIs.wonCount} Deals ({salesKPIs.conversionRate.toFixed(0)}%)</span>
+                </div>
+                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                  <span className="text-[9px] uppercase font-bold text-emerald-600 block">Finance Suite</span>
+                  <span className="font-bold text-slate-900 block truncate">{fmtINR(postMoney)}</span>
+                  <span className="text-[10px] text-slate-500 block">{fmtPct(founderOwnership)} Equity</span>
+                </div>
+                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                  <span className="text-[9px] uppercase font-bold text-teal-600 block">Operations Hub</span>
+                  <span className="font-bold text-slate-900 block truncate">{fmtINR(opsKPIs.cashBank)}</span>
+                  <span className="text-[10px] text-rose-600 block">{opsKPIs.runway === 999 ? '∞' : `${Math.round(opsKPIs.runway)} mo`} Runway</span>
+                </div>
+              </div>
+            </div>
+
             {/* Stage selection */}
             <div className="space-y-2">
               <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Startup Stage</Label>
