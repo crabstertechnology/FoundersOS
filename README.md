@@ -62,7 +62,7 @@ FounderOS is a premium, professional-grade strategic platform designed specifica
 *   **Frontend**: Next.js 15 (App Router, Turbopack), React 19, Tailwind CSS, Radix UI.
 *   **Backend & DB**: Firebase Firestore (Real-time data synchronization).
 *   **Authentication**: Firebase Authentication.
-*   **AI Orchestration**: Google Genkit & Gemini 2.5 Flash.
+*   **AI Orchestration**: Google Genkit & Gemini 3.8 Flash.
 
 ---
 
