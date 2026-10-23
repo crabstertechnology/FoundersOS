@@ -91,6 +91,31 @@ Please deliver the output structure as follows:
 `
 });
 
+async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 2, delayMs = 1500): Promise<T> {
+  let lastError: any;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      const msg = err?.message || '';
+      const isTransient = msg.includes('503') || 
+                          msg.includes('429') || 
+                          msg.includes('UNAVAILABLE') || 
+                          msg.includes('high demand') ||
+                          err?.status === 503 ||
+                          err?.status === 429;
+      if (attempt < maxRetries && isTransient) {
+        console.warn(`[Genkit Retry] Transient AI service spike (attempt ${attempt + 1}/${maxRetries}). Retrying in ${delayMs * (attempt + 1)}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)));
+      } else {
+        break;
+      }
+    }
+  }
+  throw lastError;
+}
+
 const productAdvisorFlow = ai.defineFlow(
   {
     name: 'productAdvisorFlow',
@@ -98,8 +123,10 @@ const productAdvisorFlow = ai.defineFlow(
     outputSchema: ProductAdvisorOutputSchema,
   },
   async (input) => {
-    const {output} = await productAdvisorPrompt(input);
-    return output!;
+    return runWithRetry(async () => {
+      const {output} = await productAdvisorPrompt(input);
+      return output!;
+    });
   }
 );
 
@@ -204,8 +231,10 @@ const productSuiteAdvisorFlow = ai.defineFlow(
     outputSchema: ProductSuiteAdvisorOutputSchema,
   },
   async (input) => {
-    const {output} = await productSuiteAdvisorPrompt(input);
-    return output!;
+    return runWithRetry(async () => {
+      const {output} = await productSuiteAdvisorPrompt(input);
+      return output!;
+    });
   }
 );
 
