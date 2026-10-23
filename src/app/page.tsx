@@ -30,7 +30,6 @@ import { SettingsPage } from '@/components/operations/SettingsPage';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { ProductDashboard } from '@/components/product/ProductDashboard';
 import { DigitalMarketingHub } from '@/components/sales/DigitalMarketingHub';
-import { StrategicCopilotWidget } from '@/components/ai-advisor/StrategicCopilotWidget';
 
 
 export default function FounderOSPage() {
@@ -1395,7 +1394,6 @@ export default function FounderOSPage() {
             </TabsContent>
           </Tabs>
         </main>
-        <StrategicCopilotWidget companyName={profile?.companyName} />
       </div>
     </div>
   );

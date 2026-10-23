@@ -121,11 +121,11 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const dragStartRef = React.useRef({ mouseX: 0, mouseY: 0, posX: 0, posY: 0 });
   const hasMovedRef = React.useRef(false);
 
-  // Initialize position on mount: positioned visibly above the global AI Copilot widget
+  // Initialize position on mount: positioned at bottom right
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const defaultX = Math.max(20, window.innerWidth - 80);
-      const defaultY = Math.max(80, window.innerHeight - 170);
+      const defaultY = Math.max(80, window.innerHeight - 85);
       setBotPos({ x: defaultX, y: defaultY });
     }
   }, []);
@@ -138,7 +138,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       mouseX: e.clientX,
       mouseY: e.clientY,
       posX: botPos ? botPos.x : (typeof window !== 'undefined' ? window.innerWidth - 80 : 0),
-      posY: botPos ? botPos.y : (typeof window !== 'undefined' ? window.innerHeight - 170 : 0),
+      posY: botPos ? botPos.y : (typeof window !== 'undefined' ? window.innerHeight - 85 : 0),
     };
     try {
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
