@@ -102,3 +102,110 @@ const productAdvisorFlow = ai.defineFlow(
     return output!;
   }
 );
+
+const TrackedProductSchema = z.object({
+  id: z.string().describe('Unique identifier for the product.'),
+  name: z.string().describe('Name of the product.'),
+  description: z.string().describe('Description of the product and its primary value proposition.'),
+  targetAudience: z.string().optional().describe('Target audience or ICP.'),
+  pricingModel: z.string().optional().describe('Pricing model or monetization strategy.'),
+  stage: z.string().optional().describe('Stage of development (e.g. concept, mvp, beta, launched, scaling).'),
+  status: z.string().optional().describe('Health status (e.g. on_track, needs_attention, blocked, thriving).'),
+  priority: z.string().optional().describe('Priority level (high, medium, low).'),
+  mrr: z.number().optional().describe('Current monthly revenue generated in INR.'),
+  usersCount: z.number().optional().describe('Number of active users or customers.'),
+  techStack: z.string().optional().describe('Technology stack used or planned.'),
+  launchDate: z.string().optional().describe('Launch date or target milestone.'),
+});
+
+const ProductSuiteAdvisorInputSchema = z.object({
+  products: z.array(TrackedProductSchema).min(1).describe('List of products in the startup portfolio suite.'),
+  companyContext: z.object({
+    companyName: z.string(),
+    stage: z.string(),
+    yearlyGoal: z.string(),
+    mrr: z.number(),
+    runway: z.number(),
+    cash: z.number(),
+    burnRate: z.number(),
+    teamSize: z.number(),
+  }).describe('Financial and operational snapshot of the company.'),
+  customQuestion: z.string().optional().describe('Founder specific question on their product suite or resource tradeoffs.')
+});
+
+export type ProductSuiteAdvisorInput = z.infer<typeof ProductSuiteAdvisorInputSchema>;
+
+const ProductSuiteAdvisorOutputSchema = z.object({
+  executiveSummary: z.string().describe('Strategic portfolio overview: health, focus vs. distraction risk, and overall trajectory.'),
+  resourceAllocation: z.string().describe('Specific breakdown and advice on dividing engineering team bandwidth, marketing spend, and founder time across the products given runway bounds.'),
+  productPrioritizations: z.array(z.object({
+    productName: z.string(),
+    strategicRole: z.string().describe('e.g. Primary Revenue Engine, High-Growth Hook, Strategic Moat, Speculative Bet, Resource Drain'),
+    priorityRank: z.number().describe('1 being highest priority to focus on'),
+    keyRecommendation: z.string().describe('Core strategic recommendation for this product in context of the whole portfolio'),
+    suggestedNextMilestone: z.string().describe('Concrete 30-day target to achieve')
+  })).describe('Prioritized ranking and recommendation for each product.'),
+  synergiesAndBundling: z.string().describe('Opportunities for cross-selling, feature sharing, bundling pricing, unified data layer, or marketing flywheel between products.'),
+  executionRisks: z.array(z.string()).describe('Top 3-4 execution risks, potential cannibalization, or operational bottlenecks.'),
+  immediateSuiteActions: z.array(z.string()).describe('List of 3-5 high-leverage immediate actions to align and optimize the product suite.')
+});
+
+export type ProductSuiteAdvisorOutput = z.infer<typeof ProductSuiteAdvisorOutputSchema>;
+
+export async function productSuiteAdvisorAssistant(input: ProductSuiteAdvisorInput): Promise<ProductSuiteAdvisorOutput> {
+  return productSuiteAdvisorFlow(input);
+}
+
+const productSuiteAdvisorPrompt = ai.definePrompt({
+  name: 'productSuiteAdvisorPrompt',
+  input: { schema: ProductSuiteAdvisorInputSchema },
+  output: { schema: ProductSuiteAdvisorOutputSchema },
+  prompt: `You are an elite Chief Product Officer (CPO) and Venture Capital Operating Partner specializing in startup portfolio strategy for Indian founders.
+Your job is to analyze the founder's entire Product Suite (multiple products/services/tools), cross-reference with their financial runway, monthly burn, team bandwidth, and yearly goals, and deliver high-conviction, actionable recommendations.
+
+Company Profile Context:
+- Company Name: {{{companyContext.companyName}}}
+- Stage: {{{companyContext.stage}}}
+- Yearly Goal: """{{{companyContext.yearlyGoal}}}"""
+- Total Company MRR: ₹{{{companyContext.mrr}}} | Cash in Bank: ₹{{{companyContext.cash}}}
+- Monthly Burn: ₹{{{companyContext.burnRate}}} | Runway: {{{companyContext.runway}}} Months
+- Team Size: {{{companyContext.teamSize}}} members
+
+Tracked Products in Suite:
+{{#each products}}
+- Product: {{name}}
+  * Stage: {{stage}} | Status: {{status}} | Priority: {{priority}}
+  * Current MRR: ₹{{mrr}} | Active Users: {{usersCount}}
+  * Pricing Model: {{pricingModel}}
+  * Target ICP: {{targetAudience}}
+  * Tech Stack: {{techStack}}
+  * Description: {{description}}
+{{/each}}
+
+{{#if customQuestion}}
+Founder's Specific Portfolio Question:
+"""{{{customQuestion}}}"""
+{{/if}}
+
+Please provide an objective, realistic, and brutally helpful strategic analysis:
+1. "executiveSummary": Give an unvarnished diagnosis. Are they spreading their {{{companyContext.teamSize}}}-person team too thin across too many products? Which products have real product-market fit or traction, and which are distractions?
+2. "resourceAllocation": With {{{companyContext.runway}}} months of runway and a monthly burn of ₹{{{companyContext.burnRate}}}, how should they divide engineering & marketing bandwidth? Specify recommended allocation percentages across products (e.g., 70% Product A, 30% Product B).
+3. "productPrioritizations": Rank each product in order of strategic importance (1 to N). Assign a strategic role (e.g., "Cash Cow", "Growth Engine", "Lead Magnet", "Speculative Bet", "Resource Drain"), along with a clear recommendation and a specific 30-day next milestone.
+4. "synergiesAndBundling": Identify clear cross-selling, data integration, unified onboarding, or pricing bundle opportunities where one product powers the growth of another.
+5. "executionRisks": 3-4 specific threats (e.g. cannibalizing user base, diverging customer segments, maintenance debt).
+6. "immediateSuiteActions": 3-5 immediate, high-leverage steps the founder should take this week to align the suite.
+`
+});
+
+const productSuiteAdvisorFlow = ai.defineFlow(
+  {
+    name: 'productSuiteAdvisorFlow',
+    inputSchema: ProductSuiteAdvisorInputSchema,
+    outputSchema: ProductSuiteAdvisorOutputSchema,
+  },
+  async (input) => {
+    const {output} = await productSuiteAdvisorPrompt(input);
+    return output!;
+  }
+);
+
