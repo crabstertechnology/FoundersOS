@@ -1496,13 +1496,6 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               Click each quarter to view milestones and key focus areas.
             </span>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsHistoryListModalOpen(true)}
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors self-start sm:self-auto"
-          >
-            View Plan History <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
 
         {/* Horizontal Sequence of 4 Quarters with Connecting Arrows */}
