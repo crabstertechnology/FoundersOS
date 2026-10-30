@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -302,32 +303,66 @@ export function ProductPortfolioTracker({
             return (
               <Card
                 key={p.id}
-                className={`flex flex-col border transition-all duration-200 hover:shadow-md ${
+                onClick={() => onGoToBlueprint(p.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onGoToBlueprint(p.id);
+                  }
+                }}
+                className={`group cursor-pointer flex flex-col border overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 select-none text-left ${
                   isSelected
-                    ? 'border-indigo-400 bg-indigo-50/15 ring-2 ring-indigo-500/20 shadow-sm'
-                    : 'border-slate-200/90 bg-white hover:border-slate-300'
+                    ? 'border-indigo-500 bg-indigo-50/15 ring-2 ring-indigo-500/20 shadow-md'
+                    : 'border-slate-200/90 bg-white hover:border-indigo-400'
                 }`}
               >
-                <CardHeader className="p-5 pb-3 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {getStageBadge(p.stage)}
-                        {getPriorityPill(p.priority)}
-                      </div>
-                      <h3 className="text-base font-black text-slate-900 tracking-tight truncate" title={p.name}>
-                        {p.name}
-                      </h3>
+                {/* Luna Showcase / Product Visual Area */}
+                <div className="relative w-full h-44 overflow-hidden bg-slate-900 border-b border-slate-100">
+                  <Image
+                    src={p.imageUrl || '/luna.png'}
+                    alt={`${p.name} - Luna`}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-black/20 pointer-events-none" />
+
+                  {/* Badges on top */}
+                  <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2 pointer-events-none">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {getStageBadge(p.stage)}
+                      {getPriorityPill(p.priority)}
                     </div>
-                    {getStatusBadge(p.status)}
+                    <div>
+                      {getStatusBadge(p.status)}
+                    </div>
                   </div>
+
+                  {/* Overlay prompt badge */}
+                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white text-[11px] font-bold pointer-events-none">
+                    <span className="flex items-center gap-1.5 bg-black/55 backdrop-blur-md px-2.5 py-0.5 rounded-full text-indigo-200 border border-white/15 shadow-sm">
+                      <Sparkles className="w-3 h-3 text-amber-300" />
+                      <span>Deep Dive Blueprint</span>
+                    </span>
+                    <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-white group-hover:bg-indigo-600 transition-colors shadow-sm">
+                      <span>Open</span>
+                      <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </span>
+                  </div>
+                </div>
+
+                <CardHeader className="p-4 pb-2 space-y-1.5">
+                  <h3 className="text-base font-black text-slate-900 tracking-tight truncate group-hover:text-indigo-600 transition-colors" title={p.name}>
+                    {p.name}
+                  </h3>
                   
                   <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                     {p.description}
                   </p>
                 </CardHeader>
 
-                <CardContent className="p-5 pt-0 flex-1 flex flex-col justify-between space-y-4">
+                <CardContent className="p-4 pt-0 flex-1 flex flex-col justify-between space-y-4">
                   {/* Metadata Chips */}
                   <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
                     <div className="grid grid-cols-2 gap-2 text-slate-600 font-medium">
@@ -366,40 +401,44 @@ export function ProductPortfolioTracker({
 
                   {/* Actions footer */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => onGoToBlueprint(p.id)}
-                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 border border-indigo-200/80 font-bold text-xs h-8 px-3 gap-1 flex-1 shadow-none"
-                    >
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 group-hover:text-indigo-700 transition-colors">
                       <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                      {p.aiPlan ? 'Strategy Blueprint' : 'Generate Blueprint'}
-                    </Button>
+                      <span>Deep Dive Blueprint</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEditProduct(p)}
-                      disabled={readOnly}
-                      title="Edit Product Specs"
-                      className="h-8 w-8 border-slate-200 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </Button>
-
-                    {!readOnly && products.length > 1 && (
+                    <div className="flex items-center gap-1.5">
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
-                        onClick={() => onDeleteProduct(p.id)}
-                        title="Delete Product from Suite"
-                        className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditProduct(p);
+                        }}
+                        disabled={readOnly}
+                        title="Edit Product Specs"
+                        className="h-8 w-8 border-slate-200 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Edit3 className="w-3.5 h-3.5" />
                       </Button>
-                    )}
+
+                      {!readOnly && products.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteProduct(p.id);
+                          }}
+                          title="Delete Product from Suite"
+                          className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

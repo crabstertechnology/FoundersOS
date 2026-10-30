@@ -17,6 +17,7 @@ export interface TrackedProduct {
   techStack?: string;
   launchDate?: string;
   customQuestion?: string;
+  imageUrl?: string;
   aiPlan?: any;
   aiPlanHistory?: any[];
   createdAt?: string;
