@@ -18,7 +18,8 @@ import {
   LineChart, Wallet, Rocket, PieChart, Activity, TrendingUp, 
   AlertTriangle, ArrowUpRight, BarChart3, Users, Server, DollarSign, Calendar,
   Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
-  FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail, Save
+  FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail, Save,
+  Search, Clock, ArrowRight, ChevronLeft, Download, ShoppingCart, Box, Lightbulb, Cpu, Zap, Briefcase, GraduationCap, Settings, CheckSquare, Flag, Bell
 } from 'lucide-react';
 import { weeklyProgressReportAssistant } from '@/ai/flows/weekly-progress-report-flow';
 
@@ -114,6 +115,15 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [chatLoading, setChatLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [latestModSuggestion, setLatestModSuggestion] = useState('');
+
+  // UI/UX state for Central Console redesign
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
+  const [selectedQuarterIdx, setSelectedQuarterIdx] = useState<number | null>(null);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [isHistoryListModalOpen, setIsHistoryListModalOpen] = useState(false);
+  const [isWeeklyReportModalOpen, setIsWeeklyReportModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeQuarterTab, setActiveQuarterTab] = useState<number>(0);
   
   // Draggable Roadmap Co-Pilot Bot state
   const [botPos, setBotPos] = useState<{ x: number; y: number } | null>(null);
@@ -956,6 +966,61 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     }
   };
 
+  const handleExportPlan = () => {
+    const plan = selectedHistoricalPlan ? selectedHistoricalPlan.strategicPlan : profile?.strategicPlan;
+    const goalTitle = yearlyGoal || profile?.strategicGoal || "Strategic Plan";
+    let content = `# AI Strategic Planner - ${goalTitle}\n\n`;
+    content += `**Stage:** ${(stage || profile?.companyStage || 'MVP').toUpperCase()}\n`;
+    content += `**Company:** ${companyName || 'FounderOS'}\n`;
+    content += `**Date:** ${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n\n`;
+    
+    if (plan?.analysis) {
+      content += `## Strategic Assessment & Analysis\n${plan.analysis}\n\n`;
+    }
+    
+    if (plan?.yearlyRoadmap && Array.isArray(plan.yearlyRoadmap)) {
+      content += `## 12-Month Quarterly Roadmap\n\n`;
+      plan.yearlyRoadmap.forEach((q: any) => {
+        content += `### ${q.period || 'Quarter'}: ${q.focus || ''}\n`;
+        if (q.objectives && Array.isArray(q.objectives)) {
+          q.objectives.forEach((obj: string) => {
+            content += `- ${obj}\n`;
+          });
+        }
+        content += `\n`;
+      });
+    }
+    
+    if (plan?.monthlyMilestones && Array.isArray(plan.monthlyMilestones)) {
+      content += `## Monthly Milestones\n\n`;
+      plan.monthlyMilestones.forEach((m: any) => {
+        content += `### ${m.month || 'Month'}: ${m.milestone || m.objective || ''}\n`;
+        if (m.keyMetrics && Array.isArray(m.keyMetrics)) {
+          content += `*Key Metrics:*\n`;
+          m.keyMetrics.forEach((km: string) => {
+            content += `- ${km}\n`;
+          });
+        }
+        if (m.keyDeliverables && Array.isArray(m.keyDeliverables)) {
+          content += `*Deliverables:*\n`;
+          m.keyDeliverables.forEach((kd: string) => {
+            content += `- ${kd}\n`;
+          });
+        }
+        content += `\n`;
+      });
+    }
+
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Strategic_Plan_${(companyName || 'FounderOS').replace(/\\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Predefined goal options for quick fill
   const goalPresets = [
     { text: "Achieve ₹5,000,000 ARR, optimize runway to 18 months, and hire 3 core team members.", icon: TrendingUp },
@@ -1035,55 +1100,164 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
   const hasPlan = strategicPlan && !isEditingGoal;
 
+  // Deriving 4 Quarters data with fallback
+  const defaultQuarters = [
+    { period: "Q1 Months 1–3", focus: "EZCirkit Commercial Launch & Cash Generation", objectives: ["Standardize BOM cost <= ₹750", "Launch pre-order storefront", "Secure 10 paid pre-orders"] },
+    { period: "Q2 Months 4–6", focus: "Institutional Pilot Outreach & Detach Prototype Freeze", objectives: ["Deliver curriculum packs to 5 institutions", "Freeze Detach hardware prototype specs", "Build initial B2B pipeline"] },
+    { period: "Q3 Months 7–9", focus: "B2B Pilots Execution & Investor Data Room Prep", objectives: ["Run 10 institutional pilots", "Prepare investor data room and audited financials", "Achieve 80% customer retention"] },
+    { period: "Q4 Months 10–12", focus: "Fundraising & Operations Expansion", objectives: ["Close ₹3,000,000 seed round", "Scale assembly and supply chain logistics", "Expand B2B sales footprint"] }
+  ];
+
+  const quartersList = [0, 1, 2, 3].map(qIdx => {
+    const rawQ = strategicPlan?.yearlyRoadmap?.[qIdx];
+    const def = defaultQuarters[qIdx];
+    const mStart = qIdx * 3 + 1;
+    const mEnd = (qIdx + 1) * 3;
+    const completedCount = completedMonthlyMilestones.filter((m: string) => {
+      const num = parseInt(m.replace(/\D/g, '')) || 0;
+      return num >= mStart && num <= mEnd;
+    }).length;
+    return {
+      period: rawQ?.period || def.period,
+      focus: rawQ?.focus || def.focus,
+      objectives: rawQ?.objectives || def.objectives,
+      progress: Math.min(100, Math.round((completedCount / 3) * 100))
+    };
+  });
+
+  const defaultMilestones = [
+    { month: "Month 1", milestone: "EZCirkit Product Standardization & Pre-Order Storefront Launch", metrics: ["BOM cost: ≤ ₹750", "Curriculum downloads: 150", "Paid pre-orders: 10"] },
+    { month: "Month 2", milestone: "First Production Batch Assembly & Beta School Testing", metrics: ["Batch output: 50 units", "Beta testers: 25", "User satisfaction: 90%"] },
+    { month: "Month 3", milestone: "Commercial Deliveries & Detach Sensor Architecture Freeze", metrics: ["Delivered kits: 50", "MRR: ₹50,000", "Sensor precision: 99%"] },
+    { month: "Month 4", milestone: "Institutional Outreach & Detach Prototype Assembly", metrics: ["Schools contacted: 30", "Demos completed: 12", "Prototype boards: 5"] },
+    { month: "Month 5", milestone: "Curriculum Integration & B2B Pilot Deployments", metrics: ["Active schools: 8", "Student engagement: 85%", "Pilot LOIs: 5"] },
+    { month: "Month 6", milestone: "Mid-Year Financial Audit & Investor Teaser Circulation", metrics: ["Gross margin: 60%", "Runway: 12+ mo", "Investor meetings: 15"] },
+    { month: "Month 7", milestone: "Detach Pre-Compliance Testing & Software Platform Launch", metrics: ["EMC compliance: Pass", "Cloud platform latency: <100ms", "Waitlist: 300"] },
+    { month: "Month 8", milestone: "B2B Pilot Conversion to Annual Multi-Kit Contracts", metrics: ["Annual contracts: 6", "Contract ARR: ₹600,000", "Renewal rate: 95%"] },
+    { month: "Month 9", milestone: "Investor Data Room Finalization & Pitch Roadshow", metrics: ["Diligence complete: 100%", "Term sheet targets: 3", "Committed angel funds: ₹10L"] },
+    { month: "Month 10", milestone: "Seed Round Closing & Detach Tooling Orders", metrics: ["Capital closed: ₹3,000,000", "Tooling vendor: Selected", "Lead time: 6 weeks"] },
+    { month: "Month 11", milestone: "Manufacturing Scale-up & Core Hiring in Ops and Sales", metrics: ["Assembly throughput: 200/mo", "New hires: 2", "Inventory buffer: 30 days"] },
+    { month: "Month 12", milestone: "Annual Target Review, Detach Commercial Launch & Q1 Planning", metrics: ["Annual revenue: ₹1,500,000", "Active student users: 2,500", "Net margin: Positive"] },
+  ];
+
+  const currentMonthData = (() => {
+    const raw = strategicPlan?.monthlyMilestones?.[selectedMonthIdx];
+    const def = defaultMilestones[selectedMonthIdx] || defaultMilestones[0];
+    const milestoneTitle = raw?.milestone || raw?.objective || def.milestone;
+    const metricsRaw = (raw?.keyMetrics && raw.keyMetrics.length > 0) ? raw.keyMetrics : def.metrics;
+    
+    const m1 = (metricsRaw[0] || "BOM cost: ≤ ₹750").split(/[:=]/);
+    const m2 = (metricsRaw[1] || "Curriculum downloads: 150").split(/[:=]/);
+    const m3 = (metricsRaw[2] || "Paid pre-orders: 10").split(/[:=]/);
+
+    return {
+      title: milestoneTitle,
+      metric1: { label: m1[0]?.trim() || "BOM cost", value: m1.slice(1).join(':').trim() || "≤ ₹750" },
+      metric2: { label: m2[0]?.trim() || "Curriculum downloads", value: m2.slice(1).join(':').trim() || "150" },
+      metric3: { label: m3[0]?.trim() || "Paid pre-orders", value: m3.slice(1).join(':').trim() || "10" }
+    };
+  })();
+
+  const activeProducts = (productKPIs.products && productKPIs.products.length > 0)
+    ? productKPIs.products.slice(0, 2).map((p: any, idx: number) => ({
+        name: p.name || (idx === 0 ? "EZCirkit" : "Detach"),
+        focus: p.tagline || p.description || (idx === 0 ? "Early revenue & market traction" : "Validation & waitlist growth"),
+        progress: idx === 0 ? 80 : 20
+      }))
+    : [
+        { name: "EZCirkit", focus: "Early revenue & market traction", progress: 80 },
+        { name: "Detach", focus: "Validation & waitlist growth", progress: 20 }
+      ];
+
+  const currentMonthName = `Month ${selectedMonthIdx + 1}`;
+  const isSelectedMonthCompleted = completedMonthlyMilestones.includes(currentMonthName) || completedMonthlyMilestones.includes(`M${selectedMonthIdx + 1}`);
+  const isSelectedMonthActive = selectedMonthIdx === currentMonthIndex;
+
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500 pb-12">
       
-      {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-2 mt-4">
-        <div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.1] mb-2 flex items-center gap-3">
-            <Brain className="w-10 h-10 text-indigo-600" />
-            AI Strategic Planner
-          </h1>
-          <p className="text-muted-foreground font-medium text-lg">
-            Aligning your yearly goals with automated roadmaps, milestones, and actionable tasks.
-          </p>
-        </div>
-        {!readOnly && (
-          <div className="flex items-center gap-2">
-            {hasPlan && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={(e) => handleGeneratePlan(e)}
-                disabled={aiLoading}
-                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold gap-1.5 h-10 px-4 shadow-sm"
-              >
-                <RefreshCw className={`w-4 h-4 text-indigo-600 ${aiLoading ? 'animate-spin' : ''}`} />
-                Regenerate Plan
-              </Button>
-            )}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsGoalsModalOpen(true)}
-              className="border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg font-bold gap-1.5 h-10 px-4 shadow-sm"
-            >
-              <Sparkles className="w-4 h-4 text-indigo-600" />
-              {hasPlan ? 'Edit Goals & Strategy' : 'Setup Goals & Strategy'}
-            </Button>
+      {/* Top Header matching AI Strategic Planner visual UI/UX */}
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 pt-2">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs shrink-0 mt-0.5">
+            <Sparkles className="w-5 h-5 text-indigo-600" />
           </div>
-        )}
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">
+              AI Strategic Planner
+            </h1>
+            <p className="text-xs text-slate-500 font-semibold mt-1">
+              Aligning your yearly goals with automated roadmaps, milestones, and actionable tasks.
+            </p>
+          </div>
+        </div>
+
+        {/* Search, Notifications, Avatar, History & Export actions */}
+        <div className="flex items-center flex-wrap gap-2.5">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search anything..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 pr-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-44 md:w-56 shadow-xs font-medium"
+            />
+          </div>
+
+          <button
+            type="button"
+            className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 relative transition-colors shadow-xs"
+            title="Notifications"
+          >
+            <Bell className="w-3.5 h-3.5" />
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 absolute top-2 right-2" />
+          </button>
+
+          {/* User Profile Chip */}
+          <div className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full bg-slate-50 border border-slate-200/80 shadow-xs">
+            <div className="w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+              {(profile?.founderName || user?.displayName || 'V')[0]?.toUpperCase() || 'V'}
+            </div>
+            <div className="flex flex-col text-left leading-tight pr-1">
+              <span className="text-[11px] font-bold text-slate-900 max-w-[120px] truncate">
+                {profile?.founderName || user?.displayName || 'Varshini Janaki'}
+              </span>
+              <span className="text-[9px] font-semibold text-slate-400">Founder</span>
+            </div>
+          </div>
+
+          {/* Plan History Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHistoryListModalOpen(true)}
+            className="h-8 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold gap-1.5 px-3 shadow-xs"
+          >
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
+            Plan History
+          </Button>
+
+          {/* Export Button */}
+          <Button
+            size="sm"
+            onClick={handleExportPlan}
+            className="h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold gap-1.5 px-3.5 shadow-xs"
+          >
+            <UploadCloud className="w-3.5 h-3.5 text-white" />
+            Export
+          </Button>
+        </div>
       </div>
 
       {/* LOADING STATE */}
       {aiLoading && (
-        <Card className="border-2 border-indigo-100 bg-indigo-50/5 shadow-md py-16 text-center animate-pulse">
-          <CardContent className="flex flex-col items-center justify-center space-y-6">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-slate-800">FounderOS AI is Processing</h3>
-              <p className="text-sm text-indigo-700 font-semibold max-w-md transition-all duration-300">
+        <Card className="border-2 border-indigo-100 bg-indigo-50/5 shadow-md py-14 text-center animate-pulse rounded-3xl">
+          <CardContent className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-slate-800">FounderOS AI is Processing</h3>
+              <p className="text-xs text-indigo-700 font-semibold max-w-md transition-all duration-300">
                 {loadingMessages[loadingMessageIdx]}
               </p>
             </div>
@@ -1091,661 +1265,786 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         </Card>
       )}
 
-      {/* Visitor no-plan notice */}
-      {!aiLoading && !hasPlan && readOnly && (
-        <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 animate-in fade-in duration-500">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
-            <Target className="w-8 h-8 text-slate-400" />
-          </div>
-          <h3 className="text-lg font-black text-slate-700">No Strategic Plan Yet</h3>
-          <p className="text-sm text-muted-foreground font-medium max-w-sm leading-relaxed">
-            The founder hasn't set up a strategic plan yet. Once they define a goal and generate the roadmap, you'll be able to view it here.
-          </p>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
-            👁 View-Only Access
-          </div>
+      {/* Active Strategic Initiative Card with Mountain Horizon Graphic */}
+      <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 min-h-[160px]">
+        {/* Mountain illustration in background on right */}
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-1/2 pointer-events-none overflow-hidden opacity-90">
+          <svg className="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="mtnGrad1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#818cf8" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.05" />
+              </linearGradient>
+              <linearGradient id="mtnGrad2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#e0e7ff" stopOpacity="0.1" />
+              </linearGradient>
+              <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#fef08a" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {/* Sunrise Glow */}
+            <circle cx="470" cy="50" r="45" fill="url(#sunGlow)" />
+            <circle cx="470" cy="50" r="14" fill="#fde047" />
+            {/* Summit Flag */}
+            <line x1="475" y1="52" x2="475" y2="30" stroke="#475569" strokeWidth="2" />
+            <polygon points="475,30 490,36 475,42" fill="#ef4444" />
+            {/* Distant Mountain Peak */}
+            <polygon points="200,200 320,80 430,200" fill="url(#mtnGrad1)" />
+            {/* Mid Mountain Peak */}
+            <polygon points="300,200 475,50 590,200" fill="url(#mtnGrad2)" />
+            {/* Foreground Slope */}
+            <polygon points="120,200 280,120 450,200" fill="#e0e7ff" fillOpacity="0.4" />
+          </svg>
         </div>
-      )}
 
-      {/* SETUP CTA CARD & Live Feed - triggers Popup Modal */}
-      {!aiLoading && !hasPlan && !readOnly && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Setup CTA Card */}
-          <Card className="lg:col-span-2 border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center shadow-sm flex flex-col justify-center items-center">
-            <CardContent className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
-              <div className="p-4 bg-indigo-50 rounded-full border border-indigo-100">
-                <Target className="w-8 h-8 text-indigo-600" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-xl font-black text-slate-900">Define Your Startup Strategy & Goals</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Configure your 12-month targets, stage, and attached documents in the pop-up modal to generate an automated AI roadmap.
-                </p>
-              </div>
-              <Button
+        {/* Left: Initiative Info */}
+        <div className="relative z-10 max-w-2xl space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs shrink-0">
+              <Target className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 block">
+                Active Strategic Initiative
+              </span>
+              <h2 className="text-lg md:text-xl font-black text-slate-900 leading-snug tracking-tight">
+                {yearlyGoal || profile?.strategicGoal || "Launch MVP product, secure first 10 pilot customers, and close ₹3,000,000 seed investment."}
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-extrabold border border-indigo-200/60 shadow-2xs">
+              Stage: {(stage || profile?.companyStage || 'mvp').toUpperCase()}
+            </span>
+            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-extrabold border border-emerald-200/60 flex items-center gap-1.5 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Roadmap active and synced
+            </span>
+            {!readOnly && (
+              <button
                 type="button"
                 onClick={() => setIsGoalsModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 gap-2 mt-2 shadow-sm"
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline underline-offset-4 ml-1 transition-colors"
               >
-                <Sparkles className="w-4 h-4 text-indigo-200" />
-                Setup Goals & Strategy
-              </Button>
-            </CardContent>
-          </Card>
+                Edit Strategy
+              </button>
+            )}
+          </div>
+        </div>
 
-          {/* Live Data Summary Card */}
-          <Card className="border shadow-sm flex flex-col justify-between">
-            <CardHeader className="bg-indigo-50/20 border-b pb-4">
-              <CardTitle className="text-xs uppercase font-black tracking-widest text-indigo-950 flex items-center gap-2">
-                <LineChart className="w-4 h-4 text-indigo-600" />
-                Live Business Feed
-              </CardTitle>
-              <CardDescription className="text-[10px]">
-                FoundersOS gathers these metrics from active CRM pipelines, Cap tables, and Operations tables.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4 flex-1">
-              
-              {/* Product Suite Feed */}
-              <div className="space-y-1.5 pb-3 border-b">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Product Suite
-                  </span>
-                  <span className="text-[9px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-                    {productKPIs.totalCount} {productKPIs.totalCount === 1 ? 'Product' : 'Products'}
-                  </span>
-                </span>
-                <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
-                  <div>Tracked: <span className="font-bold text-slate-900">{productKPIs.totalCount} ({productKPIs.liveCount} live)</span></div>
-                  <div>Suite MRR: <span className="font-bold text-purple-700">{fmtINR(productKPIs.suiteMrr || salesKPIs.mrr)}</span></div>
-                  <div>Users / Orgs: <span className="font-bold text-slate-900">{productKPIs.totalUsers.toLocaleString('en-IN')}</span></div>
-                  <div className="truncate" title={productKPIs.products.map(p => p.name).join(', ')}>
-                    Catalog: <span className="font-bold text-slate-800">{productKPIs.products.map(p => p.name).join(', ') || 'None'}</span>
+        {/* Right: Glassmorphic Goal Box */}
+        <div className="relative z-10 w-full sm:w-auto self-stretch sm:self-auto shrink-0">
+          <div className="bg-white/85 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-sm min-w-[210px] space-y-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
+              12-Month Goal
+            </span>
+            <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+              {salesKPIs.wonCount > 0 ? `${salesKPIs.wonCount} Pilot Customers` : '10 Pilot Customers'}
+            </div>
+            <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              {postMoney > 0 ? fmtINR(postMoney) : '₹3,000,000 Seed Round'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 12-Month Roadmap Card */}
+      <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-indigo-600 shrink-0" />
+            <h3 className="text-sm font-black text-slate-900 tracking-tight">12-Month Roadmap</h3>
+            <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+              Click each quarter to view milestones and key focus areas.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsHistoryListModalOpen(true)}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors self-start sm:self-auto"
+          >
+            View Plan History <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Horizontal Sequence of 4 Quarters with Connecting Arrows */}
+        <div className="flex flex-col md:flex-row items-center gap-3">
+          {quartersList.map((q, qIdx) => {
+            const isSelected = selectedQuarterIdx === qIdx;
+            const themeConfig = [
+              { color: 'bg-indigo-500 text-white', ring: 'border-indigo-200 hover:border-indigo-400', icon: Rocket },
+              { color: 'bg-sky-500 text-white', ring: 'border-sky-200 hover:border-sky-400', icon: Users },
+              { color: 'bg-amber-500 text-white', ring: 'border-amber-200 hover:border-amber-400', icon: FileText },
+              { color: 'bg-emerald-500 text-white', ring: 'border-emerald-200 hover:border-emerald-400', icon: TrendingUp },
+            ][qIdx % 4];
+            const Icon = themeConfig.icon;
+
+            return (
+              <React.Fragment key={qIdx}>
+                <div
+                  onClick={() => setSelectedQuarterIdx(qIdx)}
+                  className={`flex-1 w-full p-4 rounded-2xl border transition-all cursor-pointer bg-white hover:shadow-md flex flex-col justify-between min-h-[140px] relative group ${
+                    isSelected ? 'border-indigo-500 ring-2 ring-indigo-100 shadow-sm' : themeConfig.ring
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl ${themeConfig.color} flex items-center justify-center shrink-0 shadow-2xs`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="leading-tight">
+                        <span className="text-[11px] font-black text-slate-900 block">{`Q${qIdx + 1}`}</span>
+                        <span className="text-[9px] font-semibold text-slate-400 block">{`Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 leading-snug line-clamp-2">
+                      {q.focus}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 mt-auto border-t border-slate-100">
+                    <span className="text-[11px] font-extrabold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
+                      {Math.round(q.progress)}%
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </div>
-              </div>
 
-              {/* Sales Feed */}
-              <div className="space-y-1.5 pb-3 border-b">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Sales Tracker
-                </span>
-                <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
-                  <div>MRR: <span className="font-bold text-slate-900">{fmtINR(salesKPIs.mrr)}</span></div>
-                  <div>Pipeline: <span className="font-bold text-slate-900">{fmtINR(salesKPIs.activePipelineValue)}</span></div>
-                  <div>Won Deals: <span className="font-bold text-indigo-600">{salesKPIs.wonCount}</span></div>
-                  <div>Win Rate: <span className="font-bold text-emerald-600">{salesKPIs.conversionRate.toFixed(1)}%</span></div>
-                </div>
-              </div>
-
-              {/* Finance Feed */}
-              <div className="space-y-1.5 pb-3 border-b">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Finance Suite
-                </span>
-                <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
-                  <div>Valuation: <span className="font-bold text-slate-900">{fmtINR(postMoney)}</span></div>
-                  <div>Capital Raised: <span className="font-bold text-slate-900">{fmtINR(investment)}</span></div>
-                  <div>Founder Share: <span className="font-bold text-blue-600">{fmtPct(founderOwnership)}</span></div>
-                  <div>Net Worth: <span className="font-bold text-slate-900">{fmtINR(paperNetWorth)}</span></div>
-                </div>
-              </div>
-
-              {/* Operations Feed */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500" /> Operations Hub
-                </span>
-                <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
-                  <div>Bank Cash: <span className="font-bold text-slate-900">{fmtINR(opsKPIs.cashBank)}</span></div>
-                  <div>Runway: <span className="font-bold text-rose-600">{opsKPIs.runway === 999 ? '∞' : `${Math.round(opsKPIs.runway)} mo`}</span></div>
-                  <div>Monthly Burn: <span className="font-bold text-slate-900">{fmtINR(opsKPIs.totalBurn)}</span></div>
-                  <div>Team size: <span className="font-bold text-slate-900">{opsKPIs.teamSize} active</span></div>
-                </div>
-              </div>
-
-            </CardContent>
-            <div className="p-6 bg-slate-50 border-t text-[10px] text-muted-foreground font-semibold text-center leading-relaxed">
-              If these metrics look incomplete, navigate to the Product Suite, Sales, Finance, or Operations tabs to update your records.
-            </div>
-          </Card>
+                {qIdx < 3 && (
+                  <ArrowRight className="w-4 h-4 text-slate-300 hidden md:block shrink-0" />
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
-      )}
+      </div>
 
-      {/* ROADMAP & PLANNER DASHBOARD VIEW */}
-      {!aiLoading && hasPlan && (
-        <div className="space-y-8">
-          
-          {/* Goal Banner */}
-          {selectedHistoricalPlan ? (
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-900 via-slate-900 to-amber-950 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-300">
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 block">VIEWING HISTORICAL STRATEGIC PLAN</span>
-                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">{selectedHistoricalPlan.yearlyGoal}</h2>
-                <div className="flex gap-2 items-center pt-1">
-                  <Badge className="bg-amber-500/20 text-amber-200 border-amber-400/30 uppercase text-[9px] font-bold">
-                    Stage: {selectedHistoricalPlan.companyStage}
-                  </Badge>
-                  <span className="text-slate-500 text-xs">|</span>
-                  <span className="text-xs text-slate-300 font-medium">
-                    Generated on {selectedHistoricalPlan.createdAt ? new Date(selectedHistoricalPlan.createdAt.seconds * 1000).toLocaleString() : 'N/A'}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-3 shrink-0">
-                <Button 
-                  onClick={async () => {
-                    if (profileRef) {
-                      setAiLoading(true);
-                      try {
-                        await setDocumentNonBlocking(profileRef, {
-                          yearlyGoal: selectedHistoricalPlan.yearlyGoal,
-                          companyStage: selectedHistoricalPlan.companyStage,
-                          strategicPlan: selectedHistoricalPlan.strategicPlan,
-                        }, { merge: true });
-                        setSelectedHistoricalPlan(null);
-                      } catch (err) {
-                        console.error("Error restoring plan:", err);
-                      } finally {
-                        setAiLoading(false);
-                      }
-                    }
-                  }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-9 font-semibold"
-                >
-                  Restore as Active Plan
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setSelectedHistoricalPlan(null)}
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs rounded-xl h-9"
-                >
-                  Back to Active Plan
-                </Button>
-              </div>
+      {/* Middle Two-Column Grid: Monthly Milestones (Left) & AI Strategic Insight (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left Column: Monthly Milestones (12 Months) - approx 64% width */}
+        <div className="lg:col-span-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
+              <h3 className="text-sm font-black text-slate-900 tracking-tight">Monthly Milestones (12 Months)</h3>
             </div>
-          ) : (
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">ACTIVE STRATEGIC INITIATIVE</span>
-                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">{yearlyGoal}</h2>
-                <div className="flex gap-2 items-center pt-1">
-                  <Badge className="bg-indigo-500/20 text-indigo-200 border-indigo-400/30 uppercase text-[9px] font-bold">
-                    Stage: {stage}
-                  </Badge>
-                  <span className="text-slate-500 text-xs">|</span>
-                  <span className="text-xs text-slate-300 font-medium">Roadmap active and synced</span>
-                </div>
+            {/* Legend */}
+            <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-indigo-600" /> Current
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-slate-300" /> Upcoming
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Completed
+              </span>
+            </div>
+          </div>
+
+          {/* Stepper Timeline M1 to M12 */}
+          <div className="relative pt-2 pb-1">
+            <div className="absolute top-6 left-3 right-3 h-0.5 bg-slate-100 z-0" />
+            <div className="relative z-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none">
+              {Array.from({ length: 12 }).map((_, idx) => {
+                const mLabel = `M${idx + 1}`;
+                const mFullName = `Month ${idx + 1}`;
+                const isSelected = selectedMonthIdx === idx;
+                const isCompleted = completedMonthlyMilestones.includes(mFullName) || completedMonthlyMilestones.includes(mLabel);
+                const isCurrent = idx === currentMonthIndex;
+
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMonthIdx(idx)}
+                      className={`w-7 h-7 rounded-full text-[10px] font-black transition-all flex items-center justify-center ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white ring-4 ring-indigo-100 shadow-sm scale-110'
+                          : isCompleted
+                          ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                          : isCurrent
+                          ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                    >
+                      {isCompleted ? <Check className="w-3 h-3 text-white" /> : mLabel}
+                    </button>
+                    {isCurrent && (
+                      <span className="text-[9px] font-extrabold text-indigo-600 uppercase tracking-tighter">
+                        Current
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Selected Month Detail Card */}
+          <div className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200/80 space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-6 rounded-full bg-indigo-600 shrink-0" />
+                <h4 className="text-sm font-black text-slate-900">
+                  {currentMonthName}
+                </h4>
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                  isSelectedMonthCompleted
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : isSelectedMonthActive
+                    ? 'bg-indigo-100 text-indigo-800'
+                    : 'bg-slate-200 text-slate-700'
+                }`}>
+                  {isSelectedMonthCompleted ? 'Completed' : isSelectedMonthActive ? 'Current' : 'Upcoming'}
+                </span>
               </div>
+
               {!readOnly && (
-                <div className="flex gap-3 shrink-0">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setIsEditingGoal(true)}
-                    className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs rounded-xl h-9"
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant={isSelectedMonthCompleted ? "outline" : "default"}
+                    onClick={() => handleToggleMonthlyMilestone(currentMonthName, selectedMonthIdx)}
+                    className={`h-7 text-xs font-bold px-3 rounded-lg ${
+                      isSelectedMonthCompleted
+                        ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
                   >
-                    Re-Generate Plan
+                    {isSelectedMonthCompleted ? 'Mark Incomplete' : 'Mark Achieved'}
                   </Button>
                 </div>
               )}
-              {readOnly && (
-                <div className="flex gap-3 shrink-0">
-                  <Badge className="bg-slate-500/20 text-slate-200 border-slate-400/30 uppercase text-[9px] font-bold px-3 py-1.5">
-                    👁 View Only
-                  </Badge>
-                </div>
-              )}
             </div>
-          )}
 
-          {/* Strategic Analysis & Plans Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            
-            {/* Left Strategic Content Column (Roadmap Tabs) */}
-            <div className="xl:col-span-2 space-y-8">
-              
-              {/* Tab Selector - only Roadmap (merged) and History */}
-              <div className="border-b flex justify-between items-center pb-2">
-                <div className="flex gap-2 p-1 bg-slate-100">
-                  {[
-                    { id: 'roadmap', label: 'Quarterly Roadmap & Monthly Milestones', icon: Map },
-                    { id: 'history', label: 'Plan History', icon: History }
-                  ].map(item => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setActivePlannerTab(item.id as any)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all ${
-                          activePlannerTab === item.id 
-                            ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
+            <p className="text-xs font-bold text-slate-800 pl-3 leading-snug">
+              {currentMonthData.title}
+            </p>
+
+            {/* 3 Metric Target Cards & Next Month Chevron */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1 w-full">
+                {/* Metric 1 */}
+                <div className="p-3 bg-white rounded-xl border border-slate-200/60 flex items-center gap-2.5 shadow-2xs">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <Box className="w-4 h-4" />
+                  </div>
+                  <div className="leading-tight">
+                    <span className="text-[9px] font-bold text-slate-400 block truncate">{currentMonthData.metric1.label}</span>
+                    <span className="text-xs font-extrabold text-slate-900 block truncate">{currentMonthData.metric1.value}</span>
+                  </div>
+                </div>
+
+                {/* Metric 2 */}
+                <div className="p-3 bg-white rounded-xl border border-slate-200/60 flex items-center gap-2.5 shadow-2xs">
+                  <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
+                    <Download className="w-4 h-4" />
+                  </div>
+                  <div className="leading-tight">
+                    <span className="text-[9px] font-bold text-slate-400 block truncate">{currentMonthData.metric2.label}</span>
+                    <span className="text-xs font-extrabold text-slate-900 block truncate">{currentMonthData.metric2.value}</span>
+                  </div>
+                </div>
+
+                {/* Metric 3 */}
+                <div className="p-3 bg-white rounded-xl border border-slate-200/60 flex items-center gap-2.5 shadow-2xs">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                    <ShoppingCart className="w-4 h-4" />
+                  </div>
+                  <div className="leading-tight">
+                    <span className="text-[9px] font-bold text-slate-400 block truncate">{currentMonthData.metric3.label}</span>
+                    <span className="text-xs font-extrabold text-slate-900 block truncate">{currentMonthData.metric3.value}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* TABS CONTENT */}
+              {/* Next Month Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedMonthIdx((prev) => (prev + 1) % 12)}
+                className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 hover:text-indigo-600 shadow-2xs shrink-0 transition-colors"
+                title="Next Month"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
 
-              {/* 1. Combined Quarterly Roadmap + Monthly Milestones Tab */}
-              {activePlannerTab === 'roadmap' && (
-                <div className="space-y-8">
-                  {/* Quarterly Roadmap Section */}
-                  <Card className="border shadow-sm">
-                    <CardHeader className="border-b pb-4">
-                      <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                        <Map className="w-4 h-4 text-indigo-600" />
-                        12-Month Roadmap &amp; Focus Areas
-                      </CardTitle>
-                      <CardDescription>Click each quarter heading to expand or collapse the objectives.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-4 space-y-3">
-                      {strategicPlan.yearlyRoadmap?.map((quarter: any, idx: number) => (
-                        <div key={idx} className="border border-slate-200 overflow-hidden">
-                          {/* Clickable Quarter Header */}
-                          <button
-                            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-indigo-50 transition-colors text-left"
-                            onClick={() => setOpenQuarters(prev => ({ ...prev, [idx]: !prev[idx] }))}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-2 h-2 bg-indigo-600 flex-shrink-0" />
-                              <div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 block">{quarter.period}</span>
-                                <h4 className="font-extrabold text-sm text-slate-800">{quarter.focus}</h4>
-                              </div>
-                            </div>
-                            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${openQuarters[idx] ? 'rotate-90' : ''}`} />
-                          </button>
-                          {/* Collapsible Content */}
-                          {openQuarters[idx] && (
-                            <div className="px-6 py-4 bg-white border-t border-slate-100">
-                              <ul className="space-y-2">
-                                {quarter.objectives?.map((obj: string, oIdx: number) => (
-                                  <li key={oIdx} className="text-xs text-slate-600 font-medium flex items-start gap-2">
-                                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
-                                    <span>{obj}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
+        {/* Right Column: AI Strategic Insight - approx 36% width */}
+        <div className="lg:col-span-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center justify-between gap-2 pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                <h3 className="text-sm font-black text-slate-900 tracking-tight">AI Strategic Insight</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAnalysisModalOpen(true)}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+              >
+                View Full Analysis <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-                  {/* Divider between sections */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t-2 border-slate-200" />
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-[#f6f7f9] px-4 text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5" />
-                        Monthly Milestones
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Monthly Milestones Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {strategicPlan.monthlyMilestones?.map((milestone: any, idx: number) => {
-                      const isCompleted = completedMonthlyMilestones.includes(milestone.month);
-                      const isActive = idx === currentMonthIndex;
-                      return (
-                        <Card key={idx} className={`border-2 shadow-sm flex flex-col justify-between hover:border-indigo-200 transition-all ${
-                          isCompleted ? 'border-emerald-200 bg-emerald-50/5' : 
-                          isActive ? 'border-indigo-300 bg-indigo-50/5' : 'border-slate-200'
-                        }`}>
-                          <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-row items-center justify-between gap-2">
-                            <div className="space-y-1">
-                              <Badge className={`${
-                                isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
-                                isActive ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
-                                'bg-slate-100 text-slate-800 border-slate-200'
-                              } text-[10px] uppercase font-bold w-fit`}>
-                                {milestone.month}
-                              </Badge>
-                              {isCompleted && (
-                                <Badge className="bg-emerald-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5">
-                                  Achieved
-                                </Badge>
-                              )}
-                              {isActive && !isCompleted && (
-                                <Badge className="bg-indigo-600 text-white ml-2 text-[9px] uppercase font-black px-2 py-0.5 animate-pulse">
-                                  Current
-                                </Badge>
-                              )}
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-4 flex-1 space-y-4 flex flex-col justify-between">
-                            <div className="space-y-4">
-                              <div>
-                                <CardTitle className="text-sm font-bold text-slate-800 leading-snug">{milestone.milestone}</CardTitle>
-                              </div>
-                              
-                              <div>
-                                <span className="text-[9px] uppercase font-black tracking-widest text-slate-400 block mb-2">KEY METRICS TO MONITOR</span>
-                                <ul className="space-y-1.5">
-                                  {milestone.keyMetrics?.map((metric: string, mIdx: number) => (
-                                    <li key={mIdx} className="text-xs text-slate-650 font-semibold flex items-center gap-1.5">
-                                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
-                                      <span>{metric}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-
-                            {!readOnly && (
-                              <div className="pt-2 mt-auto">
-                                <Button
-                                  size="sm"
-                                  variant={isCompleted ? "outline" : "default"}
-                                  onClick={() => handleToggleMonthlyMilestone(milestone.month, idx)}
-                                  className={`w-full text-xs font-bold ${
-                                    isCompleted ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                                  }`}
-                                >
-                                  {isCompleted ? 'Mark as Incomplete' : 'Mark Milestone Achieved'}
-                                </Button>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-
-                  {/* Investor Weekly Report Generator - moved here */}
-                  {!readOnly && (
-                    <Card className="border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/10 via-white to-slate-50 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
-                      <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
-                      
-                      <CardHeader className="pb-4">
-                        <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                          <Mail className="w-5 h-5 text-indigo-600" />
-                          Investor Weekly Report Generator
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                          Analyze all logs from the last 7 days (CRM, workshops, sales, operations, tasks, feedback) and compile an executive progress report for mentors &amp; investors.
-                        </CardDescription>
-                      </CardHeader>
-                      
-                      <CardContent className="space-y-4">
-                        {weeklyReportLoading ? (
-                          <div className="py-12 text-center space-y-4 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border rounded-none animate-in fade-in duration-300">
-                            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                            <div className="space-y-1">
-                              <h4 className="text-xs font-black text-slate-800">Compiling and Analyzing Week's Activities</h4>
-                              <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
-                                Evaluating customer discovery, sales metrics, product milestones, and feedback logs...
-                              </p>
-                            </div>
-                          </div>
-                        ) : weeklyReport ? (
-                          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex justify-between items-center bg-indigo-50/30 p-2.5 border border-indigo-100">
-                              <span className="text-[10px] font-black text-indigo-950 flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                                {showHistory ? "Viewing Saved Report History" : "Report Editor (Save your edits below)"}
-                              </span>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setShowHistory(!showHistory)}
-                                  className="h-8 text-xs font-bold text-indigo-700 hover:bg-indigo-50/50 animate-in fade-in"
-                                >
-                                  {showHistory ? "Back to Editor" : `History (${(weeklyReportsHistory || []).length})`}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={handleCopyReport}
-                                  className="h-8 text-xs font-bold gap-1.5 bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all duration-200"
-                                >
-                                  {isCopied ? (
-                                    <><Check className="w-3.5 h-3.5 text-emerald-600" />Copied</>
-                                  ) : (
-                                    <><Copy className="w-3.5 h-3.5" />Copy</>
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                            
-                            {showHistory ? (
-                              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 animate-in fade-in duration-200">
-                                {(!weeklyReportsHistory || weeklyReportsHistory.length === 0) ? (
-                                  <div className="p-8 text-center text-muted-foreground font-semibold text-xs bg-white border border-dashed border-slate-200">
-                                    No saved weekly report history found.
-                                  </div>
-                                ) : (
-                                  weeklyReportsHistory.map((histReport: any) => {
-                                    const date = histReport.createdAt ? new Date(histReport.createdAt.seconds * 1000) : new Date();
-                                    const formattedDate = date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-                                    return (
-                                      <div key={histReport.id} className="p-3 bg-white border border-slate-100 hover:border-indigo-100 transition-all space-y-2">
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[10px] font-bold text-slate-500 font-mono">{formattedDate}</span>
-                                          <div className="flex gap-1.5">
-                                            <Button size="sm" variant="outline" onClick={() => { setWeeklyReport(histReport.report); setShowHistory(false); }} className="h-6 text-[9px] font-bold px-2 py-0">Restore</Button>
-                                            <Button size="sm" variant="ghost" onClick={async () => { if (window.confirm("Delete this saved report from history?")) { try { await deleteDocumentNonBlocking(doc(weeklyReportsRef!, histReport.id)); } catch (err) { console.error("Error deleting report:", err); } } }} className="h-6 text-[9px] font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-0">Delete</Button>
-                                          </div>
-                                        </div>
-                                        <div className="bg-slate-50 text-slate-700 p-3 font-mono text-[10px] whitespace-pre-wrap leading-relaxed max-h-[120px] overflow-y-auto border border-slate-100 select-all">
-                                          {histReport.report}
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                )}
-                              </div>
-                            ) : (
-                              <>
-                                <textarea
-                                  className="w-full bg-slate-900 text-slate-100 p-5 border border-slate-800 font-mono text-xs leading-relaxed min-h-[300px] max-h-[400px] focus:outline-none focus:ring-2 focus:ring-indigo-500 select-text"
-                                  value={weeklyReport}
-                                  onChange={(e) => setWeeklyReport(e.target.value)}
-                                  placeholder="Type or edit your weekly update here..."
-                                />
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                  <Button onClick={handleSaveWeeklyReport} disabled={isSavingReport} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 text-xs gap-1.5 transition-all px-6 shrink-0">
-                                    {reportSavedSuccess ? (<><Check className="w-3.5 h-3.5 text-white animate-in zoom-in-50 duration-150" />Saved to History!</>) : (<><Save className="w-3.5 h-3.5" />Save Report</>)}
-                                  </Button>
-                                  <Button onClick={handleGenerateWeeklyReport} variant="outline" className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold h-10 text-xs gap-1.5 transition-all">
-                                    <RefreshCw className="w-3.5 h-3.5" />Regenerate Update
-                                  </Button>
-                                  <Button variant="ghost" onClick={() => { if (window.confirm("Are you sure you want to clear the generated report?")) { setWeeklyReport(''); if (profileRef) { setDocumentNonBlocking(profileRef, { weeklyProgressReport: null, weeklyProgressReportGeneratedAt: null, weeklyProgressReportSavedAt: null }, { merge: true }); } } }} className="text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-bold h-10 text-xs transition-all px-4">Clear</Button>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="p-8 text-center border-2 border-dashed border-slate-200 bg-white/50 space-y-4 hover:border-indigo-200 hover:bg-indigo-50/5 transition-all">
-                            <div className="w-12 h-12 bg-indigo-50 flex items-center justify-center mx-auto text-indigo-600 shadow-sm">
-                              <Mail className="w-6 h-6" />
-                            </div>
-                            <div className="space-y-1">
-                              <h4 className="text-xs font-bold text-slate-800">No Weekly Update Compiled Yet</h4>
-                              <p className="text-[10px] text-muted-foreground font-semibold max-w-xs mx-auto leading-relaxed">
-                                Click below to analyze the last 7 days of raw workspace data and generate a mentor-ready progress report.
-                              </p>
-                            </div>
-                            <Button onClick={handleGenerateWeeklyReport} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-6 gap-1.5 shadow-sm hover:shadow-md transition-all">
-                              <Sparkles className="w-3.5 h-3.5" />Generate Weekly Update
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Weekly Adaptation Hub - moved here */}
-                  {!readOnly && (
-                    <Card className="border-2 border-indigo-100 bg-indigo-50/5 shadow-sm">
-                      <CardHeader>
-                        <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                          <RefreshCw className="w-5 h-5 text-indigo-600" />
-                          Weekly Adaptation Hub
-                        </CardTitle>
-                        <CardDescription>
-                          Log your startup progress, milestones completed, or roadblocks faced. FounderOS AI will dynamically adapt your roadmaps, monthly targets, and daily actionable tasks.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="font-bold text-xs uppercase tracking-wider text-slate-500">Weekly Progress Update</Label>
-                          <textarea
-                            className="w-full text-sm font-medium p-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white"
-                            rows={3}
-                            placeholder="e.g. Completed CRM pilots setup. Delayed MVP dashboard coding due to API bugs. Closed ₹100k ARR SaaS deal..."
-                            value={weeklyProgress}
-                            onChange={e => setWeeklyProgress(e.target.value)}
-                          />
-                        </div>
-                        <Button
-                          onClick={() => handleGeneratePlan(undefined, weeklyProgress)}
-                          disabled={!weeklyProgress || aiLoading}
-                          className="w-full bg-slate-900 hover:bg-slate-950 text-white font-bold h-10 gap-2"
-                        >
-                          <Sparkles className="w-4 h-4 text-indigo-400" />
-                          Adapt Future Plans Dynamically
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
+            {/* Visual Donut Chart */}
+            <div className="py-2 flex items-center justify-center gap-6">
+              <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="38" stroke="#e2e8f0" strokeWidth="9" fill="transparent" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    stroke="#4f46e5"
+                    strokeWidth="9"
+                    strokeDasharray={238.76}
+                    strokeDashoffset={238.76 * (1 - 0.8)}
+                    strokeLinecap="round"
+                    fill="transparent"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-base font-black text-slate-900">80%</span>
                 </div>
-              )}
+              </div>
 
-              {/* 2. Plan History Tab */}
-              {activePlannerTab === 'history' && (
-                <Card className="border shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-base font-black text-slate-900">Plan Generation History</CardTitle>
-                    <CardDescription>Browse previously generated strategic plans and assessments.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-2 space-y-4">
-                    {!planHistory || planHistory.length === 0 ? (
-                      <div className="p-8 text-center text-muted-foreground font-semibold text-xs">
-                        No plan history found. Any new plans you generate will appear here.
-                      </div>
-                    ) : (
-                      <div className="divide-y border overflow-hidden bg-white">
-                      {planHistory.map((histPlan: any) => {
-                          const date = histPlan.createdAt ? new Date(histPlan.createdAt.seconds * 1000) : new Date();
-                          const formattedDate = date.toLocaleString();
-                          const isCurrentlySelected = selectedHistoricalPlan?.id === histPlan.id;
-                          return (
-                            <div key={histPlan.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-slate-50 transition-all">
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-mono font-bold text-slate-500">{formattedDate}</span>
-                                  <Badge className="bg-slate-100 text-slate-700 uppercase text-[9px] font-bold">
-                                    Stage: {histPlan.companyStage}
-                                  </Badge>
-                                </div>
-                                <h4 className="text-sm font-bold text-slate-900">{histPlan.yearlyGoal}</h4>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant={isCurrentlySelected ? "secondary" : "outline"}
-                                  onClick={() => {
-                                    setSelectedHistoricalPlan(histPlan);
-                                    setActivePlannerTab('roadmap');
-                                  }}
-                                  className="text-xs font-bold"
-                                >
-                                  {isCurrentlySelected ? "Viewing..." : "View Plan"}
-                                </Button>
-                                {!readOnly && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      onClick={async () => {
-                                        if (profileRef) {
-                                          setAiLoading(true);
-                                          try {
-                                            await setDocumentNonBlocking(profileRef, {
-                                              yearlyGoal: histPlan.yearlyGoal,
-                                              companyStage: histPlan.companyStage,
-                                              strategicPlan: histPlan.strategicPlan,
-                                            }, { merge: true });
-                                            setSelectedHistoricalPlan(null);
-                                          } catch (err) {
-                                            console.error("Error restoring plan:", err);
-                                          } finally {
-                                            setAiLoading(false);
-                                          }
-                                        }
-                                      }}
-                                      className="text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700"
-                                    >
-                                      Restore
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={async () => {
-                                        if (profileRef && planHistoryRef && window.confirm("Delete this plan from history?")) {
-                                          try {
-                                            await deleteDocumentNonBlocking(doc(planHistoryRef, histPlan.id));
-                                            if (selectedHistoricalPlan?.id === histPlan.id) {
-                                              setSelectedHistoricalPlan(null);
-                                            }
-                                          } catch (err) {
-                                            console.error("Error deleting plan:", err);
-                                          }
-                                        }
-                                      }}
-                                      className="text-xs font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 h-9 w-9 p-0"
-                                    >
-                                      <Trash className="w-4 h-4" />
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
+              {/* Chart Legend */}
+              <div className="space-y-2 text-xs font-bold">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="flex items-center gap-2 text-slate-700">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
+                    {activeProducts[0]?.name || "EZCirkit"}
+                  </span>
+                  <span className="text-slate-900 font-black">80%</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="flex items-center gap-2 text-slate-500">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
+                    {activeProducts[1]?.name || "Detach"}
+                  </span>
+                  <span className="text-slate-500 font-bold">20%</span>
+                </div>
+              </div>
             </div>
 
-            {/* Right Strategic Insights Column (AI Analysis & Q&A) */}
-            <div className="space-y-8">
-              
-              {/* Strategic Insights Analysis */}
-              <Card className="border-2 border-indigo-50 hover:border-indigo-100 transition-all shadow-sm">
-                <CardHeader className="bg-indigo-50/30 border-b pb-4">
-                  <CardTitle className="text-xs uppercase font-black tracking-widest text-indigo-950 flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-indigo-600" />
-                    Strategic Assessment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 prose prose-slate max-w-none">
-                  {renderMarkdown(strategicPlan.analysis)}
-                </CardContent>
-              </Card>
+            {/* Highlight Callout Box with Amber Lightbulb */}
+            <div className="mt-3 p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 mt-0.5">
+                <Lightbulb className="w-4 h-4 text-amber-600" />
+              </div>
+              <p className="text-xs font-bold text-slate-800 leading-snug">
+                Prioritize EZCirkit for early revenue while maintaining a focused Detach validation track.
+              </p>
             </div>
-
           </div>
 
+          {/* Action Button */}
+          <Button
+            type="button"
+            onClick={() => setIsChatOpen(true)}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 rounded-xl gap-1.5 shadow-sm mt-3"
+          >
+            Generate Action Plan <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
         </div>
-      )}
+      </div>
+
+      {/* Bottom Three-Column Grid: Strategic Focus | Weekly Adaptation Hub | Investor Weekly Report */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Column 1: Strategic Focus */}
+        <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-5 md:p-6 flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 pb-1">
+              <Target className="w-4 h-4 text-indigo-600 shrink-0" />
+              <h3 className="text-sm font-black text-slate-900 tracking-tight">Strategic Focus</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Product 1: EZCirkit */}
+              <div className="p-3 rounded-2xl border border-slate-200/80 bg-slate-50/40 space-y-2 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                    <Cpu className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-black text-slate-900">{activeProducts[0]?.name || "EZCirkit"}</h5>
+                    <p className="text-[10px] text-slate-500 font-semibold leading-tight line-clamp-2">
+                      {activeProducts[0]?.focus || "Early revenue & market traction"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: '80%' }} />
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('productSuite')}
+                      className="text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
+                    >
+                      View Details <ArrowRight className="w-2.5 h-2.5" />
+                    </button>
+                    <span className="text-slate-600 font-extrabold">80%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product 2: Detach */}
+              <div className="p-3 rounded-2xl border border-slate-200/80 bg-slate-50/40 space-y-2 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
+                    <Server className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-black text-slate-900">{activeProducts[1]?.name || "Detach"}</h5>
+                    <p className="text-[10px] text-slate-500 font-semibold leading-tight line-clamp-2">
+                      {activeProducts[1]?.focus || "Validation & waitlist growth"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-sky-500 h-1.5 rounded-full" style={{ width: '20%' }} />
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('productSuite')}
+                      className="text-sky-600 hover:text-sky-800 flex items-center gap-0.5"
+                    >
+                      View Details <ArrowRight className="w-2.5 h-2.5" />
+                    </button>
+                    <span className="text-slate-600 font-extrabold">20%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Column 2: Weekly Adaptation Hub */}
+        <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-5 md:p-6 flex flex-col justify-between space-y-3">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-indigo-600 shrink-0" />
+              <h3 className="text-sm font-black text-slate-900 tracking-tight">Weekly Adaptation Hub</h3>
+            </div>
+            <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">
+              Log your progress, milestones or roadblocks. FounderOS AI will adapt your roadmap, targets and tasks.
+            </p>
+            <textarea
+              className="w-full text-xs font-medium p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none bg-slate-50/50 placeholder-slate-400"
+              rows={2}
+              placeholder="E.g. Completed CRM setup. Delayed MVP coding due to API bugs. Closed ₹100k deal..."
+              value={weeklyProgress}
+              onChange={e => setWeeklyProgress(e.target.value)}
+              disabled={readOnly}
+            />
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <Button
+              size="sm"
+              onClick={() => handleGeneratePlan(undefined, weeklyProgress)}
+              disabled={!weeklyProgress.trim() || aiLoading || readOnly}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold h-9 px-4 rounded-xl gap-1.5 shadow-xs"
+            >
+              Analyze &amp; Update Plan <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Column 3: Investor Weekly Report */}
+        <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-5 md:p-6 flex flex-col justify-between space-y-3">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                <h3 className="text-sm font-black text-slate-900 tracking-tight">Investor Weekly Report</h3>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleGenerateWeeklyReport}
+                disabled={weeklyReportLoading || readOnly}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold h-7 px-2.5 rounded-lg gap-1 shadow-xs"
+              >
+                {weeklyReportLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Generate Report"} <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
+
+            {/* Filter Category Chips */}
+            <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-bold">
+              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
+                <Users className="w-2.5 h-2.5" /> CRM
+              </span>
+              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100">
+                <GraduationCap className="w-2.5 h-2.5" /> Workshops
+              </span>
+              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
+                <TrendingUp className="w-2.5 h-2.5" /> Sales
+              </span>
+              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+                <Settings className="w-2.5 h-2.5" /> Operations
+              </span>
+              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100">
+                <CheckSquare className="w-2.5 h-2.5" /> Tasks
+              </span>
+              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100">
+                <MessageSquare className="w-2.5 h-2.5" /> Feedback
+              </span>
+            </div>
+
+            {/* Status Card */}
+            <div
+              onClick={() => setIsWeeklyReportModalOpen(true)}
+              className="p-3 rounded-2xl bg-slate-50/60 border border-slate-200/80 flex items-start gap-2.5 cursor-pointer hover:bg-slate-100/60 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
+                <BarChart3 className="w-3.5 h-3.5 text-indigo-600" />
+              </div>
+              <div className="space-y-0.5 leading-tight">
+                <h6 className="text-xs font-black text-slate-900">
+                  {weeklyReport ? "Weekly Update Ready (Click to View)" : "No Weekly Update Compiled Yet"}
+                </h6>
+                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
+                  Analyze the last 7 days of your workspace data and generate a mentor-ready progress report.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Strategic Assessment Markdown Modal */}
+      <Dialog open={isAnalysisModalOpen} onOpenChange={setIsAnalysisModalOpen}>
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[85vh] overflow-y-auto p-6 rounded-3xl border border-slate-200 shadow-2xl">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Brain className="w-5 h-5 text-indigo-600" />
+              Comprehensive AI Strategic Assessment
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 font-medium">
+              Detailed strategic insights, risk assessment, and market positioning formulated by FounderOS AI.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-4 prose prose-slate max-w-none text-xs leading-relaxed">
+            {strategicPlan?.analysis ? (
+              renderMarkdown(strategicPlan.analysis)
+            ) : (
+              <p className="text-slate-500 font-medium">No assessment generated yet. Click "Setup Goals &amp; Strategy" to generate your roadmap.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan History Modal */}
+      <Dialog open={isHistoryListModalOpen} onOpenChange={setIsHistoryListModalOpen}>
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto p-6 rounded-3xl border border-slate-200 shadow-2xl">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-indigo-600" />
+              Plan Generation History
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 font-medium">
+              Browse previously generated roadmaps and restore them if required.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-4 space-y-3">
+            {!planHistory || planHistory.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 font-semibold text-xs border border-dashed rounded-2xl">
+                No plan history recorded yet. Future adaptations will be archived here.
+              </div>
+            ) : (
+              planHistory.map((histPlan: any) => {
+                const date = histPlan.createdAt ? new Date(histPlan.createdAt.seconds * 1000) : new Date();
+                const formattedDate = date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                return (
+                  <div key={histPlan.id} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold text-slate-500">{formattedDate}</span>
+                        <span className="text-[9px] uppercase font-extrabold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200/60">
+                          {histPlan.companyStage || 'MVP'}
+                        </span>
+                      </div>
+                      <h5 className="text-xs font-bold text-slate-800 line-clamp-1">{histPlan.yearlyGoal}</h5>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          if (profileRef) {
+                            setAiLoading(true);
+                            try {
+                              await setDocumentNonBlocking(profileRef, {
+                                yearlyGoal: histPlan.yearlyGoal,
+                                companyStage: histPlan.companyStage,
+                                strategicPlan: histPlan.strategicPlan,
+                              }, { merge: true });
+                              setIsHistoryListModalOpen(false);
+                            } catch (err) {
+                              console.error("Error restoring plan:", err);
+                            } finally {
+                              setAiLoading(false);
+                            }
+                          }
+                        }}
+                        className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl"
+                      >
+                        Restore
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={async () => {
+                          if (profileRef && planHistoryRef && window.confirm("Delete this plan from history?")) {
+                            try {
+                              await deleteDocumentNonBlocking(doc(planHistoryRef, histPlan.id));
+                            } catch (err) {
+                              console.error("Error deleting plan:", err);
+                            }
+                          }
+                        }}
+                        className="h-8 w-8 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl"
+                      >
+                        <Trash className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Selected Quarter Objectives Modal */}
+      <Dialog open={selectedQuarterIdx !== null} onOpenChange={(open) => !open && setSelectedQuarterIdx(null)}>
+        <DialogContent className="max-w-xl w-[95vw] max-h-[85vh] overflow-y-auto p-6 rounded-3xl border border-slate-200 shadow-2xl">
+          {selectedQuarterIdx !== null && (
+            <>
+              <DialogHeader className="pb-4 border-b">
+                <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+                  <Rocket className="w-5 h-5 text-indigo-600" />
+                  {quartersList[selectedQuarterIdx].period} Deep Dive
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500 font-medium">
+                  {quartersList[selectedQuarterIdx].focus}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="pt-4 space-y-4">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 block">
+                  Core Objectives &amp; Milestones
+                </span>
+                <ul className="space-y-2.5">
+                  {quartersList[selectedQuarterIdx].objectives.map((obj: string, oIdx: number) => (
+                    <li key={oIdx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs font-semibold text-slate-800 flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <span>{obj}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Investor Weekly Report Modal */}
+      <Dialog open={isWeeklyReportModalOpen} onOpenChange={setIsWeeklyReportModalOpen}>
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto p-6 rounded-3xl border border-slate-200 shadow-2xl">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Mail className="w-5 h-5 text-indigo-600" />
+              Investor Weekly Progress Report
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 font-medium">
+              Analyze recent workspace logs to compose an executive brief for mentors and investors.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="pt-4 space-y-4">
+            <div className="flex justify-between items-center bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+              <span className="text-[11px] font-black text-indigo-950 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                {showHistory ? "Viewing Saved History" : "Report Editor"}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="h-7 text-xs font-bold text-indigo-700 hover:bg-indigo-50"
+                >
+                  {showHistory ? "Back to Editor" : `Saved History (${(weeklyReportsHistory || []).length})`}
+                </Button>
+                {weeklyReport && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCopyReport}
+                    className="h-7 text-xs font-bold gap-1 bg-white border-indigo-200 text-indigo-700"
+                  >
+                    {isCopied ? <><Check className="w-3.5 h-3.5 text-emerald-600" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {weeklyReport ? (
+              <div className="space-y-3">
+                <textarea
+                  className="w-full bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 font-mono text-xs leading-relaxed min-h-[250px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={weeklyReport}
+                  onChange={(e) => setWeeklyReport(e.target.value)}
+                  placeholder="Edit your weekly report here..."
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={handleSaveWeeklyReport}
+                    disabled={isSavingReport}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 text-xs rounded-xl gap-1.5"
+                  >
+                    {reportSavedSuccess ? <><Check className="w-3.5 h-3.5" /> Saved!</> : <><Save className="w-3.5 h-3.5" /> Save Report</>}
+                  </Button>
+                  <Button
+                    onClick={handleGenerateWeeklyReport}
+                    variant="outline"
+                    className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold h-9 text-xs rounded-xl gap-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Regenerate
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-2xl space-y-3">
+                <Mail className="w-8 h-8 text-indigo-600 mx-auto" />
+                <h5 className="text-xs font-bold text-slate-800">No report generated yet</h5>
+                <Button
+                  onClick={handleGenerateWeeklyReport}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 rounded-xl gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Compile New Weekly Report
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* AI Strategic Planner Setup & Goals Popup Modal */}
       <Dialog 
