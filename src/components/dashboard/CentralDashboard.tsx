@@ -19,7 +19,8 @@ import {
   AlertTriangle, ArrowUpRight, BarChart3, Users, Server, DollarSign, Calendar,
   Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
   FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail, Save,
-  Search, Clock, ArrowRight, ChevronLeft, Download, ShoppingCart, Box, Lightbulb, Cpu, Zap, Briefcase, GraduationCap, Settings, CheckSquare, Flag
+  Search, Clock, ArrowRight, ChevronLeft, Download, ShoppingCart, Box, Lightbulb, Cpu, Zap, Briefcase, GraduationCap, Settings, CheckSquare, Flag,
+  Star
 } from 'lucide-react';
 import { weeklyProgressReportAssistant } from '@/ai/flows/weekly-progress-report-flow';
 
@@ -1596,17 +1597,43 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                     <button
                       type="button"
                       onClick={() => setSelectedMonthIdx(idx)}
-                      className={`w-7 h-7 rounded-full text-[10px] font-black transition-all flex items-center justify-center ${
+                      className={`group relative w-8 h-8 flex items-center justify-center transition-all duration-200 focus:outline-hidden ${
                         isSelected
-                          ? 'bg-indigo-600 text-white ring-4 ring-indigo-100 shadow-sm scale-110'
-                          : isCompleted
-                          ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                          : isCurrent
-                          ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
-                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                          ? 'scale-125 z-20'
+                          : 'hover:scale-110 z-10'
                       }`}
+                      title={`${mFullName}: ${isSelected ? 'Selected' : isCompleted ? 'Completed' : 'Upcoming'}`}
                     >
-                      {isCompleted ? <Check className="w-3 h-3 text-white" /> : mLabel}
+                      <svg
+                        viewBox="0 0 24 24"
+                        className={`w-8 h-8 transition-all ${
+                          isSelected
+                            ? 'fill-indigo-600 text-indigo-700 drop-shadow-[0_2px_8px_rgba(79,70,229,0.45)]'
+                            : isCompleted
+                            ? 'fill-emerald-500 text-emerald-600 drop-shadow-xs'
+                            : isCurrent
+                            ? 'fill-indigo-100 text-indigo-400'
+                            : 'fill-slate-100 text-slate-300 hover:fill-slate-200'
+                        }`}
+                      >
+                        <polygon
+                          points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center pt-0.5 text-[9px] font-black pointer-events-none ${
+                          isSelected || isCompleted
+                            ? 'text-white'
+                            : isCurrent
+                            ? 'text-indigo-700'
+                            : 'text-slate-600'
+                        }`}
+                      >
+                        {isCompleted ? <Check className="w-3 h-3 stroke-[3] text-white" /> : mLabel}
+                      </span>
                     </button>
                     {isCurrent && (
                       <span className="text-[9px] font-extrabold text-indigo-600 uppercase tracking-tighter">
