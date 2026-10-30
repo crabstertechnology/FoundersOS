@@ -174,6 +174,17 @@ export default function FounderOSPage() {
       setActiveTab('sales');
       setSalesTab('ezcirkit');
       setEzCirkitTab(tab);
+    } else if (tab === 'productSuite' || tab === 'product') {
+      setActiveTab('product');
+    } else if (tab === 'dm' || tab === 'marketing') {
+      setActiveTab('dm');
+    } else if (['operations', 'ops', 'tasks', 'chat', 'runway', 'team'].includes(tab)) {
+      setActiveTab('operations');
+      if (['tasks', 'chat', 'weekly', 'activity'].includes(tab)) {
+        setOperationsTab(tab);
+      } else {
+        setOperationsTab('ops');
+      }
     } else {
       setActiveTab(tab);
     }

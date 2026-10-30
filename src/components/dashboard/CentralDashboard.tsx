@@ -19,7 +19,7 @@ import {
   AlertTriangle, ArrowUpRight, BarChart3, Users, Server, DollarSign, Calendar,
   Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
   FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail, Save,
-  Search, Clock, ArrowRight, ChevronLeft, Download, ShoppingCart, Box, Lightbulb, Cpu, Zap, Briefcase, GraduationCap, Settings, CheckSquare, Flag, Bell
+  Search, Clock, ArrowRight, ChevronLeft, Download, ShoppingCart, Box, Lightbulb, Cpu, Zap, Briefcase, GraduationCap, Settings, CheckSquare, Flag
 } from 'lucide-react';
 import { weeklyProgressReportAssistant } from '@/ai/flows/weekly-progress-report-flow';
 
@@ -1158,16 +1158,43 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     };
   })();
 
-  const activeProducts = (productKPIs.products && productKPIs.products.length > 0)
-    ? productKPIs.products.slice(0, 2).map((p: any, idx: number) => ({
-        name: p.name || (idx === 0 ? "EZCirkit" : "Detach"),
-        focus: p.tagline || p.description || (idx === 0 ? "Early revenue & market traction" : "Validation & waitlist growth"),
-        progress: idx === 0 ? 80 : 20
-      }))
-    : [
-        { name: "EZCirkit", focus: "Early revenue & market traction", progress: 80 },
-        { name: "Detach", focus: "Validation & waitlist growth", progress: 20 }
-      ];
+  const activeProducts = useMemo(() => {
+    if (productKPIs.products && productKPIs.products.length > 0) {
+      const totalMrr = productKPIs.products.reduce((acc: number, p: any) => acc + (Number(p.mrr) || 0), 0);
+      return productKPIs.products.slice(0, 2).map((p: any, idx: number) => {
+        let pct = 50;
+        if (totalMrr > 0) {
+          pct = Math.max(10, Math.min(90, Math.round(((Number(p.mrr) || 0) / totalMrr) * 100)));
+        } else if (idx === 0) {
+          pct = productKPIs.products.length > 1 ? 75 : 100;
+        } else {
+          pct = 25;
+        }
+        return {
+          id: p.id,
+          name: p.name || (idx === 0 ? "Core Product" : "Secondary Product"),
+          focus: p.tagline || p.description || p.targetAudience || (idx === 0 ? "Early revenue & market traction" : "Validation & waitlist growth"),
+          progress: pct,
+          stage: p.stage || 'mvp',
+          mrr: Number(p.mrr) || 0
+        };
+      });
+    }
+    return [
+      { id: '1', name: "Core Product", focus: "Early revenue & market traction", progress: 75, stage: 'launched', mrr: salesKPIs.mrr },
+      { id: '2', name: "New Feature / Pilot", focus: "Validation & waitlist growth", progress: 25, stage: 'beta', mrr: 0 }
+    ];
+  }, [productKPIs.products, salesKPIs.mrr]);
+
+  const filteredQuarters = useMemo(() => {
+    if (!searchTerm.trim()) return quartersList;
+    const term = searchTerm.toLowerCase();
+    return quartersList.filter(q => 
+      q.period.toLowerCase().includes(term) ||
+      q.focus.toLowerCase().includes(term) ||
+      q.objectives.some((obj: string) => obj.toLowerCase().includes(term))
+    );
+  }, [quartersList, searchTerm]);
 
   const currentMonthName = `Month ${selectedMonthIdx + 1}`;
   const isSelectedMonthCompleted = completedMonthlyMilestones.includes(currentMonthName) || completedMonthlyMilestones.includes(`M${selectedMonthIdx + 1}`);
@@ -1192,39 +1219,17 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           </div>
         </div>
 
-        {/* Search, Notifications, Avatar, History & Export actions */}
+        {/* Search, History & Export actions (Notification bell & Profile chip removed as requested) */}
         <div className="flex items-center flex-wrap gap-2.5">
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search anything..."
+              placeholder="Search roadmap & milestones..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 pr-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-44 md:w-56 shadow-xs font-medium"
             />
-          </div>
-
-          <button
-            type="button"
-            className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 relative transition-colors shadow-xs"
-            title="Notifications"
-          >
-            <Bell className="w-3.5 h-3.5" />
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 absolute top-2 right-2" />
-          </button>
-
-          {/* User Profile Chip */}
-          <div className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full bg-slate-50 border border-slate-200/80 shadow-xs">
-            <div className="w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-              {(profile?.founderName || user?.displayName || 'V')[0]?.toUpperCase() || 'V'}
-            </div>
-            <div className="flex flex-col text-left leading-tight pr-1">
-              <span className="text-[11px] font-bold text-slate-900 max-w-[120px] truncate">
-                {profile?.founderName || user?.displayName || 'Varshini Janaki'}
-              </span>
-              <span className="text-[9px] font-semibold text-slate-400">Founder</span>
-            </div>
           </div>
 
           {/* Plan History Button */}
@@ -1248,6 +1253,134 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             Export
           </Button>
         </div>
+      </div>
+
+      {/* Connected Feature Suites Command Row - Direct 1-Click Sync to Respective Backends */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {/* Finance Suite */}
+        <button
+          type="button"
+          onClick={() => onNavigate('finance')}
+          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+        >
+          <div className="flex items-center justify-between w-full mb-1.5">
+            <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
+              Finance Suite
+            </span>
+            <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-black text-slate-900 truncate">
+              {postMoney > 0 ? fmtINR(postMoney) : 'Set Valuation'}
+            </div>
+            <div className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 mt-0.5">
+              <span>{fmtPct(founderOwnership)} Founder Stake</span>
+              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </button>
+
+        {/* Sales Tracker */}
+        <button
+          type="button"
+          onClick={() => onNavigate('sales')}
+          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+        >
+          <div className="flex items-center justify-between w-full mb-1.5">
+            <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
+              Sales Tracker
+            </span>
+            <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Activity className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-black text-slate-900 truncate">
+              {fmtINR(salesKPIs.mrr)} <span className="text-[10px] text-slate-400 font-bold">MRR</span>
+            </div>
+            <div className="text-[10px] font-semibold text-indigo-600 flex items-center gap-1 mt-0.5">
+              <span>{salesKPIs.wonCount} Deals Won ({salesKPIs.conversionRate.toFixed(0)}%)</span>
+              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </button>
+
+        {/* Operations Hub */}
+        <button
+          type="button"
+          onClick={() => onNavigate('operations')}
+          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+        >
+          <div className="flex items-center justify-between w-full mb-1.5">
+            <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
+              Operations Hub
+            </span>
+            <div className="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+              <Settings className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-black text-slate-900 truncate">
+              {fmtINR(opsKPIs.cashBank)} <span className="text-[10px] text-slate-400 font-bold">Cash</span>
+            </div>
+            <div className="text-[10px] font-semibold text-teal-600 flex items-center gap-1 mt-0.5">
+              <span>{opsKPIs.runway === 999 ? '∞ Runway' : `${Math.round(opsKPIs.runway)} mo runway`}</span>
+              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </button>
+
+        {/* Product Suite */}
+        <button
+          type="button"
+          onClick={() => onNavigate('product')}
+          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+        >
+          <div className="flex items-center justify-between w-full mb-1.5">
+            <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
+              Product Suite
+            </span>
+            <div className="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Box className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-black text-slate-900 truncate">
+              {productKPIs.totalCount} {productKPIs.totalCount === 1 ? 'Product' : 'Products'}
+            </div>
+            <div className="text-[10px] font-semibold text-purple-600 flex items-center gap-1 mt-0.5">
+              <span>{fmtINR(productKPIs.suiteMrr || salesKPIs.mrr)} Portfolio MRR</span>
+              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </button>
+
+        {/* Marketing Hub */}
+        <button
+          type="button"
+          onClick={() => onNavigate('dm')}
+          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs col-span-2 sm:col-span-1"
+        >
+          <div className="flex items-center justify-between w-full mb-1.5">
+            <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
+              Marketing Hub
+            </span>
+            <div className="w-6 h-6 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-black text-slate-900 truncate">
+              {profile?.dmActivePlan?.productName || 'Active GTM'}
+            </div>
+            <div className="text-[10px] font-semibold text-sky-600 flex items-center gap-1 mt-0.5">
+              <span>{profile?.dmActivePlan?.platforms?.length || 0} Social Channels</span>
+              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* LOADING STATE */}
@@ -1374,53 +1507,59 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
         {/* Horizontal Sequence of 4 Quarters with Connecting Arrows */}
         <div className="flex flex-col md:flex-row items-center gap-3">
-          {quartersList.map((q, qIdx) => {
-            const isSelected = selectedQuarterIdx === qIdx;
-            const themeConfig = [
-              { color: 'bg-indigo-500 text-white', ring: 'border-indigo-200 hover:border-indigo-400', icon: Rocket },
-              { color: 'bg-sky-500 text-white', ring: 'border-sky-200 hover:border-sky-400', icon: Users },
-              { color: 'bg-amber-500 text-white', ring: 'border-amber-200 hover:border-amber-400', icon: FileText },
-              { color: 'bg-emerald-500 text-white', ring: 'border-emerald-200 hover:border-emerald-400', icon: TrendingUp },
-            ][qIdx % 4];
-            const Icon = themeConfig.icon;
+          {filteredQuarters.length === 0 ? (
+            <div className="w-full py-8 text-center text-xs font-semibold text-slate-500 bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
+              No roadmap quarters match "{searchTerm}". Try clearing your search.
+            </div>
+          ) : (
+            filteredQuarters.map((q, qIdx) => {
+              const isSelected = selectedQuarterIdx === qIdx;
+              const themeConfig = [
+                { color: 'bg-indigo-500 text-white', ring: 'border-indigo-200 hover:border-indigo-400', icon: Rocket },
+                { color: 'bg-sky-500 text-white', ring: 'border-sky-200 hover:border-sky-400', icon: Users },
+                { color: 'bg-amber-500 text-white', ring: 'border-amber-200 hover:border-amber-400', icon: FileText },
+                { color: 'bg-emerald-500 text-white', ring: 'border-emerald-200 hover:border-emerald-400', icon: TrendingUp },
+              ][qIdx % 4];
+              const Icon = themeConfig.icon;
 
-            return (
-              <React.Fragment key={qIdx}>
-                <div
-                  onClick={() => setSelectedQuarterIdx(qIdx)}
-                  className={`flex-1 w-full p-4 rounded-2xl border transition-all cursor-pointer bg-white hover:shadow-md flex flex-col justify-between min-h-[140px] relative group ${
-                    isSelected ? 'border-indigo-500 ring-2 ring-indigo-100 shadow-sm' : themeConfig.ring
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl ${themeConfig.color} flex items-center justify-center shrink-0 shadow-2xs`}>
-                        <Icon className="w-4 h-4" />
+              return (
+                <React.Fragment key={qIdx}>
+                  <div
+                    onClick={() => setSelectedQuarterIdx(qIdx)}
+                    className={`flex-1 w-full p-4 rounded-2xl border transition-all cursor-pointer bg-white hover:shadow-md flex flex-col justify-between min-h-[140px] relative group ${
+                      isSelected ? 'border-indigo-500 ring-2 ring-indigo-100 shadow-sm' : themeConfig.ring
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-8 h-8 rounded-xl ${themeConfig.color} flex items-center justify-center shrink-0 shadow-2xs`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="leading-tight">
+                          <span className="text-[11px] font-black text-slate-900 block">{`Q${qIdx + 1}`}</span>
+                          <span className="text-[9px] font-semibold text-slate-400 block">{`Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`}</span>
+                        </div>
                       </div>
-                      <div className="leading-tight">
-                        <span className="text-[11px] font-black text-slate-900 block">{`Q${qIdx + 1}`}</span>
-                        <span className="text-[9px] font-semibold text-slate-400 block">{`Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`}</span>
-                      </div>
+                      <p className="text-xs font-bold text-slate-800 leading-snug line-clamp-2">
+                        {q.focus}
+                      </p>
                     </div>
-                    <p className="text-xs font-bold text-slate-800 leading-snug line-clamp-2">
-                      {q.focus}
-                    </p>
+
+                    <div className="flex items-center justify-between pt-3 mt-auto border-t border-slate-100">
+                      <span className="text-[11px] font-extrabold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
+                        {Math.round(q.progress)}%
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 mt-auto border-t border-slate-100">
-                    <span className="text-[11px] font-extrabold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
-                      {Math.round(q.progress)}%
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
-                  </div>
-                </div>
-
-                {qIdx < 3 && (
-                  <ArrowRight className="w-4 h-4 text-slate-300 hidden md:block shrink-0" />
-                )}
-              </React.Fragment>
-            );
-          })}
+                  {qIdx < filteredQuarters.length - 1 && (
+                    <ArrowRight className="w-4 h-4 text-slate-300 hidden md:block shrink-0" />
+                  )}
+                </React.Fragment>
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -1607,13 +1746,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                     stroke="#4f46e5"
                     strokeWidth="9"
                     strokeDasharray={238.76}
-                    strokeDashoffset={238.76 * (1 - 0.8)}
+                    strokeDashoffset={238.76 * (1 - (activeProducts[0]?.progress || 75) / 100)}
                     strokeLinecap="round"
                     fill="transparent"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-base font-black text-slate-900">80%</span>
+                  <span className="text-base font-black text-slate-900">{activeProducts[0]?.progress || 75}%</span>
                 </div>
               </div>
 
@@ -1622,16 +1761,16 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 <div className="flex items-center justify-between gap-4">
                   <span className="flex items-center gap-2 text-slate-700">
                     <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
-                    {activeProducts[0]?.name || "EZCirkit"}
+                    <span className="max-w-[100px] truncate">{activeProducts[0]?.name || "Core Product"}</span>
                   </span>
-                  <span className="text-slate-900 font-black">80%</span>
+                  <span className="text-slate-900 font-black">{activeProducts[0]?.progress || 75}%</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span className="flex items-center gap-2 text-slate-500">
                     <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
-                    {activeProducts[1]?.name || "Detach"}
+                    <span className="max-w-[100px] truncate">{activeProducts[1]?.name || "Secondary Product"}</span>
                   </span>
-                  <span className="text-slate-500 font-bold">20%</span>
+                  <span className="text-slate-500 font-bold">{100 - (activeProducts[0]?.progress || 75)}%</span>
                 </div>
               </div>
             </div>
@@ -1642,7 +1781,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 <Lightbulb className="w-4 h-4 text-amber-600" />
               </div>
               <p className="text-xs font-bold text-slate-800 leading-snug">
-                Prioritize EZCirkit for early revenue while maintaining a focused Detach validation track.
+                {profile?.productSuiteRecommendations?.executiveSummary || 
+                 profile?.productSuiteRecommendations?.resourceAllocation || 
+                 `Prioritize ${activeProducts[0]?.name || "core revenue drivers"} for immediate traction while maintaining structured validation on secondary pipelines.`}
               </p>
             </div>
           </div>
@@ -1650,10 +1791,10 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           {/* Action Button */}
           <Button
             type="button"
-            onClick={() => setIsChatOpen(true)}
+            onClick={() => hasPlan ? setIsChatOpen(true) : setIsGoalsModalOpen(true)}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 rounded-xl gap-1.5 shadow-sm mt-3"
           >
-            Generate Action Plan <ArrowRight className="w-3.5 h-3.5" />
+            {hasPlan ? "Consult Roadmap Co-Pilot" : "Generate 12-Month Plan"} <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </div>
       </div>
@@ -1664,20 +1805,29 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         {/* Column 1: Strategic Focus */}
         <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-5 md:p-6 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 pb-1">
-              <Target className="w-4 h-4 text-indigo-600 shrink-0" />
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Strategic Focus</h3>
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-indigo-600 shrink-0" />
+                <h3 className="text-sm font-black text-slate-900 tracking-tight">Strategic Focus</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigate('product')}
+                className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-0.5"
+              >
+                All Products <ArrowRight className="w-3 h-3" />
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {/* Product 1: EZCirkit */}
+              {/* Product 1 */}
               <div className="p-3 rounded-2xl border border-slate-200/80 bg-slate-50/40 space-y-2 flex flex-col justify-between">
                 <div className="space-y-1.5">
                   <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
                     <Cpu className="w-4 h-4" />
                   </div>
                   <div>
-                    <h5 className="text-xs font-black text-slate-900">{activeProducts[0]?.name || "EZCirkit"}</h5>
+                    <h5 className="text-xs font-black text-slate-900 truncate">{activeProducts[0]?.name || "Core Product"}</h5>
                     <p className="text-[10px] text-slate-500 font-semibold leading-tight line-clamp-2">
                       {activeProducts[0]?.focus || "Early revenue & market traction"}
                     </p>
@@ -1686,29 +1836,29 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
                 <div className="space-y-1 pt-1">
                   <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: '80%' }} />
+                    <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${activeProducts[0]?.progress || 75}%` }} />
                   </div>
                   <div className="flex justify-between items-center text-[10px] font-bold">
                     <button
                       type="button"
-                      onClick={() => onNavigate('productSuite')}
+                      onClick={() => onNavigate('product')}
                       className="text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
                     >
                       View Details <ArrowRight className="w-2.5 h-2.5" />
                     </button>
-                    <span className="text-slate-600 font-extrabold">80%</span>
+                    <span className="text-slate-600 font-extrabold">{activeProducts[0]?.progress || 75}%</span>
                   </div>
                 </div>
               </div>
 
-              {/* Product 2: Detach */}
+              {/* Product 2 */}
               <div className="p-3 rounded-2xl border border-slate-200/80 bg-slate-50/40 space-y-2 flex flex-col justify-between">
                 <div className="space-y-1.5">
                   <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
                     <Server className="w-4 h-4" />
                   </div>
                   <div>
-                    <h5 className="text-xs font-black text-slate-900">{activeProducts[1]?.name || "Detach"}</h5>
+                    <h5 className="text-xs font-black text-slate-900 truncate">{activeProducts[1]?.name || "Secondary Product"}</h5>
                     <p className="text-[10px] text-slate-500 font-semibold leading-tight line-clamp-2">
                       {activeProducts[1]?.focus || "Validation & waitlist growth"}
                     </p>
@@ -1717,17 +1867,17 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
                 <div className="space-y-1 pt-1">
                   <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-sky-500 h-1.5 rounded-full" style={{ width: '20%' }} />
+                    <div className="bg-sky-500 h-1.5 rounded-full" style={{ width: `${100 - (activeProducts[0]?.progress || 75)}%` }} />
                   </div>
                   <div className="flex justify-between items-center text-[10px] font-bold">
                     <button
                       type="button"
-                      onClick={() => onNavigate('productSuite')}
+                      onClick={() => onNavigate('product')}
                       className="text-sky-600 hover:text-sky-800 flex items-center gap-0.5"
                     >
                       View Details <ArrowRight className="w-2.5 h-2.5" />
                     </button>
-                    <span className="text-slate-600 font-extrabold">20%</span>
+                    <span className="text-slate-600 font-extrabold">{100 - (activeProducts[0]?.progress || 75)}%</span>
                   </div>
                 </div>
               </div>
@@ -1785,26 +1935,56 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               </Button>
             </div>
 
-            {/* Filter Category Chips */}
+            {/* Clickable Feature Category Chips - Live Sync to Sub-Suites */}
             <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-bold">
-              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
+              <button
+                type="button"
+                onClick={() => onNavigate('leads')}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                title="View CRM Leads"
+              >
                 <Users className="w-2.5 h-2.5" /> CRM
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100">
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('workshops')}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 hover:bg-sky-100 transition-colors"
+                title="View Workshops"
+              >
                 <GraduationCap className="w-2.5 h-2.5" /> Workshops
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('sales')}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 transition-colors"
+                title="View Sales Analytics"
+              >
                 <TrendingUp className="w-2.5 h-2.5" /> Sales
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('operations')}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                title="View Operations"
+              >
                 <Settings className="w-2.5 h-2.5" /> Operations
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100">
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('tasks')}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition-colors"
+                title="View Tasks"
+              >
                 <CheckSquare className="w-2.5 h-2.5" /> Tasks
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100">
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('activity')}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100 transition-colors"
+                title="View Daily Activity"
+              >
                 <MessageSquare className="w-2.5 h-2.5" /> Feedback
-              </span>
+              </button>
             </div>
 
             {/* Status Card */}
