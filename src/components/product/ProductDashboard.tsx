@@ -12,7 +12,7 @@ import {
   Box, Sparkles, Loader2, Code, TrendingUp, DollarSign, ListTodo, AlertTriangle, 
   HelpCircle, ChevronRight, FileText, CheckCircle2, Mic, Presentation,
   History, Clock, Trash2, RotateCcw, Save, Check, Plus, Edit3, Compass,
-  Layers, ChevronDown
+  Layers, ChevronDown, ArrowLeft
 } from 'lucide-react';
 import {
   Dialog,
@@ -26,6 +26,7 @@ import { TrackedProduct, ProductSuiteRecommendationData, ProductStatus } from '.
 import { ProductModal } from './ProductModal';
 import { ProductPortfolioTracker } from './ProductPortfolioTracker';
 import { ProductSuiteRecommendations } from './ProductSuiteRecommendations';
+import { DetachProductShowcase } from './DetachProductShowcase';
 
 interface ProductDashboardProps {
   userId: string;
@@ -422,24 +423,6 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
 
         <button
           type="button"
-          onClick={() => setMainTab('blueprint')}
-          className={`py-3 px-4 text-xs font-black tracking-wide transition-all border-b-2 flex items-center gap-2 shrink-0 ${
-            mainTab === 'blueprint'
-              ? 'border-indigo-600 text-indigo-700 bg-indigo-50/20'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-indigo-600" />
-          Product Deep-Dive & Blueprint
-          {activeProduct && (
-            <span className="bg-indigo-100 text-indigo-800 rounded-full px-2 py-0.5 text-[10px] font-bold max-w-[120px] truncate">
-              {activeProduct.name}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
           onClick={() => setMainTab('recommendations')}
           className={`py-3 px-4 text-xs font-black tracking-wide transition-all border-b-2 flex items-center gap-2 shrink-0 ${
             mainTab === 'recommendations'
@@ -483,6 +466,24 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
       {/* TAB 2: PRODUCT DEEP-DIVE & AI BLUEPRINT */}
       {mainTab === 'blueprint' && (
         <div className="space-y-6">
+          {/* Back to Portfolio Breadcrumb Bar */}
+          <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200/90 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setMainTab('portfolio')}
+              className="inline-flex items-center gap-2 text-xs font-black text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-3.5 py-1.5 rounded-lg transition-all shadow-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Product Portfolio & Tracker
+            </button>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+              <span className="hidden sm:inline">Active Blueprint:</span>
+              <span className="bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full font-black text-xs">
+                {activeProduct?.name || 'Selected Product'}
+              </span>
+            </div>
+          </div>
+
           {/* Product Switcher Bar */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm">
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -552,6 +553,24 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
               </Button>
             </div>
           </div>
+
+          {/* Detach Hardware Showcase (Shown under Detach product suite page) */}
+          {activeProduct && (products.length === 1 || activeProduct.name.toLowerCase().includes('detach') || activeProduct.name.toLowerCase().includes('luna')) && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                    Flagship Hardware Overview
+                  </h3>
+                </div>
+                <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full">
+                  Physical Companion
+                </span>
+              </div>
+              <DetachProductShowcase />
+            </div>
+          )}
 
           {/* Loading Animation */}
           {loading && (

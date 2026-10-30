@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import {
   Wifi, Battery, Shield, Zap, Smartphone, Package,
-  ArrowUpRight, CheckCircle2, Star, ChevronDown, ChevronUp
+  ArrowUpRight, CheckCircle2, Star, ChevronDown, ChevronUp, Sparkles
 } from 'lucide-react';
 
 const DETACH_FEATURES = [
@@ -74,62 +74,51 @@ export function DetachProductShowcase() {
   const [specsExpanded, setSpecsExpanded] = useState(false);
 
   return (
-    <div className="w-full rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-      {/* ── Hero band ── */}
+    <div className="w-full rounded-xl border border-slate-200/90 bg-white shadow-sm overflow-hidden">
+      {/* ── Hero band (Medium Sized) ── */}
       <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white overflow-hidden">
         {/* decorative blobs */}
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-sky-500/10 blur-2xl pointer-events-none" />
+        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-36 h-36 rounded-full bg-sky-500/10 blur-xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-0">
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-4">
           {/* Left – copy */}
-          <div className="flex-1 p-8 md:p-12 space-y-5">
+          <div className="flex-1 p-5 md:p-6 space-y-3">
             {/* badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+              <span className="inline-flex items-center gap-1.5 bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full">
                 <Star className="w-3 h-3 fill-indigo-300 text-indigo-300" />
                 Flagship Hardware
               </span>
-              <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+              <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full">
                 <CheckCircle2 className="w-3 h-3" />
-                Now Available
+                Active Device
               </span>
             </div>
 
             {/* heading */}
             <div>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.05]">
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">
                 Detach
               </h2>
-              <p className="text-indigo-200/70 text-sm font-semibold mt-1 uppercase tracking-widest">
-                by EZCirkit · Physical Disconnect Device
+              <p className="text-indigo-200/70 text-xs font-semibold mt-0.5 uppercase tracking-wider">
+                by EZCirkit · Physical Disconnect Companion
               </p>
             </div>
 
-            <p className="text-slate-300/90 text-sm md:text-base leading-relaxed max-w-lg">
-              <strong className="text-white">Detach</strong> is a pocket-sized wireless hardware device that lets you
+            <p className="text-slate-300/90 text-xs md:text-sm leading-relaxed max-w-lg">
+              <strong className="text-white">Detach</strong> is a pocket-sized wireless hardware companion that lets you
               physically disconnect — from your phone, your desk, your digital world — with a single tap.
               Built for founders, remote workers, and high-performers who need hard boundaries between deep-work
-              and downtime. Premium matte-black finish with a gold-clasp wrist strap.
+              and downtime.
             </p>
 
-            {/* CTA row */}
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <button className="inline-flex items-center gap-2 bg-white text-slate-900 font-extrabold text-sm px-5 py-2.5 rounded-xl hover:bg-indigo-50 transition-colors shadow-lg shadow-black/20">
-                Learn More
-                <ArrowUpRight className="w-4 h-4" />
-              </button>
-              <button className="inline-flex items-center gap-2 border border-white/20 text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-white/10 transition-colors">
-                Pre-order Now
-              </button>
-            </div>
-
             {/* quick specs strip */}
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex flex-wrap gap-2 pt-1">
               {['42 g', 'BT 5.3', '36 hr battery', 'IP54', 'AES-256'].map((s) => (
                 <span
                   key={s}
-                  className="bg-white/10 border border-white/10 text-white/80 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                  className="bg-white/10 border border-white/10 text-white/80 text-[10px] font-bold px-2.5 py-0.5 rounded-full"
                 >
                   {s}
                 </span>
@@ -137,9 +126,9 @@ export function DetachProductShowcase() {
             </div>
           </div>
 
-          {/* Right – product image */}
-          <div className="lg:w-80 xl:w-96 flex items-end justify-center p-8 lg:p-12 shrink-0">
-            <div className="relative w-56 h-72 lg:w-64 lg:h-80 drop-shadow-2xl">
+          {/* Right – product image (Medium Size) */}
+          <div className="md:w-56 lg:w-64 flex items-center justify-center p-4 md:p-6 shrink-0">
+            <div className="relative w-36 h-48 md:w-44 md:h-56 drop-shadow-xl">
               <Image
                 src="/detach-device.png"
                 alt="Detach device – matte black wireless physical disconnect hardware"
@@ -152,29 +141,29 @@ export function DetachProductShowcase() {
         </div>
       </div>
 
-      {/* ── Feature grid ── */}
-      <div className="p-6 md:p-8 bg-slate-50/50 border-t border-slate-200/60">
-        <div className="mb-6">
-          <h3 className="text-lg font-black text-slate-900">What Makes Detach Different</h3>
-          <p className="text-xs text-slate-500 font-medium mt-1">
+      {/* ── Feature grid (Medium/Compact) ── */}
+      <div className="p-4 md:p-5 bg-slate-50/50 border-t border-slate-200/60">
+        <div className="mb-3">
+          <h3 className="text-sm font-black text-slate-900">What Makes Detach Different</h3>
+          <p className="text-[11px] text-slate-500 font-medium">
             Hardware-grade freedom for the always-on generation.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {DETACH_FEATURES.map((feat) => {
             const Icon = feat.icon;
             return (
               <div
                 key={feat.title}
-                className={`flex items-start gap-4 p-4 rounded-xl border bg-white ${feat.border} hover:shadow-sm transition-shadow`}
+                className={`flex items-start gap-3 p-3 rounded-lg border bg-white ${feat.border} hover:shadow-sm transition-shadow`}
               >
-                <div className={`p-2.5 rounded-lg ${feat.bg} shrink-0`}>
-                  <Icon className={`w-5 h-5 ${feat.color}`} />
+                <div className={`p-2 rounded-md ${feat.bg} shrink-0`}>
+                  <Icon className={`w-4 h-4 ${feat.color}`} />
                 </div>
-                <div className="space-y-1 min-w-0">
-                  <h4 className="text-sm font-black text-slate-900 leading-tight">{feat.title}</h4>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{feat.description}</p>
+                <div className="space-y-0.5 min-w-0">
+                  <h4 className="text-xs font-black text-slate-900 leading-tight">{feat.title}</h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">{feat.description}</p>
                 </div>
               </div>
             );
@@ -187,23 +176,23 @@ export function DetachProductShowcase() {
         <button
           type="button"
           onClick={() => setSpecsExpanded((v) => !v)}
-          className="w-full flex items-center justify-between px-6 md:px-8 py-4 text-sm font-black text-slate-700 hover:bg-slate-50 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-3 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors"
         >
           <span className="flex items-center gap-2">
-            <Package className="w-4 h-4 text-slate-400" />
+            <Package className="w-3.5 h-3.5 text-slate-400" />
             Technical Specifications
           </span>
           {specsExpanded
-            ? <ChevronUp className="w-4 h-4 text-slate-400" />
-            : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+            : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
         </button>
 
         {specsExpanded && (
-          <div className="px-6 md:px-8 pb-6 grid grid-cols-2 md:grid-cols-4 gap-3 animate-in fade-in duration-200">
+          <div className="px-5 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 animate-in fade-in duration-200">
             {SPECS.map((spec) => (
-              <div key={spec.label} className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-0.5">
+              <div key={spec.label} className="bg-slate-50 border border-slate-200/80 rounded-lg p-2.5 space-y-0.5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{spec.label}</p>
-                <p className="text-sm font-bold text-slate-900">{spec.value}</p>
+                <p className="text-xs font-bold text-slate-900">{spec.value}</p>
               </div>
             ))}
           </div>

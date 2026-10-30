@@ -12,7 +12,6 @@ import {
   AlertTriangle, ShieldAlert, Zap, Compass, Check
 } from 'lucide-react';
 import { TrackedProduct, ProductStage, ProductStatus, ProductPriority } from './types';
-import { DetachProductShowcase } from './DetachProductShowcase';
 
 interface ProductPortfolioTrackerProps {
   products: TrackedProduct[];
@@ -204,18 +203,6 @@ export function ProductPortfolioTracker({
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* ── Detach Featured Product Showcase ── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-black uppercase tracking-widest text-slate-400">Featured Product</span>
-          <span className="h-px flex-1 bg-slate-200/80" />
-          <span className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wide">
-            Flagship Hardware
-          </span>
-        </div>
-        <DetachProductShowcase />
       </div>
 
       {/* ── Tracked Products Section Header ── */}
