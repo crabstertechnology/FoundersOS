@@ -969,7 +969,7 @@ export default function FounderOSPage() {
         }}
       >
         {/* Dynamic Inner Tab Switcher */}
-        <main className="flex-1 p-3 sm:p-4 md:p-8 max-w-[1500px] w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-5 md:p-6 w-full">
           <Tabs value={activeTab} className="w-full">
             {/* Console Landing Dashboard */}
             <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none">

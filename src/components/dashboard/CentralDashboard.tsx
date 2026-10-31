@@ -1213,12 +1213,12 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const isSelectedMonthActive = selectedMonthIdx === currentMonthIndex;
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500 pb-12">
+    <div className="space-y-6 w-full animate-in fade-in duration-500 pb-12">
       
       {/* Top Header matching AI Strategic Planner visual UI/UX */}
       <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 pt-2">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs shrink-0 mt-0.5">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs shrink-0 mt-0.5">
             <Sparkles className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
@@ -1239,7 +1239,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             variant="outline"
             size="sm"
             onClick={() => setIsHistoryListModalOpen(true)}
-            className="h-8 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold gap-1.5 px-3 shadow-xs"
+            className="h-8 rounded-full border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold gap-1.5 px-3.5 shadow-xs"
           >
             <Clock className="w-3.5 h-3.5 text-slate-500" />
             Plan History
@@ -1249,7 +1249,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           <Button
             size="sm"
             onClick={handleExportPlan}
-            className="h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold gap-1.5 px-3.5 shadow-xs"
+            className="h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold gap-1.5 px-4 shadow-xs"
           >
             <UploadCloud className="w-3.5 h-3.5 text-white" />
             Export
@@ -1263,13 +1263,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('finance')}
-          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Finance Suite
             </span>
-            <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1288,13 +1288,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('sales')}
-          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Sales Tracker
             </span>
-            <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Activity className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1313,13 +1313,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('operations')}
-          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Operations Hub
             </span>
-            <div className="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
               <Settings className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1338,13 +1338,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('product')}
-          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Product Suite
             </span>
-            <div className="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
               <Box className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1363,13 +1363,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('dm')}
-          className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs col-span-2 sm:col-span-1"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs col-span-2 sm:col-span-1"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Marketing Hub
             </span>
-            <div className="w-6 h-6 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1382,7 +1382,6 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
-        </button>
       </div>
 
       {/* LOADING STATE */}
@@ -1520,7 +1519,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 <div
                   key={qIdx}
                   onClick={() => setSelectedMonthIdx(qIdx * 3)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  className={`p-3 rounded-2xl border transition-all cursor-pointer ${
                     isQuarterActive
                       ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-100 shadow-2xs'
                       : 'bg-slate-50/50 border-slate-200/70 hover:bg-slate-100/60'
@@ -1583,13 +1582,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
           {/* Details (Appears when any circle is touched) giving content about BOTH Roadmap and Milestone */}
           {selectedMonthIdx !== null && selectedMonthData ? (
-            <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/90 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="p-5 rounded-3xl bg-slate-50/70 border border-slate-200/90 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
               
               {/* Roadmap Context Bar */}
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-slate-200/70">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black px-2.5 py-0.5 rounded-md bg-indigo-100 text-indigo-800">
+                    <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
                       {selectedMonthData.quarterName} Roadmap ({selectedMonthData.quarterPeriod})
                     </span>
                     <span className="text-[11px] font-extrabold text-slate-500">
@@ -1608,7 +1607,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                       size="sm"
                       variant={selectedMonthData.isCompleted ? "outline" : "default"}
                       onClick={() => handleToggleMonthlyMilestone(selectedMonthData.monthName, selectedMonthIdx)}
-                      className={`h-7 text-xs font-bold px-3 rounded-lg ${
+                      className={`h-7 text-xs font-bold px-3.5 rounded-full ${
                         selectedMonthData.isCompleted
                           ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
                           : 'bg-indigo-600 hover:bg-indigo-700 text-white'
@@ -1620,7 +1619,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                   <button
                     type="button"
                     onClick={() => setSelectedMonthIdx(null)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+                    className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
                     title="Close details"
                   >
                     <X className="w-4 h-4" />
@@ -1629,12 +1628,12 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               </div>
 
               {/* Monthly Milestone Objective Title */}
-              <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 space-y-1">
+              <div className="p-4 bg-white rounded-2xl border border-slate-200/80 space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                     {selectedMonthData.monthName} Milestone Objective
                   </span>
-                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
                     selectedMonthData.isCompleted
                       ? 'bg-emerald-100 text-emerald-800'
                       : selectedMonthData.isCurrent
@@ -1650,8 +1649,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               </div>
 
               {/* Key Targets & Deliverables in One Line (Points removed) */}
-              <div className="p-3 bg-white rounded-xl border border-slate-200/80 flex flex-wrap lg:flex-nowrap items-center gap-x-3 gap-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md shrink-0">
+              <div className="p-3.5 bg-white rounded-2xl border border-slate-200/80 flex flex-wrap lg:flex-nowrap items-center gap-x-3 gap-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full shrink-0">
                   <Target className="w-3.5 h-3.5 text-indigo-600" />
                   <span>Key Targets &amp; Deliverables:</span>
                 </div>
@@ -1736,18 +1735,18 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
             {/* Visual Strategic Tags & Key Signals (Clean visual breakdown instead of big text) */}
             <div className="mt-3 grid grid-cols-2 gap-2.5">
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Stance</span>
                 <span className="text-xs font-black text-indigo-600 block truncate">Traction &amp; Cashflow</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Lead Driver</span>
                 <span className="text-xs font-black text-slate-800 block truncate">{activeProducts[0]?.name || "Core Product"}</span>
               </div>
             </div>
 
             {/* Concise Visual Highlight Callout */}
-            <div className="mt-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
+            <div className="mt-2.5 p-3 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
                 <span className="text-xs font-bold text-slate-800 truncate">
@@ -1768,7 +1767,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           <Button
             type="button"
             onClick={() => hasPlan ? setIsChatOpen(true) : setIsGoalsModalOpen(true)}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 rounded-xl gap-1.5 shadow-sm mt-3"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 rounded-full gap-1.5 shadow-sm mt-3"
           >
             {hasPlan ? "Consult Roadmap Co-Pilot" : "Generate 12-Month Plan"} <ArrowRight className="w-3.5 h-3.5" />
           </Button>
@@ -1789,7 +1788,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               Log your progress, milestones or roadblocks. FounderOS AI will adapt your roadmap, targets and tasks.
             </p>
             <textarea
-              className="w-full text-xs font-medium p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none bg-slate-50/50 placeholder-slate-400"
+              className="w-full text-xs font-medium p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none bg-slate-50/50 placeholder-slate-400"
               rows={2}
               placeholder="E.g. Completed CRM setup. Delayed MVP coding due to API bugs. Closed ₹100k deal..."
               value={weeklyProgress}
@@ -1803,7 +1802,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               size="sm"
               onClick={() => handleGeneratePlan(undefined, weeklyProgress)}
               disabled={!weeklyProgress.trim() || aiLoading || readOnly}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold h-9 px-4 rounded-xl gap-1.5 shadow-xs"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold h-9 px-5 rounded-full gap-1.5 shadow-xs"
             >
               Analyze &amp; Update Plan <ArrowRight className="w-3.5 h-3.5" />
             </Button>
@@ -1822,7 +1821,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 size="sm"
                 onClick={handleGenerateWeeklyReport}
                 disabled={weeklyReportLoading || readOnly}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold h-7 px-2.5 rounded-lg gap-1 shadow-xs"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold h-7 px-3 rounded-full gap-1 shadow-xs"
               >
                 {weeklyReportLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Generate Report"} <ArrowRight className="w-3 h-3" />
               </Button>
@@ -1833,7 +1832,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => onNavigate('leads')}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-colors"
                 title="View CRM Leads"
               >
                 <Users className="w-2.5 h-2.5" /> CRM
@@ -1841,7 +1840,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => onNavigate('workshops')}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 hover:bg-sky-100 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 hover:bg-sky-100 transition-colors"
                 title="View Workshops"
               >
                 <GraduationCap className="w-2.5 h-2.5" /> Workshops
@@ -1849,7 +1848,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => onNavigate('sales')}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 transition-colors"
                 title="View Sales Analytics"
               >
                 <TrendingUp className="w-2.5 h-2.5" /> Sales
@@ -1857,7 +1856,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => onNavigate('operations')}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
                 title="View Operations"
               >
                 <Settings className="w-2.5 h-2.5" /> Operations
@@ -1865,7 +1864,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => onNavigate('tasks')}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition-colors"
                 title="View Tasks"
               >
                 <CheckSquare className="w-2.5 h-2.5" /> Tasks
@@ -1873,7 +1872,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => onNavigate('activity')}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100 transition-colors"
                 title="View Daily Activity"
               >
                 <MessageSquare className="w-2.5 h-2.5" /> Feedback
@@ -1883,9 +1882,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             {/* Status Card */}
             <div
               onClick={() => setIsWeeklyReportModalOpen(true)}
-              className="p-3 rounded-2xl bg-slate-50/60 border border-slate-200/80 flex items-start gap-2.5 cursor-pointer hover:bg-slate-100/60 transition-colors"
+              className="p-3.5 rounded-2xl bg-slate-50/60 border border-slate-200/80 flex items-start gap-2.5 cursor-pointer hover:bg-slate-100/60 transition-colors"
             >
-              <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
                 <BarChart3 className="w-3.5 h-3.5 text-indigo-600" />
               </div>
               <div className="space-y-0.5 leading-tight">
@@ -2407,7 +2406,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
       {/* Roadmap Co-Pilot Chat Dialog Modal */}
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="max-w-2xl w-[95vw] h-[85vh] max-h-[700px] flex flex-col p-0 border border-slate-200 shadow-2xl overflow-hidden rounded-none">
+        <DialogContent className="max-w-2xl w-[95vw] h-[85vh] max-h-[700px] flex flex-col p-0 border border-slate-200 shadow-2xl overflow-hidden rounded-3xl">
           <DialogHeader className="border-b bg-indigo-50/20 px-5 py-4 flex flex-row items-center justify-between shrink-0">
             <div>
               <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">

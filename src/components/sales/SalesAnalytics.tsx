@@ -464,7 +464,7 @@ export function SalesAnalytics({
   const maxStageCount = Math.max(...funnelStages.map(s => stageStats[s.value]?.count || 0), 1);
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <div className="space-y-6 w-full animate-in fade-in duration-500">
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {activeSubTab === undefined && (

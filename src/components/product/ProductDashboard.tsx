@@ -384,7 +384,7 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
   const hasPlan = aiPlan && !loading;
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <div className="space-y-6 w-full animate-in fade-in duration-500">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-2 mt-2">
         <div>

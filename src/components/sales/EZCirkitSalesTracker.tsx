@@ -46,7 +46,7 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
   const setActiveTab = onSubTabChange !== undefined ? onSubTabChange : setLocalActiveTab;
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <div className="space-y-6 w-full animate-in fade-in duration-500">
       {activeSubTab === undefined && (
         <div>
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 leading-tight mb-1">
