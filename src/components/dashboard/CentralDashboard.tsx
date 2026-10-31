@@ -118,12 +118,11 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [latestModSuggestion, setLatestModSuggestion] = useState('');
 
   // UI/UX state for Central Console redesign
-  const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState<number | null>(null);
   const [selectedQuarterIdx, setSelectedQuarterIdx] = useState<number | null>(null);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [isHistoryListModalOpen, setIsHistoryListModalOpen] = useState(false);
   const [isWeeklyReportModalOpen, setIsWeeklyReportModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [activeQuarterTab, setActiveQuarterTab] = useState<number>(0);
   
   // Draggable Roadmap Co-Pilot Bot state
@@ -1141,23 +1140,41 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     { month: "Month 12", milestone: "Annual Target Review, Detach Commercial Launch & Q1 Planning", metrics: ["Annual revenue: ₹1,500,000", "Active student users: 2,500", "Net margin: Positive"] },
   ];
 
-  const currentMonthData = (() => {
+  const selectedMonthData = useMemo(() => {
+    if (selectedMonthIdx === null || selectedMonthIdx === undefined) return null;
     const raw = strategicPlan?.monthlyMilestones?.[selectedMonthIdx];
     const def = defaultMilestones[selectedMonthIdx] || defaultMilestones[0];
     const milestoneTitle = raw?.milestone || raw?.objective || def.milestone;
-    const metricsRaw = (raw?.keyMetrics && raw.keyMetrics.length > 0) ? raw.keyMetrics : def.metrics;
-    
-    const m1 = (metricsRaw[0] || "BOM cost: ≤ ₹750").split(/[:=]/);
-    const m2 = (metricsRaw[1] || "Curriculum downloads: 150").split(/[:=]/);
-    const m3 = (metricsRaw[2] || "Paid pre-orders: 10").split(/[:=]/);
+
+    // Extract all points neatly
+    const points: string[] = [];
+    if (raw?.keyMetrics && Array.isArray(raw.keyMetrics) && raw.keyMetrics.length > 0) {
+      points.push(...raw.keyMetrics.filter(Boolean));
+    } else if (def?.metrics && Array.isArray(def.metrics)) {
+      points.push(...def.metrics.filter(Boolean));
+    }
+
+    if (raw?.deliverables && Array.isArray(raw.deliverables)) {
+      points.push(...raw.deliverables.filter(Boolean));
+    } else if (raw?.tasks && Array.isArray(raw.tasks)) {
+      points.push(...raw.tasks.filter(Boolean));
+    }
+
+    const qIdx = Math.floor(selectedMonthIdx / 3);
+    const qData = quartersList[qIdx];
 
     return {
+      idx: selectedMonthIdx,
+      monthNum: selectedMonthIdx + 1,
+      monthName: `Month ${selectedMonthIdx + 1}`,
       title: milestoneTitle,
-      metric1: { label: m1[0]?.trim() || "BOM cost", value: m1.slice(1).join(':').trim() || "≤ ₹750" },
-      metric2: { label: m2[0]?.trim() || "Curriculum downloads", value: m2.slice(1).join(':').trim() || "150" },
-      metric3: { label: m3[0]?.trim() || "Paid pre-orders", value: m3.slice(1).join(':').trim() || "10" }
+      points: points.length > 0 ? points : [def.milestone],
+      quarterName: `Q${qIdx + 1}`,
+      quarterFocus: qData?.focus || '',
+      isCompleted: completedMonthlyMilestones.includes(`Month ${selectedMonthIdx + 1}`) || completedMonthlyMilestones.includes(`M${selectedMonthIdx + 1}`),
+      isCurrent: selectedMonthIdx === currentMonthIndex
     };
-  })();
+  }, [selectedMonthIdx, strategicPlan, completedMonthlyMilestones, currentMonthIndex, quartersList]);
 
   const activeProducts = useMemo(() => {
     if (productKPIs.products && productKPIs.products.length > 0) {
@@ -1187,18 +1204,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     ];
   }, [productKPIs.products, salesKPIs.mrr]);
 
-  const filteredQuarters = useMemo(() => {
-    if (!searchTerm.trim()) return quartersList;
-    const term = searchTerm.toLowerCase();
-    return quartersList.filter(q => 
-      q.period.toLowerCase().includes(term) ||
-      q.focus.toLowerCase().includes(term) ||
-      q.objectives.some((obj: string) => obj.toLowerCase().includes(term))
-    );
-  }, [quartersList, searchTerm]);
-
-  const currentMonthName = `Month ${selectedMonthIdx + 1}`;
-  const isSelectedMonthCompleted = completedMonthlyMilestones.includes(currentMonthName) || completedMonthlyMilestones.includes(`M${selectedMonthIdx + 1}`);
+  const currentMonthName = selectedMonthIdx !== null ? `Month ${selectedMonthIdx + 1}` : '';
+  const isSelectedMonthCompleted = selectedMonthIdx !== null && (completedMonthlyMilestones.includes(currentMonthName) || completedMonthlyMilestones.includes(`M${selectedMonthIdx + 1}`));
   const isSelectedMonthActive = selectedMonthIdx === currentMonthIndex;
 
   return (
@@ -1220,18 +1227,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           </div>
         </div>
 
-        {/* Search, History & Export actions (Notification bell & Profile chip removed as requested) */}
+        {/* History & Export actions */}
         <div className="flex items-center flex-wrap gap-2.5">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search roadmap & milestones..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-44 md:w-56 shadow-xs font-medium"
-            />
-          </div>
 
           {/* Plan History Button */}
           <Button
@@ -1487,85 +1484,15 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         </div>
       </div>
 
-      {/* 12-Month Roadmap Card */}
-      <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-indigo-600 shrink-0" />
-            <h3 className="text-sm font-black text-slate-900 tracking-tight">12-Month Roadmap</h3>
-            <span className="text-xs text-slate-400 font-medium hidden sm:inline">
-              Click each quarter to view milestones and key focus areas.
-            </span>
-          </div>
-        </div>
-
-        {/* Horizontal Sequence of 4 Quarters with Connecting Arrows */}
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          {filteredQuarters.length === 0 ? (
-            <div className="w-full py-8 text-center text-xs font-semibold text-slate-500 bg-slate-50/60 rounded-2xl border border-dashed border-slate-200">
-              No roadmap quarters match "{searchTerm}". Try clearing your search.
-            </div>
-          ) : (
-            filteredQuarters.map((q, qIdx) => {
-              const isSelected = selectedQuarterIdx === qIdx;
-              const themeConfig = [
-                { color: 'bg-indigo-500 text-white', ring: 'border-indigo-200 hover:border-indigo-400', icon: Rocket },
-                { color: 'bg-sky-500 text-white', ring: 'border-sky-200 hover:border-sky-400', icon: Users },
-                { color: 'bg-amber-500 text-white', ring: 'border-amber-200 hover:border-amber-400', icon: FileText },
-                { color: 'bg-emerald-500 text-white', ring: 'border-emerald-200 hover:border-emerald-400', icon: TrendingUp },
-              ][qIdx % 4];
-              const Icon = themeConfig.icon;
-
-              return (
-                <React.Fragment key={qIdx}>
-                  <div
-                    onClick={() => setSelectedQuarterIdx(qIdx)}
-                    className={`flex-1 w-full p-4 rounded-2xl border transition-all cursor-pointer bg-white hover:shadow-md flex flex-col justify-between min-h-[140px] relative group ${
-                      isSelected ? 'border-indigo-500 ring-2 ring-indigo-100 shadow-sm' : themeConfig.ring
-                    }`}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 rounded-xl ${themeConfig.color} flex items-center justify-center shrink-0 shadow-2xs`}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="leading-tight">
-                          <span className="text-[11px] font-black text-slate-900 block">{`Q${qIdx + 1}`}</span>
-                          <span className="text-[9px] font-semibold text-slate-400 block">{`Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`}</span>
-                        </div>
-                      </div>
-                      <p className="text-xs font-bold text-slate-800 leading-snug line-clamp-2">
-                        {q.focus}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 mt-auto border-t border-slate-100">
-                      <span className="text-[11px] font-extrabold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
-                        {Math.round(q.progress)}%
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                  </div>
-
-                  {qIdx < filteredQuarters.length - 1 && (
-                    <ArrowRight className="w-4 h-4 text-slate-300 hidden md:block shrink-0" />
-                  )}
-                </React.Fragment>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Middle Two-Column Grid: Monthly Milestones (Left) & AI Strategic Insight (Right) */}
+      {/* Combined 12-Month Strategic Roadmap & Milestones (Left) & Visual AI Strategic Insight (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Column: Monthly Milestones (12 Months) - approx 64% width */}
+        {/* Left Column: Combined 12-Month Roadmap & Milestones - approx 64% width */}
         <div className="lg:col-span-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 space-y-6">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Monthly Milestones (12 Months)</h3>
+              <h3 className="text-sm font-black text-slate-900 tracking-tight">12-Month Roadmap &amp; Milestones</h3>
             </div>
             {/* Legend */}
             <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
@@ -1581,160 +1508,221 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             </div>
           </div>
 
-          {/* Stepper Timeline M1 to M12 */}
-          <div className="relative pt-2 pb-1">
-            <div className="absolute top-6 left-3 right-3 h-0.5 bg-slate-100 z-0" />
-            <div className="relative z-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none">
-              {Array.from({ length: 12 }).map((_, idx) => {
-                const mLabel = `M${idx + 1}`;
-                const mFullName = `Month ${idx + 1}`;
-                const isSelected = selectedMonthIdx === idx;
-                const isCompleted = completedMonthlyMilestones.includes(mFullName) || completedMonthlyMilestones.includes(mLabel);
-                const isCurrent = idx === currentMonthIndex;
+          {/* 4 Quarters with integrated Monthly Milestone Stars */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {quartersList.map((q, qIdx) => {
+              const themeConfig = [
+                { color: 'bg-indigo-500 text-white', icon: Rocket },
+                { color: 'bg-sky-500 text-white', icon: Users },
+                { color: 'bg-amber-500 text-white', icon: FileText },
+                { color: 'bg-emerald-500 text-white', icon: TrendingUp },
+              ][qIdx % 4];
+              const Icon = themeConfig.icon;
+              const quarterMonths = [qIdx * 3, qIdx * 3 + 1, qIdx * 3 + 2];
+              const isQuarterActive = quarterMonths.includes(selectedMonthIdx ?? -1);
 
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMonthIdx(idx)}
-                      className={`group relative w-8 h-8 flex items-center justify-center transition-all duration-200 focus:outline-hidden ${
-                        isSelected
-                          ? 'scale-125 z-20'
-                          : 'hover:scale-110 z-10'
-                      }`}
-                      title={`${mFullName}: ${isSelected ? 'Selected' : isCompleted ? 'Completed' : 'Upcoming'}`}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        className={`w-8 h-8 transition-all ${
-                          isSelected
-                            ? 'fill-indigo-600 text-indigo-700 drop-shadow-[0_2px_8px_rgba(79,70,229,0.45)]'
-                            : isCompleted
-                            ? 'fill-emerald-500 text-emerald-600 drop-shadow-xs'
-                            : isCurrent
-                            ? 'fill-indigo-100 text-indigo-400'
-                            : 'fill-slate-100 text-slate-300 hover:fill-slate-200'
-                        }`}
-                      >
-                        <polygon
-                          points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <span
-                        className={`absolute inset-0 flex items-center justify-center pt-0.5 text-[9px] font-black pointer-events-none ${
-                          isSelected || isCompleted
-                            ? 'text-white'
-                            : isCurrent
-                            ? 'text-indigo-700'
-                            : 'text-slate-600'
-                        }`}
-                      >
-                        {isCompleted ? <Check className="w-3 h-3 stroke-[3] text-white" /> : mLabel}
+              return (
+                <div
+                  key={qIdx}
+                  className={`p-4 rounded-2xl border transition-all bg-white flex flex-col justify-between space-y-3 shadow-2xs ${
+                    isQuarterActive
+                      ? 'border-indigo-400 ring-2 ring-indigo-100/80 shadow-xs'
+                      : 'border-slate-200/80 hover:border-slate-300'
+                  }`}
+                >
+                  {/* Quarter Header */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-lg ${themeConfig.color} flex items-center justify-center shrink-0 shadow-2xs`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-xs font-black text-slate-900">{`Q${qIdx + 1}`}</span>
+                      </div>
+                      <span className="text-[10px] font-extrabold text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/60">
+                        {Math.round(q.progress)}%
                       </span>
-                    </button>
-                    {isCurrent && (
-                      <span className="text-[9px] font-extrabold text-indigo-600 uppercase tracking-tighter">
-                        Current
-                      </span>
-                    )}
+                    </div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      {`Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`}
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 leading-snug line-clamp-2 min-h-[2rem]">
+                      {q.focus}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+
+                  {/* 3 Milestone Stars for this Quarter */}
+                  <div className="pt-2.5 border-t border-slate-100">
+                    <div className="flex items-center justify-around gap-1">
+                      {quarterMonths.map((mIdx) => {
+                        const mLabel = `M${mIdx + 1}`;
+                        const mFullName = `Month ${mIdx + 1}`;
+                        const isSelected = selectedMonthIdx === mIdx;
+                        const isCompleted = completedMonthlyMilestones.includes(mFullName) || completedMonthlyMilestones.includes(mLabel);
+                        const isCurrent = mIdx === currentMonthIndex;
+
+                        return (
+                          <div key={mIdx} className="flex flex-col items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedMonthIdx(prev => prev === mIdx ? null : mIdx)}
+                              className={`group relative w-8 h-8 flex items-center justify-center transition-all duration-200 focus:outline-hidden ${
+                                isSelected
+                                  ? 'scale-125 z-20'
+                                  : 'hover:scale-110 z-10'
+                              }`}
+                              title={`${mFullName}: ${isSelected ? 'Selected (Click to toggle)' : isCompleted ? 'Completed' : 'Upcoming'} — Click to view details`}
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                className={`w-8 h-8 transition-all ${
+                                  isSelected
+                                    ? 'fill-indigo-600 text-indigo-700 drop-shadow-[0_2px_8px_rgba(79,70,229,0.45)]'
+                                    : isCompleted
+                                    ? 'fill-emerald-500 text-emerald-600 drop-shadow-xs'
+                                    : isCurrent
+                                    ? 'fill-indigo-100 text-indigo-400 ring-2 ring-indigo-400/40 rounded-full'
+                                    : 'fill-slate-100 text-slate-300 hover:fill-slate-200'
+                                }`}
+                              >
+                                <polygon
+                                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              <span
+                                className={`absolute inset-0 flex items-center justify-center pt-0.5 text-[9px] font-black pointer-events-none ${
+                                  isSelected || isCompleted
+                                    ? 'text-white'
+                                    : isCurrent
+                                    ? 'text-indigo-700'
+                                    : 'text-slate-600'
+                                }`}
+                              >
+                                {isCompleted ? <Check className="w-3 h-3 stroke-[3] text-white" /> : mLabel}
+                              </span>
+                            </button>
+                            <span className="text-[9px] font-bold text-slate-500">
+                              {isCurrent ? (
+                                <span className="text-indigo-600 font-extrabold uppercase tracking-tighter">Now</span>
+                              ) : (
+                                mLabel
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Selected Month Detail Card */}
-          <div className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200/80 space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-6 rounded-full bg-indigo-600 shrink-0" />
-                <h4 className="text-sm font-black text-slate-900">
-                  {currentMonthName}
-                </h4>
-                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                  isSelectedMonthCompleted
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : isSelectedMonthActive
-                    ? 'bg-indigo-100 text-indigo-800'
-                    : 'bg-slate-200 text-slate-700'
-                }`}>
-                  {isSelectedMonthCompleted ? 'Completed' : isSelectedMonthActive ? 'Current' : 'Upcoming'}
-                </span>
-              </div>
+          {/* Selected Month Detail Card (Appears when any star is pressed) */}
+          {selectedMonthIdx !== null && selectedMonthData ? (
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/90 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div className="flex items-center flex-wrap gap-2">
+                  <span className="w-1.5 h-6 rounded-full bg-indigo-600 shrink-0" />
+                  <h4 className="text-sm font-black text-slate-900">
+                    {selectedMonthData.monthName}
+                  </h4>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {selectedMonthData.quarterName}
+                  </span>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                    selectedMonthData.isCompleted
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : selectedMonthData.isCurrent
+                      ? 'bg-indigo-100 text-indigo-800'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {selectedMonthData.isCompleted ? 'Completed' : selectedMonthData.isCurrent ? 'Current Month' : 'Upcoming'}
+                  </span>
+                </div>
 
-              {!readOnly && (
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant={isSelectedMonthCompleted ? "outline" : "default"}
-                    onClick={() => handleToggleMonthlyMilestone(currentMonthName, selectedMonthIdx)}
-                    className={`h-7 text-xs font-bold px-3 rounded-lg ${
-                      isSelectedMonthCompleted
-                        ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                    }`}
+                  {!readOnly && (
+                    <Button
+                      size="sm"
+                      variant={selectedMonthData.isCompleted ? "outline" : "default"}
+                      onClick={() => handleToggleMonthlyMilestone(selectedMonthData.monthName, selectedMonthIdx)}
+                      className={`h-7 text-xs font-bold px-3 rounded-lg ${
+                        selectedMonthData.isCompleted
+                          ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      }`}
+                    >
+                      {selectedMonthData.isCompleted ? 'Mark Incomplete' : 'Mark Achieved'}
+                    </Button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMonthIdx(null)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+                    title="Close details"
                   >
-                    {isSelectedMonthCompleted ? 'Mark Incomplete' : 'Mark Achieved'}
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            <p className="text-xs font-bold text-slate-800 pl-3 leading-snug">
-              {currentMonthData.title}
-            </p>
-
-            {/* 3 Metric Target Cards & Next Month Chevron */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1 w-full">
-                {/* Metric 1 */}
-                <div className="p-3 bg-white rounded-xl border border-slate-200/60 flex items-center gap-2.5 shadow-2xs">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                    <Box className="w-4 h-4" />
-                  </div>
-                  <div className="leading-tight">
-                    <span className="text-[9px] font-bold text-slate-400 block truncate">{currentMonthData.metric1.label}</span>
-                    <span className="text-xs font-extrabold text-slate-900 block truncate">{currentMonthData.metric1.value}</span>
-                  </div>
-                </div>
-
-                {/* Metric 2 */}
-                <div className="p-3 bg-white rounded-xl border border-slate-200/60 flex items-center gap-2.5 shadow-2xs">
-                  <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
-                    <Download className="w-4 h-4" />
-                  </div>
-                  <div className="leading-tight">
-                    <span className="text-[9px] font-bold text-slate-400 block truncate">{currentMonthData.metric2.label}</span>
-                    <span className="text-xs font-extrabold text-slate-900 block truncate">{currentMonthData.metric2.value}</span>
-                  </div>
-                </div>
-
-                {/* Metric 3 */}
-                <div className="p-3 bg-white rounded-xl border border-slate-200/60 flex items-center gap-2.5 shadow-2xs">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                    <ShoppingCart className="w-4 h-4" />
-                  </div>
-                  <div className="leading-tight">
-                    <span className="text-[9px] font-bold text-slate-400 block truncate">{currentMonthData.metric3.label}</span>
-                    <span className="text-xs font-extrabold text-slate-900 block truncate">{currentMonthData.metric3.value}</span>
-                  </div>
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              {/* Next Month Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedMonthIdx((prev) => (prev + 1) % 12)}
-                className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 hover:text-indigo-600 shadow-2xs shrink-0 transition-colors"
-                title="Next Month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              {/* Milestone Objective Title */}
+              <div className="p-3 bg-white rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                  Monthly Milestone Objective
+                </span>
+                <p className="text-xs font-extrabold text-slate-900 leading-snug">
+                  {selectedMonthData.title}
+                </p>
+              </div>
+
+              {/* Targets & Deliverables in Points Neatly */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  <Target className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Key Targets &amp; Deliverables</span>
+                </div>
+                <div className="space-y-2">
+                  {selectedMonthData.points.map((pt, pIdx) => {
+                    const hasColon = pt.includes(':');
+                    const parts = hasColon ? pt.split(':') : [pt];
+                    const label = parts[0]?.trim();
+                    const value = parts.slice(1).join(':').trim();
+
+                    return (
+                      <div
+                        key={pIdx}
+                        className="p-3 bg-white rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 shadow-2xs hover:border-indigo-200 transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                          <span className="text-xs font-bold text-slate-800 leading-snug">
+                            {label}
+                          </span>
+                        </div>
+                        {value && (
+                          <span className="text-xs font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-lg shrink-0">
+                            {value}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-4 rounded-2xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
+              <p className="text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                Click any milestone star (M1–M12) to view specific monthly targets &amp; deliverables.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Right Column: AI Strategic Insight - approx 36% width */}
@@ -1795,16 +1783,33 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               </div>
             </div>
 
-            {/* Highlight Callout Box with Amber Lightbulb */}
-            <div className="mt-3 p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 mt-0.5">
-                <Lightbulb className="w-4 h-4 text-amber-600" />
+            {/* Visual Strategic Tags & Key Signals (Clean visual breakdown instead of big text) */}
+            <div className="mt-3 grid grid-cols-2 gap-2.5">
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Stance</span>
+                <span className="text-xs font-black text-indigo-600 block truncate">Traction &amp; Cashflow</span>
               </div>
-              <p className="text-xs font-bold text-slate-800 leading-snug">
-                {profile?.productSuiteRecommendations?.executiveSummary || 
-                 profile?.productSuiteRecommendations?.resourceAllocation || 
-                 `Prioritize ${activeProducts[0]?.name || "core revenue drivers"} for immediate traction while maintaining structured validation on secondary pipelines.`}
-              </p>
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Lead Driver</span>
+                <span className="text-xs font-black text-slate-800 block truncate">{activeProducts[0]?.name || "Core Product"}</span>
+              </div>
+            </div>
+
+            {/* Concise Visual Highlight Callout */}
+            <div className="mt-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="text-xs font-bold text-slate-800 truncate">
+                  Prioritize core traction over secondary pipeline
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAnalysisModalOpen(true)}
+                className="text-[11px] font-extrabold text-amber-700 hover:text-amber-900 shrink-0 underline underline-offset-2"
+              >
+                Details
+              </button>
             </div>
           </div>
 
@@ -1819,91 +1824,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         </div>
       </div>
 
-      {/* Bottom Three-Column Grid: Strategic Focus | Weekly Adaptation Hub | Investor Weekly Report */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Column 1: Strategic Focus */}
-        <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-5 md:p-6 flex flex-col justify-between space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between pb-1">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-indigo-600 shrink-0" />
-                <h3 className="text-sm font-black text-slate-900 tracking-tight">Strategic Focus</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => onNavigate('product')}
-                className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-0.5"
-              >
-                All Products <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Product 1 */}
-              <div className="p-3 rounded-2xl border border-slate-200/80 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                <div className="space-y-1.5">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                    <Cpu className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-black text-slate-900 truncate">{activeProducts[0]?.name || "Core Product"}</h5>
-                    <p className="text-[10px] text-slate-500 font-semibold leading-tight line-clamp-2">
-                      {activeProducts[0]?.focus || "Early revenue & market traction"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1 pt-1">
-                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${activeProducts[0]?.progress || 75}%` }} />
-                  </div>
-                  <div className="flex justify-between items-center text-[10px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => onNavigate('product')}
-                      className="text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
-                    >
-                      View Details <ArrowRight className="w-2.5 h-2.5" />
-                    </button>
-                    <span className="text-slate-600 font-extrabold">{activeProducts[0]?.progress || 75}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product 2 */}
-              <div className="p-3 rounded-2xl border border-slate-200/80 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                <div className="space-y-1.5">
-                  <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
-                    <Server className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-black text-slate-900 truncate">{activeProducts[1]?.name || "Secondary Product"}</h5>
-                    <p className="text-[10px] text-slate-500 font-semibold leading-tight line-clamp-2">
-                      {activeProducts[1]?.focus || "Validation & waitlist growth"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1 pt-1">
-                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-sky-500 h-1.5 rounded-full" style={{ width: `${100 - (activeProducts[0]?.progress || 75)}%` }} />
-                  </div>
-                  <div className="flex justify-between items-center text-[10px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => onNavigate('product')}
-                      className="text-sky-600 hover:text-sky-800 flex items-center gap-0.5"
-                    >
-                      View Details <ArrowRight className="w-2.5 h-2.5" />
-                    </button>
-                    <span className="text-slate-600 font-extrabold">{100 - (activeProducts[0]?.progress || 75)}%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Bottom Two-Column Grid: Weekly Adaptation Hub | Investor Weekly Report */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Column 2: Weekly Adaptation Hub */}
         <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-5 md:p-6 flex flex-col justify-between space-y-3">
