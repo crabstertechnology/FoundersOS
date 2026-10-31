@@ -51,6 +51,7 @@ export default function FounderOSPage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarAutoHide, setIsSidebarAutoHide] = useState(false);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Load sidebar auto-hide preference on mount
   React.useEffect(() => {
@@ -299,151 +300,479 @@ export default function FounderOSPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#f6f7f9]">
-      {/* Auto-hide Sidebar Hover Trigger Zone */}
-      {isSidebarAutoHide && (
-        <div 
-          className="fixed left-0 top-0 bottom-0 w-2.5 z-40 bg-transparent" 
-          onMouseEnter={() => setIsSidebarHovered(true)}
-        />
-      )}
+    <div className="h-screen flex flex-col bg-[#f6f7f9] overflow-hidden">
+      {/* Minimal Consolidated Top Navigation Bar (Edge to Edge, Spans Full Width) */}
+      <header className="h-16 w-full border-b border-slate-200/80 bg-white/75 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 shadow-[0_1px_10px_rgba(0,0,0,0.02)]">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="md:hidden p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
+            title="Open Menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
 
-      {/* Desktop Left Sidebar (Wix-inspired clean light UI/UX) */}
-      <aside 
-        onMouseEnter={() => isSidebarAutoHide && setIsSidebarHovered(true)}
-        onMouseLeave={() => isSidebarAutoHide && setIsSidebarHovered(false)}
-        className={`hidden md:flex flex-col h-screen select-none bg-white border-r border-slate-200 text-slate-700 transition-all duration-300 ease-spring shrink-0
-          ${isSidebarAutoHide 
-            ? `fixed left-0 top-0 z-50 shadow-[0_10px_35px_rgba(0,0,0,0.08)] ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'} ${isSidebarHovered ? 'translate-x-0' : '-translate-x-full'}` 
-            : `sticky top-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'}`
-          }
-        `}
-      >
-        {/* Sidebar Controls Header */}
-        <div className={`h-12 border-b border-slate-200/80 flex items-center ${isSidebarMinimized ? 'justify-center px-2' : 'justify-end px-3'} transition-all duration-300`}>
-          <div className="flex items-center gap-1">
-            {!isSidebarMinimized && (
-              <button
-                onClick={toggleSidebarAutoHide}
-                className="text-slate-400 hover:text-slate-700 p-1.5 hover:bg-slate-100 rounded-lg transition-all duration-150"
-                title={isSidebarAutoHide ? 'Pin Sidebar' : 'Enable Auto-hide'}
+          {/* FounderOS Company Name in Nav Bar */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-xs">
+              <span className="text-white font-black text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>F</span>
+            </div>
+            <span className="font-extrabold text-base tracking-tight text-slate-950" style={{ letterSpacing: '-0.02em', fontFamily: "'Outfit', sans-serif" }}>
+              Founder<span className="text-indigo-600">OS</span>
+            </span>
+          </div>
+
+          <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+          <h2 className="text-xs font-bold text-slate-500 tracking-wider uppercase font-code hidden sm:block">
+            {getPageTitle()}
+          </h2>
+        </div>
+        
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/calendar')}
+            className="flex items-center gap-1.5 font-bold text-xs border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg h-9 px-2.5 sm:px-3"
+          >
+            <Calendar className="w-4 h-4 text-indigo-600" />
+            <span className="hidden sm:inline">Calendar</span>
+          </Button>
+          <NotificationCenter />
+          <QuickCalculator />
+
+          {/* Founder Profile - Soft circle shape, only icon on top right corner; opens dropdown on hover and press */}
+          <div 
+            className="relative flex items-center"
+            onMouseEnter={() => setIsProfileOpen(true)}
+            onMouseLeave={() => setIsProfileOpen(false)}
+          >
+            <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="w-9 h-9 rounded-full bg-linear-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-xs ring-2 ring-indigo-200/70 hover:ring-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none"
+                  title="Founder Profile"
+                  aria-label="Founder Profile"
+                >
+                  <User className="w-4.5 h-4.5 text-white" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                sideOffset={8}
+                onMouseEnter={() => setIsProfileOpen(true)}
+                onMouseLeave={() => setIsProfileOpen(false)}
+                className="w-56 p-1.5 shadow-xl border-slate-200/80 bg-white/95 backdrop-blur-md rounded-2xl animate-in fade-in zoom-in-95 duration-150 z-50"
               >
-                {isSidebarAutoHide ? (
-                  <PinOff className="w-3.5 h-3.5 text-indigo-600" />
-                ) : (
-                  <Pin className="w-3.5 h-3.5" />
-                )}
-              </button>
-            )}
-            <button
-              onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
-              className="text-slate-400 hover:text-slate-700 p-1.5 hover:bg-slate-100 rounded-lg hidden md:flex items-center justify-center shrink-0 transition-all duration-150"
-              title={isSidebarMinimized ? 'Expand Sidebar' : 'Minimize Sidebar'}
-            >
-              {isSidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
+                <div className="px-2 py-1.5 mb-1">
+                  <p className="text-xs font-bold text-slate-900 truncate">{user?.email || 'founder@startup.com'}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Founder Account</span>
+                    {isVisitor && (
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 rounded-full">
+                        View Only
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-lg"
+                >
+                  <User className="w-4 h-4 text-slate-500" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-lg"
+                >
+                  <Settings className="w-4 h-4 text-slate-500" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => { initiateSignOut(auth); setIsProfileOpen(false); }}
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-lg"
+                >
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
+      </header>
 
-        {/* Scrollable Navigation List (Wix Font & UI/UX) */}
-        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1 font-sans">
-          {isSidebarMinimized ? (
-            <div className="flex flex-col items-center gap-1">
-              {[
-                { tab: 'dashboard', icon: Home, label: 'Central Console' },
-                { tab: 'product', icon: Box, label: 'Product Suite' },
-                { tab: 'dm', icon: Megaphone, label: 'Digital Marketing' },
-                { tab: 'sales', icon: TrendingUp, label: 'Sales Tracker' },
-                { tab: 'finance', icon: Calculator, label: 'Finance Suite' },
-                { tab: 'operations', icon: Activity, label: 'Operations Hub' },
-              ].map(({ tab, icon: Icon, label }) => (
+      {/* Main Container below Navigation Bar */}
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        {/* Auto-hide Sidebar Hover Trigger Zone (starts below navbar at top-16) */}
+        {isSidebarAutoHide && (
+          <div 
+            className="fixed left-0 top-16 bottom-0 w-2.5 z-40 bg-transparent" 
+            onMouseEnter={() => setIsSidebarHovered(true)}
+          />
+        )}
+
+        {/* Desktop Left Sidebar (Below Top Navbar with Transparent Glassmorphism & Bold Dark Curvy Font) */}
+        <aside 
+          onMouseEnter={() => isSidebarAutoHide && setIsSidebarHovered(true)}
+          onMouseLeave={() => isSidebarAutoHide && setIsSidebarHovered(false)}
+          className={`hidden md:flex flex-col h-full select-none bg-white/60 backdrop-blur-xl border-r border-slate-200/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)] text-slate-900 transition-all duration-300 ease-spring shrink-0
+            ${isSidebarAutoHide 
+              ? `fixed left-0 top-16 bottom-0 z-40 shadow-[0_10px_35px_rgba(0,0,0,0.08)] ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'} ${isSidebarHovered ? 'translate-x-0' : '-translate-x-full'}` 
+              : `${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'}`
+            }
+          `}
+          style={{ fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif" }}
+        >
+          {/* Sidebar Controls Header */}
+          <div className={`h-12 border-b border-slate-200/60 flex items-center ${isSidebarMinimized ? 'justify-center px-2' : 'justify-end px-3'} transition-all duration-300`}>
+            <div className="flex items-center gap-1">
+              {!isSidebarMinimized && (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-150 ${
-                    activeTab === tab
-                      ? 'bg-slate-200/90 text-slate-900 font-medium shadow-2xs'
-                      : 'hover:bg-slate-100 hover:text-slate-900 text-slate-600'
-                  }`}
-                  title={label}
+                  onClick={toggleSidebarAutoHide}
+                  className="text-slate-500 hover:text-slate-900 p-1.5 hover:bg-slate-900/5 rounded-xl transition-all duration-150"
+                  title={isSidebarAutoHide ? 'Pin Sidebar' : 'Enable Auto-hide'}
                 >
-                  <Icon className="w-4.5 h-4.5" />
+                  {isSidebarAutoHide ? (
+                    <PinOff className="w-3.5 h-3.5 text-indigo-600" />
+                  ) : (
+                    <Pin className="w-3.5 h-3.5" />
+                  )}
                 </button>
-              ))}
-            </div>
-          ) : (
-            <>
-              {/* Central Console */}
+              )}
               <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 ${
-                  activeTab === 'dashboard'
-                    ? 'bg-slate-200/80 text-slate-900 font-medium'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
-                }`}
+                onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
+                className="text-slate-500 hover:text-slate-900 p-1.5 hover:bg-slate-900/5 rounded-xl hidden md:flex items-center justify-center shrink-0 transition-all duration-150"
+                title={isSidebarMinimized ? 'Expand Sidebar' : 'Minimize Sidebar'}
               >
-                <Home className="w-4 h-4 shrink-0 text-slate-600" />
-                <span>Central Console</span>
+                {isSidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               </button>
+            </div>
+          </div>
 
-              {/* Product Suite */}
+          {/* Scrollable Navigation List with Bold Dark Curvy Font & Rounded Active Corners */}
+          <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+            {isSidebarMinimized ? (
+              <div className="flex flex-col items-center gap-1.5">
+                {[
+                  { tab: 'dashboard', icon: Home, label: 'Central Console' },
+                  { tab: 'product', icon: Box, label: 'Product Suite' },
+                  { tab: 'dm', icon: Megaphone, label: 'Digital Marketing' },
+                  { tab: 'sales', icon: TrendingUp, label: 'Sales Tracker' },
+                  { tab: 'finance', icon: Calculator, label: 'Finance Suite' },
+                  { tab: 'operations', icon: Activity, label: 'Operations Hub' },
+                ].map(({ tab, icon: Icon, label }) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-150 ${
+                      activeTab === tab
+                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                        : 'hover:bg-slate-900/5 hover:text-slate-950 text-slate-800'
+                    }`}
+                    title={label}
+                  >
+                    <Icon className="w-5 h-5 stroke-[2.2]" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Central Console */}
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                    activeTab === 'dashboard'
+                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                  }`}
+                >
+                  <Home className="w-4.5 h-4.5 shrink-0 stroke-[2.2]" />
+                  <span>Central Console</span>
+                </button>
+
+                {/* Product Suite */}
+                <button
+                  onClick={() => setActiveTab('product')}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                    activeTab === 'product'
+                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Box className="w-4.5 h-4.5 stroke-[2.2]" />
+                    <span>Product Suite</span>
+                  </div>
+                </button>
+
+                {/* Digital Marketing */}
+                <button
+                  onClick={() => setActiveTab('dm')}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                    activeTab === 'dm'
+                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Megaphone className="w-4.5 h-4.5 stroke-[2.2]" />
+                    <span>Digital Marketing</span>
+                  </div>
+                  <span className="bg-[#f97316] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                    NEW
+                  </span>
+                </button>
+
+                <div className="h-px bg-slate-200/70 my-2 mx-1" />
+
+                {/* Sales Section */}
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => setIsSalesExpanded(!isSalesExpanded)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
+                      activeTab === 'sales'
+                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                        : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="w-4.5 h-4.5 stroke-[2.2]" />
+                      <span>Sales Tracker</span>
+                    </div>
+                    {isSalesExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-slate-700" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-black" />
+                    )}
+                  </button>
+
+                  {isSalesExpanded && (
+                    <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5 animate-in slide-in-from-top-1 duration-200">
+                      {[
+                        { sub: 'strategy', label: 'Sales Strategy' },
+                        { sub: 'leads', label: 'Lead Tracker' },
+                        { sub: 'workshops', label: 'Workshop Tracker' },
+                        { sub: 'products', label: 'Product Sales' },
+                        { sub: 'weekly', label: 'Weekly Dashboard' },
+                        { sub: 'activity', label: 'Daily Activity' },
+                      ].map(({ sub, label }) => {
+                        const isActive = activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === sub;
+                        return (
+                          <button
+                            key={sub}
+                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
+                            className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
+                              isActive
+                                ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                                : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-px bg-slate-200/70 my-2 mx-1" />
+
+                {/* Finance Section */}
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
+                      activeTab === 'finance'
+                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                        : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Calculator className="w-4.5 h-4.5 stroke-[2.2]" />
+                      <span>Finance Suite</span>
+                    </div>
+                    {isFinanceExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-slate-700" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-black" />
+                    )}
+                  </button>
+
+                  {isFinanceExpanded && (
+                    <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5 animate-in slide-in-from-top-1 duration-200">
+                      {[
+                        { sub: 'calc', label: 'Valuation Calculator' },
+                        { sub: 'tracker', label: 'Cap Table Tracker' },
+                        { sub: 'exit', label: 'Exit Simulator' },
+                        { sub: 'negotiate', label: 'Term Sheet Assistant' },
+                        { sub: 'qa', label: 'Term Sheet Q&A' },
+                        { sub: 'glossary', label: "Founder's Glossary" },
+                        { sub: 'weekly', label: 'Weekly Dashboard' },
+                        { sub: 'activity', label: 'Daily Activity' },
+                      ].map(({ sub, label }) => {
+                        const isActive = activeTab === 'finance' && financeTab === sub;
+                        return (
+                          <button
+                            key={sub}
+                            onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
+                            className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
+                              isActive
+                                ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                                : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-px bg-slate-200/70 my-2 mx-1" />
+
+                {/* Operations Section */}
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
+                      activeTab === 'operations'
+                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                        : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-4.5 h-4.5 stroke-[2.2]" />
+                      <span>Operations Hub</span>
+                    </div>
+                    {isOperationsExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-slate-700" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-black" />
+                    )}
+                  </button>
+
+                  {isOperationsExpanded && (
+                    <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5 animate-in slide-in-from-top-1 duration-200">
+                      {[
+                        { sub: 'ops', label: 'Runway & SaaS Burn' },
+                        { sub: 'tasks', label: 'Task Workspace' },
+                        { sub: 'chat', label: 'Team Chat' },
+                        { sub: 'weekly', label: 'Weekly Dashboard' },
+                        { sub: 'activity', label: 'Daily Activity' },
+                      ].map(({ sub, label }) => {
+                        const isActive = activeTab === 'operations' && operationsTab === sub;
+                        return (
+                          <button
+                            key={sub}
+                            onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
+                            className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
+                              isActive
+                                ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                                : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </nav>
+        </aside>
+
+      {/* Mobile Drawer Navigation */}
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <aside 
+            className="w-72 bg-white/80 backdrop-blur-2xl text-slate-950 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-200/60 shadow-2xl"
+            style={{ fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif" }}
+          >
+            <div className="h-14 border-b border-slate-200/60 flex items-center justify-end px-4 shrink-0">
               <button
-                onClick={() => setActiveTab('product')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 ${
-                  activeTab === 'product'
-                    ? 'bg-slate-200/80 text-slate-900 font-medium'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-900/5 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+              <button
+                onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                  activeTab === 'dashboard'
+                    ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                    : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Box className="w-4 h-4 text-slate-600" />
+                  <Home className="w-4.5 h-4.5 stroke-[2.2]" />
+                  <span>Central Console</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('product'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                  activeTab === 'product'
+                    ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                    : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Box className="w-4.5 h-4.5 stroke-[2.2]" />
                   <span>Product Suite</span>
                 </div>
               </button>
 
-              {/* Digital Marketing (with NEW badge matching Wix style) */}
               <button
-                onClick={() => setActiveTab('dm')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 ${
+                onClick={() => { setActiveTab('dm'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
                   activeTab === 'dm'
-                    ? 'bg-slate-200/80 text-slate-900 font-medium'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
+                    ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                    : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Megaphone className="w-4 h-4 text-slate-600" />
+                  <Megaphone className="w-4.5 h-4.5 stroke-[2.2]" />
                   <span>Digital Marketing</span>
                 </div>
-                <span className="bg-[#f97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
-                  NEW
-                </span>
+                <span className="bg-[#f97316] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">NEW</span>
               </button>
-
-              <div className="h-px bg-slate-200/80 my-2 mx-1" />
 
               {/* Sales Section */}
               <div className="space-y-0.5">
                 <button
                   onClick={() => setIsSalesExpanded(!isSalesExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 group ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
                     activeTab === 'sales'
-                      ? 'bg-slate-200/80 text-slate-900 font-medium'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
+                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <TrendingUp className="w-4 h-4 text-slate-600" />
+                    <TrendingUp className="w-4.5 h-4.5 stroke-[2.2]" />
                     <span>Sales Tracker</span>
                   </div>
                   {isSalesExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-slate-700" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
+                    <ChevronRight className="w-4 h-4 text-slate-700" />
                   )}
                 </button>
-
                 {isSalesExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-5 animate-in slide-in-from-top-1 duration-200">
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5">
                     {[
                       { sub: 'strategy', label: 'Sales Strategy' },
                       { sub: 'leads', label: 'Lead Tracker' },
@@ -456,11 +785,11 @@ export default function FounderOSPage() {
                       return (
                         <button
                           key={sub}
-                          onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
-                          className={`w-full text-left px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
+                          onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); setIsMobileSidebarOpen(false); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
                             isActive
-                              ? 'text-indigo-600 font-medium bg-indigo-50/70'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-normal'
+                              ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                              : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
                           }`}
                         >
                           {label}
@@ -471,31 +800,31 @@ export default function FounderOSPage() {
                 )}
               </div>
 
-              <div className="h-px bg-slate-200/80 my-2 mx-1" />
+              <div className="h-px bg-slate-200/70 my-2 mx-1" />
 
               {/* Finance Section */}
               <div className="space-y-0.5">
                 <button
                   onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 group ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
                     activeTab === 'finance'
-                      ? 'bg-slate-200/80 text-slate-900 font-medium'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
+                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Calculator className="w-4 h-4 text-slate-600" />
+                    <Calculator className="w-4.5 h-4.5 stroke-[2.2]" />
                     <span>Finance Suite</span>
                   </div>
                   {isFinanceExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-slate-700" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
+                    <ChevronRight className="w-4 h-4 text-slate-700" />
                   )}
                 </button>
 
                 {isFinanceExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-5 animate-in slide-in-from-top-1 duration-200">
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5">
                     {[
                       { sub: 'calc', label: 'Valuation Calculator' },
                       { sub: 'tracker', label: 'Cap Table Tracker' },
@@ -510,11 +839,11 @@ export default function FounderOSPage() {
                       return (
                         <button
                           key={sub}
-                          onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
-                          className={`w-full text-left px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
+                          onClick={() => { setActiveTab('finance'); setFinanceTab(sub); setIsMobileSidebarOpen(false); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
                             isActive
-                              ? 'text-indigo-600 font-medium bg-indigo-50/70'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-normal'
+                              ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                              : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
                           }`}
                         >
                           {label}
@@ -525,31 +854,31 @@ export default function FounderOSPage() {
                 )}
               </div>
 
-              <div className="h-px bg-slate-200/80 my-2 mx-1" />
+              <div className="h-px bg-slate-200/70 my-2 mx-1" />
 
               {/* Operations Section */}
               <div className="space-y-0.5">
                 <button
                   onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 group ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
                     activeTab === 'operations'
-                      ? 'bg-slate-200/80 text-slate-900 font-medium'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
+                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Activity className="w-4 h-4 text-slate-600" />
+                    <Activity className="w-4.5 h-4.5 stroke-[2.2]" />
                     <span>Operations Hub</span>
                   </div>
                   {isOperationsExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-slate-700" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
+                    <ChevronRight className="w-4 h-4 text-slate-700" />
                   )}
                 </button>
 
                 {isOperationsExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-5 animate-in slide-in-from-top-1 duration-200">
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5">
                     {[
                       { sub: 'ops', label: 'Runway & SaaS Burn' },
                       { sub: 'tasks', label: 'Task Workspace' },
@@ -561,11 +890,11 @@ export default function FounderOSPage() {
                       return (
                         <button
                           key={sub}
-                          onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
-                          className={`w-full text-left px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
+                          onClick={() => { setActiveTab('operations'); setOperationsTab(sub); setIsMobileSidebarOpen(false); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
                             isActive
-                              ? 'text-indigo-600 font-medium bg-indigo-50/70'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-normal'
+                              ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                              : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
                           }`}
                         >
                           {label}
@@ -575,452 +904,13 @@ export default function FounderOSPage() {
                   </div>
                 )}
               </div>
-            </>
-          )}
-        </nav>
-      </aside>
-
-      {/* Mobile Drawer Navigation */}
-      {isMobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <aside className="w-72 bg-white text-slate-800 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-200 shadow-2xl">
-            <div className="h-14 border-b border-slate-200/80 flex items-center justify-end px-4 shrink-0">
-              <button
-                onClick={() => setIsMobileSidebarOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1 font-sans">
-              <button
-                onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === 'dashboard'
-                    ? 'bg-slate-200/80 text-slate-900 font-bold'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Home className="w-4 h-4 text-slate-600" />
-                  <span>Central Console</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => { setActiveTab('product'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === 'product'
-                    ? 'bg-slate-200/80 text-slate-900 font-bold'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Box className="w-4 h-4 text-slate-600" />
-                  <span>Product Suite</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => { setActiveTab('dm'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === 'dm'
-                    ? 'bg-slate-200/80 text-slate-900 font-bold'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Megaphone className="w-4 h-4 text-slate-600" />
-                  <span>Digital Marketing</span>
-                </div>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white">NEW</span>
-              </button>
-
-              {/* Sales Section */}
-              <div className="space-y-1">
-                <button
-                  onClick={() => setIsSalesExpanded(!isSalesExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === 'sales'
-                      ? 'bg-slate-200/80 text-slate-900 font-bold'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="w-4 h-4 text-slate-600" />
-                    <span>Sales Tracker</span>
-                  </div>
-                  {isSalesExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                  )}
-                </button>
-                {isSalesExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-4">
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'strategy'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Sales Strategy
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('leads'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Lead Tracker
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('workshops'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Workshop Tracker
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('products'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Product Sales
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="h-px bg-slate-200/80 my-2" />
-
-              <div className="space-y-1">
-                <button
-                  onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === 'finance'
-                      ? 'bg-slate-200/80 text-slate-900 font-bold'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Calculator className="w-4 h-4 text-slate-600" />
-                    <span>Finance Suite</span>
-                  </div>
-                  {isFinanceExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                  )}
-                </button>
-
-                {isFinanceExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-4">
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'calc'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Valuation Calculator
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('tracker'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'tracker'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Cap Table Tracker
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('exit'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'exit'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Exit Simulator
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('negotiate'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'negotiate'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Term Sheet Assistant
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('qa'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'qa'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Term Sheet Q&amp;A
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('glossary'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'glossary'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Founder&apos;s Glossary
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'weekly'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'finance' && financeTab === 'activity'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="h-px bg-slate-200/80 my-2" />
-
-              <div className="space-y-1">
-                <button
-                  onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === 'operations'
-                      ? 'bg-slate-200/80 text-slate-900 font-bold'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Activity className="w-4 h-4 text-slate-600" />
-                    <span>Operations Hub</span>
-                  </div>
-                  {isOperationsExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                  )}
-                </button>
-
-                {isOperationsExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-4">
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('ops'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'operations' && operationsTab === 'ops'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Runway &amp; SaaS Burn
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('tasks'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'operations' && operationsTab === 'tasks'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Task Workspace
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('chat'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'operations' && operationsTab === 'chat'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Team Chat
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'operations' && operationsTab === 'weekly'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
-                        activeTab === 'operations' && operationsTab === 'activity'
-                          ? 'font-bold text-primary bg-primary/10'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
-                  </div>
-                )}
-              </div>
             </nav>
           </aside>
         </div>
       )}
 
-      {/* Main Panel Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
-        {/* Minimal Consolidated Top Bar */}
-        <header className="h-16 border-b bg-white flex items-center justify-between px-6 shrink-0 sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsMobileSidebarOpen(true)}
-              className="md:hidden p-1.5 hover:bg-slate-100 rounded-lg text-slate-600"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-
-            {/* FounderOS Company Name in Nav Bar */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-xs">
-                <span className="text-white font-black text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>F</span>
-              </div>
-              <span className="font-extrabold text-base tracking-tight text-slate-900" style={{ letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>
-                Founder<span className="text-indigo-600">OS</span>
-              </span>
-            </div>
-
-            <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
-
-            <h2 className="text-xs font-bold text-slate-500 tracking-wider uppercase font-code hidden sm:block">
-              {getPageTitle()}
-            </h2>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/calendar')}
-              className="flex items-center gap-1.5 font-bold text-xs border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg h-9 px-2.5 sm:px-3"
-            >
-              <Calendar className="w-4 h-4 text-indigo-600" />
-              <span className="hidden sm:inline">Calendar</span>
-            </Button>
-            <NotificationCenter />
-            <QuickCalculator />
-
-            {/* Founder Profile beside the calculator with Profile, Settings, Logout dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-full hover:bg-slate-100 border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
-                  title="Founder Profile"
-                >
-                  <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
-                    {(user?.email || 'F').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="hidden md:flex flex-col items-start leading-none text-left">
-                    <span className="text-xs font-semibold text-slate-800 truncate max-w-[120px]">
-                      {user?.email?.split('@')[0] || 'Founder'}
-                    </span>
-                    <span className="text-[10px] text-slate-400">Founder</span>
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-lg border-slate-200 bg-white">
-                <div className="px-2 py-1.5 mb-1">
-                  <p className="text-xs font-bold text-slate-900 truncate">{user?.email || 'founder@startup.com'}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Founder Account</span>
-                    {isVisitor && (
-                      <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 rounded-full">
-                        View Only
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setActiveTab('settings')}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-md"
-                >
-                  <User className="w-4 h-4 text-slate-500" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setActiveTab('settings')}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-md"
-                >
-                  <Settings className="w-4 h-4 text-slate-500" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => initiateSignOut(auth)}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-md"
-                >
-                  <LogOut className="w-4 h-4 text-rose-500" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-
+      {/* Main Panel Content Area (Scrollable below Top Navigation Bar) */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
         {/* Dynamic Inner Tab Switcher */}
         <main className="flex-1 p-3 sm:p-4 md:p-8 max-w-[1500px] w-full mx-auto">
           <Tabs value={activeTab} className="w-full">
@@ -1260,5 +1150,6 @@ export default function FounderOSPage() {
         </main>
       </div>
     </div>
-  );
+  </div>
+);
 }
