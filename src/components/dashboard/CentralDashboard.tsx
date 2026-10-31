@@ -1169,8 +1169,12 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       monthName: `Month ${selectedMonthIdx + 1}`,
       title: milestoneTitle,
       points: points.length > 0 ? points : [def.milestone],
+      quarterIdx: qIdx,
       quarterName: `Q${qIdx + 1}`,
+      quarterPeriod: qData?.period || `Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`,
       quarterFocus: qData?.focus || '',
+      quarterProgress: qData?.progress || 0,
+      quarterObjectives: qData?.objectives || [],
       isCompleted: completedMonthlyMilestones.includes(`Month ${selectedMonthIdx + 1}`) || completedMonthlyMilestones.includes(`M${selectedMonthIdx + 1}`),
       isCurrent: selectedMonthIdx === currentMonthIndex
     };
@@ -1508,143 +1512,122 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             </div>
           </div>
 
-          {/* 4 Quarters with integrated Monthly Milestone Stars */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          {/* Roadmap Quarters Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
             {quartersList.map((q, qIdx) => {
-              const themeConfig = [
-                { color: 'bg-indigo-500 text-white', icon: Rocket },
-                { color: 'bg-sky-500 text-white', icon: Users },
-                { color: 'bg-amber-500 text-white', icon: FileText },
-                { color: 'bg-emerald-500 text-white', icon: TrendingUp },
-              ][qIdx % 4];
-              const Icon = themeConfig.icon;
-              const quarterMonths = [qIdx * 3, qIdx * 3 + 1, qIdx * 3 + 2];
-              const isQuarterActive = quarterMonths.includes(selectedMonthIdx ?? -1);
-
+              const isQuarterActive = selectedMonthData?.quarterIdx === qIdx;
               return (
                 <div
                   key={qIdx}
-                  className={`p-4 rounded-2xl border transition-all bg-white flex flex-col justify-between space-y-3 shadow-2xs ${
+                  onClick={() => setSelectedMonthIdx(qIdx * 3)}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
                     isQuarterActive
-                      ? 'border-indigo-400 ring-2 ring-indigo-100/80 shadow-xs'
-                      : 'border-slate-200/80 hover:border-slate-300'
+                      ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-100 shadow-2xs'
+                      : 'bg-slate-50/50 border-slate-200/70 hover:bg-slate-100/60'
                   }`}
+                  title={`View Q${qIdx + 1} (${q.period})`}
                 >
-                  {/* Quarter Header */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-7 h-7 rounded-lg ${themeConfig.color} flex items-center justify-center shrink-0 shadow-2xs`}>
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="text-xs font-black text-slate-900">{`Q${qIdx + 1}`}</span>
-                      </div>
-                      <span className="text-[10px] font-extrabold text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md border border-slate-200/60">
-                        {Math.round(q.progress)}%
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      {`Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`}
-                    </div>
-                    <p className="text-xs font-bold text-slate-800 leading-snug line-clamp-2 min-h-[2rem]">
-                      {q.focus}
-                    </p>
+                  <div className="flex items-center justify-between text-[11px] font-black">
+                    <span className="text-slate-900">{`Q${qIdx + 1}`} <span className="text-[10px] font-semibold text-slate-400">({q.period})</span></span>
+                    <span className="text-indigo-600 font-extrabold">{Math.round(q.progress)}%</span>
                   </div>
-
-                  {/* 3 Milestone Stars for this Quarter */}
-                  <div className="pt-2.5 border-t border-slate-100">
-                    <div className="flex items-center justify-around gap-1">
-                      {quarterMonths.map((mIdx) => {
-                        const mLabel = `M${mIdx + 1}`;
-                        const mFullName = `Month ${mIdx + 1}`;
-                        const isSelected = selectedMonthIdx === mIdx;
-                        const isCompleted = completedMonthlyMilestones.includes(mFullName) || completedMonthlyMilestones.includes(mLabel);
-                        const isCurrent = mIdx === currentMonthIndex;
-
-                        return (
-                          <div key={mIdx} className="flex flex-col items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedMonthIdx(prev => prev === mIdx ? null : mIdx)}
-                              className={`group relative w-8 h-8 flex items-center justify-center transition-all duration-200 focus:outline-hidden ${
-                                isSelected
-                                  ? 'scale-125 z-20'
-                                  : 'hover:scale-110 z-10'
-                              }`}
-                              title={`${mFullName}: ${isSelected ? 'Selected (Click to toggle)' : isCompleted ? 'Completed' : 'Upcoming'} — Click to view details`}
-                            >
-                              <svg
-                                viewBox="0 0 24 24"
-                                className={`w-8 h-8 transition-all ${
-                                  isSelected
-                                    ? 'fill-indigo-600 text-indigo-700 drop-shadow-[0_2px_8px_rgba(79,70,229,0.45)]'
-                                    : isCompleted
-                                    ? 'fill-emerald-500 text-emerald-600 drop-shadow-xs'
-                                    : isCurrent
-                                    ? 'fill-indigo-100 text-indigo-400 ring-2 ring-indigo-400/40 rounded-full'
-                                    : 'fill-slate-100 text-slate-300 hover:fill-slate-200'
-                                }`}
-                              >
-                                <polygon
-                                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                              <span
-                                className={`absolute inset-0 flex items-center justify-center pt-0.5 text-[9px] font-black pointer-events-none ${
-                                  isSelected || isCompleted
-                                    ? 'text-white'
-                                    : isCurrent
-                                    ? 'text-indigo-700'
-                                    : 'text-slate-600'
-                                }`}
-                              >
-                                {isCompleted ? <Check className="w-3 h-3 stroke-[3] text-white" /> : mLabel}
-                              </span>
-                            </button>
-                            <span className="text-[9px] font-bold text-slate-500">
-                              {isCurrent ? (
-                                <span className="text-indigo-600 font-extrabold uppercase tracking-tighter">Now</span>
-                              ) : (
-                                mLabel
-                              )}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <p className="text-[11px] font-semibold text-slate-600 mt-1 line-clamp-1">
+                    {q.focus}
+                  </p>
                 </div>
               );
             })}
           </div>
 
-          {/* Selected Month Detail Card (Appears when any star is pressed) */}
+          {/* Straight Flow of 12 Milestone Stars (Continuous unbroken horizontal timeline) */}
+          <div className="relative pt-3 pb-2">
+            <div className="absolute top-7 left-4 right-4 h-0.5 bg-slate-200/90 z-0" />
+            <div className="relative z-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none px-2">
+              {Array.from({ length: 12 }).map((_, idx) => {
+                const mLabel = `M${idx + 1}`;
+                const mFullName = `Month ${idx + 1}`;
+                const isSelected = selectedMonthIdx === idx;
+                const isCompleted = completedMonthlyMilestones.includes(mFullName) || completedMonthlyMilestones.includes(mLabel);
+                const isCurrent = idx === currentMonthIndex;
+
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMonthIdx(prev => prev === idx ? null : idx)}
+                      className={`group relative w-9 h-9 flex items-center justify-center transition-all duration-200 focus:outline-hidden ${
+                        isSelected
+                          ? 'scale-125 z-20'
+                          : 'hover:scale-110 z-10'
+                      }`}
+                      title={`${mFullName}: ${isSelected ? 'Selected (Click to toggle)' : isCompleted ? 'Completed' : 'Upcoming'} — Touch for roadmap & milestone details`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        className={`w-9 h-9 transition-all ${
+                          isSelected
+                            ? 'fill-indigo-600 text-indigo-700 drop-shadow-[0_2px_10px_rgba(79,70,229,0.5)]'
+                            : isCompleted
+                            ? 'fill-emerald-500 text-emerald-600 drop-shadow-xs'
+                            : isCurrent
+                            ? 'fill-indigo-100 text-indigo-500 ring-2 ring-indigo-400/50 rounded-full'
+                            : 'fill-slate-100 text-slate-300 hover:fill-slate-200'
+                        }`}
+                      >
+                        <polygon
+                          points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center pt-0.5 text-[9px] font-black pointer-events-none ${
+                          isSelected || isCompleted
+                            ? 'text-white'
+                            : isCurrent
+                            ? 'text-indigo-700'
+                            : 'text-slate-600'
+                        }`}
+                      >
+                        {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3] text-white" /> : mLabel}
+                      </span>
+                    </button>
+                    <span className="text-[10px] font-bold text-slate-500">
+                      {isCurrent ? (
+                        <span className="text-indigo-600 font-extrabold uppercase tracking-tighter">Now</span>
+                      ) : (
+                        mLabel
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Details (Appears when any star is touched) giving content about BOTH Roadmap and Milestone */}
           {selectedMonthIdx !== null && selectedMonthData ? (
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/90 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                <div className="flex items-center flex-wrap gap-2">
-                  <span className="w-1.5 h-6 rounded-full bg-indigo-600 shrink-0" />
-                  <h4 className="text-sm font-black text-slate-900">
-                    {selectedMonthData.monthName}
-                  </h4>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    {selectedMonthData.quarterName}
-                  </span>
-                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                    selectedMonthData.isCompleted
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : selectedMonthData.isCurrent
-                      ? 'bg-indigo-100 text-indigo-800'
-                      : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {selectedMonthData.isCompleted ? 'Completed' : selectedMonthData.isCurrent ? 'Current Month' : 'Upcoming'}
-                  </span>
+            <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/90 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              
+              {/* Roadmap Context Bar */}
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-slate-200/70">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black px-2.5 py-0.5 rounded-md bg-indigo-100 text-indigo-800">
+                      {selectedMonthData.quarterName} Roadmap ({selectedMonthData.quarterPeriod})
+                    </span>
+                    <span className="text-[11px] font-extrabold text-slate-500">
+                      {selectedMonthData.quarterProgress}% Quarter Complete
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">
+                    <span className="text-slate-400 font-medium">Roadmap Focus: </span>
+                    {selectedMonthData.quarterFocus}
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {!readOnly && (
                     <Button
                       size="sm"
@@ -1670,11 +1653,22 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 </div>
               </div>
 
-              {/* Milestone Objective Title */}
-              <div className="p-3 bg-white rounded-xl border border-slate-200/80">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
-                  Monthly Milestone Objective
-                </span>
+              {/* Monthly Milestone Objective Title */}
+              <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    {selectedMonthData.monthName} Milestone Objective
+                  </span>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                    selectedMonthData.isCompleted
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : selectedMonthData.isCurrent
+                      ? 'bg-indigo-100 text-indigo-800'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {selectedMonthData.isCompleted ? 'Completed' : selectedMonthData.isCurrent ? 'Current' : 'Upcoming'}
+                  </span>
+                </div>
                 <p className="text-xs font-extrabold text-slate-900 leading-snug">
                   {selectedMonthData.title}
                 </p>
@@ -1714,12 +1708,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                   })}
                 </div>
               </div>
+
             </div>
           ) : (
-            <div className="p-4 rounded-2xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
+            <div className="p-5 rounded-2xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
               <p className="text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                Click any milestone star (M1–M12) to view specific monthly targets &amp; deliverables.
+                Touch any star (M1–M12) in the flow above to reveal its roadmap focus, milestone objectives &amp; targets.
               </p>
             </div>
           )}
