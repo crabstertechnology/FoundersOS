@@ -1382,6 +1382,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
+        </button>
       </div>
 
       {/* LOADING STATE */}
@@ -1434,7 +1435,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         </div>
 
         {/* Left: Initiative Info */}
-        <div className="relative z-10 max-w-2xl space-y-3">
+        <div className="relative z-10 flex-1 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs shrink-0">
               <Target className="w-5 h-5 text-indigo-600" />
@@ -1461,7 +1462,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => setIsGoalsModalOpen(true)}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline underline-offset-4 ml-1 transition-colors"
+                className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/60 text-indigo-700 hover:bg-indigo-100/70 ml-1 transition-colors shadow-2xs"
               >
                 Edit Strategy
               </button>
@@ -1471,7 +1472,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
         {/* Right: Glassmorphic Goal Box */}
         <div className="relative z-10 w-full sm:w-auto self-stretch sm:self-auto shrink-0">
-          <div className="bg-white/85 backdrop-blur-md border border-white/80 rounded-2xl p-4 shadow-sm min-w-[210px] space-y-1.5">
+          <div className="bg-white/85 backdrop-blur-md border border-white/80 rounded-3xl p-4 shadow-sm min-w-[210px] space-y-1.5">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
               12-Month Goal
             </span>
@@ -1519,7 +1520,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 <div
                   key={qIdx}
                   onClick={() => setSelectedMonthIdx(qIdx * 3)}
-                  className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                  className={`p-3.5 rounded-3xl border transition-all cursor-pointer ${
                     isQuarterActive
                       ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-100 shadow-2xs'
                       : 'bg-slate-50/50 border-slate-200/70 hover:bg-slate-100/60'
@@ -1666,7 +1667,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
             </div>
           ) : (
-            <div className="p-5 rounded-2xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
+            <div className="p-5 rounded-3xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
               <p className="text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
                 Touch any circle (M1–M12) in the flow above to reveal its roadmap focus, milestone objectives &amp; targets.
@@ -1735,18 +1736,18 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
             {/* Visual Strategic Tags & Key Signals (Clean visual breakdown instead of big text) */}
             <div className="mt-3 grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <div className="p-3 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Stance</span>
                 <span className="text-xs font-black text-indigo-600 block truncate">Traction &amp; Cashflow</span>
               </div>
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <div className="p-3 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Lead Driver</span>
                 <span className="text-xs font-black text-slate-800 block truncate">{activeProducts[0]?.name || "Core Product"}</span>
               </div>
             </div>
 
             {/* Concise Visual Highlight Callout */}
-            <div className="mt-2.5 p-3 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
+            <div className="mt-2.5 p-3.5 rounded-3xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
                 <span className="text-xs font-bold text-slate-800 truncate">
@@ -1756,7 +1757,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <button
                 type="button"
                 onClick={() => setIsAnalysisModalOpen(true)}
-                className="text-[11px] font-extrabold text-amber-700 hover:text-amber-900 shrink-0 underline underline-offset-2"
+                className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-100/90 text-amber-800 hover:bg-amber-200/90 shrink-0 transition-colors shadow-2xs"
               >
                 Details
               </button>
@@ -1882,7 +1883,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             {/* Status Card */}
             <div
               onClick={() => setIsWeeklyReportModalOpen(true)}
-              className="p-3.5 rounded-2xl bg-slate-50/60 border border-slate-200/80 flex items-start gap-2.5 cursor-pointer hover:bg-slate-100/60 transition-colors"
+              className="p-3.5 rounded-3xl bg-slate-50/60 border border-slate-200/80 flex items-start gap-2.5 cursor-pointer hover:bg-slate-100/60 transition-colors"
             >
               <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
                 <BarChart3 className="w-3.5 h-3.5 text-indigo-600" />
@@ -1937,7 +1938,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           </DialogHeader>
           <div className="pt-4 space-y-3">
             {!planHistory || planHistory.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 font-semibold text-xs border border-dashed rounded-2xl">
+              <div className="p-8 text-center text-slate-400 font-semibold text-xs border border-dashed rounded-3xl">
                 No plan history recorded yet. Future adaptations will be archived here.
               </div>
             ) : (
@@ -1975,7 +1976,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                             }
                           }
                         }}
-                        className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl"
+                        className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-4"
                       >
                         Restore
                       </Button>
@@ -1991,7 +1992,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                             }
                           }
                         }}
-                        className="h-8 w-8 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl"
+                        className="h-8 w-8 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-full"
                       >
                         <Trash className="w-3.5 h-3.5" />
                       </Button>
@@ -2024,7 +2025,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 </span>
                 <ul className="space-y-2.5">
                   {quartersList[selectedQuarterIdx].objectives.map((obj: string, oIdx: number) => (
-                    <li key={oIdx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs font-semibold text-slate-800 flex items-start gap-2.5">
+                    <li key={oIdx} className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs font-semibold text-slate-800 flex items-start gap-2.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
                       <span>{obj}</span>
                     </li>
@@ -2050,7 +2051,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           </DialogHeader>
 
           <div className="pt-4 space-y-4">
-            <div className="flex justify-between items-center bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+            <div className="flex justify-between items-center bg-indigo-50/50 p-2.5 rounded-2xl border border-indigo-100">
               <span className="text-[11px] font-black text-indigo-950 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 {showHistory ? "Viewing Saved History" : "Report Editor"}
@@ -2060,7 +2061,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                   size="sm"
                   variant="ghost"
                   onClick={() => setShowHistory(!showHistory)}
-                  className="h-7 text-xs font-bold text-indigo-700 hover:bg-indigo-50"
+                  className="h-7 text-xs font-bold text-indigo-700 hover:bg-indigo-50 rounded-full px-3"
                 >
                   {showHistory ? "Back to Editor" : `Saved History (${(weeklyReportsHistory || []).length})`}
                 </Button>
@@ -2069,7 +2070,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                     size="sm"
                     variant="outline"
                     onClick={handleCopyReport}
-                    className="h-7 text-xs font-bold gap-1 bg-white border-indigo-200 text-indigo-700"
+                    className="h-7 text-xs font-bold gap-1 bg-white border-indigo-200 text-indigo-700 rounded-full px-3"
                   >
                     {isCopied ? <><Check className="w-3.5 h-3.5 text-emerald-600" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
                   </Button>
@@ -2080,7 +2081,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             {weeklyReport ? (
               <div className="space-y-3">
                 <textarea
-                  className="w-full bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 font-mono text-xs leading-relaxed min-h-[250px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-slate-900 text-slate-100 p-4 rounded-2xl border border-slate-800 font-mono text-xs leading-relaxed min-h-[250px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   value={weeklyReport}
                   onChange={(e) => setWeeklyReport(e.target.value)}
                   placeholder="Edit your weekly report here..."
@@ -2089,26 +2090,26 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                   <Button
                     onClick={handleSaveWeeklyReport}
                     disabled={isSavingReport}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 text-xs rounded-xl gap-1.5"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 text-xs rounded-full px-4 gap-1.5"
                   >
                     {reportSavedSuccess ? <><Check className="w-3.5 h-3.5" /> Saved!</> : <><Save className="w-3.5 h-3.5" /> Save Report</>}
                   </Button>
                   <Button
                     onClick={handleGenerateWeeklyReport}
                     variant="outline"
-                    className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold h-9 text-xs rounded-xl gap-1.5"
+                    className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold h-9 text-xs rounded-full px-4 gap-1.5"
                   >
                     <RefreshCw className="w-3.5 h-3.5" /> Regenerate
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-2xl space-y-3">
+              <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-3xl space-y-3">
                 <Mail className="w-8 h-8 text-indigo-600 mx-auto" />
                 <h5 className="text-xs font-bold text-slate-800">No report generated yet</h5>
                 <Button
                   onClick={handleGenerateWeeklyReport}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 rounded-xl gap-1.5"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 rounded-full gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5" /> Compile New Weekly Report
                 </Button>
@@ -2126,7 +2127,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
           setIsEditingGoal(open); 
         }}
       >
-        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto p-6 border border-slate-200 shadow-2xl rounded-2xl">
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto p-6 border border-slate-200 shadow-2xl rounded-3xl">
           <DialogHeader className="pb-4 border-b">
             <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
               <Target className="w-6 h-6 text-indigo-600" />
@@ -2146,33 +2147,33 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             className="space-y-5 pt-4"
           >
             {/* Live Business Context Banner */}
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                   <LineChart className="w-3.5 h-3.5 text-indigo-600" />
                   Synchronized Live Business Feeds (All 4 Pillars Considered)
                 </span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                   Auto-Injected to AI
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 pt-0.5">
-                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                <div className="p-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
                   <span className="text-[9px] uppercase font-bold text-purple-600 block">Product Suite</span>
                   <span className="font-bold text-slate-900 block truncate">{productKPIs.totalCount} Products</span>
                   <span className="text-[10px] text-slate-500 block">{fmtINR(productKPIs.suiteMrr || salesKPIs.mrr)} MRR</span>
                 </div>
-                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                <div className="p-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
                   <span className="text-[9px] uppercase font-bold text-indigo-600 block">Sales Tracker</span>
                   <span className="font-bold text-slate-900 block truncate">{fmtINR(salesKPIs.mrr)} MRR</span>
                   <span className="text-[10px] text-slate-500 block">{salesKPIs.wonCount} Deals ({salesKPIs.conversionRate.toFixed(0)}%)</span>
                 </div>
-                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                <div className="p-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
                   <span className="text-[9px] uppercase font-bold text-emerald-600 block">Finance Suite</span>
                   <span className="font-bold text-slate-900 block truncate">{fmtINR(postMoney)}</span>
                   <span className="text-[10px] text-slate-500 block">{fmtPct(founderOwnership)} Equity</span>
                 </div>
-                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-xs">
+                <div className="p-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
                   <span className="text-[9px] uppercase font-bold text-teal-600 block">Operations Hub</span>
                   <span className="font-bold text-slate-900 block truncate">{fmtINR(opsKPIs.cashBank)}</span>
                   <span className="text-[10px] text-rose-600 block">{opsKPIs.runway === 999 ? '∞' : `${Math.round(opsKPIs.runway)} mo`} Runway</span>
@@ -2184,7 +2185,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="space-y-2">
               <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Startup Stage</Label>
               <Select value={stage} onValueChange={setStage} disabled={readOnly}>
-                <SelectTrigger className="w-full h-10 border-slate-200 font-semibold">
+                <SelectTrigger className="w-full h-11 border-slate-200 font-semibold rounded-full px-4">
                   <SelectValue placeholder="Select current stage..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -2199,7 +2200,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="space-y-2">
               <Label className="font-black text-xs uppercase tracking-wider text-slate-500">Startup Yearly Goal</Label>
               <textarea
-                className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                className="w-full text-sm font-medium p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                 rows={4}
                 placeholder="Describe your primary targets for the next 12 months (e.g. key revenue milestones, funding milestones, customer numbers)..."
                 value={yearlyGoal}
@@ -2220,7 +2221,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                         type="button"
                         onClick={() => setYearlyGoal(preset.text)}
                         disabled={readOnly}
-                        className="p-3 text-left text-xs bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 transition-all border rounded-lg font-medium text-slate-600 flex flex-col justify-between"
+                        className="p-3.5 text-left text-xs bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 transition-all border rounded-2xl font-medium text-slate-600 flex flex-col justify-between"
                       >
                         <Icon className="w-4 h-4 text-indigo-500 mb-2 shrink-0" />
                         <p className="line-clamp-3 leading-relaxed">{preset.text}</p>
@@ -2239,7 +2240,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               </Label>
               
               {attachedDocName ? (
-                <div className="flex items-center justify-between p-3.5 rounded-lg border-2 border-indigo-50 bg-indigo-50/10 hover:bg-indigo-50/20 transition-all">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl border-2 border-indigo-50 bg-indigo-50/10 hover:bg-indigo-50/20 transition-all">
                   <div className="flex items-center gap-3">
                     <FileText className="w-8 h-8 text-indigo-600 shrink-0" />
                     <div className="space-y-0.5">
@@ -2271,7 +2272,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                   )}
                 </div>
               ) : (
-                <div className="relative group border-2 border-dashed border-slate-200 hover:border-indigo-300 transition-all rounded-lg p-5 bg-slate-50/30 text-center cursor-pointer">
+                <div className="relative group border-2 border-dashed border-slate-200 hover:border-indigo-300 transition-all rounded-2xl p-5 bg-slate-50/30 text-center cursor-pointer">
                   <input
                     type="file"
                     className="absolute inset-0 opacity-0 cursor-pointer"
@@ -2324,7 +2325,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
               </Label>
               <textarea
-                className="w-full text-sm font-medium p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                className="w-full text-sm font-medium p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                 rows={2}
                 placeholder="Provide context like sales channels, target audience, roadblocks, or details not logged in Sales/Finance trackers..."
                 value={missingInfoContext}
@@ -2340,7 +2341,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 onClick={handleSaveGoals}
                 disabled={readOnly || !yearlyGoal || isSavingGoals}
                 variant="outline"
-                className="flex-1 border-slate-300 font-bold h-11 gap-2 text-slate-700 hover:bg-slate-50"
+                className="flex-1 border-slate-300 font-bold h-11 gap-2 text-slate-700 hover:bg-slate-50 rounded-full shadow-xs"
               >
                 {isSavingGoals ? (
                   <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
@@ -2355,7 +2356,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               <Button
                 type="submit"
                 disabled={readOnly || !yearlyGoal}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 text-sm gap-2"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 text-sm gap-2 rounded-full shadow-md shadow-indigo-600/20"
               >
                 <Sparkles className="w-4 h-4" />
                 Generate 12-Month Plan & Roadmap
@@ -2395,8 +2396,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             
             {/* Hover Tooltip Pill */}
             <span
-              style={{ borderRadius: '4px' }}
-              className="absolute -top-7 right-0 px-2.5 py-0.5 bg-slate-950/95 text-indigo-200 text-[10px] font-bold tracking-tight whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-indigo-500/40"
+              style={{ borderRadius: '9999px' }}
+              className="absolute -top-7 right-0 px-3 py-1 bg-slate-950/95 text-indigo-200 text-[10px] font-bold tracking-tight whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-indigo-500/40"
             >
               Roadmap Co-Pilot (Drag me)
             </span>
@@ -2430,7 +2431,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                     await deleteDoc(roadmapChatRef).catch(() => {});
                   }
                 }}
-                className="text-slate-400 hover:text-rose-600 text-xs font-bold"
+                className="text-slate-400 hover:text-rose-600 text-xs font-bold rounded-full px-3"
               >
                 Reset Chat
               </Button>
@@ -2455,14 +2456,14 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                     <button
                       type="button"
                       onClick={() => handleSendChatMessage(undefined, "I want to prioritize product development over sales outreach in Q2.")}
-                      className="px-3 py-2 border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs font-semibold text-slate-700 transition-all shadow-sm text-left"
+                      className="px-4 py-2 border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs font-semibold text-slate-700 transition-all shadow-2xs rounded-full text-left"
                     >
                       "Prioritize dev over sales in Q2"
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSendChatMessage(undefined, "We are short on runway, adjust the monthly milestones to be more conservative.")}
-                      className="px-3 py-2 border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs font-semibold text-slate-700 transition-all shadow-sm text-left"
+                      className="px-4 py-2 border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 text-xs font-semibold text-slate-700 transition-all shadow-2xs rounded-full text-left"
                     >
                       "Short on runway, make milestones conservative"
                     </button>
@@ -2471,7 +2472,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               ) : (
                 chatMessages.map((msg, index) => (
                   <div key={index} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`p-3 text-xs leading-relaxed max-w-[85%] ${
+                    <div className={`p-3.5 text-xs leading-relaxed max-w-[85%] rounded-3xl ${
                       msg.role === 'user'
                         ? 'bg-indigo-600 text-white shadow-sm'
                         : 'bg-white border border-slate-200 text-slate-800 shadow-sm'
@@ -2498,7 +2499,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
             {/* Modification Suggestion Alert & Modify Button */}
             {latestModSuggestion && (
-              <div className="p-3.5 bg-amber-50 border-t border-b border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
+              <div className="p-3.5 mx-4 my-2 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200 shadow-2xs">
                 <div className="space-y-1">
                   <span className="text-[10px] font-black tracking-widest text-amber-900 uppercase block">RECOMMENDED REVISION</span>
                   <p className="text-xs font-bold text-slate-800 leading-normal">{latestModSuggestion}</p>
@@ -2509,7 +2510,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                     setIsChatOpen(false);
                   }}
                   disabled={aiLoading}
-                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold h-9 gap-1.5 shrink-0 px-4"
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold h-9 gap-1.5 shrink-0 px-4 rounded-full shadow-xs"
                 >
                   {aiLoading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -2522,7 +2523,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             )}
 
             {/* Chat Input Field */}
-            <div className="p-3 bg-white border-t flex gap-2">
+            <div className="p-3 bg-white border-t flex gap-2 items-center">
               <Input
                 placeholder="Discuss plan adjustments (e.g. shift priorities, change timeline)..."
                 value={chatMessage}
@@ -2534,13 +2535,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                   }
                 }}
                 disabled={chatLoading}
-                className="bg-slate-50 border-slate-200 text-xs h-10 rounded-none focus-visible:ring-indigo-500"
+                className="bg-slate-50 border-slate-200 text-xs h-11 rounded-full px-4 focus-visible:ring-indigo-500 flex-1"
               />
               <Button
                 size="icon"
                 disabled={chatLoading || !chatMessage.trim()}
                 onClick={() => handleSendChatMessage()}
-                className="h-10 w-10 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-none"
+                className="h-11 w-11 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 rounded-full shadow-sm"
               >
                 <Send className="w-4 h-4" />
               </Button>

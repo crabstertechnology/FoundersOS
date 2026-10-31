@@ -247,18 +247,18 @@ export default function FounderOSPage() {
       <div className="min-h-screen flex flex-col bg-background">
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-border h-20 flex items-center px-6 print:hidden">
           <div className="flex items-center gap-3 shrink-0">
-            <div className="bg-primary text-white font-headline font-black text-xl w-10 h-10 flex items-center justify-center rounded-lg shadow-sm">F</div>
+            <div className="bg-primary text-white font-headline font-black text-xl w-10 h-10 flex items-center justify-center rounded-2xl shadow-sm">F</div>
             <span className="font-headline font-extrabold text-2xl tracking-tighter hidden md:inline">FOUNDER<span className="text-primary">OS</span></span>
           </div>
           
           <div className="flex-1 flex justify-center">
-            <div className="hidden lg:flex items-center gap-4 animate-in fade-in">
-              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('valuation')?.scrollIntoView({ behavior: 'smooth' })}>Valuation Engine</Button>
-              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('equity')?.scrollIntoView({ behavior: 'smooth' })}>Equity Tracker</Button>
-              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('exit-sim')?.scrollIntoView({ behavior: 'smooth' })}>Exit Sim</Button>
-              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('term-sheet')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet AI</Button>
-              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('qa-analyser')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet Q&A</Button>
-              <Button variant="ghost" className="text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('glossary')?.scrollIntoView({ behavior: 'smooth' })}>Founder's Glossary</Button>
+            <div className="hidden lg:flex items-center gap-2 animate-in fade-in">
+              <Button variant="ghost" className="rounded-full px-4 text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('valuation')?.scrollIntoView({ behavior: 'smooth' })}>Valuation Engine</Button>
+              <Button variant="ghost" className="rounded-full px-4 text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('equity')?.scrollIntoView({ behavior: 'smooth' })}>Equity Tracker</Button>
+              <Button variant="ghost" className="rounded-full px-4 text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('exit-sim')?.scrollIntoView({ behavior: 'smooth' })}>Exit Sim</Button>
+              <Button variant="ghost" className="rounded-full px-4 text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('term-sheet')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet AI</Button>
+              <Button variant="ghost" className="rounded-full px-4 text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('qa-analyser')?.scrollIntoView({ behavior: 'smooth' })}>Term Sheet Q&A</Button>
+              <Button variant="ghost" className="rounded-full px-4 text-sm font-bold hover:text-primary hover:bg-primary/5 transition-colors" onClick={() => document.getElementById('glossary')?.scrollIntoView({ behavior: 'smooth' })}>Founder's Glossary</Button>
             </div>
           </div>
 
@@ -334,7 +334,7 @@ export default function FounderOSPage() {
                 setIsSidebarMinimized(false);
               }
             }}
-            className="p-2 hover:bg-slate-100/90 text-slate-700 hover:text-indigo-600 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0"
+            className="p-2 hover:bg-slate-100/90 text-slate-700 hover:text-indigo-600 rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0"
             title="Toggle Sidebar"
             aria-label="Toggle Sidebar"
           >
@@ -343,7 +343,7 @@ export default function FounderOSPage() {
 
           {/* FounderOS Company Name in Nav Bar */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-xs">
               <span className="text-white font-black text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>F</span>
             </div>
             <span className="font-extrabold text-base tracking-tight text-slate-950" style={{ letterSpacing: '-0.02em', fontFamily: "'Outfit', sans-serif" }}>
@@ -410,14 +410,14 @@ export default function FounderOSPage() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-lg"
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
                 >
                   <User className="w-4 h-4 text-slate-500" />
                   <span>Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-lg"
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
                 >
                   <Settings className="w-4 h-4 text-slate-500" />
                   <span>Settings</span>
@@ -425,7 +425,7 @@ export default function FounderOSPage() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => { initiateSignOut(auth); setIsProfileOpen(false); }}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-lg"
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-xl"
                 >
                   <LogOut className="w-4 h-4 text-rose-500" />
                   <span>Logout</span>
@@ -972,7 +972,7 @@ export default function FounderOSPage() {
         <main className="flex-1 p-3 sm:p-5 md:p-6 w-full">
           <Tabs value={activeTab} className="w-full">
             {/* Console Landing Dashboard */}
-            <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none">
+            <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none w-full">
               <CentralDashboard userId={userId!} companyProfileId={companyProfileId} onNavigate={handleNavigate} readOnly={isVisitor} />
             </TabsContent>
 
