@@ -332,12 +332,12 @@ export default function FounderOSPage() {
         <div className="flex items-center gap-2.5 sm:gap-3">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => router.push('/calendar')}
-            className="flex items-center gap-1.5 font-bold text-xs border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 transition-all rounded-lg h-9 px-2.5 sm:px-3"
+            className="rounded-full h-9 w-9 border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all shrink-0 cursor-pointer"
+            title="Calendar"
           >
             <Calendar className="w-4 h-4 text-indigo-600" />
-            <span className="hidden sm:inline">Calendar</span>
           </Button>
           <NotificationCenter />
           <QuickCalculator />
@@ -466,20 +466,23 @@ export default function FounderOSPage() {
                   { tab: 'sales', icon: TrendingUp, label: 'Sales Tracker' },
                   { tab: 'finance', icon: Calculator, label: 'Finance Suite' },
                   { tab: 'operations', icon: Activity, label: 'Operations Hub' },
-                ].map(({ tab, icon: Icon, label }) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-150 ${
-                      activeTab === tab
-                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
-                        : 'hover:bg-slate-900/5 hover:text-slate-950 text-slate-800'
-                    }`}
-                    title={label}
-                  >
-                    <Icon className="w-5 h-5 stroke-[2.2]" />
-                  </button>
-                ))}
+                ].map(({ tab, icon: Icon, label }) => {
+                  const isActive = activeTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-150 ${
+                        isActive
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 font-extrabold'
+                          : 'hover:bg-slate-900/5 hover:text-slate-950 text-slate-700'
+                      }`}
+                      title={label}
+                    >
+                      <Icon className={`w-5 h-5 stroke-[2.2] ${isActive ? 'text-white' : 'text-slate-700'}`} />
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <>
@@ -488,11 +491,11 @@ export default function FounderOSPage() {
                   onClick={() => setActiveTab('dashboard')}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
                     activeTab === 'dashboard'
-                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
                       : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                   }`}
                 >
-                  <Home className="w-4.5 h-4.5 shrink-0 stroke-[2.2]" />
+                  <Home className={`w-4.5 h-4.5 shrink-0 stroke-[2.2] ${activeTab === 'dashboard' ? 'text-white' : 'text-slate-700'}`} />
                   <span>Central Console</span>
                 </button>
 
@@ -501,12 +504,12 @@ export default function FounderOSPage() {
                   onClick={() => setActiveTab('product')}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
                     activeTab === 'product'
-                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
                       : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Box className="w-4.5 h-4.5 stroke-[2.2]" />
+                    <Box className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'product' ? 'text-white' : 'text-slate-700'}`} />
                     <span>Product Suite</span>
                   </div>
                 </button>
@@ -516,15 +519,17 @@ export default function FounderOSPage() {
                   onClick={() => setActiveTab('dm')}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
                     activeTab === 'dm'
-                      ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
                       : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Megaphone className="w-4.5 h-4.5 stroke-[2.2]" />
+                    <Megaphone className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'dm' ? 'text-white' : 'text-slate-700'}`} />
                     <span>Digital Marketing</span>
                   </div>
-                  <span className="bg-[#f97316] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                    activeTab === 'dm' ? 'bg-white text-indigo-700' : 'bg-[#f97316] text-white'
+                  }`}>
                     NEW
                   </span>
                 </button>
@@ -537,18 +542,18 @@ export default function FounderOSPage() {
                     onClick={() => setIsSalesExpanded(!isSalesExpanded)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
                       activeTab === 'sales'
-                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                        ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
                         : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <TrendingUp className="w-4.5 h-4.5 stroke-[2.2]" />
+                      <TrendingUp className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'sales' ? 'text-white' : 'text-slate-700'}`} />
                       <span>Sales Tracker</span>
                     </div>
                     {isSalesExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-slate-700" />
+                      <ChevronDown className={`w-4 h-4 ${activeTab === 'sales' ? 'text-white' : 'text-slate-700'}`} />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-black" />
+                      <ChevronRight className={`w-4 h-4 ${activeTab === 'sales' ? 'text-white' : 'text-slate-700 group-hover:text-black'}`} />
                     )}
                   </button>
 
@@ -569,7 +574,7 @@ export default function FounderOSPage() {
                             onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
                             className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
                               isActive
-                                ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                                ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
                                 : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
                             }`}
                           >
@@ -589,18 +594,18 @@ export default function FounderOSPage() {
                     onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
                       activeTab === 'finance'
-                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                        ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
                         : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Calculator className="w-4.5 h-4.5 stroke-[2.2]" />
+                      <Calculator className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'finance' ? 'text-white' : 'text-slate-700'}`} />
                       <span>Finance Suite</span>
                     </div>
                     {isFinanceExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-slate-700" />
+                      <ChevronDown className={`w-4 h-4 ${activeTab === 'finance' ? 'text-white' : 'text-slate-700'}`} />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-black" />
+                      <ChevronRight className={`w-4 h-4 ${activeTab === 'finance' ? 'text-white' : 'text-slate-700 group-hover:text-black'}`} />
                     )}
                   </button>
 
@@ -623,7 +628,7 @@ export default function FounderOSPage() {
                             onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
                             className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
                               isActive
-                                ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                                ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
                                 : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
                             }`}
                           >
@@ -643,18 +648,18 @@ export default function FounderOSPage() {
                     onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
                       activeTab === 'operations'
-                        ? 'bg-slate-900/10 text-slate-950 font-extrabold shadow-2xs'
+                        ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
                         : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Activity className="w-4.5 h-4.5 stroke-[2.2]" />
+                      <Activity className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'operations' ? 'text-white' : 'text-slate-700'}`} />
                       <span>Operations Hub</span>
                     </div>
                     {isOperationsExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-slate-700" />
+                      <ChevronDown className={`w-4 h-4 ${activeTab === 'operations' ? 'text-white' : 'text-slate-700'}`} />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-black" />
+                      <ChevronRight className={`w-4 h-4 ${activeTab === 'operations' ? 'text-white' : 'text-slate-700 group-hover:text-black'}`} />
                     )}
                   </button>
 
@@ -674,7 +679,7 @@ export default function FounderOSPage() {
                             onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
                             className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
                               isActive
-                                ? 'text-indigo-700 font-extrabold bg-indigo-50/80 shadow-2xs'
+                                ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
                                 : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
                             }`}
                           >
