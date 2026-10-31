@@ -8,8 +8,12 @@ import {
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
   Menu, X, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
-  ShieldAlert, Calendar, Box, Megaphone, Pin, PinOff
+  ShieldAlert, Calendar, Box, Megaphone, Pin, PinOff, User
 } from 'lucide-react';
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
@@ -304,37 +308,28 @@ export default function FounderOSPage() {
         />
       )}
 
-      {/* Desktop Left Sidebar */}
+      {/* Desktop Left Sidebar (Wix-inspired clean light UI/UX) */}
       <aside 
         onMouseEnter={() => isSidebarAutoHide && setIsSidebarHovered(true)}
         onMouseLeave={() => isSidebarAutoHide && setIsSidebarHovered(false)}
-        className={`hidden md:flex flex-col h-screen select-none bg-[#07090f] border-r border-[rgba(255,255,255,0.06)] text-slate-400 transition-all duration-300 ease-spring shrink-0
+        className={`hidden md:flex flex-col h-screen select-none bg-white border-r border-slate-200 text-slate-700 transition-all duration-300 ease-spring shrink-0
           ${isSidebarAutoHide 
-            ? `fixed left-0 top-0 z-50 shadow-[20px_0_60px_-10px_rgba(0,0,0,0.5)] ${isSidebarMinimized ? 'w-[72px]' : 'w-[270px]'} ${isSidebarHovered ? 'translate-x-0' : '-translate-x-full'}` 
-            : `sticky top-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[270px]'}`
+            ? `fixed left-0 top-0 z-50 shadow-[0_10px_35px_rgba(0,0,0,0.08)] ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'} ${isSidebarHovered ? 'translate-x-0' : '-translate-x-full'}` 
+            : `sticky top-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'}`
           }
         `}
       >
-        {/* Brand Header */}
-        <div className={`h-14 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between ${isSidebarMinimized ? 'px-3 justify-center' : 'px-4'} transition-all duration-300`}>
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(99,102,241,0.5)]">
-              <span className="text-white font-black text-sm" style={{fontFamily:'Inter,sans-serif'}}>F</span>
-            </div>
-            {!isSidebarMinimized && (
-              <span className="font-extrabold text-[15px] tracking-tight text-white animate-in fade-in duration-200" style={{letterSpacing:'-0.02em',fontFamily:'Inter,sans-serif'}}>Founder<span className="text-indigo-400">OS</span></span>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-1 shrink-0">
+        {/* Sidebar Controls Header */}
+        <div className={`h-12 border-b border-slate-200/80 flex items-center ${isSidebarMinimized ? 'justify-center px-2' : 'justify-end px-3'} transition-all duration-300`}>
+          <div className="flex items-center gap-1">
             {!isSidebarMinimized && (
               <button
                 onClick={toggleSidebarAutoHide}
-                className="text-slate-600 hover:text-slate-300 p-1.5 hover:bg-white/8 rounded-lg transition-all duration-150"
+                className="text-slate-400 hover:text-slate-700 p-1.5 hover:bg-slate-100 rounded-lg transition-all duration-150"
                 title={isSidebarAutoHide ? 'Pin Sidebar' : 'Enable Auto-hide'}
               >
                 {isSidebarAutoHide ? (
-                  <PinOff className="w-3.5 h-3.5 text-indigo-400" />
+                  <PinOff className="w-3.5 h-3.5 text-indigo-600" />
                 ) : (
                   <Pin className="w-3.5 h-3.5" />
                 )}
@@ -342,33 +337,33 @@ export default function FounderOSPage() {
             )}
             <button
               onClick={() => setIsSidebarMinimized(!isSidebarMinimized)}
-              className="text-slate-600 hover:text-slate-300 p-1.5 hover:bg-white/8 rounded-lg hidden md:flex items-center justify-center shrink-0 transition-all duration-150"
+              className="text-slate-400 hover:text-slate-700 p-1.5 hover:bg-slate-100 rounded-lg hidden md:flex items-center justify-center shrink-0 transition-all duration-150"
               title={isSidebarMinimized ? 'Expand Sidebar' : 'Minimize Sidebar'}
             >
-              {isSidebarMinimized ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+              {isSidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        {/* Scrollable Navigation List */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+        {/* Scrollable Navigation List (Wix Font & UI/UX) */}
+        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1 font-sans">
           {isSidebarMinimized ? (
             <div className="flex flex-col items-center gap-1">
               {[
-                { tab: 'dashboard', icon: Home, label: 'Console' },
-                { tab: 'product', icon: Box, label: 'Product' },
-                { tab: 'dm', icon: Megaphone, label: 'Marketing' },
-                { tab: 'sales', icon: TrendingUp, label: 'Sales' },
-                { tab: 'finance', icon: Calculator, label: 'Finance' },
-                { tab: 'operations', icon: ListChecks, label: 'Ops' },
+                { tab: 'dashboard', icon: Home, label: 'Central Console' },
+                { tab: 'product', icon: Box, label: 'Product Suite' },
+                { tab: 'dm', icon: Megaphone, label: 'Digital Marketing' },
+                { tab: 'sales', icon: TrendingUp, label: 'Sales Tracker' },
+                { tab: 'finance', icon: Calculator, label: 'Finance Suite' },
+                { tab: 'operations', icon: Activity, label: 'Operations Hub' },
               ].map(({ tab, icon: Icon, label }) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-150 ${
                     activeTab === tab
-                      ? 'bg-indigo-600 text-white shadow-[0_0_12px_rgba(99,102,241,0.4)]'
-                      : 'hover:bg-white/8 hover:text-slate-200 text-slate-500'
+                      ? 'bg-slate-200/90 text-slate-900 font-medium shadow-2xs'
+                      : 'hover:bg-slate-100 hover:text-slate-900 text-slate-600'
                   }`}
                   title={label}
                 >
@@ -381,475 +376,296 @@ export default function FounderOSPage() {
               {/* Central Console */}
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 ${
                   activeTab === 'dashboard'
-                    ? 'bg-indigo-600 text-white font-semibold shadow-[0_0_12px_rgba(99,102,241,0.35)]'
-                    : 'text-slate-400 hover:bg-white/6 hover:text-slate-100'
+                    ? 'bg-slate-200/80 text-slate-900 font-medium'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
                 }`}
               >
-                <Home className="w-4 h-4 shrink-0" />
+                <Home className="w-4 h-4 shrink-0 text-slate-600" />
                 <span>Central Console</span>
               </button>
 
               {/* Product Suite */}
               <button
                 onClick={() => setActiveTab('product')}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 ${
                   activeTab === 'product'
-                    ? 'bg-primary text-white shadow-md shadow-primary/15'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100'
+                    ? 'bg-slate-200/80 text-slate-900 font-medium'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Box className="w-4 h-4" />
+                  <Box className="w-4 h-4 text-slate-600" />
                   <span>Product Suite</span>
                 </div>
               </button>
 
-              {/* Digital Marketing */}
+              {/* Digital Marketing (with NEW badge matching Wix style) */}
               <button
                 onClick={() => setActiveTab('dm')}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 ${
                   activeTab === 'dm'
-                    ? 'bg-primary text-white shadow-md shadow-primary/15'
-                    : 'hover:bg-slate-800/50 hover:text-slate-100'
+                    ? 'bg-slate-200/80 text-slate-900 font-medium'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Megaphone className="w-4 h-4" />
+                  <Megaphone className="w-4 h-4 text-slate-600" />
                   <span>Digital Marketing</span>
                 </div>
+                <span className="bg-[#f97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                  NEW
+                </span>
               </button>
 
+              <div className="h-px bg-slate-200/80 my-2 mx-1" />
+
               {/* Sales Section */}
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <button
                   onClick={() => setIsSalesExpanded(!isSalesExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 group ${
                     activeTab === 'sales'
-                      ? 'text-white font-black'
-                      : 'hover:bg-slate-800/50 hover:text-slate-100'
+                      ? 'bg-slate-200/80 text-slate-900 font-medium'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <TrendingUp className="w-4 h-4" />
+                    <TrendingUp className="w-4 h-4 text-slate-600" />
                     <span>Sales Tracker</span>
                   </div>
                   {isSalesExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
                   )}
-                </button>                {isSalesExpanded && (
-                  <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'strategy'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Sales Strategy
-                    </button>
+                </button>
 
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('leads'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Lead Tracker
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('workshops'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Workshop Tracker
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('products'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Product Sales
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-
-                    <button
-                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
+                {isSalesExpanded && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-5 animate-in slide-in-from-top-1 duration-200">
+                    {[
+                      { sub: 'strategy', label: 'Sales Strategy' },
+                      { sub: 'leads', label: 'Lead Tracker' },
+                      { sub: 'workshops', label: 'Workshop Tracker' },
+                      { sub: 'products', label: 'Product Sales' },
+                      { sub: 'weekly', label: 'Weekly Dashboard' },
+                      { sub: 'activity', label: 'Daily Activity' },
+                    ].map(({ sub, label }) => {
+                      const isActive = activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === sub;
+                      return (
+                        <button
+                          key={sub}
+                          onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
+                            isActive
+                              ? 'text-indigo-600 font-medium bg-indigo-50/70'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-normal'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              <div className="h-px bg-slate-850/80 my-3" />
+              <div className="h-px bg-slate-200/80 my-2 mx-1" />
 
               {/* Finance Section */}
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <button
                   onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 group ${
                     activeTab === 'finance'
-                      ? 'text-white font-black'
-                      : 'hover:bg-slate-800/50 hover:text-slate-100'
+                      ? 'bg-slate-200/80 text-slate-900 font-medium'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Calculator className="w-4 h-4" />
+                    <Calculator className="w-4 h-4 text-slate-600" />
                     <span>Finance Suite</span>
                   </div>
                   {isFinanceExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
                   )}
                 </button>
 
                 {isFinanceExpanded && (
-                  <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'calc'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Valuation Calculator
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('tracker'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'tracker'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Cap Table Tracker
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('exit'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'exit'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Exit Simulator
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('negotiate'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'negotiate'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Term Sheet Assistant
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('qa'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'qa'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Term Sheet Q&A
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('glossary'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'glossary'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Founder's Glossary
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'finance' && financeTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-5 animate-in slide-in-from-top-1 duration-200">
+                    {[
+                      { sub: 'calc', label: 'Valuation Calculator' },
+                      { sub: 'tracker', label: 'Cap Table Tracker' },
+                      { sub: 'exit', label: 'Exit Simulator' },
+                      { sub: 'negotiate', label: 'Term Sheet Assistant' },
+                      { sub: 'qa', label: 'Term Sheet Q&A' },
+                      { sub: 'glossary', label: "Founder's Glossary" },
+                      { sub: 'weekly', label: 'Weekly Dashboard' },
+                      { sub: 'activity', label: 'Daily Activity' },
+                    ].map(({ sub, label }) => {
+                      const isActive = activeTab === 'finance' && financeTab === sub;
+                      return (
+                        <button
+                          key={sub}
+                          onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
+                            isActive
+                              ? 'text-indigo-600 font-medium bg-indigo-50/70'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-normal'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              <div className="h-px bg-slate-850/80 my-3" />
+              <div className="h-px bg-slate-200/80 my-2 mx-1" />
 
               {/* Operations Section */}
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <button
                   onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] transition-all duration-150 group ${
                     activeTab === 'operations'
-                      ? 'text-white font-black'
-                      : 'hover:bg-slate-800/50 hover:text-slate-100'
+                      ? 'bg-slate-200/80 text-slate-900 font-medium'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-normal'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Activity className="w-4 h-4" />
+                    <Activity className="w-4 h-4 text-slate-600" />
                     <span>Operations Hub</span>
                   </div>
                   {isOperationsExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
                   )}
                 </button>
 
                 {isOperationsExpanded && (
-                  <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5 animate-in slide-in-from-top-1 duration-200">
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('ops'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'ops'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Runway & SaaS Burn
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('tasks'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'tasks'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Task Workspace
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('chat'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'chat'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Team Chat
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Weekly Dashboard
-                    </button>
-                    <button
-                      onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                        activeTab === 'operations' && operationsTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/30'
-                      }`}
-                    >
-                      Daily Activity
-                    </button>
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-5 animate-in slide-in-from-top-1 duration-200">
+                    {[
+                      { sub: 'ops', label: 'Runway & SaaS Burn' },
+                      { sub: 'tasks', label: 'Task Workspace' },
+                      { sub: 'chat', label: 'Team Chat' },
+                      { sub: 'weekly', label: 'Weekly Dashboard' },
+                      { sub: 'activity', label: 'Daily Activity' },
+                    ].map(({ sub, label }) => {
+                      const isActive = activeTab === 'operations' && operationsTab === sub;
+                      return (
+                        <button
+                          key={sub}
+                          onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
+                            isActive
+                              ? 'text-indigo-600 font-medium bg-indigo-50/70'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-normal'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             </>
           )}
         </nav>
-
-        {/* Profile/Footer Widget */}
-        <div className={`p-4 border-t border-slate-800/80 bg-slate-950/40 transition-all duration-350 ${isSidebarMinimized ? 'flex flex-col items-center gap-3 py-4 px-2' : 'space-y-2'}`}>
-          {isSidebarMinimized ? (
-            <>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all border ${
-                  activeTab === 'settings'
-                    ? 'bg-slate-800/60 border-slate-700 text-white'
-                    : 'hover:bg-slate-850 border-transparent text-slate-400 hover:text-white'
-                }`}
-                title="Settings"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => initiateSignOut(auth)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-rose-400 hover:bg-rose-950/20 hover:text-rose-300 transition-all"
-                title="Sign Out"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`w-full flex items-center gap-3 text-left p-2 rounded-xl transition-all border ${
-                  activeTab === 'settings'
-                    ? 'bg-slate-800/60 border-slate-700 text-white'
-                    : 'hover:bg-slate-850 border-transparent text-slate-300'
-                }`}
-              >
-                <div className="w-8 h-8 bg-primary text-white font-black text-xs flex items-center justify-center rounded-lg shadow-sm">
-                  {(user?.email || 'F').charAt(0).toUpperCase()}
-                </div>
-                <div className="flex flex-col items-start leading-tight min-w-0 flex-1">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Founder Profile</span>
-                  <div className="flex items-center gap-1.5 w-full min-w-0">
-                    <span className="text-xs font-semibold text-slate-200 truncate flex-1">{user.email}</span>
-                    {isVisitor && (
-                      <span className="shrink-0 text-[8px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-full">
-                        View Only
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <Settings className="w-3.5 h-3.5 opacity-60 shrink-0" />
-              </button>
-              
-              <button
-                onClick={() => initiateSignOut(auth)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/20 hover:text-rose-300 transition-all"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
-            </>
-          )}
-        </div>
       </aside>
 
       {/* Mobile Drawer Navigation */}
       {isMobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-300">
-          <aside className="w-72 bg-[#090d16] text-slate-200 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-800">
-            <button
-              onClick={() => setIsMobileSidebarOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="h-16 border-b border-slate-800/80 flex items-center gap-3 px-6">
-              <div className="bg-primary text-white font-headline font-black text-lg w-8 h-8 flex items-center justify-center rounded-lg shadow-sm">F</div>
-              <span className="font-headline font-black text-xl tracking-tight text-white">FOUNDER<span className="text-primary">OS</span></span>
+        <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <aside className="w-72 bg-white text-slate-800 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-200 shadow-2xl">
+            <div className="h-14 border-b border-slate-200/80 flex items-center justify-end px-4 shrink-0">
+              <button
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
+            <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1 font-sans">
               <button
                 onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === 'dashboard'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
+                    ? 'bg-slate-200/80 text-slate-900 font-bold'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Home className="w-4 h-4" />
+                  <Home className="w-4 h-4 text-slate-600" />
                   <span>Central Console</span>
                 </div>
               </button>
 
               <button
                 onClick={() => { setActiveTab('product'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === 'product'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
+                    ? 'bg-slate-200/80 text-slate-900 font-bold'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Box className="w-4 h-4" />
+                  <Box className="w-4 h-4 text-slate-600" />
                   <span>Product Suite</span>
                 </div>
               </button>
 
               <button
                 onClick={() => { setActiveTab('dm'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === 'dm'
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
+                    ? 'bg-slate-200/80 text-slate-900 font-bold'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Megaphone className="w-4 h-4" />
+                  <Megaphone className="w-4 h-4 text-slate-600" />
                   <span>Digital Marketing</span>
                 </div>
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white">NEW</span>
               </button>
 
               {/* Sales Section */}
               <div className="space-y-1">
                 <button
                   onClick={() => setIsSalesExpanded(!isSalesExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                     activeTab === 'sales'
-                      ? 'text-white font-black bg-slate-800/30'
-                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
+                      ? 'bg-slate-200/80 text-slate-900 font-bold'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <TrendingUp className="w-4 h-4" />
+                    <TrendingUp className="w-4 h-4 text-slate-600" />
                     <span>Sales Tracker</span>
                   </div>
                   {isSalesExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                   )}
-                </button>                {isSalesExpanded && (
-                  <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
+                </button>
+                {isSalesExpanded && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-4">
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('strategy'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'strategy'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Sales Strategy
@@ -857,10 +673,10 @@ export default function FounderOSPage() {
 
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('leads'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'leads'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Lead Tracker
@@ -868,10 +684,10 @@ export default function FounderOSPage() {
 
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('workshops'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'workshops'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Workshop Tracker
@@ -879,10 +695,10 @@ export default function FounderOSPage() {
 
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('products'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'products'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Product Sales
@@ -890,10 +706,10 @@ export default function FounderOSPage() {
 
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Weekly Dashboard
@@ -901,10 +717,10 @@ export default function FounderOSPage() {
 
                     <button
                       onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Daily Activity
@@ -913,106 +729,106 @@ export default function FounderOSPage() {
                 )}
               </div>
 
-              <div className="h-px bg-slate-850/80 my-3" />
+              <div className="h-px bg-slate-200/80 my-2" />
 
               <div className="space-y-1">
                 <button
                   onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                     activeTab === 'finance'
-                      ? 'text-white font-black bg-slate-800/30'
-                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
+                      ? 'bg-slate-200/80 text-slate-900 font-bold'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Calculator className="w-4 h-4" />
+                    <Calculator className="w-4 h-4 text-slate-600" />
                     <span>Finance Suite</span>
                   </div>
                   {isFinanceExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                   )}
                 </button>
 
                 {isFinanceExpanded && (
-                  <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-4">
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'calc'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Valuation Calculator
                     </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('tracker'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'tracker'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Cap Table Tracker
                     </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('exit'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'exit'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Exit Simulator
                     </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('negotiate'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'negotiate'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Term Sheet Assistant
                     </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('qa'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'qa'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
-                      Term Sheet Q&A
+                      Term Sheet Q&amp;A
                     </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('glossary'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'glossary'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
-                      Founder's Glossary
+                      Founder&apos;s Glossary
                     </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Weekly Dashboard
                     </button>
                     <button
                       onClick={() => { setActiveTab('finance'); setFinanceTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'finance' && financeTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Daily Activity
@@ -1021,76 +837,76 @@ export default function FounderOSPage() {
                 )}
               </div>
 
-              <div className="h-px bg-slate-850/80 my-3" />
+              <div className="h-px bg-slate-200/80 my-2" />
 
               <div className="space-y-1">
                 <button
                   onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                     activeTab === 'operations'
-                      ? 'text-white font-black bg-slate-800/30'
-                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white'
+                      ? 'bg-slate-200/80 text-slate-900 font-bold'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Activity className="w-4 h-4" />
+                    <Activity className="w-4 h-4 text-slate-600" />
                     <span>Operations Hub</span>
                   </div>
                   {isOperationsExpanded ? (
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 opacity-80" />
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                   )}
                 </button>
 
                 {isOperationsExpanded && (
-                  <div className="pl-6 pr-1 py-1 space-y-1 border-l border-slate-800/60 ml-5">
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-200 ml-4">
                     <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('ops'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'operations' && operationsTab === 'ops'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
-                      Runway & SaaS Burn
+                      Runway &amp; SaaS Burn
                     </button>
                     <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('tasks'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'operations' && operationsTab === 'tasks'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Task Workspace
                     </button>
                     <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('chat'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'operations' && operationsTab === 'chat'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Team Chat
                     </button>
                     <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('weekly'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'operations' && operationsTab === 'weekly'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Weekly Dashboard
                     </button>
                     <button
                       onClick={() => { setActiveTab('operations'); setOperationsTab('activity'); setIsMobileSidebarOpen(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all ${
                         activeTab === 'operations' && operationsTab === 'activity'
-                          ? 'text-primary font-bold bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800/30'
+                          ? 'font-bold text-primary bg-primary/10'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       Daily Activity
@@ -1099,40 +915,6 @@ export default function FounderOSPage() {
                 )}
               </div>
             </nav>
-
-            <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
-              <button
-                onClick={() => { setActiveTab('settings'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 text-left p-2 rounded-xl transition-all border ${
-                  activeTab === 'settings'
-                    ? 'bg-slate-800/80 border-slate-700 text-white'
-                    : 'hover:bg-slate-850 border-transparent text-slate-300'
-                }`}
-              >
-                <div className="w-8 h-8 bg-primary text-white font-black text-xs flex items-center justify-center rounded-lg shadow-sm">
-                  {(user?.email || 'F').charAt(0).toUpperCase()}
-                </div>
-                <div className="flex flex-col items-start leading-tight min-w-0 flex-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Founder Profile</span>
-                  <div className="flex items-center gap-1.5 w-full min-w-0">
-                    <span className="text-xs font-semibold text-slate-200 truncate flex-1">{user.email}</span>
-                    {isVisitor && (
-                      <span className="shrink-0 text-[8px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-full">
-                        View Only
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-              
-              <button
-                onClick={() => { initiateSignOut(auth); setIsMobileSidebarOpen(false); }}
-                className="w-full mt-2 flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/20 hover:text-rose-300 transition-all"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
-            </div>
           </aside>
         </div>
       )}
@@ -1148,7 +930,20 @@ export default function FounderOSPage() {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <h2 className="text-xs font-black text-slate-700 tracking-widest uppercase font-code">
+
+            {/* FounderOS Company Name in Nav Bar */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-xs">
+                <span className="text-white font-black text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>F</span>
+              </div>
+              <span className="font-extrabold text-base tracking-tight text-slate-900" style={{ letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>
+                Founder<span className="text-indigo-600">OS</span>
+              </span>
+            </div>
+
+            <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+            <h2 className="text-xs font-bold text-slate-500 tracking-wider uppercase font-code hidden sm:block">
               {getPageTitle()}
             </h2>
           </div>
@@ -1165,6 +960,64 @@ export default function FounderOSPage() {
             </Button>
             <NotificationCenter />
             <QuickCalculator />
+
+            {/* Founder Profile beside the calculator with Profile, Settings, Logout dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-full hover:bg-slate-100 border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+                  title="Founder Profile"
+                >
+                  <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
+                    {(user?.email || 'F').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="hidden md:flex flex-col items-start leading-none text-left">
+                    <span className="text-xs font-semibold text-slate-800 truncate max-w-[120px]">
+                      {user?.email?.split('@')[0] || 'Founder'}
+                    </span>
+                    <span className="text-[10px] text-slate-400">Founder</span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1.5 shadow-lg border-slate-200 bg-white">
+                <div className="px-2 py-1.5 mb-1">
+                  <p className="text-xs font-bold text-slate-900 truncate">{user?.email || 'founder@startup.com'}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Founder Account</span>
+                    {isVisitor && (
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 rounded-full">
+                        View Only
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setActiveTab('settings')}
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-md"
+                >
+                  <User className="w-4 h-4 text-slate-500" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setActiveTab('settings')}
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-md"
+                >
+                  <Settings className="w-4 h-4 text-slate-500" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => initiateSignOut(auth)}
+                  className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-md"
+                >
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 

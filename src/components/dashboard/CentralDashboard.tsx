@@ -1539,9 +1539,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             })}
           </div>
 
-          {/* Straight Flow of 12 Milestone Stars (Continuous unbroken horizontal timeline) */}
+          {/* Straight Flow of 12 Milestone Circles (Continuous unbroken horizontal timeline) */}
           <div className="relative pt-3 pb-2">
-            <div className="absolute top-7 left-4 right-4 h-0.5 bg-slate-200/90 z-0" />
+            <div className="absolute top-[1.125rem] left-4 right-4 h-0.5 bg-slate-200/90 z-0" />
             <div className="relative z-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none px-2">
               {Array.from({ length: 12 }).map((_, idx) => {
                 const mLabel = `M${idx + 1}`;
@@ -1555,43 +1555,18 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                     <button
                       type="button"
                       onClick={() => setSelectedMonthIdx(prev => prev === idx ? null : idx)}
-                      className={`group relative w-9 h-9 flex items-center justify-center transition-all duration-200 focus:outline-hidden ${
+                      className={`group relative w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center font-black text-[10px] md:text-xs transition-all duration-200 focus:outline-hidden ${
                         isSelected
-                          ? 'scale-125 z-20'
-                          : 'hover:scale-110 z-10'
+                          ? 'bg-indigo-600 text-white shadow-[0_2px_12px_rgba(79,70,229,0.5)] ring-4 ring-indigo-200 scale-110 z-20'
+                          : isCompleted
+                          ? 'bg-emerald-500 text-white shadow-xs hover:bg-emerald-600 z-10'
+                          : isCurrent
+                          ? 'bg-white text-indigo-700 border-2 border-indigo-600 ring-4 ring-indigo-100 hover:scale-105 z-10'
+                          : 'bg-white text-slate-600 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 z-10'
                       }`}
                       title={`${mFullName}: ${isSelected ? 'Selected (Click to toggle)' : isCompleted ? 'Completed' : 'Upcoming'} — Touch for roadmap & milestone details`}
                     >
-                      <svg
-                        viewBox="0 0 24 24"
-                        className={`w-9 h-9 transition-all ${
-                          isSelected
-                            ? 'fill-indigo-600 text-indigo-700 drop-shadow-[0_2px_10px_rgba(79,70,229,0.5)]'
-                            : isCompleted
-                            ? 'fill-emerald-500 text-emerald-600 drop-shadow-xs'
-                            : isCurrent
-                            ? 'fill-indigo-100 text-indigo-500 ring-2 ring-indigo-400/50 rounded-full'
-                            : 'fill-slate-100 text-slate-300 hover:fill-slate-200'
-                        }`}
-                      >
-                        <polygon
-                          points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <span
-                        className={`absolute inset-0 flex items-center justify-center pt-0.5 text-[9px] font-black pointer-events-none ${
-                          isSelected || isCompleted
-                            ? 'text-white'
-                            : isCurrent
-                            ? 'text-indigo-700'
-                            : 'text-slate-600'
-                        }`}
-                      >
-                        {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3] text-white" /> : mLabel}
-                      </span>
+                      {isCompleted ? <Check className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[3] text-white" /> : mLabel}
                     </button>
                     <span className="text-[10px] font-bold text-slate-500">
                       {isCurrent ? (
@@ -1606,7 +1581,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             </div>
           </div>
 
-          {/* Details (Appears when any star is touched) giving content about BOTH Roadmap and Milestone */}
+          {/* Details (Appears when any circle is touched) giving content about BOTH Roadmap and Milestone */}
           {selectedMonthIdx !== null && selectedMonthData ? (
             <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/90 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
               
@@ -1674,38 +1649,19 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 </p>
               </div>
 
-              {/* Targets & Deliverables in Points Neatly */}
-              <div className="space-y-2 pt-1">
-                <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              {/* Key Targets & Deliverables in One Line (Points removed) */}
+              <div className="p-3 bg-white rounded-xl border border-slate-200/80 flex flex-wrap lg:flex-nowrap items-center gap-x-3 gap-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md shrink-0">
                   <Target className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Key Targets &amp; Deliverables</span>
+                  <span>Key Targets &amp; Deliverables:</span>
                 </div>
-                <div className="space-y-2">
-                  {selectedMonthData.points.map((pt, pIdx) => {
-                    const hasColon = pt.includes(':');
-                    const parts = hasColon ? pt.split(':') : [pt];
-                    const label = parts[0]?.trim();
-                    const value = parts.slice(1).join(':').trim();
-
-                    return (
-                      <div
-                        key={pIdx}
-                        className="p-3 bg-white rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 shadow-2xs hover:border-indigo-200 transition-colors"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-                          <span className="text-xs font-bold text-slate-800 leading-snug">
-                            {label}
-                          </span>
-                        </div>
-                        {value && (
-                          <span className="text-xs font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-lg shrink-0">
-                            {value}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-semibold text-slate-800">
+                  {selectedMonthData.points.map((pt, pIdx) => (
+                    <span key={pIdx} className="inline-flex items-center gap-2">
+                      {pIdx > 0 && <span className="text-slate-300 font-bold">•</span>}
+                      <span>{pt}</span>
+                    </span>
+                  ))}
                 </div>
               </div>
 
@@ -1714,7 +1670,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="p-5 rounded-2xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
               <p className="text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                Touch any star (M1–M12) in the flow above to reveal its roadmap focus, milestone objectives &amp; targets.
+                Touch any circle (M1–M12) in the flow above to reveal its roadmap focus, milestone objectives &amp; targets.
               </p>
             </div>
           )}
