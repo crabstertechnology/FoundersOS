@@ -448,8 +448,8 @@ export default function FounderOSPage() {
               setIsSidebarMinimized(true);
             }
           }}
-          className={`hidden md:flex flex-col h-full select-none bg-white/60 backdrop-blur-xl border-r border-slate-200/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)] text-slate-900 transition-all duration-300 ease-spring shrink-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'}`}
-          style={{ fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif" }}
+          className={`hidden md:flex flex-col h-full select-none bg-white/60 backdrop-blur-xl border-r border-slate-200/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)] text-slate-900 transition-all duration-300 ease-spring shrink-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'} font-sidebar`}
+          style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
         >
           {/* Sidebar Controls Header */}
           <div className={`h-12 border-b border-slate-200/60 flex items-center ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-3'} transition-all duration-300`}>
@@ -740,8 +740,8 @@ export default function FounderOSPage() {
           <aside 
             onClick={(e) => e.stopPropagation()}
             onMouseLeave={() => setIsMobileSidebarOpen(false)}
-            className="w-72 bg-white/80 backdrop-blur-2xl text-slate-950 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-200/60 shadow-2xl"
-            style={{ fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif" }}
+            className="w-72 bg-white/80 backdrop-blur-2xl text-slate-950 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-200/60 shadow-2xl font-sidebar"
+            style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
           >
             <div className="h-14 border-b border-slate-200/60 flex items-center justify-end px-4 shrink-0">
               <button

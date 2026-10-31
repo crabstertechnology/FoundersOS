@@ -10,8 +10,14 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'DM Sans', 'system-ui', 'sans-serif'],
-        headline: ['Inter', 'Plus Jakarta Sans', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        body: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sidebar: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        heading: ['Rubik', 'system-ui', '-apple-system', 'sans-serif'],
+        headline: ['Rubik', 'system-ui', '-apple-system', 'sans-serif'],
+        tile: ['Raleway', 'system-ui', '-apple-system', 'sans-serif'],
+        content: ['Soria', 'Lora', 'Georgia', 'serif'],
+        soria: ['Soria', 'Lora', 'Georgia', 'serif'],
         code: ['JetBrains Mono', 'DM Mono', 'Fira Code', 'monospace'],
       },
       colors: {
