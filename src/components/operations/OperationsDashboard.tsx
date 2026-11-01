@@ -9,12 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
 import { cn } from '@/lib/utils';
 import { 
-  Plus, Trash2, Edit2, Sparkles, Loader2, Wallet, Users, Layout, ShieldAlert,
+  Plus, Trash2, Edit2, Sparkles, Loader2, Wallet, Users, Layout, ShieldAlert, Layers, Cloud,
   Server, Laptop, Briefcase, Calendar, CheckCircle2, ChevronRight, Activity, Info, ListChecks, Shield, MessageSquare,
-  Printer
+  Printer, BarChart3, CreditCard, Calculator, Download, Clock, Flame, Coins, Send, Play, RefreshCw, X, ChevronDown, Check, ArrowRight, Eye
 } from 'lucide-react';
 import { exportReportToPDF } from '@/lib/utils/pdfExport';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
@@ -26,6 +28,7 @@ import { AdminPanel } from './AdminPanel';
 import { TeamChat } from './TeamChat';
 import { OperationsWeeklyDashboard, DEFAULT_OPS_TARGETS } from './OperationsWeeklyDashboard';
 import { OperationsDailyActivity } from './OperationsDailyActivity';
+import { RunwayOperationsView } from './RunwayOperationsView';
 import type { Employee } from './TaskManager';
 
 interface OperationsDashboardProps {
@@ -140,6 +143,14 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
   const [showAddSaas, setShowAddSaas] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
 
+  // Modal and filter states
+  const [isAddSaasOpen, setIsAddSaasOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isEditCashOpen, setIsEditCashOpen] = useState(false);
+  const [isAuditHistoryOpen, setIsAuditHistoryOpen] = useState(false);
+  const [isAuditReportOpen, setIsAuditReportOpen] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState('This Month');
+
   // Runway Simulation States
   const [simRevenue, setSimRevenue] = useState(0);
   const [simSaaSPercent, setSimSaaSPercent] = useState(100);
@@ -216,6 +227,27 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
       categoryTotals
     };
   }, [subscriptions, team, otherBurn, cashBank]);
+
+  // Cash & Runway 6-Month Projection
+  const projectionData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const simSaaS = calculatedStats.totalSaasMonthly * (simSaaSPercent / 100);
+    const simSalaries = calculatedStats.totalSalaries + simSalariesDelta;
+    const simBurn = Math.max(0, simSaaS + simSalaries + otherBurn - simRevenue);
+    
+    // Starting balance (anchor to cash in bank, or default ₹10L scale for visual preview if 0)
+    const baseCash = cashBank > 0 ? cashBank : 1000000;
+    
+    return months.map((month, idx) => {
+      // Projected cash decrease or steady growth
+      const projected = Math.max(0, baseCash - (simBurn * idx * 0.5));
+      return {
+        month,
+        cashBalance: projected,
+        burn: simBurn > 0 ? simBurn : calculatedStats.totalBurn,
+      };
+    });
+  }, [cashBank, calculatedStats.totalBurn, calculatedStats.totalSaasMonthly, calculatedStats.totalSalaries, simSaaSPercent, simSalariesDelta, otherBurn, simRevenue]);
 
   // Handlers: SaaS Tracker
   const handleSaveSaas = (e: React.FormEvent) => {
@@ -569,840 +601,59 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
         </TabsContent>
 
         <TabsContent value="ops" className="mt-0 focus-visible:outline-none">
-      <div className="space-y-6 animate-in fade-in duration-300">
-        {/* KPI Cards (Runway Dashboard Parameters & Outflows) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          
-          {/* KPI 1: Runway */}
-          <Card className={`border-2 shadow-sm ${isDangerRunway ? 'border-red-200 bg-red-50/10' : 'border-teal-100 bg-teal-50/10'}`}>
-            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-teal-950">
-                Survival Runway
-              </CardTitle>
-              <Activity className={`w-4 h-4 ${isDangerRunway ? 'text-red-500' : 'text-teal-500'}`} />
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className={`text-2xl font-code font-black leading-none mb-1 ${isDangerRunway ? 'text-red-900' : 'text-teal-950'}`}>
-                {calculatedStats.runway === 999 ? '∞' : `${Math.round(calculatedStats.runway)} months`}
-              </div>
-              <p className="text-[9px] font-bold text-muted-foreground/80 uppercase">
-                BURN: <span className="font-bold text-slate-800">{fmtINR(calculatedStats.totalBurn)}/mo</span>
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* KPI 2: Cash in Bank */}
-          <Card className="border-2 border-teal-100/50 bg-white shadow-sm">
-            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-slate-800">
-                Liquid Bank Cash
-              </CardTitle>
-              <Wallet className="w-4 h-4 text-teal-500 opacity-75" />
-            </CardHeader>
-            <CardContent className="pt-0 space-y-1">
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                <Input 
-                  type="number"
-                  className="pl-6 h-8 text-sm font-bold font-code border-slate-200 focus-visible:ring-teal-500"
-                  value={cashBankInput}
-                  onChange={e => handleUpdateCash(Number(e.target.value))}
-                  disabled={readOnly}
-                />
-              </div>
-              <p className="text-[9px] font-semibold text-muted-foreground/70 uppercase">Adjusts runway calculation</p>
-            </CardContent>
-          </Card>
-
-          {/* KPI 3: Other Monthly Expenses */}
-          <Card className="border-2 border-teal-100/50 bg-white shadow-sm">
-            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-slate-800">
-                Other Expenses
-              </CardTitle>
-              <Plus className="w-4 h-4 text-teal-500 opacity-75" />
-            </CardHeader>
-            <CardContent className="pt-0 space-y-1">
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-code text-xs">₹</span>
-                <Input 
-                  type="number"
-                  className="pl-6 h-8 text-sm font-bold font-code border-slate-200 focus-visible:ring-teal-500"
-                  value={otherBurnInput}
-                  onChange={e => handleUpdateOverhead(Number(e.target.value))}
-                  disabled={readOnly}
-                />
-              </div>
-              <p className="text-[9px] font-semibold text-muted-foreground/70 uppercase">Rent, marketing, compliance</p>
-            </CardContent>
-          </Card>
-
-          {/* KPI 4: Headcount Expenses */}
-          <Card className="border-2 shadow-sm border-indigo-100 bg-indigo-50/10">
-            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-indigo-950">
-                Headcount Costs
-              </CardTitle>
-              <Users className="w-4 h-4 text-indigo-500" />
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-code font-black text-indigo-950 mb-1">
-                {fmtINR(calculatedStats.totalSalaries)}
-              </div>
-              <p className="text-[9px] font-bold text-indigo-600 uppercase">
-                {calculatedStats.activeHeadcount} Active | {calculatedStats.openRoles} Planned
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* KPI 5: SaaS Monthly Costs */}
-          <Card className="border-2 shadow-sm border-purple-100 bg-purple-50/10">
-            <CardHeader className="pb-1.5 flex flex-row items-center justify-between space-y-0 text-muted-foreground">
-              <CardTitle className="text-[10px] uppercase font-black tracking-widest text-purple-950">
-                SaaS Costs
-              </CardTitle>
-              <Server className="w-4 h-4 text-purple-500" />
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-2xl font-code font-black text-purple-950 mb-1">
-                {fmtINR(calculatedStats.totalSaasMonthly)}
-              </div>
-              <p className="text-[9px] font-bold text-purple-600 uppercase">
-                {subscriptions.length} Subscriptions
-              </p>
-            </CardContent>
-          </Card>
-
-        </div>
-
-        {/* Burn Sync Formula Info Strip */}
-        <div className="bg-slate-50 border rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-600">
-          <div className="flex items-center gap-1.5">
-            <Info className="w-4 h-4 text-teal-600 shrink-0" />
-            <span>Monthly Burn Breakdown:</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 font-mono">
-            <span>SaaS: <strong className="text-slate-900">{fmtINR(calculatedStats.totalSaasMonthly)}</strong></span>
-            <span className="text-slate-400">+</span>
-            <span>Salaries: <strong className="text-slate-900">{fmtINR(calculatedStats.totalSalaries)}</strong></span>
-            <span className="text-slate-400">+</span>
-            <span>Other: <strong className="text-slate-900">{fmtINR(otherBurn)}</strong></span>
-            <span className="text-slate-400">=</span>
-            <span className="bg-teal-600 text-white px-2.5 py-0.5 rounded font-bold font-mono">Total Burn: {fmtINR(calculatedStats.totalBurn)}/mo</span>
-          </div>
-          <div className="text-[10px] text-muted-foreground text-right">
-            Synced automatically to Valuations
-          </div>
-        </div>
-
-        {/* Scenario Planner and SaaS Breakdown Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* SaaS Spend Breakdown by Category */}
-          <Card className="border shadow-sm bg-white lg:col-span-1">
-            <CardHeader className="pb-3 border-b">
-              <CardTitle className="text-xs uppercase font-black tracking-widest text-slate-800 flex items-center justify-between">
-                <span>SaaS Spending Breakdown</span>
-                <span className="text-[10px] text-teal-600 font-bold lowercase font-sans">monthly eq.</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              {calculatedStats.totalSaasMonthly === 0 ? (
-                <p className="text-xs text-center py-6 text-muted-foreground font-semibold">No SaaS expenses tracked yet.</p>
-              ) : (
-                CATEGORIES.map(cat => {
-                  const monthlyVal = calculatedStats.categoryTotals[cat.value] || 0;
-                  const percent = calculatedStats.totalSaasMonthly > 0 ? (monthlyVal / calculatedStats.totalSaasMonthly) * 100 : 0;
-                  return (
-                    <div key={cat.value} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-slate-700">{cat.label}</span>
-                        <span className="text-slate-900 font-bold font-code">{fmtINR(monthlyVal)} ({percent.toFixed(0)}%)</span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div 
-                          className={cn("h-full rounded-full", cat.value === 'hosting' ? 'bg-cyan-500' : cat.value === 'ai' ? 'bg-purple-500' : cat.value === 'saas' ? 'bg-indigo-500' : cat.value === 'marketing' ? 'bg-pink-500' : 'bg-slate-500')} 
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Runway Simulator */}
-          <Card className="border shadow-sm bg-white lg:col-span-2">
-            <CardHeader className="pb-3 border-b">
-              <CardTitle className="text-xs uppercase font-black tracking-widest text-slate-800 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-indigo-600" />
-                Runway & Cash Simulator
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* Simulator Inputs */}
-                <div className="space-y-4 md:col-span-2">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>Simulated Monthly Revenue (₹)</span>
-                      <span className="text-indigo-600 font-code font-black">{fmtINR(simRevenue)}</span>
-                    </div>
-                    <input 
-                      type="range"
-                      min="0"
-                      max="1000000"
-                      step="10000"
-                      value={simRevenue}
-                      onChange={e => setSimRevenue(Number(e.target.value))}
-                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>SaaS cost efficiency / cuts</span>
-                      <span className="text-purple-600 font-black">{100 - simSaaSPercent}% cut ({fmtINR(calculatedStats.totalSaasMonthly * (simSaaSPercent / 100))} remaining)</span>
-                    </div>
-                    <input 
-                      type="range"
-                      min="10"
-                      max="100"
-                      step="5"
-                      value={simSaaSPercent}
-                      onChange={e => setSimSaaSPercent(Number(e.target.value))}
-                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>Salaries change (hire or downscale) (₹/mo)</span>
-                      <span className="text-emerald-600 font-code font-black">{simSalariesDelta >= 0 ? '+' : ''}{fmtINR(simSalariesDelta)}</span>
-                    </div>
-                    <input 
-                      type="range"
-                      min="-500000"
-                      max="500000"
-                      step="10000"
-                      value={simSalariesDelta}
-                      onChange={e => setSimSalariesDelta(Number(e.target.value))}
-                      className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-                    />
-                  </div>
-                </div>
-
-                {/* Simulator Outputs */}
-                <div className="bg-slate-50 border rounded-xl p-4 flex flex-col justify-center space-y-4 md:col-span-1">
-                  {(() => {
-                    const simSaaS = calculatedStats.totalSaasMonthly * (simSaaSPercent / 100);
-                    const simSalaries = calculatedStats.totalSalaries + simSalariesDelta;
-                    const simBurn = simSaaS + simSalaries + otherBurn - simRevenue;
-                    const simRunway = simBurn <= 0 ? 999 : cashBank / simBurn;
-                    
-                    return (
-                      <>
-                        <div className="space-y-0.5 text-center">
-                          <span className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Simulated Net Burn</span>
-                          <div className="text-xl font-code font-black text-slate-900">
-                            {simBurn <= 0 ? 'Profitable (₹0)' : `${fmtINR(simBurn)}/mo`}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-0.5 text-center border-t pt-3">
-                          <span className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Simulated Runway</span>
-                          <div className={`text-2xl font-code font-black ${simRunway === 999 ? 'text-emerald-600' : simRunway < 6 ? 'text-rose-600' : 'text-teal-600'}`}>
-                            {simRunway === 999 ? '∞ months' : `${simRunway.toFixed(1)} months`}
-                          </div>
-                        </div>
-                        
-                        {(simRevenue > 0 || simSaaSPercent < 100 || simSalariesDelta !== 0) && (
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              setSimRevenue(0);
-                              setSimSaaSPercent(100);
-                              setSimSalariesDelta(0);
-                            }}
-                            className="text-[10px] uppercase font-bold text-indigo-600 hover:text-indigo-800 transition-colors mx-auto mt-2 block"
-                          >
-                            Reset Scenario
-                          </button>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-                
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main SaaS and Headcount Trackers */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Pillar 1: SaaS Cost Tracker */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                <Laptop className="w-4 h-4 text-teal-600" />
-                SaaS & Subscriptions
-              </h2>
-              {!readOnly && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="border-teal-200 text-teal-700 hover:bg-teal-50 text-xs font-bold gap-1 rounded-full h-8 px-3"
-                  onClick={() => {
-                    setShowAddSaas(!showAddSaas);
-                    if (editingSaasId) {
-                      setEditingSaasId(null);
-                      setSaasName('');
-                      setSaasCost('');
-                    }
-                  }}
-                >
-                  {showAddSaas ? 'Cancel' : editingSaasId ? 'Edit Sub' : '+ Add Sub'}
-                </Button>
-              )}
-            </div>
-
-            {/* SaaS Form (Collapsible) */}
-            {showAddSaas && !readOnly && (
-              <Card className="border border-teal-100 bg-teal-50/5 shadow-sm animate-in slide-in-from-top-2 duration-200">
-                <CardContent className="pt-4 pb-4">
-                  <form onSubmit={handleSaveSaas} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                      <div className="space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Subscription / SaaS Name</Label>
-                        <Input 
-                          placeholder="e.g. AWS, Github, ChatGPT..."
-                          value={saasName}
-                          onChange={e => setSaasName(e.target.value)}
-                          required
-                          disabled={readOnly}
-                          className="h-9 border-slate-200"
-                        />
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Subscription Cost (₹)</Label>
-                        <Input 
-                          type="number"
-                          placeholder="e.g. 15000"
-                          value={saasCost}
-                          onChange={e => setSaasCost(e.target.value === '' ? '' : Number(e.target.value))}
-                          required
-                          disabled={readOnly}
-                          className="h-9 border-slate-200"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Billing Cycle</Label>
-                        <Select 
-                          value={saasBilling} 
-                          onValueChange={(val: 'monthly' | 'yearly') => setSaasBilling(val)}
-                          disabled={readOnly}
-                        >
-                          <SelectTrigger className="h-9 border-slate-200">
-                            <SelectValue placeholder="Billing cycle" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="yearly">Yearly</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Category</Label>
-                        <Select 
-                          value={saasCategory} 
-                          onValueChange={(val: any) => setSaasCategory(val)}
-                          disabled={readOnly}
-                        >
-                          <SelectTrigger className="h-9 border-slate-200">
-                            <SelectValue placeholder="Category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CATEGORIES.map(cat => (
-                              <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-slate-500 font-bold hover:bg-slate-100"
-                        onClick={() => {
-                          setShowAddSaas(false);
-                          setSaasName('');
-                          setSaasCost('');
-                          setSaasBilling('monthly');
-                          setSaasCategory('hosting');
-                          setEditingSaasId(null);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit" size="sm" className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4">
-                        Save Subscription
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* SaaS Table */}
-            <Card className="border shadow-sm bg-white overflow-hidden">
-              <CardContent className="p-0">
-                {subscriptions.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground text-xs font-semibold">
-                    No subscriptions tracked yet. Add software costs to start.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-slate-50/75">
-                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Service</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Cost Details</TableHead>
-                          <TableHead className="w-16 h-9 py-2"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {subscriptions.map(sub => {
-                          const cat = CATEGORIES.find(c => c.value === sub.category) || CATEGORIES[4];
-                          const monthlyEquivalent = sub.billing === 'yearly' ? sub.cost / 12 : sub.cost;
-                          return (
-                            <TableRow key={sub.id} className="hover:bg-slate-50/50 transition-colors">
-                              <TableCell className="font-bold py-2.5">
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-slate-800 text-sm font-bold">{sub.name}</span>
-                                  <div>
-                                    <Badge variant="outline" className={cn("text-[8px] font-bold uppercase py-0.5 px-2 rounded-full", cat.color)}>
-                                      {cat.label}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-code text-slate-800 py-2.5">
-                                <div className="flex flex-col">
-                                  <span className="font-bold">{fmtINR(sub.cost)} <span className="text-[10px] font-bold text-muted-foreground uppercase">/ {sub.billing === 'yearly' ? 'yr' : 'mo'}</span></span>
-                                  {sub.billing === 'yearly' && (
-                                    <span className="text-[10px] font-semibold text-teal-600 font-sans italic">
-                                      Eq: {fmtINR(monthlyEquivalent)}/mo
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right py-2.5 pr-3">
-                                <div className="flex justify-end gap-1">
-                                  <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full"
-                                    onClick={() => handleEditSaas(sub)}
-                                    disabled={readOnly}
-                                  >
-                                    <Edit2 className="w-3 h-3" />
-                                  </Button>
-                                  <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
-                                    onClick={() => handleDeleteSaas(sub.id)}
-                                    disabled={readOnly}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Pillar 2: Headcount Planner */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-teal-600" />
-                Headcount Planner
-              </h2>
-              {!readOnly && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="border-teal-200 text-teal-700 hover:bg-teal-50 text-xs font-bold gap-1 rounded-full h-8 px-3"
-                  onClick={() => {
-                    setShowAddMember(!showAddMember);
-                    if (editingMemberId) {
-                      setEditingMemberId(null);
-                      setMemberName('');
-                      setMemberRole('');
-                      setMemberSalary('');
-                    }
-                  }}
-                >
-                  {showAddMember ? 'Cancel' : editingMemberId ? 'Edit Role' : '+ Add Role'}
-                </Button>
-              )}
-            </div>
-
-            {/* Team Form (Collapsible) */}
-            {showAddMember && !readOnly && (
-              <Card className="border border-teal-100 bg-teal-50/5 shadow-sm animate-in slide-in-from-top-2 duration-200">
-                <CardContent className="pt-4 pb-4">
-                  <form onSubmit={handleSaveMember} className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Name</Label>
-                        <Input 
-                          placeholder="e.g. Amit S..."
-                          value={memberName}
-                          onChange={e => setMemberName(e.target.value)}
-                          required
-                          disabled={readOnly}
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Role</Label>
-                        <Input 
-                          placeholder="e.g. Lead Engineer..."
-                          value={memberRole}
-                          onChange={e => setMemberRole(e.target.value)}
-                          disabled={readOnly}
-                          className="h-9"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 items-end">
-                      <div className="col-span-1 space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Monthly Salary (₹)</Label>
-                        <Input 
-                          type="number"
-                          placeholder="e.g. 100000"
-                          value={memberSalary}
-                          onChange={e => setMemberSalary(e.target.value === '' ? '' : Number(e.target.value))}
-                          required
-                          disabled={readOnly}
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="col-span-1 space-y-1">
-                        <Label className="font-bold text-xs text-slate-700">Status</Label>
-                        <Select value={memberStatus} onValueChange={(v: any) => setMemberStatus(v)} disabled={readOnly}>
-                          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="hiring">Planned Hire</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-9">
-                        Save Member
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Team Table */}
-            <Card className="border shadow-sm bg-white overflow-hidden">
-              <CardContent className="p-0">
-                {team.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground text-xs font-semibold">
-                    No team members listed yet. Add roles to start.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-slate-50/75">
-                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Name & Role</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Monthly Salary</TableHead>
-                          <TableHead className="font-black text-xs uppercase text-slate-500 h-9 py-2">Status</TableHead>
-                          <TableHead className="w-16 h-9 py-2"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {team.map(member => (
-                          <TableRow key={member.id} className="hover:bg-slate-50/50 transition-colors">
-                            <TableCell className="font-bold py-2.5">
-                              <div className="text-slate-800 text-sm">{member.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-medium">{member.role}</div>
-                            </TableCell>
-                            <TableCell className="font-code font-black text-slate-800 py-2.5">
-                              {fmtINR(member.salary)}
-                            </TableCell>
-                            <TableCell className="py-2.5">
-                              <Badge className={`border text-[9px] uppercase font-black px-1.5 py-0.5 ${member.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
-                                {member.status === 'active' ? 'Active' : 'Planned'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right py-2.5 pr-3">
-                              <div className="flex justify-end gap-1">
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-7 w-7 text-slate-400 hover:text-teal-600 rounded-full"
-                                  onClick={() => handleEditMember(member)}
-                                  disabled={readOnly}
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-7 w-7 text-slate-400 hover:text-rose-600 rounded-full"
-                                  onClick={() => handleDeleteMember(member.id)}
-                                  disabled={readOnly}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-      {/* Operations AI Advisor Section */}
-      <div className="space-y-6 pt-10 border-t border-slate-100">
-        <h2 className="text-xl font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-teal-600" />
-          AI Operations Advisor
-        </h2>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          
-          {/* AI Trigger Control */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="border-2 border-teal-100 bg-teal-50/10 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-teal-950 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-teal-600" />
-                  Evaluate Burn Efficiency
-                </CardTitle>
-                <CardDescription>
-                  Generate AI recommendations to optimize software subscriptions, roles, and extend runway.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label className="font-bold text-xs">Custom Inquiry (Optional)</Label>
-                  <textarea 
-                    placeholder="e.g. We want to cut our SaaS spend by 20%. Where do you see direct pruning opportunities?"
-                    rows={3}
-                    className="w-full text-sm p-3 rounded-lg border border-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
-                    value={customQuestion}
-                    onChange={e => setCustomQuestion(e.target.value)}
-                    disabled={readOnly}
-                  />
-                </div>
-
-                <Button 
-                  onClick={triggerAIAnalysis}
-                  disabled={aiLoading || readOnly}
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold gap-2 rounded-full py-5"
-                >
-                  {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {aiLoading ? 'Analyzing Operations...' : 'Run Operations Audit'}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* AI History */}
-            {operationsReports.length > 0 && (
-              <Card className="border shadow-sm">
-                <CardHeader className="pb-2 border-b">
-                  <CardTitle className="text-xs uppercase font-bold tracking-widest text-slate-500 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-teal-600" />
-                    Operations Audit History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 divide-y max-h-[220px] overflow-y-auto">
-                  {operationsReports.map(report => {
-                    const date = report.createdAt ? new Date(report.createdAt.seconds * 1000) : new Date();
-                    const label = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    return (
-                      <div 
-                        key={report.id}
-                        onClick={() => setActiveReport(report)}
-                        className={`p-3 text-xs cursor-pointer hover:bg-slate-50 flex justify-between items-center transition-colors font-medium ${activeReport?.id === report.id ? 'bg-teal-50/50 font-bold border-l-4 border-teal-600' : ''}`}
-                      >
-                        <span className="truncate">{label}</span>
-                        <div className="flex items-center gap-1">
-                          <Badge variant="outline" className="text-[8px] h-4 bg-white border-teal-200 text-teal-750 text-teal-800">Audit</Badge>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-6 w-6 text-slate-400 hover:text-rose-600"
-                            onClick={(e) => handleDeleteReport(report.id, e)}
-                            disabled={readOnly}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* AI Report Output */}
-          <div className="lg:col-span-2">
-            {activeReport ? (
-              <Card className="border-2 border-teal-100 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4">
-                <CardHeader className="bg-teal-900 text-white p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <CardTitle className="text-base font-black uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-teal-350 text-teal-300 animate-pulse" />
-                      Operations Audit Report
-                    </CardTitle>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-80 font-mono">
-                        Generated {activeReport.createdAt ? new Date(activeReport.createdAt.seconds * 1000).toLocaleString() : 'Just now'}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="bg-white hover:bg-slate-100 text-teal-900 text-[10px] font-black uppercase tracking-wider px-3 h-7 gap-1.5 rounded-md border border-teal-200"
-                        onClick={handleExportPDF}
-                      >
-                        <Printer className="w-3.5 h-3.5 text-teal-650" /> Export PDF
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 space-y-6">
-                  
-                  {/* Summary */}
-                  <div className="prose prose-sm max-w-none text-slate-700 font-medium">
-                    <p className="text-sm italic leading-relaxed bg-slate-50 p-4 rounded-xl border border-dashed border-teal-200">
-                      "{activeReport.advice?.summary || 'No summary available.'}"
-                    </p>
-                  </div>
-
-                  {/* Runway analysis */}
-                  <div className="space-y-2.5">
-                    <h4 className="text-xs uppercase font-black tracking-widest text-slate-900">
-                      Runway & Burn Composition
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed font-semibold bg-teal-50/30 p-3 rounded-lg border border-teal-100/50">
-                      {activeReport.advice?.runwayAnalysis || 'No analysis available.'}
-                    </p>
-                  </div>
-
-                  {/* Cost & Headcount Recommendations */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <h4 className="text-xs uppercase font-black tracking-widest text-teal-700 flex items-center gap-1.5">
-                        <Server className="w-4 h-4 shrink-0" />
-                        SaaS Cost Savings
-                      </h4>
-                      <ul className="space-y-2">
-                        {(activeReport.advice?.costOptimizationOpportunities || []).map((item: string, i: number) => (
-                          <li key={i} className="text-xs text-slate-600 leading-relaxed font-semibold flex gap-1.5 items-start">
-                            <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-teal-500 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="text-xs uppercase font-black tracking-widest text-teal-750 text-teal-800 flex items-center gap-1.5">
-                        <Users className="w-4 h-4 shrink-0" />
-                        Headcount Recommendations
-                      </h4>
-                      <ul className="space-y-2">
-                        {(activeReport.advice?.teamPlanningRecommendations || []).map((item: string, i: number) => (
-                          <li key={i} className="text-xs text-slate-600 leading-relaxed font-semibold flex gap-1.5 items-start">
-                            <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-teal-500 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Runway extension */}
-                  <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl space-y-3">
-                    <h4 className="text-xs uppercase font-black tracking-widest text-slate-800 flex items-center gap-1.5">
-                      <Activity className="w-4 h-4 text-teal-500" />
-                      Runway Extension Tactics
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(activeReport.advice?.runwayExtensionTactics || []).map((tip: string, i: number) => (
-                        <div key={i} className="p-3 bg-white border rounded-lg text-xs leading-relaxed text-slate-600 font-semibold flex gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0 mt-0.5" />
-                          {tip}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="bg-teal-900 text-white p-5 rounded-xl shadow-inner space-y-4">
-                    <h4 className="text-xs uppercase font-black tracking-[0.2em] text-teal-200">
-                      Immediate Action Plan
-                    </h4>
-                    <div className="space-y-2.5">
-                      {(activeReport.advice?.suggestedActions || []).map((action: string, i: number) => (
-                        <div key={i} className="flex gap-3 text-xs font-bold items-center">
-                          <span className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-[10px] shrink-0 font-black">
-                            {i + 1}
-                          </span>
-                          <span>{action}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="h-full flex items-center justify-center p-12 border-2 border-dashed rounded-xl text-center text-muted-foreground bg-slate-50/50">
-                <div className="max-w-xs space-y-2">
-                  <Sparkles className="w-8 h-8 mx-auto text-teal-250 text-teal-300" />
-                  <p className="text-sm font-semibold">No Operations audit active.</p>
-                  <p className="text-xs">Select a historical audit from history or click "Run Operations Audit" to evaluate your expenses.</p>
-                </div>
-              </div>
-            )}
-              </div>
-
-        </div>
-      </div>
-      </div>
+          <RunwayOperationsView
+            profile={profile}
+            calculatedStats={calculatedStats}
+            subscriptions={subscriptions}
+            team={team}
+            otherBurn={otherBurn}
+            cashBank={cashBank}
+            readOnly={readOnly}
+            operationsReports={operationsReports}
+            activeReport={activeReport}
+            setActiveReport={setActiveReport}
+            aiLoading={aiLoading}
+            triggerAIAnalysis={triggerAIAnalysis}
+            customQuestion={customQuestion}
+            setCustomQuestion={setCustomQuestion}
+            handleSaveSaas={handleSaveSaas}
+            handleDeleteSaas={handleDeleteSaas}
+            handleSaveMember={handleSaveMember}
+            handleDeleteMember={handleDeleteMember}
+            handleUpdateCash={handleUpdateCash}
+            handleUpdateOverhead={handleUpdateOverhead}
+            handleExportPDF={handleExportPDF}
+            handleDeleteReport={handleDeleteReport}
+            saasName={saasName}
+            setSaasName={setSaasName}
+            saasCost={saasCost}
+            setSaasCost={setSaasCost}
+            saasBilling={saasBilling}
+            setSaasBilling={setSaasBilling}
+            saasCategory={saasCategory}
+            setSaasCategory={setSaasCategory}
+            editingSaasId={editingSaasId}
+            setEditingSaasId={setEditingSaasId}
+            memberName={memberName}
+            setMemberName={setMemberName}
+            memberRole={memberRole}
+            setMemberRole={setMemberRole}
+            memberSalary={memberSalary}
+            setMemberSalary={setMemberSalary}
+            memberStatus={memberStatus}
+            setMemberStatus={setMemberStatus}
+            editingMemberId={editingMemberId}
+            setEditingMemberId={setEditingMemberId}
+            cashBankInput={cashBankInput}
+            otherBurnInput={otherBurnInput}
+            simRevenue={simRevenue}
+            setSimRevenue={setSimRevenue}
+            simSaaSPercent={simSaaSPercent}
+            setSimSaaSPercent={setSimSaaSPercent}
+            simSalariesDelta={simSalariesDelta}
+            setSimSalariesDelta={setSimSalariesDelta}
+            CATEGORIES={CATEGORIES}
+          />
       </TabsContent>
       </Tabs>
     </div>
