@@ -117,8 +117,8 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [latestModSuggestion, setLatestModSuggestion] = useState('');
 
-  // UI/UX state for Central Console redesign
-  const [selectedMonthIdx, setSelectedMonthIdx] = useState<number | null>(null);
+  // UI/UX state for Central Console redesign - default to Month 1 (index 0) so Roadmap is immediately active & highlighted
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState<number | null>(0);
   const [selectedQuarterIdx, setSelectedQuarterIdx] = useState<number | null>(null);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [isHistoryListModalOpen, setIsHistoryListModalOpen] = useState(false);
@@ -1699,58 +1699,92 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       {/* Combined 12-Month Strategic Roadmap & Milestones (Left) & Visual AI Strategic Insight (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Column: Combined 12-Month Roadmap & Milestones - approx 64% width */}
-        <div className="lg:col-span-8 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.09),0_4px_16px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_46px_-6px_rgba(0,0,0,0.12)] transition-shadow duration-300 p-6 md:p-7 space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">12-Month Roadmap &amp; Milestones</h3>
+        {/* Left Column: Highlighted 12-Month Roadmap & Milestones (Flagship Strategic Compass) - approx 64% width */}
+        <div className="lg:col-span-8 relative rounded-3xl bg-white border-2 border-indigo-500/35 shadow-[0_20px_50px_-10px_rgba(79,70,229,0.18),0_8px_24px_-4px_rgba(15,23,42,0.06)] hover:shadow-[0_24px_64px_-10px_rgba(79,70,229,0.24)] transition-all duration-300 p-6 md:p-7 space-y-6 overflow-hidden ring-4 ring-indigo-50/80">
+          
+          {/* Ambient Diffused Glows (Color Theory: Subconscious Elevation & Depth) */}
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-gradient-to-tr from-emerald-500/8 via-indigo-500/8 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+          {/* Highlighted Header with Strategic Icon & Status Badge */}
+          <div className="relative z-10 flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30 ring-2 ring-indigo-200">
+                <Calendar className="w-5 h-5 text-white stroke-[2.2]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-black text-slate-950 tracking-tight font-heading">
+                    12-Month Roadmap &amp; Milestones
+                  </h3>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700 border border-indigo-200/90 shadow-2xs">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" /> Core Strategic Compass
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Master timeline tracking quarterly execution targets, unit deliverables &amp; founder checkpoints
+                </p>
+              </div>
             </div>
-            {/* Legend */}
-            <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
+
+            {/* Legend with Color Psychology Tokens */}
+            <div className="flex items-center gap-3 text-[11px] font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/70 shrink-0">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-indigo-600" /> Current
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 ring-2 ring-indigo-200" /> Current
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-slate-300" /> Upcoming
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-300" /> Upcoming
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Completed
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-200" /> Completed
               </span>
             </div>
           </div>
 
-          {/* Roadmap Quarters Overview */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          {/* Roadmap Quarters Overview (Q1 - Q4 Cards with Smooth Progress Fill) */}
+          <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-3">
             {quartersList.map((q, qIdx) => {
               const isQuarterActive = selectedMonthData?.quarterIdx === qIdx;
               return (
                 <div
                   key={qIdx}
                   onClick={() => setSelectedMonthIdx(qIdx * 3)}
-                  className={`p-3.5 rounded-3xl border transition-all cursor-pointer ${
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
                     isQuarterActive
-                      ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-100 shadow-2xs'
-                      : 'bg-slate-50/50 border-slate-200/70 hover:bg-slate-100/60'
+                      ? 'bg-gradient-to-b from-indigo-50/95 via-white to-indigo-50/50 border-indigo-300 ring-2 ring-indigo-200/80 shadow-sm shadow-indigo-500/10'
+                      : 'bg-slate-50/60 border-slate-200/80 hover:border-slate-300 hover:bg-slate-100/70 hover:shadow-2xs'
                   }`}
                   title={`View Q${qIdx + 1} (${q.period})`}
                 >
                   <div className="flex items-center justify-between text-[11px] font-black">
-                    <span className="text-slate-900">{`Q${qIdx + 1}`} <span className="text-[10px] font-semibold text-slate-400">({q.period})</span></span>
-                    <span className="text-indigo-600 font-extrabold">{Math.round(q.progress)}%</span>
+                    <span className="text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      {`Q${qIdx + 1}`}{' '}
+                      <span className="text-[10px] font-semibold text-slate-400">({q.period})</span>
+                    </span>
+                    <span className={`text-[11px] font-black px-1.5 py-0.5 rounded-md ${
+                      isQuarterActive ? 'bg-indigo-600 text-white shadow-2xs' : 'text-indigo-600 bg-indigo-50'
+                    }`}>
+                      {Math.round(q.progress)}%
+                    </span>
                   </div>
-                  <p className="text-[11px] font-semibold text-slate-600 mt-1 line-clamp-1">
+                  <p className="text-[11px] font-bold text-slate-700 mt-1 line-clamp-1">
                     {q.focus}
                   </p>
+                  <div className="w-full bg-slate-200/70 rounded-full h-1.5 mt-2.5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-600 to-violet-600 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(4, Math.round(q.progress)))}%` }}
+                    />
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Straight Flow of 12 Milestone Circles (Continuous unbroken horizontal timeline) */}
-          <div className="relative pt-3 pb-2">
-            <div className="absolute top-[1.125rem] left-4 right-4 h-0.5 bg-slate-200/90 z-0" />
-            <div className="relative z-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none px-2">
+          {/* Straight Flow of 12 Milestone Circles (Illuminated Continuous Timeline) */}
+          <div className="relative z-10 pt-4 pb-2 px-1">
+            <div className="absolute top-[1.375rem] left-5 right-5 h-1 bg-gradient-to-r from-emerald-400 via-indigo-500 to-slate-200 rounded-full z-0 opacity-80" />
+            <div className="relative z-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none px-1">
               {Array.from({ length: 12 }).map((_, idx) => {
                 const mLabel = `M${idx + 1}`;
                 const mFullName = `Month ${idx + 1}`;
@@ -1759,28 +1793,28 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 const isCurrent = idx === currentMonthIndex;
 
                 return (
-                  <div key={idx} className="flex flex-col items-center gap-1 shrink-0">
+                  <div key={idx} className="flex flex-col items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => setSelectedMonthIdx(prev => prev === idx ? null : idx)}
-                      className={`group relative w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center font-black text-[10px] md:text-xs transition-all duration-200 focus:outline-hidden ${
+                      className={`group relative w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-[11px] md:text-xs transition-all duration-200 focus:outline-hidden cursor-pointer ${
                         isSelected
-                          ? 'bg-indigo-600 text-white shadow-[0_2px_12px_rgba(79,70,229,0.5)] ring-4 ring-indigo-200 scale-110 z-20'
+                          ? 'bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-[0_4px_16px_rgba(79,70,229,0.55)] ring-4 ring-indigo-200 scale-110 z-20'
                           : isCompleted
-                          ? 'bg-emerald-500 text-white shadow-xs hover:bg-emerald-600 z-10'
+                          ? 'bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-xs hover:scale-105 z-10 ring-2 ring-emerald-200'
                           : isCurrent
-                          ? 'bg-white text-indigo-700 border-2 border-indigo-600 ring-4 ring-indigo-100 hover:scale-105 z-10'
-                          : 'bg-white text-slate-600 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 z-10'
+                          ? 'bg-white text-indigo-700 border-2 border-indigo-600 ring-4 ring-indigo-100 hover:scale-105 z-10 shadow-sm'
+                          : 'bg-white text-slate-600 border border-slate-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 z-10 shadow-2xs'
                       }`}
                       title={`${mFullName}: ${isSelected ? 'Selected (Click to toggle)' : isCompleted ? 'Completed' : 'Upcoming'} — Touch for roadmap & milestone details`}
                     >
-                      {isCompleted ? <Check className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[3] text-white" /> : mLabel}
+                      {isCompleted ? <Check className="w-4 h-4 md:w-4.5 md:h-4.5 stroke-[3] text-white" /> : mLabel}
                     </button>
-                    <span className="text-[10px] font-bold text-slate-500">
+                    <span className="text-[10px] font-bold">
                       {isCurrent ? (
-                        <span className="text-indigo-600 font-extrabold uppercase tracking-tighter">Now</span>
+                        <span className="text-indigo-600 font-extrabold uppercase tracking-tight bg-indigo-50 border border-indigo-200 px-1 rounded-sm">Now</span>
                       ) : (
-                        mLabel
+                        <span className="text-slate-500">{mLabel}</span>
                       )}
                     </span>
                   </div>
@@ -1789,14 +1823,14 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             </div>
           </div>
 
-          {/* Details (Appears when any circle is touched) giving content about BOTH Roadmap and Milestone */}
+          {/* Details (Appears when any circle is touched, defaults to Month 1 on load) giving content about BOTH Roadmap and Milestone */}
           {selectedMonthIdx !== null && selectedMonthData ? (
-            <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="relative z-10 p-6 md:p-7 rounded-3xl bg-gradient-to-b from-white via-indigo-50/15 to-white border border-indigo-200/90 shadow-[0_6px_24px_rgba(79,70,229,0.06)] space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
               
               {/* Header Context Bar */}
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3.5 border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30">
                     M{selectedMonthData.monthNum}
                   </div>
                   <div>
@@ -1829,7 +1863,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                       className={`h-8 text-xs font-bold px-4 rounded-xl shadow-xs transition-all ${
                         selectedMonthData.isCompleted
                           ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                          : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xs'
                       }`}
                     >
                       {selectedMonthData.isCompleted ? 'Mark Incomplete' : '✓ Mark Achieved'}
@@ -1847,7 +1881,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
               </div>
 
               {/* Primary Strategic Milestone Objective */}
-              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100/90 flex items-start gap-3.5">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-violet-50/40 to-indigo-50/60 border border-indigo-200/80 flex items-start gap-3.5">
                 <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
                   <Flag className="w-4 h-4 text-white" />
                 </div>

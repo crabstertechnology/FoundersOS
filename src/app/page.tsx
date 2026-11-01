@@ -305,7 +305,7 @@ export default function FounderOSPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white text-slate-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-slate-50/70 text-slate-900 overflow-hidden">
       {/* Minimal Consolidated Top Navigation Bar (Edge to Edge, Spans Full Width) */}
       <header className="h-16 w-full border-b border-slate-100 bg-white/95 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-3">
@@ -961,7 +961,7 @@ export default function FounderOSPage() {
 
       {/* Main Panel Content Area (Scrollable below Top Navigation Bar) */}
       <div 
-        className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto bg-white"
+        className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto bg-slate-50/70"
         onMouseEnter={() => {
           if (!isSidebarPinned) {
             setIsSidebarMinimized(true);

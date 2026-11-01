@@ -12,15 +12,15 @@
 
 @layer base {
   :root {
-    /* ── 60% Dominant Canvas: Pure Crisp White ── */
-    --background:          0 0% 100%;
-    --surface-elevated:    0 0% 100%;
+    /* ── 60% Dominant Canvas: Clean Soft Porcelain Canvas for Optical Rest & Depth ── */
+    --background:          215 28% 98%;     /* #f8fafc */
+    --surface-elevated:    0 0% 100%;       /* Pure white elevated cards */
     --surface-overlay:     0 0% 100%;
 
     /* ── 30% Structural Neutrals: Deep Slate for WCAG AAA Readability ── */
     --foreground:          222 47% 11%;     /* #0f172a */
 
-    /* ── Card: Pure White with Refined Depth ── */
+    /* ── Card: Pure White with Tactile Elevation ── */
     --card:                0 0% 100%;
     --card-foreground:     222 47% 11%;
 
@@ -28,21 +28,21 @@
     --popover:             0 0% 100%;
     --popover-foreground:  222 47% 11%;
 
-    /* ── 10% Primary Brand Accent: Modern Royal Indigo (Conveys Trust, Intelligence & Authority) ── */
-    --primary:             238 82% 58%;     /* #4f46e5 */
+    /* ── 10% Primary Brand Accent: Modern Royal Indigo (Visionary Clarity & Authority) ── */
+    --primary:             238 84% 59%;     /* #4f46e5 */
     --primary-foreground:  0 0% 100%;
-    --primary-hover:       238 82% 50%;     /* #4338ca */
+    --primary-hover:       238 84% 50%;     /* #4338ca */
     --primary-subtle:      238 100% 97.5%;  /* #f0f1fe */
-    --primary-subtle-fg:   238 82% 45%;
+    --primary-subtle-fg:   238 84% 45%;
 
     /* ── Secondary Surfaces & Muted Accents ── */
-    --secondary:           210 20% 97%;     /* #f1f5f9 */
+    --secondary:           210 20% 96%;     /* #f1f5f9 */
     --secondary-foreground: 222 47% 18%;
 
-    --muted:               210 20% 96%;
+    --muted:               215 20% 95%;
     --muted-foreground:    215 16% 47%;     /* #64748b */
 
-    /* ── Harmonious Complementary Accent: Electric Violet / Amethyst ── */
+    /* ── Harmonious Analogous Accent: Electric Violet / Amethyst ── */
     --accent:              262 83% 58%;     /* #7c3aed */
     --accent-foreground:   0 0% 100%;
 
@@ -54,7 +54,7 @@
     --success-subtle-fg:   158 64% 28%;
 
     /* Warning — Warm Sunlit Amber for Alerts & Deadlines */
-    --warning:             38 92% 48%;      /* #d97706 */
+    --warning:             38 92% 50%;      /* #d97706 */
     --warning-foreground:  0 0% 100%;
     --warning-subtle:      45 93% 96%;
     --warning-subtle-fg:   38 92% 28%;
@@ -65,29 +65,33 @@
     --destructive-subtle:  350 100% 97%;
     --destructive-subtle-fg: 350 89% 36%;
 
+    /* Info / Analytic Cyan for Metrics & Intel */
+    --info:                199 89% 48%;     /* #0284c7 */
+    --info-foreground:     0 0% 100%;
+
     /* ── Subtle Structured Borders & Focus Rings ── */
-    --border:              220 13% 91%;     /* #e2e8f0 */
-    --border-strong:       220 13% 82%;     /* #cbd5e1 */
-    --input:               220 13% 91%;
-    --ring:                238 82% 58%;
+    --border:              220 16% 90%;     /* #e2e8f0 */
+    --border-strong:       220 16% 80%;     /* #cbd5e1 */
+    --input:               220 16% 90%;
+    --ring:                238 84% 59%;
 
     /* ── Radius ── */
     --radius:              0.75rem;
 
-    /* ── Refined Light-Theme Ambient Drop Shadows (Soft & Tactile on Pure White) ── */
-    --shadow-xs:   0 1px 2px 0 rgb(0 0 0 / 0.03);
-    --shadow-sm:   0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-    --shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    --shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.03);
-    --shadow-xl:   0 20px 25px -5px rgb(0 0 0 / 0.06), 0 8px 10px -6px rgb(0 0 0 / 0.04);
-    --shadow-2xl:  0 25px 50px -12px rgb(0 0 0 / 0.12);
+    /* ── Refined Light-Theme Slate-Tinted Ambient Shadows ── */
+    --shadow-xs:   0 1px 2px 0 rgb(15 23 42 / 0.03);
+    --shadow-sm:   0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
+    --shadow-md:   0 4px 6px -1px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+    --shadow-lg:   0 10px 15px -3px rgb(15 23 42 / 0.07), 0 4px 6px -4px rgb(15 23 42 / 0.04);
+    --shadow-xl:   0 20px 25px -5px rgb(15 23 42 / 0.08), 0 8px 10px -6px rgb(15 23 42 / 0.04);
+    --shadow-2xl:  0 25px 50px -12px rgb(15 23 42 / 0.16);
 
     /* ── Harmonious Categorical Chart Palette ── */
-    --chart-1:   238 82% 58%;  /* Indigo */
-    --chart-2:   158 64% 40%;  /* Emerald */
-    --chart-3:   262 83% 58%;  /* Violet */
-    --chart-4:   38 92% 50%;   /* Amber */
-    --chart-5:   350 89% 56%;  /* Rose */
+    --chart-1:   238 84% 59%;  /* Royal Indigo */
+    --chart-2:   158 64% 40%;  /* Mint Emerald */
+    --chart-3:   262 83% 58%;  /* Electric Violet */
+    --chart-4:   38 92% 50%;   /* Warm Amber */
+    --chart-5:   350 89% 56%;  /* Rose Crimson */
   }
 
   .dark {
