@@ -1471,13 +1471,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('finance')}
-          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-400 hover:shadow-md hover:shadow-indigo-500/5 transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Finance Suite
             </span>
-            <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-600 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1485,9 +1485,10 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="text-sm font-black text-slate-900 truncate">
               {postMoney > 0 ? fmtINR(postMoney) : 'Set Valuation'}
             </div>
-            <div className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 mt-0.5">
+            <div className="text-[10px] font-semibold text-slate-600 flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
               <span>{fmtPct(founderOwnership)} Founder Stake</span>
-              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowRight className="w-2.5 h-2.5 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
             </div>
           </div>
         </button>
@@ -1496,13 +1497,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('sales')}
-          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-400 hover:shadow-md hover:shadow-indigo-500/5 transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Sales Tracker
             </span>
-            <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-600 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
               <Activity className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1510,9 +1511,10 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="text-sm font-black text-slate-900 truncate">
               {fmtINR(salesKPIs.mrr)} <span className="text-[10px] text-slate-400 font-bold">MRR</span>
             </div>
-            <div className="text-[10px] font-semibold text-indigo-600 flex items-center gap-1 mt-0.5">
+            <div className="text-[10px] font-semibold text-slate-600 flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
               <span>{salesKPIs.wonCount} Deals Won ({salesKPIs.conversionRate.toFixed(0)}%)</span>
-              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowRight className="w-2.5 h-2.5 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
             </div>
           </div>
         </button>
@@ -1521,13 +1523,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('operations')}
-          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-400 hover:shadow-md hover:shadow-indigo-500/5 transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Operations Hub
             </span>
-            <div className="w-6 h-6 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-600 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
               <Settings className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1535,9 +1537,10 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="text-sm font-black text-slate-900 truncate">
               {fmtINR(opsKPIs.cashBank)} <span className="text-[10px] text-slate-400 font-bold">Cash</span>
             </div>
-            <div className="text-[10px] font-semibold text-teal-600 flex items-center gap-1 mt-0.5">
+            <div className="text-[10px] font-semibold text-slate-600 flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
               <span>{opsKPIs.runway === 999 ? '∞ Runway' : `${Math.round(opsKPIs.runway)} mo runway`}</span>
-              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowRight className="w-2.5 h-2.5 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
             </div>
           </div>
         </button>
@@ -1546,13 +1549,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('product')}
-          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-400 hover:shadow-md hover:shadow-indigo-500/5 transition-all text-left flex flex-col justify-between group shadow-2xs"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Product Suite
             </span>
-            <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-600 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
               <Box className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1560,9 +1563,10 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="text-sm font-black text-slate-900 truncate">
               {productKPIs.totalCount} {productKPIs.totalCount === 1 ? 'Product' : 'Products'}
             </div>
-            <div className="text-[10px] font-semibold text-purple-600 flex items-center gap-1 mt-0.5">
+            <div className="text-[10px] font-semibold text-slate-600 flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
               <span>{fmtINR(productKPIs.suiteMrr || salesKPIs.mrr)} Portfolio MRR</span>
-              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowRight className="w-2.5 h-2.5 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
             </div>
           </div>
         </button>
@@ -1571,13 +1575,13 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
         <button
           type="button"
           onClick={() => onNavigate('dm')}
-          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col justify-between group shadow-2xs col-span-2 sm:col-span-1"
+          className="p-3.5 rounded-3xl bg-white border border-slate-200/80 hover:border-indigo-400 hover:shadow-md hover:shadow-indigo-500/5 transition-all text-left flex flex-col justify-between group shadow-2xs col-span-2 sm:col-span-1"
         >
           <div className="flex items-center justify-between w-full mb-1.5">
             <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 group-hover:text-indigo-600 transition-colors">
               Marketing Hub
             </span>
-            <div className="w-6 h-6 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-600 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -1585,9 +1589,10 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="text-sm font-black text-slate-900 truncate">
               {profile?.dmActivePlan?.productName || 'Active GTM'}
             </div>
-            <div className="text-[10px] font-semibold text-sky-600 flex items-center gap-1 mt-0.5">
+            <div className="text-[10px] font-semibold text-slate-600 flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
               <span>{profile?.dmActivePlan?.platforms?.length || 0} Social Channels</span>
-              <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowRight className="w-2.5 h-2.5 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
             </div>
           </div>
         </button>
