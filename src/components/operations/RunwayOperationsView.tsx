@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 import { fmtINR } from '@/lib/utils/formatters';
+import { cn } from '@/lib/utils';
 import { 
   Plus, Trash2, Edit2, Sparkles, Loader2, Wallet, Users, Layers, Cloud,
   Server, Laptop, Calendar, ChevronRight, Download, Clock, Flame, Coins, Send, Play, RefreshCw, Eye, Printer, Info,
@@ -129,23 +130,38 @@ export function RunwayOperationsView({
   const [isAuditHistoryOpen, setIsAuditHistoryOpen] = useState(false);
   const [isAuditReportOpen, setIsAuditReportOpen] = useState(false);
 
-  // 6-Month Projection Area Chart
+  // Effective simulator cash in bank
+  const effectiveCash = useMemo(() => {
+    if (cashBank > 0) return cashBank;
+    if (typeof cashBankInput === 'number' && cashBankInput > 0) return cashBankInput;
+    return 1000000; // ₹10,00,000 baseline if cash not configured yet
+  }, [cashBank, cashBankInput]);
+
+  // Dynamic 6-Month Projection Area Chart
   const projectionData = useMemo(() => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const simSaaS = calculatedStats.totalSaasMonthly * (simSaaSPercent / 100);
-    const simSalaries = calculatedStats.totalSalaries + simSalariesDelta;
-    const simBurn = Math.max(0, simSaaS + simSalaries + otherBurn - simRevenue);
-    const baseCash = cashBank > 0 ? cashBank : 1000000;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const curMonth = new Date().getMonth();
+    const months = Array.from({ length: 6 }, (_, i) => monthNames[(curMonth + i) % 12]);
+
+    const simSaaS = (calculatedStats.totalSaasMonthly || 0) * (simSaaSPercent / 100);
+    const simSalaries = Math.max(0, (calculatedStats.totalSalaries || 0) + simSalariesDelta);
+    const totalSimExpenses = simSaaS + simSalaries + (otherBurn || 0);
+    const simBurn = totalSimExpenses - simRevenue;
 
     return months.map((month, idx) => {
-      const projected = Math.max(0, baseCash - (simBurn * idx * 0.45));
+      // If profitable (simBurn <= 0), cash accumulates over time
+      // If burning cash (simBurn > 0), cash depletes over time
+      const projectedCash = simBurn <= 0
+        ? effectiveCash + (Math.abs(simBurn) * idx)
+        : Math.max(0, effectiveCash - (simBurn * idx));
+
       return {
         month,
-        cashBalance: projected,
-        burn: simBurn > 0 ? simBurn : calculatedStats.totalBurn,
+        cashBalance: Math.round(projectedCash),
+        burn: Math.round(Math.max(0, simBurn)),
       };
     });
-  }, [cashBank, calculatedStats.totalBurn, calculatedStats.totalSaasMonthly, calculatedStats.totalSalaries, simSaaSPercent, simSalariesDelta, otherBurn, simRevenue]);
+  }, [effectiveCash, calculatedStats.totalSaasMonthly, calculatedStats.totalSalaries, simSaaSPercent, simSalariesDelta, otherBurn, simRevenue]);
 
   return (
     <div className="space-y-6 relative animate-in fade-in duration-300">
@@ -474,60 +490,74 @@ export function RunwayOperationsView({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-              {/* Inputs (7 cols) */}
-              <div className="md:col-span-7 space-y-3.5">
+              {/* Inputs (7 cols) with Interactive Range Sliders */}
+              <div className="md:col-span-7 space-y-4">
                 
-                {/* Input 1: Revenue */}
-                <div className="flex items-center justify-between gap-3">
-                  <Label className="text-xs font-medium text-slate-700">Simulated Monthly Revenue (₹)</Label>
-                  <div className="relative w-36">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-xs">₹</span>
-                    <Input 
-                      type="number"
-                      value={simRevenue}
-                      onChange={e => setSimRevenue(Math.max(0, Number(e.target.value) || 0))}
-                      className="pl-6 h-8 text-xs font-bold font-mono bg-slate-50/60 border-slate-200"
-                    />
+                {/* Slider 1: Revenue */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold text-slate-700">
+                    <span>Simulated Monthly Revenue (₹)</span>
+                    <span className="text-indigo-600 font-mono font-black">{fmtINR(simRevenue)}</span>
                   </div>
+                  <input 
+                    type="range"
+                    min="0"
+                    max={Math.max(1000000, Math.ceil(((calculatedStats.totalBurn || 0) * 1.5) / 100000) * 100000)}
+                    step="10000"
+                    value={simRevenue}
+                    onChange={e => setSimRevenue(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
                 </div>
 
-                {/* Input 2: SaaS Efficiency / Cuts */}
-                <div className="flex items-center justify-between gap-3">
-                  <Label className="text-xs font-medium text-slate-700">SaaS cost efficiency / cuts</Label>
-                  <div className="w-48">
-                    <Select 
-                      value={String(100 - simSaaSPercent)} 
-                      onValueChange={v => setSimSaaSPercent(100 - Number(v))}
-                    >
-                      <SelectTrigger className="h-8 text-xs font-medium bg-slate-50/60 border-slate-200">
-                        <SelectValue placeholder="0% cut" />
-                      </SelectTrigger>
-                      <SelectContent align="end">
-                        <SelectItem value="0">0% cut ({fmtINR(calculatedStats.totalSaasMonthly)} remaining)</SelectItem>
-                        <SelectItem value="10">10% cut ({fmtINR(calculatedStats.totalSaasMonthly * 0.9)} remaining)</SelectItem>
-                        <SelectItem value="20">20% cut ({fmtINR(calculatedStats.totalSaasMonthly * 0.8)} remaining)</SelectItem>
-                        <SelectItem value="30">30% cut ({fmtINR(calculatedStats.totalSaasMonthly * 0.7)} remaining)</SelectItem>
-                        <SelectItem value="50">50% cut ({fmtINR(calculatedStats.totalSaasMonthly * 0.5)} remaining)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Slider 2: SaaS Efficiency / Cuts */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold text-slate-700">
+                    <span>SaaS Cost Efficiency / Cuts</span>
+                    <span className="text-purple-600 font-black">
+                      {100 - simSaaSPercent}% cut
+                      {calculatedStats.totalSaasMonthly > 0 ? (
+                        <span className="font-mono text-slate-500 font-normal ml-1">
+                          ({fmtINR(calculatedStats.totalSaasMonthly * (simSaaSPercent / 100))} remaining)
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-normal ml-1">
+                          (0 SaaS added)
+                        </span>
+                      )}
+                    </span>
                   </div>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={simSaaSPercent}
+                    onChange={e => setSimSaaSPercent(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                  />
                 </div>
 
-                {/* Input 3: Salaries Delta */}
-                <div className="flex items-center justify-between gap-3">
-                  <Label className="text-xs font-medium text-slate-700 leading-tight">
-                    Salaries change (hire or downscale) (₹/mo)
-                  </Label>
-                  <div className="relative w-36">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-xs">₹</span>
-                    <Input 
-                      type="number"
-                      value={simSalariesDelta}
-                      onChange={e => setSimSalariesDelta(Number(e.target.value) || 0)}
-                      placeholder="+0"
-                      className="pl-6 h-8 text-xs font-bold font-mono bg-slate-50/60 border-slate-200"
-                    />
+                {/* Slider 3: Salaries Delta */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold text-slate-700">
+                    <span>Salaries Change (Hiring / Cuts) (₹/mo)</span>
+                    <span className={cn(
+                      "font-mono font-black",
+                      simSalariesDelta > 0 ? "text-emerald-600" : simSalariesDelta < 0 ? "text-rose-600" : "text-slate-600"
+                    )}>
+                      {simSalariesDelta > 0 ? '+' : ''}{fmtINR(simSalariesDelta)}
+                    </span>
                   </div>
+                  <input 
+                    type="range"
+                    min={Math.min(-500000, -calculatedStats.totalSalaries || -500000)}
+                    max={Math.max(500000, (calculatedStats.totalSalaries * 2) || 500000)}
+                    step="10000"
+                    value={simSalariesDelta}
+                    onChange={e => setSimSalariesDelta(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
                 </div>
 
               </div>
@@ -535,38 +565,109 @@ export function RunwayOperationsView({
               {/* Output Highlight Tiles (5 cols) */}
               <div className="md:col-span-5 flex flex-col justify-center gap-3">
                 {(() => {
-                  const simSaaS = calculatedStats.totalSaasMonthly * (simSaaSPercent / 100);
-                  const simSalaries = calculatedStats.totalSalaries + simSalariesDelta;
-                  const simBurn = simSaaS + simSalaries + otherBurn - simRevenue;
-                  const simRunway = simBurn <= 0 ? 999 : cashBank / simBurn;
+                  const simSaaS = (calculatedStats.totalSaasMonthly || 0) * (simSaaSPercent / 100);
+                  const simSalaries = Math.max(0, (calculatedStats.totalSalaries || 0) + simSalariesDelta);
+                  const totalSimExpenses = simSaaS + simSalaries + (otherBurn || 0);
+                  const simBurn = totalSimExpenses - simRevenue;
+                  const isProfitable = simBurn < 0;
+                  const isBreakeven = simBurn === 0;
+                  const simRunway = simBurn <= 0 ? 999 : effectiveCash / simBurn;
 
                   return (
                     <>
-                      {/* Net Burn Tile */}
-                      <div className="bg-emerald-50/80 border border-emerald-100 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                          <Coins className="w-4 h-4" />
+                      {/* Net Burn / Net Profit Tile */}
+                      <div className={cn(
+                        "border rounded-xl p-3.5 flex items-center gap-3 shadow-2xs transition-all",
+                        isProfitable 
+                          ? "bg-emerald-50/80 border-emerald-200/80" 
+                          : isBreakeven 
+                            ? "bg-slate-50 border-slate-200" 
+                            : "bg-rose-50/80 border-rose-200/80"
+                      )}>
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                          isProfitable 
+                            ? "bg-emerald-500/10 text-emerald-600" 
+                            : isBreakeven 
+                              ? "bg-slate-200/70 text-slate-600" 
+                              : "bg-rose-500/10 text-rose-600"
+                        )}>
+                          {isProfitable ? <Coins className="w-4 h-4" /> : isBreakeven ? <Coins className="w-4 h-4" /> : <Flame className="w-4 h-4" />}
                         </div>
-                        <div>
-                          <div className="text-[10px] font-bold text-slate-500 uppercase">Simulated Net Burn</div>
-                          <div className="text-base font-black text-emerald-600 font-mono">
-                            {simBurn <= 0 ? 'Profitable (₹0)' : `${fmtINR(simBurn)}/mo`}
+                        <div className="min-w-0">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            {isProfitable ? 'Simulated Net Profit' : 'Simulated Net Burn'}
+                          </div>
+                          <div className={cn(
+                            "text-base font-black font-mono tracking-tight",
+                            isProfitable ? "text-emerald-600" : isBreakeven ? "text-slate-800" : "text-rose-600"
+                          )}>
+                            {isProfitable 
+                              ? `+${fmtINR(Math.abs(simBurn))}/mo` 
+                              : isBreakeven 
+                                ? '₹0/mo' 
+                                : `${fmtINR(simBurn)}/mo`}
+                          </div>
+                          <div className={cn(
+                            "text-[10px] font-medium mt-0.5 truncate",
+                            isProfitable ? "text-emerald-700 font-semibold" : isBreakeven ? "text-slate-500" : "text-rose-500"
+                          )}>
+                            {isProfitable ? 'Profitable (Cash Inflow)' : isBreakeven ? 'Breakeven' : 'Monthly Cash Drain'}
                           </div>
                         </div>
                       </div>
 
                       {/* Runway Tile */}
-                      <div className="bg-purple-50/80 border border-purple-100 rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
+                      <div className={cn(
+                        "border rounded-xl p-3.5 flex items-center gap-3 shadow-2xs transition-all",
+                        simBurn <= 0 
+                          ? "bg-emerald-50/80 border-emerald-200/80" 
+                          : simRunway < 6 
+                            ? "bg-rose-50/80 border-rose-200/80" 
+                            : "bg-purple-50/80 border-purple-200/80"
+                      )}>
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                          simBurn <= 0 
+                            ? "bg-emerald-500/10 text-emerald-600" 
+                            : simRunway < 6 
+                              ? "bg-rose-500/10 text-rose-600" 
+                              : "bg-purple-500/10 text-purple-600"
+                        )}>
                           <Calendar className="w-4 h-4" />
                         </div>
-                        <div>
-                          <div className="text-[10px] font-bold text-slate-500 uppercase">Simulated Runway</div>
-                          <div className="text-base font-black text-purple-700 font-mono">
-                            {simRunway === 999 ? '∞ months' : `${simRunway.toFixed(1)} months`}
+                        <div className="min-w-0">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Simulated Runway</div>
+                          <div className={cn(
+                            "text-base font-black font-mono tracking-tight",
+                            simBurn <= 0 ? "text-emerald-700" : simRunway < 6 ? "text-rose-600" : "text-purple-700"
+                          )}>
+                            {simBurn <= 0 ? '∞ months' : `${simRunway.toFixed(1)} months`}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                            {simBurn <= 0 
+                              ? 'Infinite runway (profitable)' 
+                              : cashBank > 0 
+                                ? `Based on ${fmtINR(cashBank)} liquid cash` 
+                                : `Based on ${fmtINR(effectiveCash)} baseline`}
                           </div>
                         </div>
                       </div>
+
+                      {(simRevenue > 0 || simSaaSPercent < 100 || simSalariesDelta !== 0) && (
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setSimRevenue(0);
+                            setSimSaaSPercent(100);
+                            setSimSalariesDelta(0);
+                          }}
+                          className="text-[10px] uppercase font-bold text-indigo-600 hover:text-indigo-800 transition-colors mx-auto mt-0.5 flex items-center gap-1 cursor-pointer"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          <span>Reset Scenario</span>
+                        </button>
+                      )}
                     </>
                   );
                 })()}
@@ -584,8 +685,8 @@ export function RunwayOperationsView({
                   <span>Cash Balance</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rotate-45 bg-purple-400" />
-                  <span>Burn (Monthly)</span>
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span>Monthly Burn</span>
                 </div>
               </div>
             </div>
@@ -598,6 +699,10 @@ export function RunwayOperationsView({
                       <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02} />
                     </linearGradient>
+                    <linearGradient id="roseGradientFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.01} />
+                    </linearGradient>
                   </defs>
                   <XAxis 
                     dataKey="month" 
@@ -609,10 +714,10 @@ export function RunwayOperationsView({
                     tickLine={false} 
                     axisLine={false} 
                     tickFormatter={(v) => v === 0 ? '₹0' : v >= 100000 ? `₹${(v/100000).toFixed(1)}L` : `₹${(v/1000).toFixed(0)}k`}
-                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 500 }}
+                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 500 }} 
                   />
                   <RechartsTooltip 
-                    formatter={(val: number) => [fmtINR(val), 'Amount']}
+                    formatter={(val: number, name: string) => [fmtINR(val), name]}
                     contentStyle={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 600 }}
                   />
                   <Area 
@@ -624,6 +729,17 @@ export function RunwayOperationsView({
                     fillOpacity={1} 
                     fill="url(#purpleGradientFill)" 
                     dot={{ r: 3.5, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2 }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="burn" 
+                    name="Monthly Burn" 
+                    stroke="#f43f5e" 
+                    strokeWidth={1.5} 
+                    strokeDasharray="3 3"
+                    fillOpacity={1} 
+                    fill="url(#roseGradientFill)" 
+                    dot={{ r: 2.5, fill: '#f43f5e', stroke: '#fff', strokeWidth: 1.5 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
