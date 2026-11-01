@@ -238,16 +238,18 @@ export function RunwayOperationsView({
           className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between min-h-[142px] hover:border-indigo-300 transition-all cursor-pointer group"
         >
           <div>
-            <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <Wallet className="w-4 h-4" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Wallet className="w-4 h-4" />
+                </div>
+                <div className="text-xs font-bold text-slate-800">Liquid Bank Cash</div>
               </div>
               <span className="text-slate-300 group-hover:text-slate-500 transition-colors">
                 <Edit2 className="w-3.5 h-3.5" />
               </span>
             </div>
-            <div className="text-xs font-bold text-slate-800 mt-2">Liquid Bank Cash</div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1 font-mono tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-3 font-mono tracking-tight">
               {fmtINR(cashBank)}
             </div>
           </div>
@@ -260,16 +262,18 @@ export function RunwayOperationsView({
           className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between min-h-[142px] hover:border-indigo-300 transition-all cursor-pointer group"
         >
           <div>
-            <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Layers className="w-4 h-4" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div className="text-xs font-bold text-slate-800">Other Expenses</div>
               </div>
               <span className="text-slate-300 group-hover:text-slate-500 transition-colors">
                 <Edit2 className="w-3.5 h-3.5" />
               </span>
             </div>
-            <div className="text-xs font-bold text-slate-800 mt-2">Other Expenses</div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1 font-mono tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-3 font-mono tracking-tight">
               {fmtINR(otherBurn)}
             </div>
           </div>
@@ -279,11 +283,13 @@ export function RunwayOperationsView({
         {/* KPI 4: Headcount Costs */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between min-h-[142px]">
           <div>
-            <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-              <Users className="w-4 h-4" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="text-xs font-bold text-slate-800">Headcount Costs</div>
             </div>
-            <div className="text-xs font-bold text-slate-800 mt-2">Headcount Costs</div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1 font-mono tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-3 font-mono tracking-tight">
               {fmtINR(calculatedStats.totalSalaries)}
             </div>
           </div>
@@ -295,11 +301,13 @@ export function RunwayOperationsView({
         {/* KPI 5: SaaS Costs */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between min-h-[142px]">
           <div>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <Cloud className="w-4 h-4" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <Cloud className="w-4 h-4" />
+              </div>
+              <div className="text-xs font-bold text-slate-800">SaaS Costs</div>
             </div>
-            <div className="text-xs font-bold text-slate-800 mt-2">SaaS Costs</div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1 font-mono tracking-tight">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-3 font-mono tracking-tight">
               {fmtINR(calculatedStats.totalSaasMonthly)}
             </div>
           </div>
@@ -739,54 +747,25 @@ export function RunwayOperationsView({
         {/* Card 3: AI Operations Advisor (6 cols) */}
         <div className="lg:col-span-6 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-600" />
                   <span className="font-bold text-sm text-slate-900">AI Operations Advisor</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                   Evaluate burn efficiency and get AI recommendations to optimize software subscriptions, roles, and extend runway.
                 </p>
-                
-                <div className="mt-3">
-                  <Button 
-                    onClick={triggerAIAnalysis}
-                    disabled={aiLoading || readOnly}
-                    className="bg-purple-600 hover:bg-purple-700 text-white rounded-full font-bold px-5 py-2 text-xs flex items-center gap-2 shadow-xs"
-                  >
-                    {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                    <span>{aiLoading ? 'Auditing...' : 'Run Operations Audit'}</span>
-                  </Button>
-                </div>
               </div>
 
-              {/* 3D AI Chip Illustration */}
-              <div className="relative w-20 h-20 shrink-0">
-                <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="20" y="20" width="60" height="60" rx="14" fill="url(#aiChipGradient)" />
-                  <rect x="28" y="28" width="44" height="44" rx="8" fill="#7C3AED" />
-                  <text x="50" y="56" fill="white" fontSize="18" fontWeight="900" fontFamily="sans-serif" textAnchor="middle">AI</text>
-                  <rect x="32" y="10" width="4" height="10" rx="2" fill="#A78BFA" />
-                  <rect x="48" y="10" width="4" height="10" rx="2" fill="#A78BFA" />
-                  <rect x="64" y="10" width="4" height="10" rx="2" fill="#A78BFA" />
-                  <rect x="32" y="80" width="4" height="10" rx="2" fill="#A78BFA" />
-                  <rect x="48" y="80" width="4" height="10" rx="2" fill="#A78BFA" />
-                  <rect x="64" y="80" width="4" height="10" rx="2" fill="#A78BFA" />
-                  <rect x="10" y="32" width="10" height="4" rx="2" fill="#A78BFA" />
-                  <rect x="10" y="48" width="10" height="4" rx="2" fill="#A78BFA" />
-                  <rect x="10" y="64" width="10" height="4" rx="2" fill="#A78BFA" />
-                  <rect x="80" y="32" width="10" height="4" rx="2" fill="#A78BFA" />
-                  <rect x="80" y="48" width="10" height="4" rx="2" fill="#A78BFA" />
-                  <rect x="80" y="64" width="10" height="4" rx="2" fill="#A78BFA" />
-                  <defs>
-                    <linearGradient id="aiChipGradient" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#A78BFA" />
-                      <stop offset="1" stopColor="#6D28D9" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
+              <Button 
+                onClick={triggerAIAnalysis}
+                disabled={aiLoading || readOnly}
+                className="bg-purple-600 hover:bg-purple-700 text-white rounded-full font-bold px-4 sm:px-5 py-2 text-xs flex items-center gap-2 shadow-xs shrink-0 self-start"
+              >
+                {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                <span>{aiLoading ? 'Auditing...' : 'Run Operations Audit'}</span>
+              </Button>
             </div>
 
             {/* Custom Inquiry Input */}
