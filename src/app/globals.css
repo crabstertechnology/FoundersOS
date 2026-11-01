@@ -12,82 +12,82 @@
 
 @layer base {
   :root {
-    /* ── Surface & Background ── */
-    --background:          0 0% 99%;
+    /* ── 60% Dominant Canvas: Pure Crisp White ── */
+    --background:          0 0% 100%;
     --surface-elevated:    0 0% 100%;
     --surface-overlay:     0 0% 100%;
 
-    /* ── Foreground ── */
-    --foreground:          220 20% 10%;
+    /* ── 30% Structural Neutrals: Deep Slate for WCAG AAA Readability ── */
+    --foreground:          222 47% 11%;     /* #0f172a */
 
-    /* ── Card ── */
+    /* ── Card: Pure White with Refined Depth ── */
     --card:                0 0% 100%;
-    --card-foreground:     220 20% 10%;
+    --card-foreground:     222 47% 11%;
 
     /* ── Popover ── */
     --popover:             0 0% 100%;
-    --popover-foreground:  220 20% 10%;
+    --popover-foreground:  222 47% 11%;
 
-    /* ── Primary — Indigo 600 ── */
-    --primary:             241 79% 58%;
+    /* ── 10% Primary Brand Accent: Modern Royal Indigo (Conveys Trust, Intelligence & Authority) ── */
+    --primary:             238 82% 58%;     /* #4f46e5 */
     --primary-foreground:  0 0% 100%;
-    --primary-hover:       241 79% 52%;
-    --primary-subtle:      241 79% 97%;
-    --primary-subtle-fg:   241 79% 45%;
+    --primary-hover:       238 82% 50%;     /* #4338ca */
+    --primary-subtle:      238 100% 97.5%;  /* #f0f1fe */
+    --primary-subtle-fg:   238 82% 45%;
 
-    /* ── Secondary ── */
-    --secondary:           220 14% 96%;
-    --secondary-foreground: 220 20% 20%;
+    /* ── Secondary Surfaces & Muted Accents ── */
+    --secondary:           210 20% 97%;     /* #f1f5f9 */
+    --secondary-foreground: 222 47% 18%;
 
-    /* ── Muted ── */
-    --muted:               220 13% 95%;
-    --muted-foreground:    220 9% 50%;
+    --muted:               210 20% 96%;
+    --muted-foreground:    215 16% 47%;     /* #64748b */
 
-    /* ── Accent — Violet ── */
-    --accent:              265 70% 58%;
+    /* ── Harmonious Complementary Accent: Electric Violet / Amethyst ── */
+    --accent:              262 83% 58%;     /* #7c3aed */
     --accent-foreground:   0 0% 100%;
 
-    /* ── Success — Emerald ── */
-    --success:             160 84% 39%;
+    /* ── Semantic Colors (Functional Psychology) ── */
+    /* Success — Mint Emerald for Positive Growth, ARR & Deals */
+    --success:             158 64% 40%;     /* #059669 */
     --success-foreground:  0 0% 100%;
-    --success-subtle:      160 84% 95%;
-    --success-subtle-fg:   160 84% 29%;
+    --success-subtle:      152 76% 96%;
+    --success-subtle-fg:   158 64% 28%;
 
-    /* ── Warning — Amber ── */
-    --warning:             38 92% 50%;
+    /* Warning — Warm Sunlit Amber for Alerts & Deadlines */
+    --warning:             38 92% 48%;      /* #d97706 */
     --warning-foreground:  0 0% 100%;
-    --warning-subtle:      38 92% 96%;
-    --warning-subtle-fg:   38 92% 30%;
+    --warning-subtle:      45 93% 96%;
+    --warning-subtle-fg:   38 92% 28%;
 
-    /* ── Destructive ── */
-    --destructive:         0 72% 51%;
+    /* Destructive — Vibrant Rose Crimson for Burn & Red Flags */
+    --destructive:         350 89% 56%;     /* #e11d48 */
     --destructive-foreground: 0 0% 100%;
-    --destructive-subtle:  0 72% 96%;
-    --destructive-subtle-fg: 0 72% 40%;
+    --destructive-subtle:  350 100% 97%;
+    --destructive-subtle-fg: 350 89% 36%;
 
-    /* ── Borders & Rings ── */
-    --border:              220 13% 91%;
-    --border-strong:       220 13% 82%;
+    /* ── Subtle Structured Borders & Focus Rings ── */
+    --border:              220 13% 91%;     /* #e2e8f0 */
+    --border-strong:       220 13% 82%;     /* #cbd5e1 */
     --input:               220 13% 91%;
-    --ring:                241 79% 58%;
+    --ring:                238 82% 58%;
 
     /* ── Radius ── */
     --radius:              0.75rem;
 
-    /* ── Shadows ── */
-    --shadow-xs:   0 1px 2px 0 rgb(0 0 0 / 0.04);
-    --shadow-sm:   0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
-    --shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-    --shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-    --shadow-xl:   0 20px 25px -5px rgb(0 0 0 / 0.07), 0 8px 10px -6px rgb(0 0 0 / 0.05);
-    --shadow-2xl:  0 25px 50px -12px rgb(0 0 0 / 0.18);
+    /* ── Refined Light-Theme Ambient Drop Shadows (Soft & Tactile on Pure White) ── */
+    --shadow-xs:   0 1px 2px 0 rgb(0 0 0 / 0.03);
+    --shadow-sm:   0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    --shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.03);
+    --shadow-xl:   0 20px 25px -5px rgb(0 0 0 / 0.06), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+    --shadow-2xl:  0 25px 50px -12px rgb(0 0 0 / 0.12);
 
-    /* ── Chart Colors ── */
-    --chart-1:   241 79% 58%;
-    --chart-2:   160 84% 39%;
-    --chart-3:   265 70% 58%;
-    --chart-4:   38 92% 50%;
-    --chart-5:   0 72% 51%;
+    /* ── Harmonious Categorical Chart Palette ── */
+    --chart-1:   238 82% 58%;  /* Indigo */
+    --chart-2:   158 64% 40%;  /* Emerald */
+    --chart-3:   262 83% 58%;  /* Violet */
+    --chart-4:   38 92% 50%;   /* Amber */
+    --chart-5:   350 89% 56%;  /* Rose */
   }
 
   .dark {

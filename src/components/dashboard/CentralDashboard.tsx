@@ -1126,18 +1126,210 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   });
 
   const defaultMilestones = [
-    { month: "Month 1", milestone: "EZCirkit Product Standardization & Pre-Order Storefront Launch", metrics: ["BOM cost: ≤ ₹750", "Curriculum downloads: 150", "Paid pre-orders: 10"] },
-    { month: "Month 2", milestone: "First Production Batch Assembly & Beta School Testing", metrics: ["Batch output: 50 units", "Beta testers: 25", "User satisfaction: 90%"] },
-    { month: "Month 3", milestone: "Commercial Deliveries & Detach Sensor Architecture Freeze", metrics: ["Delivered kits: 50", "MRR: ₹50,000", "Sensor precision: 99%"] },
-    { month: "Month 4", milestone: "Institutional Outreach & Detach Prototype Assembly", metrics: ["Schools contacted: 30", "Demos completed: 12", "Prototype boards: 5"] },
-    { month: "Month 5", milestone: "Curriculum Integration & B2B Pilot Deployments", metrics: ["Active schools: 8", "Student engagement: 85%", "Pilot LOIs: 5"] },
-    { month: "Month 6", milestone: "Mid-Year Financial Audit & Investor Teaser Circulation", metrics: ["Gross margin: 60%", "Runway: 12+ mo", "Investor meetings: 15"] },
-    { month: "Month 7", milestone: "Detach Pre-Compliance Testing & Software Platform Launch", metrics: ["EMC compliance: Pass", "Cloud platform latency: <100ms", "Waitlist: 300"] },
-    { month: "Month 8", milestone: "B2B Pilot Conversion to Annual Multi-Kit Contracts", metrics: ["Annual contracts: 6", "Contract ARR: ₹600,000", "Renewal rate: 95%"] },
-    { month: "Month 9", milestone: "Investor Data Room Finalization & Pitch Roadshow", metrics: ["Diligence complete: 100%", "Term sheet targets: 3", "Committed angel funds: ₹10L"] },
-    { month: "Month 10", milestone: "Seed Round Closing & Detach Tooling Orders", metrics: ["Capital closed: ₹3,000,000", "Tooling vendor: Selected", "Lead time: 6 weeks"] },
-    { month: "Month 11", milestone: "Manufacturing Scale-up & Core Hiring in Ops and Sales", metrics: ["Assembly throughput: 200/mo", "New hires: 2", "Inventory buffer: 30 days"] },
-    { month: "Month 12", milestone: "Annual Target Review, Detach Commercial Launch & Q1 Planning", metrics: ["Annual revenue: ₹1,500,000", "Active student users: 2,500", "Net margin: Positive"] },
+    {
+      month: "Month 1",
+      milestone: "EZCirkit Product Standardization & Pre-Order Storefront Launch",
+      metrics: ["BOM cost: ≤ ₹750", "Curriculum downloads: 150+", "Paid pre-orders: 10 units", "Acquisition cost: ≤ ₹1,200"],
+      deliverables: [
+        "Freeze EZCirkit hardware schematics & component bill of materials (BOM)",
+        "Finalize 10-lesson modular robotics & electronics curriculum PDF and teacher guide",
+        "Set up pre-order landing page with payment gateway integration",
+        "Initiate supplier negotiations for volume discounts on microcontrollers & sensors"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "BOM Cost Auditing & Vendor Benchmarking", financeActions: ["Audit current component costs vs ₹750 target", "Establish supplier payment schedule"], salesActions: ["Draft pre-order landing page copy & curriculum highlights", "Design promotional demo video"], opsActions: ["Audit component inventory in lab", "Test supplier sample batches"] },
+        { week: "Week 2", theme: "Curriculum Packaging & Educator Feedback", financeActions: ["Model profit margins across 50, 100, and 500 kit tiers"], salesActions: ["Send draft curriculum to 10 educators for beta feedback", "Launch email waitlist signup"], opsActions: ["Standardize packaging box dimensions & insert foam"] },
+        { week: "Week 3", theme: "Storefront QA & Payment Gateway Integration", financeActions: ["Verify payment gateway merchant payout flows & GST setup"], salesActions: ["Launch pre-order storefront to targeted mailing list", "Run first community demo webinar"], opsActions: ["Finalize QA checklist for assembled PCB boards"] },
+        { week: "Week 4", theme: "Inaugural Pre-Orders & Production Scheduling", financeActions: ["Reconcile first 10 paid pre-orders & gross receipts"], salesActions: ["Follow up with warm inquiries and school science leads"], opsActions: ["Place initial batch component orders with distributor"] }
+      ]
+    },
+    {
+      month: "Month 2",
+      milestone: "First Production Batch Assembly & Beta School Testing",
+      metrics: ["Batch output: 50 units", "Beta testers: 25 classrooms", "User satisfaction: 90%+", "Assembly time: <45 mins/kit"],
+      deliverables: [
+        "Assemble and QA-test first production batch of 50 kits",
+        "Distribute beta evaluation kits to 25 STEM educators across Tamil Nadu",
+        "Collect structured teacher feedback on hands-on workshop usability",
+        "Optimize packaging design for postal drop-ship durability and reduced freight cost"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Component Receiving & Inventory Inspection", financeActions: ["Verify invoice terms with PCB assembly house"], salesActions: ["Confirm 25 beta educator delivery addresses & session dates"], opsActions: ["Inspect incoming batch components for defects"] },
+        { week: "Week 2", theme: "Assembly Line Optimization & First 25 Kits", financeActions: ["Track direct labor and packaging expense per kit"], salesActions: ["Host beta kickoff call with participating schools"], opsActions: ["Time kit assembly process and reduce bottleneck steps"] },
+        { week: "Week 3", theme: "Batch QA Testing & Classroom Delivery", financeActions: ["Monitor regional courier shipping costs"], salesActions: ["Gather initial video testimonials from students"], opsActions: ["Run 100% functional test on all soldered sensor modules"] },
+        { week: "Week 4", theme: "Beta Feedback Analysis & Design Fixes", financeActions: ["Calculate realized gross margin on first 50 kits"], salesActions: ["Compile user ratings into sales brochure testimonials"], opsActions: ["Document firmware adjustments for next revision"] }
+      ]
+    },
+    {
+      month: "Month 3",
+      milestone: "Commercial Deliveries & Detach Sensor Architecture Freeze",
+      metrics: ["Delivered kits: 50+", "MRR: ₹50,000", "Sensor precision: 99%", "Repeat purchase intent: 70%+"],
+      deliverables: [
+        "Fulfill and deliver 100% of inaugural paid customer pre-orders",
+        "Complete architectural freeze for Detach multi-sensor IoT telemetry module",
+        "Publish customer case studies and classroom demonstration video highlights",
+        "Implement initial inventory ledger and reorder threshold alerts"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Commercial Order Fulfillment & Dispatch", financeActions: ["Issue GST tax invoices for all fulfilled pre-orders"], salesActions: ["Trigger automated customer delivery notifications and setup guide"], opsActions: ["Confirm final shipping tracking numbers with courier"] },
+        { week: "Week 2", theme: "Detach Sensor Architecture Review", financeActions: ["Establish R&D prototyping budget for Detach sensor module"], salesActions: ["Interview top 5 beta teachers for case study quote"], opsActions: ["Finalize pinout, power rails, and I2C/SPI sensor bus"] },
+        { week: "Week 3", theme: "Telemetry Firmware Benchmark & Sensor Testing", financeActions: ["Review monthly burn rate and runway projections"], salesActions: ["Publish first case study on website and social channels"], opsActions: ["Benchmark ADC sensor accuracy and noise floor"] },
+        { week: "Week 4", theme: "Q1 Milestone Review & Q2 Institutional Strategy", financeActions: ["Close Q1 financial books and summarize revenue vs target"], salesActions: ["Draft Q2 institutional pilot proposal template"], opsActions: ["Freeze Detach schematic revision 1.0 for prototype fab"] }
+      ]
+    },
+    {
+      month: "Month 4",
+      milestone: "Institutional Outreach & Detach Prototype Assembly",
+      metrics: ["Schools contacted: 30+", "Demos completed: 12", "Prototype boards fabricated: 5", "Pipeline value: ₹4,50,000"],
+      deliverables: [
+        "Launch outbound outreach campaign targeting private matriculation & CBSE schools",
+        "Fabricate 5 working prototype boards for Detach sensor hardware",
+        "Conduct 12 in-person interactive curriculum demos for school principals",
+        "Establish vendor credit terms with regional PCB fabrication partners"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Target Institutional Account List Curation", financeActions: ["Set pilot discount tiers and institutional pricing matrix"], salesActions: ["Curate contact list of 30 STEM coordinators in Chennai & Coimbatore"], opsActions: ["Send Detach Gerber files to rapid fabrication partner"] },
+        { week: "Week 2", theme: "Direct School Outreach & Demo Bookings", financeActions: ["Track travel and demonstration budget"], salesActions: ["Execute targeted phone & email sequence to schedule 12 live demos"], opsActions: ["Receive bare PCB boards and procure sensor components"] },
+        { week: "Week 3", theme: "Prototype Board Assembly & Live Demos", financeActions: ["Review preliminary pipeline ROI"], salesActions: ["Conduct first 6 in-person demonstrations with live student kits"], opsActions: ["Hand-assemble and flash firmware on 5 Detach prototype units"] },
+        { week: "Week 4", theme: "Demo Follow-ups & Pilot Proposal Submissions", financeActions: ["Issue pilot quotation agreements"], salesActions: ["Complete remaining 6 demos and send customized pilot proposals"], opsActions: ["Perform stress tests on wireless Bluetooth/WiFi telemetry"] }
+      ]
+    },
+    {
+      month: "Month 5",
+      milestone: "Curriculum Integration & B2B Pilot Deployments",
+      metrics: ["Active schools: 8", "Student engagement: 85%+", "Pilot LOIs signed: 5+", "Hardware bug rate: <1%"],
+      deliverables: [
+        "Deploy multi-week robotics lab pilots across 8 selected schools",
+        "Conduct teacher training workshops and certify 16 instructor leads",
+        "Draft annual institutional procurement agreements with bundled pricing",
+        "Benchmark Detach real-time telemetry battery life under continuous testing"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Pilot Kit Deployment & Classroom Setup", financeActions: ["Secure pilot deposit payments from enrolled schools"], salesActions: ["Onboard 8 pilot schools and distribute student lesson binders"], opsActions: ["Deliver 40 classroom demo kits and spare part packs"] },
+        { week: "Week 2", theme: "Teacher Training & Curriculum Kickoff", financeActions: ["Reconcile training material printing & delivery expenses"], salesActions: ["Host 2-day hands-on instructor certification workshop"], opsActions: ["Provide dedicated on-call technical support for teachers"] },
+        { week: "Week 3", theme: "Classroom Observation & Student Engagement Audit", financeActions: ["Model annual recurring revenue (ARR) per school contract"], salesActions: ["Observe 4 live classroom sessions and gather feedback"], opsActions: ["Audit hardware durability under aggressive student usage"] },
+        { week: "Week 4", theme: "Pilot Evaluation & Procurement LOI", financeActions: ["Prepare final commercial contracts for annual license"], salesActions: ["Present pilot outcome reports to school trustees and secure 5 LOIs"], opsActions: ["Incorporate teacher feature requests into hardware backlog"] }
+      ]
+    },
+    {
+      month: "Month 6",
+      milestone: "Mid-Year Financial Audit & Investor Teaser Circulation",
+      metrics: ["Gross margin: 60%+", "Runway: 12+ months", "Investor meetings scheduled: 15+", "Active student users: 800+"],
+      deliverables: [
+        "Complete comprehensive mid-year financial audit and unit economics review",
+        "Prepare confidential one-page investor teaser and founder pitch deck",
+        "Circulate teaser to pre-seed VC funds and angel networks across India",
+        "Review H1 OKRs and recalibrate revenue targets for H2 institutional cycle"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Mid-Year Financial Audit & P&L Analysis", financeActions: ["Audit all H1 revenue, COGS, operational expenses, and burn rate", "Calculate exact unit economics and customer payback period"], salesActions: ["Consolidate H1 revenue metrics and pipeline deal values"], opsActions: ["Audit physical inventory and reconcile warehouse asset value"] },
+        { week: "Week 2", theme: "Investor Teaser & Pitch Deck Finalization", financeActions: ["Build 3-year financial forecast model (revenue, headcount, capital)"], salesActions: ["Create visual traction slides with pilot photos and retention metrics"], opsActions: ["Map out production scale-up roadmap for 1,000 kits"] },
+        { week: "Week 3", theme: "Targeted Investor Outreach & Roadshow Prep", financeActions: ["Set up data room security permissions and NDA templates"], salesActions: ["Reach out to 25 curated angel investors and early-stage VC funds"], opsActions: ["Prepare hardware demo kit for in-person partner meetings"] },
+        { week: "Week 4", theme: "Investor Meetings & H2 Goal Alignment", financeActions: ["Track investor feedback on valuation and round sizing"], salesActions: ["Conduct first 5 partner screening calls"], opsActions: ["Lock in H2 production schedule with manufacturing partner"] }
+      ]
+    },
+    {
+      month: "Month 7",
+      milestone: "Detach Pre-Compliance Testing & Software Platform Launch",
+      metrics: ["EMC compliance: Pass", "Cloud platform latency: <100ms", "Waitlist signups: 300+", "Uptime: 99.9%"],
+      deliverables: [
+        "Submit Detach hardware prototype for regulatory EMC and safety testing",
+        "Deploy cloud telemetry dashboard for remote classroom analytics",
+        "Launch public waitlist portal and product demonstration preview",
+        "Integrate automated student progress tracking into school web portal"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Pre-Compliance Testing Submission", financeActions: ["Pay testing lab certification fees"], salesActions: ["Draft public launch announcement and product video script"], opsActions: ["Submit 2 test units to accredited EMC testing facility"] },
+        { week: "Week 2", theme: "Cloud Platform Beta Deployment", financeActions: ["Audit AWS/GCP cloud hosting budget vs user load"], salesActions: ["Invite 50 pilot students to test browser telemetry viewer"], opsActions: ["Perform load testing and API latency optimization"] },
+        { week: "Week 3", theme: "Certification Review & Firmware Polish", financeActions: ["Review preliminary tooling vendor capital requirements"], salesActions: ["Launch public teaser landing page and capture 300 waitlist leads"], opsActions: ["Resolve test lab feedback and finalize PCB ground shielding"] },
+        { week: "Week 4", theme: "Platform Integration & School Portal Rollout", financeActions: ["Invoice ongoing subscription fees for pilot platform"], salesActions: ["Demo cloud dashboard to prospective school principals"], opsActions: ["Deploy automatic over-the-air (OTA) firmware update system"] }
+      ]
+    },
+    {
+      month: "Month 8",
+      milestone: "B2B Pilot Conversion to Annual Multi-Kit Contracts",
+      metrics: ["Annual contracts: 6 signed", "Contract ARR: ₹6,00,000", "Renewal rate: 95%", "Average deal size: ₹1,00,000"],
+      deliverables: [
+        "Convert 6 high-engagement pilot schools into multi-year recurring contracts",
+        "Deliver bulk curriculum replenishment shipments for upcoming academic term",
+        "Introduce tiered service level agreements (SLAs) for technical lab support",
+        "Onboard first full-time B2B sales account executive"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Pilot Conversion Negotiations", financeActions: ["Review contract payment schedules and upfront deposit terms"], salesActions: ["Conduct closing meetings with school decision makers"], opsActions: ["Stage bulk kit inventory ready for rapid dispatch"] },
+        { week: "Week 2", theme: "Contract Finalization & Billing Setup", financeActions: ["Collect upfront annual subscription payments"], salesActions: ["Sign 3 enterprise institutional supply contracts"], opsActions: ["Prepare custom school branding labels for hardware boxes"] },
+        { week: "Week 3", theme: "Bulk Shipments & Onboarding", financeActions: ["Reconcile accounts receivable"], salesActions: ["Sign remaining 3 enterprise institutional contracts"], opsActions: ["Dispatch bulk pallets to schools with freight insurance"] },
+        { week: "Week 4", theme: "Sales Team Expansion & Pipeline Review", financeActions: ["Establish compensation structure and sales commission policy"], salesActions: ["Onboard full-time B2B sales hire and assign target territories"], opsActions: ["Set up automated RMA replacement protocol for damaged parts"] }
+      ]
+    },
+    {
+      month: "Month 9",
+      milestone: "Investor Data Room Finalization & Pitch Roadshow",
+      metrics: ["Diligence readiness: 100%", "Term sheet targets: 3", "Committed angel funds: ₹10,00,000", "LTV/CAC ratio: >3.5x"],
+      deliverables: [
+        "Finalize virtual data room: capitalization table, IP assignments, customer contracts",
+        "Initiate formal seed round investor meetings and in-person partner presentations",
+        "Obtain first ₹10L in angel syndicate soft commitments",
+        "File provisional patent application for Detach modular sensor mounting system"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Data Room Due Diligence Preparation", financeActions: ["Upload audited cap table, tax filings, and bank statements to data room"], salesActions: ["Assemble customer pipeline metrics, cohort retention, and contract proofs"], opsActions: ["Document manufacturing supply agreements and BOM cost trajectory"] },
+        { week: "Week 2", theme: "IP Protection & Provisional Patent Filing", financeActions: ["Pay IP attorney filing fees"], salesActions: ["Present to 4 regional angel investor groups in Bangalore & Chennai"], opsActions: ["Finalize technical patent drawings and claims for sensor mount"] },
+        { week: "Week 3", theme: "Lead Investor Partner Meetings", financeActions: ["Track term sheet negotiation terms and liquidation preferences"], salesActions: ["Host in-person institutional demo for lead investor diligence team"], opsActions: ["Demonstrate live telemetric dashboard during VC presentation"] },
+        { week: "Week 4", theme: "Syndicate Commitment Consolidation", financeActions: ["Secure ₹10,00,000 in binding syndicate soft commitments"], salesActions: ["Follow up with all active investor contacts and share diligence links"], opsActions: ["Benchmark production lead times for 5,000 unit tooling scale"] }
+      ]
+    },
+    {
+      month: "Month 10",
+      milestone: "Seed Round Closing & Detach Tooling Orders",
+      metrics: ["Capital closed: ₹3,000,000", "Tooling vendor: Selected", "Tooling lead time: 6 weeks", "Cash runway: 24 months"],
+      deliverables: [
+        "Execute definitive seed investment agreements and receive wire transfers",
+        "Place injection-molding tooling orders for Detach production enclosures",
+        "Authorize component advance orders to secure volume tier price cuts",
+        "Formulate employee stock option plan (ESOP) allocation pool"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Term Sheet Execution & Legal Review", financeActions: ["Review shareholders agreement (SHA) and share subscription agreement (SSA)"], salesActions: ["Maintain sales momentum and book new demos for upcoming term"], opsActions: ["Obtain final mold flow simulation reports from tooling vendors"] },
+        { week: "Week 2", theme: "Definitive Agreement Signing & Wire Transfers", financeActions: ["Confirm receipt of ₹3,000,000 seed funding wire in escrow"], salesActions: ["Announce funding milestone to school network and partners"], opsActions: ["Select top-tier precision injection molding manufacturer"] },
+        { week: "Week 3", theme: "Capital Allocation & Tooling Purchase Order", financeActions: ["Disburse tooling deposit and setup capital reserve account"], salesActions: ["Launch pre-booking campaign for Detach commercial edition"], opsActions: ["Release 3D CAD files and sign off on mold fabrication contract"] },
+        { week: "Week 4", theme: "Governance Setup & ESOP Structuring", financeActions: ["Formalize 10% ESOP pool and board resolutions"], salesActions: ["Draft Q4 marketing campaign plan"], opsActions: ["Order long-lead microcontrollers and passive components"] }
+      ]
+    },
+    {
+      month: "Month 11",
+      milestone: "Manufacturing Scale-Up & Core Hiring in Ops and Sales",
+      metrics: ["Assembly throughput: 200 kits/mo", "New hires: 2 onboarded", "Inventory buffer: 30 days", "Scrap rate: <2%"],
+      deliverables: [
+        "Scale semi-automated assembly line to reach 200 kits per month capacity",
+        "Hire Senior Embedded Systems Engineer and Regional Institutional Sales Manager",
+        "Establish buffer stock for microcontrollers to hedge against supply chain shocks",
+        "Roll out enterprise school management dashboard with multi-campus analytics"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Talent Acquisition & Technical Screening", financeActions: ["Set competitive payroll, ESOP, and benefits budgets for new roles"], salesActions: ["Interview sales candidates with proven school network track records"], opsActions: ["Interview embedded firmware engineers with IoT telemetry experience"] },
+        { week: "Week 2", theme: "Core Hiring Offers & Team Onboarding", financeActions: ["Complete background checks and issue formal appointment letters"], salesActions: ["Train new sales executive on institutional presentation playbook"], opsActions: ["Integrate new embedded systems engineer into firmware sprint"] },
+        { week: "Week 3", theme: "Assembly Throughput Scaling", financeActions: ["Audit manufacturing labor cost and target ₹500 assembly per kit"], salesActions: ["Expand outreach to private schools in tier-2 district hubs"], opsActions: ["Install semi-automatic screw driving & testing jigs in assembly line"] },
+        { week: "Week 4", theme: "Quality Assurance & Buffer Inventory Audit", financeActions: ["Review monthly cash burn and verify 20+ months runway"], salesActions: ["Achieve 15 new active pipeline proposals"], opsActions: ["Reach 200 kits/month throughput with <2% scrap rate"] }
+      ]
+    },
+    {
+      month: "Month 12",
+      milestone: "Annual Target Review, Detach Commercial Launch & Q1 Planning",
+      metrics: ["Annual revenue: ₹1,500,000+", "Active student users: 2,500+", "Net margin: Positive", "Schools onboarded: 20+"],
+      deliverables: [
+        "Officially launch Detach IoT sensor suite for commercial educational and maker orders",
+        "Conduct comprehensive Year-1 performance review with board of advisors",
+        "Publish Year-1 Annual Impact Report for investors, educators, and community",
+        "Formulate Year-2 strategic roadmap with expansion to neighboring state districts"
+      ],
+      weeklyPlans: [
+        { week: "Week 1", theme: "Commercial Product Launch & Press Announcement", financeActions: ["Activate online payment gateways for commercial Detach sales"], salesActions: ["Host official product release event with partner school principals"], opsActions: ["Inspect initial injection-molded production samples and approve run"] },
+        { week: "Week 2", theme: "Annual Revenue Audit & KPI Reconciliations", financeActions: ["Close annual financial audit confirming ₹1.5M+ milestone revenue"], salesActions: ["Calculate annual customer retention rate and lifetime value (LTV)"], opsActions: ["Document warehouse shipping throughput and courier SLA metrics"] },
+        { week: "Week 3", theme: "Board Review & Stakeholder Impact Report", financeActions: ["Circulate Q4 board deck and financial summary to seed investors"], salesActions: ["Publish Year-1 Impact Report showing 2,500+ active students"], opsActions: ["Reward assembly team for hitting annual production milestones"] },
+        { week: "Week 4", theme: "Year-2 Roadmap Formulation & Strategic Kickoff", financeActions: ["Finalize Year-2 operating budget and revenue targets"], salesActions: ["Set territory goals for state-wide distribution expansion"], opsActions: ["Freeze Year-2 hardware R&D objectives and next-gen sensors"] }
+      ]
+    }
   ];
 
   const selectedMonthData = useMemo(() => {
@@ -1146,18 +1338,32 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
     const def = defaultMilestones[selectedMonthIdx] || defaultMilestones[0];
     const milestoneTitle = raw?.milestone || raw?.objective || def.milestone;
 
-    // Extract all points neatly
-    const points: string[] = [];
+    // Extract metrics
+    const metrics: string[] = [];
     if (raw?.keyMetrics && Array.isArray(raw.keyMetrics) && raw.keyMetrics.length > 0) {
-      points.push(...raw.keyMetrics.filter(Boolean));
+      metrics.push(...raw.keyMetrics.filter(Boolean));
     } else if (def?.metrics && Array.isArray(def.metrics)) {
-      points.push(...def.metrics.filter(Boolean));
+      metrics.push(...def.metrics.filter(Boolean));
     }
 
-    if (raw?.deliverables && Array.isArray(raw.deliverables)) {
-      points.push(...raw.deliverables.filter(Boolean));
-    } else if (raw?.tasks && Array.isArray(raw.tasks)) {
-      points.push(...raw.tasks.filter(Boolean));
+    // Extract deliverables
+    const deliverables: string[] = [];
+    if (raw?.deliverables && Array.isArray(raw.deliverables) && raw.deliverables.length > 0) {
+      deliverables.push(...raw.deliverables.filter(Boolean));
+    } else if (raw?.tasks && Array.isArray(raw.tasks) && raw.tasks.length > 0) {
+      deliverables.push(...raw.tasks.filter(Boolean));
+    } else if (def?.deliverables && Array.isArray(def.deliverables)) {
+      deliverables.push(...def.deliverables.filter(Boolean));
+    }
+
+    // Extract weekly plans (if present in AI output or default plan)
+    const weeklyPlans: any[] = [];
+    if (raw?.weeklyPlans && Array.isArray(raw.weeklyPlans) && raw.weeklyPlans.length > 0) {
+      weeklyPlans.push(...raw.weeklyPlans);
+    } else if (selectedMonthIdx === 0 && strategicPlan?.weeklyPlans && Array.isArray(strategicPlan.weeklyPlans) && strategicPlan.weeklyPlans.length > 0) {
+      weeklyPlans.push(...strategicPlan.weeklyPlans);
+    } else if (def?.weeklyPlans && Array.isArray(def.weeklyPlans)) {
+      weeklyPlans.push(...def.weeklyPlans);
     }
 
     const qIdx = Math.floor(selectedMonthIdx / 3);
@@ -1168,7 +1374,9 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       monthNum: selectedMonthIdx + 1,
       monthName: `Month ${selectedMonthIdx + 1}`,
       title: milestoneTitle,
-      points: points.length > 0 ? points : [def.milestone],
+      metrics: metrics.length > 0 ? metrics : def.metrics,
+      deliverables: deliverables.length > 0 ? deliverables : def.deliverables,
+      weeklyPlans,
       quarterIdx: qIdx,
       quarterName: `Q${qIdx + 1}`,
       quarterPeriod: qData?.period || `Months ${qIdx * 3 + 1}–${(qIdx + 1) * 3}`,
@@ -1492,7 +1700,7 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Combined 12-Month Roadmap & Milestones - approx 64% width */}
-        <div className="lg:col-span-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 space-y-6">
+        <div className="lg:col-span-8 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.09),0_4px_16px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_46px_-6px_rgba(0,0,0,0.12)] transition-shadow duration-300 p-6 md:p-7 space-y-6">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
@@ -1583,23 +1791,33 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
 
           {/* Details (Appears when any circle is touched) giving content about BOTH Roadmap and Milestone */}
           {selectedMonthIdx !== null && selectedMonthData ? (
-            <div className="p-5 rounded-3xl bg-slate-50/70 border border-slate-200/90 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
               
-              {/* Roadmap Context Bar */}
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-slate-200/70">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                      {selectedMonthData.quarterName} Roadmap ({selectedMonthData.quarterPeriod})
-                    </span>
-                    <span className="text-[11px] font-extrabold text-slate-500">
-                      {selectedMonthData.quarterProgress}% Quarter Complete
-                    </span>
+              {/* Header Context Bar */}
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3.5 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
+                    M{selectedMonthData.monthNum}
                   </div>
-                  <p className="text-xs font-bold text-slate-700">
-                    <span className="text-slate-400 font-medium">Roadmap Focus: </span>
-                    {selectedMonthData.quarterFocus}
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-base font-black text-slate-900 tracking-tight font-heading">
+                        {selectedMonthData.monthName} Milestone &amp; Roadmap
+                      </h4>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                        selectedMonthData.isCompleted
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                          : selectedMonthData.isCurrent
+                          ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/60'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200/60'
+                      }`}>
+                        {selectedMonthData.isCompleted ? '✓ Completed' : selectedMonthData.isCurrent ? '● Current Active Month' : 'Upcoming'}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                      Part of <span className="text-indigo-600 font-bold">{selectedMonthData.quarterName} Roadmap ({selectedMonthData.quarterPeriod})</span> · {selectedMonthData.quarterProgress}% Quarter Progress
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
@@ -1608,19 +1826,19 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                       size="sm"
                       variant={selectedMonthData.isCompleted ? "outline" : "default"}
                       onClick={() => handleToggleMonthlyMilestone(selectedMonthData.monthName, selectedMonthIdx)}
-                      className={`h-7 text-xs font-bold px-3.5 rounded-full ${
+                      className={`h-8 text-xs font-bold px-4 rounded-xl shadow-xs transition-all ${
                         selectedMonthData.isCompleted
                           ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
                           : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                       }`}
                     >
-                      {selectedMonthData.isCompleted ? 'Mark Incomplete' : 'Mark Achieved'}
+                      {selectedMonthData.isCompleted ? 'Mark Incomplete' : '✓ Mark Achieved'}
                     </Button>
                   )}
                   <button
                     type="button"
                     onClick={() => setSelectedMonthIdx(null)}
-                    className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                     title="Close details"
                   >
                     <X className="w-4 h-4" />
@@ -1628,41 +1846,176 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
                 </div>
               </div>
 
-              {/* Monthly Milestone Objective Title */}
-              <div className="p-4 bg-white rounded-2xl border border-slate-200/80 space-y-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    {selectedMonthData.monthName} Milestone Objective
-                  </span>
-                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                    selectedMonthData.isCompleted
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : selectedMonthData.isCurrent
-                      ? 'bg-indigo-100 text-indigo-800'
-                      : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {selectedMonthData.isCompleted ? 'Completed' : selectedMonthData.isCurrent ? 'Current' : 'Upcoming'}
-                  </span>
+              {/* Primary Strategic Milestone Objective */}
+              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100/90 flex items-start gap-3.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  <Flag className="w-4 h-4 text-white" />
                 </div>
-                <p className="text-xs font-extrabold text-slate-900 leading-snug">
-                  {selectedMonthData.title}
-                </p>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">
+                    Primary Strategic Objective
+                  </span>
+                  <p className="text-sm font-bold text-slate-900 leading-snug">
+                    {selectedMonthData.title}
+                  </p>
+                </div>
               </div>
 
-              {/* Key Targets & Deliverables in One Line (Points removed) */}
-              <div className="p-3.5 bg-white rounded-2xl border border-slate-200/80 flex flex-wrap lg:flex-nowrap items-center gap-x-3 gap-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full shrink-0">
-                  <Target className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Key Targets &amp; Deliverables:</span>
+              {/* Two-Column Grid: 1) Roadmap Alignment & Objectives, 2) Target KPIs & Deliverables */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Column 1: Roadmap Alignment & Quarterly Focus */}
+                <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
+                    <Map className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <h5 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                      {selectedMonthData.quarterName} Roadmap Alignment
+                    </h5>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quarter Thematic Focus</span>
+                    <p className="text-xs font-bold text-slate-800 mt-0.5 leading-relaxed">
+                      {selectedMonthData.quarterFocus}
+                    </p>
+                  </div>
+                  {selectedMonthData.quarterObjectives && selectedMonthData.quarterObjectives.length > 0 && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quarter Milestone Benchmarks</span>
+                      <ul className="space-y-1">
+                        {selectedMonthData.quarterObjectives.map((obj: string, oIdx: number) => (
+                          <li key={oIdx} className="flex items-start gap-2 text-xs font-semibold text-slate-700">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                            <span>{obj}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-semibold text-slate-800">
-                  {selectedMonthData.points.map((pt, pIdx) => (
-                    <span key={pIdx} className="inline-flex items-center gap-2">
-                      {pIdx > 0 && <span className="text-slate-300 font-bold">•</span>}
-                      <span>{pt}</span>
-                    </span>
+
+                {/* Column 2: Key Metrics & Success Criteria */}
+                <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
+                    <Target className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <h5 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                      Target Metrics &amp; Success KPIs
+                    </h5>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {selectedMonthData.metrics.map((metric: string, mIdx: number) => {
+                      const parts = metric.split(':');
+                      const label = parts.length > 1 ? parts[0].trim() : `KPI ${mIdx + 1}`;
+                      const val = parts.length > 1 ? parts.slice(1).join(':').trim() : metric;
+                      return (
+                        <div key={mIdx} className="p-2.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs space-y-0.5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">
+                            {label}
+                          </span>
+                          <span className="text-xs font-black text-slate-900 block truncate">
+                            {val}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Key Deliverables & Output Items */}
+              <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                  <div className="flex items-center gap-2">
+                    <CheckSquare className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <h5 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                      Required Deliverables &amp; Output Checkpoints
+                    </h5>
+                  </div>
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+                    {selectedMonthData.deliverables.length} Deliverables
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {selectedMonthData.deliverables.map((del: string, dIdx: number) => (
+                    <div key={dIdx} className="flex items-start gap-2.5 p-3 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+                      <div className="w-5 h-5 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="text-[10px] font-black text-indigo-700">{dIdx + 1}</span>
+                      </div>
+                      <span className="text-xs font-semibold text-slate-800 leading-snug">
+                        {del}
+                      </span>
+                    </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Weekly Execution Blueprint (Weeks 1 to 4) */}
+              {selectedMonthData.weeklyPlans && selectedMonthData.weeklyPlans.length > 0 && (
+                <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <h5 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                        Weekly Execution Blueprint (Month {selectedMonthData.monthNum})
+                      </h5>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      4 Weeks Scheduled
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedMonthData.weeklyPlans.map((wPlan: any, wIdx: number) => (
+                      <div key={wIdx} className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+                            {wPlan.week || `Week ${wIdx + 1}`}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-700 truncate max-w-[200px]" title={wPlan.theme}>
+                            {wPlan.theme}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 pt-1 text-[11px]">
+                          {wPlan.salesActions && wPlan.salesActions.length > 0 && (
+                            <div className="flex items-start gap-1.5">
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0 mt-0.5">Sales</span>
+                              <span className="text-slate-700 font-medium leading-tight">{wPlan.salesActions[0]}</span>
+                            </div>
+                          )}
+                          {wPlan.financeActions && wPlan.financeActions.length > 0 && (
+                            <div className="flex items-start gap-1.5">
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0 mt-0.5">Finance</span>
+                              <span className="text-slate-700 font-medium leading-tight">{wPlan.financeActions[0]}</span>
+                            </div>
+                          )}
+                          {wPlan.opsActions && wPlan.opsActions.length > 0 && (
+                            <div className="flex items-start gap-1.5">
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0 mt-0.5">Ops</span>
+                              <span className="text-slate-700 font-medium leading-tight">{wPlan.opsActions[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick AI Advisor Trigger */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-indigo-50/40 border border-indigo-100/60 text-xs">
+                <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  Need tailored guidance on Month {selectedMonthData.monthNum}?
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsChatOpen(true);
+                    setChatMessage(`Help me plan and execute the key milestones for Month ${selectedMonthData.monthNum}: ${selectedMonthData.title}`);
+                  }}
+                  className="font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+                >
+                  Consult Co-Pilot <ArrowRight className="w-3 h-3" />
+                </button>
               </div>
 
             </div>
@@ -1670,14 +2023,14 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             <div className="p-5 rounded-3xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
               <p className="text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                Touch any circle (M1–M12) in the flow above to reveal its roadmap focus, milestone objectives &amp; targets.
+                Touch any circle (M1–M12) in the flow above to reveal its complete roadmap focus, milestone objectives, deliverables &amp; weekly execution plans.
               </p>
             </div>
           )}
         </div>
 
         {/* Right Column: AI Strategic Insight - approx 36% width */}
-        <div className="lg:col-span-4 rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-4 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.09),0_4px_16px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_46px_-6px_rgba(0,0,0,0.12)] transition-shadow duration-300 p-6 md:p-7 flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between gap-2 pb-3">
               <div className="flex items-center gap-2">

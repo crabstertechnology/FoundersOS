@@ -305,9 +305,9 @@ export default function FounderOSPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#f6f7f9] overflow-hidden">
+    <div className="h-screen flex flex-col bg-white text-slate-900 overflow-hidden">
       {/* Minimal Consolidated Top Navigation Bar (Edge to Edge, Spans Full Width) */}
-      <header className="h-16 w-full border-b border-slate-200/80 bg-white/75 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 shadow-[0_1px_10px_rgba(0,0,0,0.02)]">
+      <header className="h-16 w-full border-b border-slate-100 bg-white/95 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-3">
           {/* Sidebar Toggle Button (Opens sidebar on hover and click) */}
           <button
@@ -448,7 +448,7 @@ export default function FounderOSPage() {
               setIsSidebarMinimized(true);
             }
           }}
-          className={`hidden md:flex flex-col h-full select-none bg-white/60 backdrop-blur-xl border-r border-slate-200/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)] text-slate-900 transition-all duration-300 ease-spring shrink-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'} font-sidebar`}
+          className={`hidden md:flex flex-col h-full select-none bg-white/95 backdrop-blur-xl border-r border-slate-100 shadow-[2px_0_12px_rgba(0,0,0,0.015)] text-slate-900 transition-all duration-300 ease-spring shrink-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'} font-sidebar`}
           style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
         >
           {/* Sidebar Controls Header */}
@@ -961,7 +961,7 @@ export default function FounderOSPage() {
 
       {/* Main Panel Content Area (Scrollable below Top Navigation Bar) */}
       <div 
-        className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto"
+        className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto bg-white"
         onMouseEnter={() => {
           if (!isSidebarPinned) {
             setIsSidebarMinimized(true);
@@ -1003,7 +1003,7 @@ export default function FounderOSPage() {
             <TabsContent value="finance" className="mt-0 focus-visible:outline-none">
               {/* Sub-suite Segmented Navigation Bar */}
               <div className="mb-6 overflow-x-auto pb-2 scrollbar-none">
-                <div className="inline-flex items-center gap-1.5 p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl backdrop-blur-md shadow-lg">
+                <div className="inline-flex items-center gap-1.5 p-1.5 bg-slate-100/90 border border-slate-200/80 rounded-2xl backdrop-blur-md shadow-xs">
                   {[
                     { id: 'calc', label: 'Valuation Calculator', icon: Calculator },
                     { id: 'tracker', label: 'Cap Table Tracker', icon: PieChart },
@@ -1022,11 +1022,11 @@ export default function FounderOSPage() {
                         onClick={() => setFinanceTab(subItem.id)}
                         className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                           isActive
-                            ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                            ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/80 font-extrabold'
+                            : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
                         }`}
                       >
-                        <SubIcon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                        <SubIcon className={`w-3.5 h-3.5 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`} />
                         <span>{subItem.label}</span>
                       </button>
                     );
@@ -1036,15 +1036,15 @@ export default function FounderOSPage() {
 
               <Tabs value={financeTab} className="w-full animate-in fade-in duration-300">
                 <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <LayoutDashboard className="w-3.5 h-3.5" /> Finance Suite / Weekly Dashboard
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Finance Weekly Dashboard
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         Monitor your funding progress, valuation targets, burn rate limits, and capital runway metrics.
                       </p>
                     </div>
@@ -1062,15 +1062,15 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <Activity className="w-3.5 h-3.5" /> Finance Suite / Daily Audit
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Finance Daily Activity Log
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         Log daily cash transactions, categorize software spend, and audit your assigned strategic execution.
                       </p>
                     </div>
@@ -1083,15 +1083,15 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <Calculator className="w-3.5 h-3.5" /> Finance Suite / Valuation Engine
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Startup Valuation Calculator
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         Model your funding rounds, track unit economics, and get AI-powered strategic advice instantly.
                       </p>
                     </div>
@@ -1100,15 +1100,15 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="tracker" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <PieChart className="w-3.5 h-3.5" /> Finance Suite / Equity Governance
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Cap Table Tracker
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         Track ownership percentages, share types, and board control health checks.
                       </p>
                     </div>
@@ -1117,15 +1117,15 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="exit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <TrendingUp className="w-3.5 h-3.5" /> Finance Suite / M&A Simulation
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Exit Waterfall Simulator
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
                       </p>
                     </div>
@@ -1134,15 +1134,15 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <Gavel className="w-3.5 h-3.5" /> Finance Suite / Deal Legal AI
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Term Sheet AI Assistant
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
                       </p>
                     </div>
@@ -1151,15 +1151,15 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="qa" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <MessageSquare className="w-3.5 h-3.5" /> Finance Suite / Advisory Q&A
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Term Sheet Q&A Assistant
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
                       </p>
                     </div>
@@ -1168,15 +1168,15 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="glossary" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 p-6 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="mb-6 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-950 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+                      <div className="flex items-center gap-2 text-indigo-600 text-xs font-mono uppercase tracking-widest font-bold mb-1">
                         <BookOpen className="w-3.5 h-3.5" /> Finance Suite / VC Knowledge
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight font-heading">
                         Founder's Glossary
                       </h1>
-                      <p className="text-xs text-slate-400 font-medium max-w-2xl mt-1">
+                      <p className="text-xs text-slate-500 font-medium max-w-2xl mt-1">
                         Master the jargon of VC funding with plain-English explanations and real-world examples.
                       </p>
                     </div>
