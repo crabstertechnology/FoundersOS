@@ -15,7 +15,8 @@ import { fmtINR, fmtPct } from '@/lib/utils/formatters';
 import { 
   Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, 
   User, TrendingUp, History, PieChart as PieIcon,
-  ShieldAlert, ArrowRightLeft, Target, Percent, Plus
+  ShieldAlert, ArrowRightLeft, Target, Percent, Plus,
+  CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { 
@@ -220,72 +221,94 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-6">
+      {/* ── 3-Column: Ownership Registry | Ownership Mix | Decision Logic ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,500px)_280px_280px] gap-6 items-start">
+
+        {/* ── LEFT: Ownership Registry (with History + Dilution Engine via tabs) ── */}
+        <div>
           <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
-            <TabsList className="bg-muted/50 p-1 rounded-xl mb-6">
-              <TabsTrigger value="registry" className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <User className="w-4 h-4" /> Partner Registry
-              </TabsTrigger>
-              <TabsTrigger value="rounds" className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <History className="w-4 h-4" /> History
-              </TabsTrigger>
-              <TabsTrigger value="simulator" className="gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-primary font-bold">
-                <ArrowRightLeft className="w-4 h-4" /> Dilution Engine
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between mb-4">
+              <TabsList className="bg-muted/50 p-1 rounded-xl">
+                <TabsTrigger value="registry" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <User className="w-3.5 h-3.5" /> Ownership Registry
+                </TabsTrigger>
+                <TabsTrigger value="rounds" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <History className="w-3.5 h-3.5" /> History
+                </TabsTrigger>
+                <TabsTrigger value="simulator" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm text-primary font-bold">
+                  <ArrowRightLeft className="w-3.5 h-3.5" /> Dilution Engine
+                </TabsTrigger>
+              </TabsList>
+              {!readOnly && activeView === 'registry' && (
+                <Button onClick={addStakeholder} variant="outline" size="sm" className="gap-2 font-bold rounded-full text-xs">
+                  <UserPlus className="w-3.5 h-3.5" /> Add Partner
+                </Button>
+              )}
+              {!readOnly && activeView === 'rounds' && (
+                <Dialog open={isAddingRound} onOpenChange={setIsAddingRound}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2 font-bold rounded-full text-xs">
+                      <Plus className="w-3.5 h-3.5" /> Record Round
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Record New Funding Round</DialogTitle>
+                      <DialogDescription>Document a milestone where you raised capital in exchange for equity.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name2" className="text-right">Round Name</Label>
+                        <Input id="name2" placeholder="Seed, Series A..." className="col-span-3" value={newRoundData.roundName} onChange={e => setNewRoundData({...newRoundData, roundName: e.target.value})} />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="date2" className="text-right">Date</Label>
+                        <Input id="date2" type="date" className="col-span-3" value={newRoundData.date} onChange={e => setNewRoundData({...newRoundData, date: e.target.value})} />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="amount2" className="text-right">Amount (₹)</Label>
+                        <Input id="amount2" type="number" className="col-span-3" value={newRoundData.amountRaised || ''} onChange={e => setNewRoundData({...newRoundData, amountRaised: Number(e.target.value)})} />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="equity2" className="text-right">Equity %</Label>
+                        <Input id="equity2" type="number" className="col-span-3" value={newRoundData.equityOffered || ''} onChange={e => setNewRoundData({...newRoundData, equityOffered: Number(e.target.value)})} />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleRecordRound} className="bg-primary text-white font-bold rounded-full px-6">Save Round</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
 
             <TabsContent value="registry">
-              <Card className="shadow-md border-none">
-                <CardHeader className="flex flex-row items-center justify-between pb-6">
-                  <div>
-                    <CardTitle className="text-xl font-bold">Ownership Registry</CardTitle>
-                    <CardDescription>Sasitharan starts at 100%. Adding partners reduces his stake.</CardDescription>
-                  </div>
-                  {!readOnly && (
-                    <Button onClick={addStakeholder} variant="outline" className="gap-2 font-bold rounded-full">
-                      <UserPlus className="w-4 h-4" /> Add Partner
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent>
+              <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs">
+                <CardContent className="pt-4 p-4">
                   <Table>
                     <TableHeader className="bg-muted/30">
                       <TableRow className="uppercase text-[10px] font-bold tracking-widest">
-                        <TableHead className="w-[300px]">Name</TableHead>
+                        <TableHead className="w-[200px]">Name</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead className="text-right">Ownership %</TableHead>
                         {!readOnly && <TableHead className="w-10"></TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {/* Fixed Founder Row */}
                       <TableRow className="bg-primary/5 font-bold">
                         <TableCell>Sasitharan (Founder)</TableCell>
-                        <TableCell>
-                          <Badge className="bg-primary text-white text-[9px] uppercase">Primary Owner</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-code text-primary">
-                          {fmtPct(stats.founderPct)}
-                        </TableCell>
+                        <TableCell><Badge className="bg-primary text-white text-[9px] uppercase">Primary Owner</Badge></TableCell>
+                        <TableCell className="text-right font-mono text-primary">{fmtPct(stats.founderPct)}</TableCell>
                         <TableCell></TableCell>
                       </TableRow>
-
                       {(stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan').map((s) => (
                         <TableRow key={s.id} className="group hover:bg-muted/20">
-                           <TableCell>
-                            <Input 
-                              value={s.name || ''} 
-                              className="h-8 border-none bg-transparent font-medium focus-visible:ring-1" 
-                              onChange={e => updateStakeholder(s.id, 'name', e.target.value)}
-                              disabled={readOnly}
-                            />
+                          <TableCell>
+                            <Input value={s.name || ''} className="h-8 border-none bg-transparent font-medium focus-visible:ring-1" onChange={e => updateStakeholder(s.id, 'name', e.target.value)} disabled={readOnly} />
                           </TableCell>
                           <TableCell>
                             <Select value={s.role} onValueChange={v => updateStakeholder(s.id, 'role', v)} disabled={readOnly}>
-                              <SelectTrigger className="h-8 w-24 border-none bg-muted/50 text-[10px] font-bold uppercase">
-                                <SelectValue />
-                              </SelectTrigger>
+                              <SelectTrigger className="h-8 w-24 border-none bg-muted/50 text-[10px] font-bold uppercase"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="Partner">Partner</SelectItem>
                                 <SelectItem value="Investor">Investor</SelectItem>
@@ -296,13 +319,7 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center justify-end gap-2">
-                              <Input 
-                                type="number" 
-                                value={s.ownershipPercentage || ''} 
-                                className="h-8 w-20 border-none bg-muted/30 text-right font-code font-bold text-primary" 
-                                onChange={e => updateStakeholder(s.id, 'ownershipPercentage', Number(e.target.value))}
-                                disabled={readOnly}
-                              />
+                              <Input type="number" value={s.ownershipPercentage || ''} className="h-8 w-20 border-none bg-muted/30 text-right font-mono font-bold text-primary" onChange={e => updateStakeholder(s.id, 'ownershipPercentage', Number(e.target.value))} disabled={readOnly} />
                               <span className="text-xs font-bold">%</span>
                             </div>
                           </TableCell>
@@ -317,14 +334,11 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
                       ))}
                     </TableBody>
                   </Table>
-
                   {stats.totalAllocatedToOthers > 100 && (
-                    <Alert variant="destructive" className="mt-6">
+                    <Alert variant="destructive" className="mt-4">
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle>Over-allocation Alert</AlertTitle>
-                      <AlertDescription>
-                        You have allocated {fmtPct(stats.totalAllocatedToOthers)} to others. This exceeds Sasitharan's 100% capacity.
-                      </AlertDescription>
+                      <AlertDescription>You have allocated {fmtPct(stats.totalAllocatedToOthers)} to others. This exceeds Sasitharan's 100% capacity.</AlertDescription>
                     </Alert>
                   )}
                 </CardContent>
@@ -332,102 +346,34 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
             </TabsContent>
 
             <TabsContent value="rounds">
-              <Card className="shadow-md border-none">
-                <CardHeader className="flex flex-row items-center justify-between pb-6">
-                  <div>
-                    <CardTitle className="text-xl font-bold">Funding History</CardTitle>
-                    <CardDescription>Track key milestones where equity was exchanged for capital.</CardDescription>
-                  </div>
-                  {!readOnly && (
-                    <Dialog open={isAddingRound} onOpenChange={setIsAddingRound}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="gap-2 font-bold rounded-full">
-                          <Plus className="w-4 h-4" /> Record Round
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Record New Funding Round</DialogTitle>
-                          <DialogDescription>
-                            Document a milestone where you raised capital in exchange for equity.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="name" className="text-right">Round Name</Label>
-                            <Input 
-                              id="name" 
-                              placeholder="Seed, Series A..." 
-                              className="col-span-3"
-                              value={newRoundData.roundName}
-                              onChange={e => setNewRoundData({...newRoundData, roundName: e.target.value})}
-                            />
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="date" className="text-right">Date</Label>
-                            <Input 
-                              id="date" 
-                              type="date" 
-                              className="col-span-3"
-                              value={newRoundData.date}
-                              onChange={e => setNewRoundData({...newRoundData, date: e.target.value})}
-                            />
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="amount" className="text-right">Amount (₹)</Label>
-                            <Input 
-                              id="amount" 
-                              type="number" 
-                              className="col-span-3"
-                              value={newRoundData.amountRaised || ''}
-                              onChange={e => setNewRoundData({...newRoundData, amountRaised: Number(e.target.value)})}
-                            />
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="equity" className="text-right">Equity %</Label>
-                            <Input 
-                              id="equity" 
-                              type="number" 
-                              className="col-span-3"
-                              value={newRoundData.equityOffered || ''}
-                              onChange={e => setNewRoundData({...newRoundData, equityOffered: Number(e.target.value)})}
-                            />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button onClick={handleRecordRound} className="bg-primary text-white font-bold rounded-full px-6">Save Round</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </CardHeader>
-                <CardContent>
+              <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs">
+                <CardContent className="pt-4 p-4">
                   {(!rounds || rounds.length === 0) ? (
-                    <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/5">
-                      <History className="w-10 h-10 text-muted-foreground mx-auto mb-4 opacity-30" />
+                    <div className="text-center py-16 border-2 border-dashed rounded-xl bg-muted/5">
+                      <History className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-30" />
                       <p className="text-muted-foreground text-sm">No recorded rounds. Use "Record Round" to start your history.</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {rounds.map((r) => (
-                        <div key={r.id} className="p-4 border rounded-xl bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                              <Target className="w-5 h-5" />
+                        <div key={r.id} className="p-3 border rounded-xl bg-white flex items-center justify-between hover:border-primary/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                              <Target className="w-4 h-4" />
                             </div>
                             <div>
-                              <div className="font-bold text-lg">{r.roundName}</div>
+                              <div className="font-bold">{r.roundName}</div>
                               <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{new Date(r.date).toLocaleDateString()}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-12">
+                          <div className="flex items-center gap-6">
                             <div className="text-right">
-                              <div className="text-[10px] text-muted-foreground uppercase font-bold">Capital Raised</div>
-                              <div className="font-bold text-foreground">{fmtINR(r.amountRaised)}</div>
+                              <div className="text-[10px] text-muted-foreground uppercase font-bold">Capital</div>
+                              <div className="font-bold text-sm">{fmtINR(r.amountRaised)}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-[10px] text-muted-foreground uppercase font-bold">Equity Granted</div>
-                              <div className="font-bold text-primary">{fmtPct(r.equityOffered)}</div>
+                              <div className="text-[10px] text-muted-foreground uppercase font-bold">Equity</div>
+                              <div className="font-bold text-sm text-primary">{fmtPct(r.equityOffered)}</div>
                             </div>
                             {!readOnly && (
                               <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(roundsCollectionRef!, r.id))}>
@@ -449,79 +395,84 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
           </Tabs>
         </div>
 
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="shadow-lg border-none overflow-hidden">
-            <CardHeader className="pb-0">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <PieIcon className="w-5 h-5 text-primary" /> Ownership Mix
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip formatter={(val: number) => [fmtPct(val), 'Ownership']} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+        {/* ── CENTER: Ownership Mix ── */}
+        <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden">
+          <CardHeader className="pb-2 border-b border-slate-100">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
+              <PieIcon className="w-4 h-4 text-indigo-600" /> Ownership Mix
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500">Equity distribution</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={5} dataKey="value">
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(val: number) => [fmtPct(val), 'Ownership']} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="shadow-md bg-muted/20 border-none">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold flex items-center gap-2 text-primary">
-                <ShieldAlert className="w-5 h-5" /> Decision Logic
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <AuthorityCheck 
-                label="Founder Control" 
-                pass={stats.founderPct > 50} 
-                val={fmtPct(stats.founderPct)}
-                warning="Proprietor control is at risk if stake drops below 50%."
-              />
-              <AuthorityCheck 
-                label="ESOP Pool" 
-                pass={stats.esopPct >= 5 && stats.esopPct <= 15} 
-                val={fmtPct(stats.esopPct)}
-                warning="A 10% pool is standard for hiring key partners later."
-              />
-              <AuthorityCheck 
-                label="Over-Allocation" 
-                pass={stats.totalAllocatedToOthers <= 100} 
-                val={fmtPct(stats.totalAllocatedToOthers)}
-                warning="You have allocated more than the total 100% available."
-              />
-            </CardContent>
-          </Card>
-        </div>
+        {/* ── RIGHT: Decision Logic & Governance ── */}
+        <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs">
+          <CardHeader className="pb-2 border-b border-slate-100">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
+              <ShieldAlert className="w-4 h-4 text-indigo-600" /> Decision Logic
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500">Governance authority checks</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-3">
+            <AuthorityCheck 
+              label="Founder Control" 
+              pass={stats.founderPct > 50} 
+              val={fmtPct(stats.founderPct)}
+              warning="Proprietor control is at risk if stake drops below 50%."
+            />
+            <AuthorityCheck 
+              label="ESOP Pool" 
+              pass={stats.esopPct >= 5 && stats.esopPct <= 15} 
+              val={fmtPct(stats.esopPct)}
+              warning="A 10% pool is standard for hiring key partners later."
+            />
+            <AuthorityCheck 
+              label="Over-Allocation" 
+              pass={stats.totalAllocatedToOthers <= 100} 
+              val={fmtPct(stats.totalAllocatedToOthers)}
+              warning="You have allocated more than the total 100% available."
+            />
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
 }
-
 function AuthorityCheck({ label, pass, val, warning }: { label: string; pass: boolean; val: string; warning: string }) {
   return (
-    <div className={`p-4 rounded-xl border-l-4 transition-all ${pass ? 'bg-green-50/50 border-green-500' : 'bg-red-50/50 border-red-500'}`}>
+    <div className={`p-3.5 rounded-xl border transition-all ${pass ? 'bg-emerald-50/60 border-emerald-200/80' : 'bg-rose-50/60 border-rose-200/80'}`}>
       <div className="flex items-center justify-between mb-1">
-        <span className={`text-[10px] uppercase font-black ${pass ? 'text-green-800' : 'text-red-800'}`}>{label}</span>
-        <span className="font-code text-[10px] font-bold bg-white px-2 py-0.5 rounded border">{val}</span>
+        <div className="flex items-center gap-2">
+          {pass ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          ) : (
+            <AlertTriangle className="w-4 h-4 text-rose-600" />
+          )}
+          <span className={`text-xs uppercase font-bold tracking-wider ${pass ? 'text-emerald-900' : 'text-rose-900'}`}>{label}</span>
+        </div>
+        <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded-md border shadow-2xs ${pass ? 'bg-white text-emerald-700 border-emerald-200' : 'bg-white text-rose-700 border-rose-200'}`}>
+          {val}
+        </span>
       </div>
-      {!pass && <p className="text-[10px] text-muted-foreground leading-tight italic">{warning}</p>}
+      <p className={`text-xs leading-relaxed mt-1 ${pass ? 'text-emerald-700/90' : 'text-rose-700'}`}>
+        {pass ? 'Threshold satisfied according to cap table covenants.' : warning}
+      </p>
     </div>
   );
 }
