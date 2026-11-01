@@ -221,11 +221,11 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
         </Card>
       </div>
 
-      {/* ── 3-Column: Ownership Registry | Ownership Mix | Decision Logic ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,500px)_280px_280px] gap-6 items-start">
+      {/* ── 4-Column Grid: Registry (2 cols, up to Market Valuation) | Mix (1 col) | Decision Logic (1 col) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
 
-        {/* ── LEFT: Ownership Registry (with History + Dilution Engine via tabs) ── */}
-        <div>
+        {/* ── LEFT: Ownership Registry (spans 2 columns, aligning up to the Market Valuation card above) ── */}
+        <div className="lg:col-span-2">
           <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
             <div className="flex items-center justify-between mb-4">
               <TabsList className="bg-muted/50 p-1 rounded-xl">
@@ -395,8 +395,8 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
           </Tabs>
         </div>
 
-        {/* ── CENTER: Ownership Mix ── */}
-        <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden">
+        {/* ── CENTER: Ownership Mix (1 column) ── */}
+        <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden">
           <CardHeader className="pb-2 border-b border-slate-100">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
               <PieIcon className="w-4 h-4 text-indigo-600" /> Ownership Mix
@@ -420,8 +420,8 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
           </CardContent>
         </Card>
 
-        {/* ── RIGHT: Decision Logic & Governance ── */}
-        <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs">
+        {/* ── RIGHT: Decision Logic & Governance (1 column) ── */}
+        <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs">
           <CardHeader className="pb-2 border-b border-slate-100">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
               <ShieldAlert className="w-4 h-4 text-indigo-600" /> Decision Logic
