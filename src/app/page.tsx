@@ -1033,50 +1033,64 @@ export default function FounderOSPage() {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="w-9 h-9 rounded-full bg-linear-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-xs ring-2 ring-indigo-200/70 hover:ring-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none"
+                    className="w-9 h-9 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-xs ring-2 ring-indigo-200/80 hover:ring-indigo-400 transition-all duration-200 cursor-pointer focus:outline-none shrink-0"
+                    title="Founder Profile"
                     aria-label="Founder Profile"
                   >
-                    <User className="w-4.5 h-4.5 text-white" />
+                    {user?.photoURL ? (
+                      <img src={user.photoURL} alt="Founder Avatar" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <span className="text-white text-xs font-bold uppercase select-none leading-none" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                        {(user?.displayName?.trim() || user?.email?.trim() || 'F').charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
                   sideOffset={8}
-                  className="w-56 p-1.5 shadow-xl border-slate-200/80 bg-white/95 backdrop-blur-md rounded-2xl animate-in fade-in zoom-in-95 duration-150 z-50"
+                  className="w-60 p-2 shadow-xl border-slate-200/80 bg-white rounded-2xl animate-in fade-in zoom-in-95 duration-150 z-50 select-none"
                 >
-                  <div className="px-2 py-1.5 mb-1">
-                    <p className="text-xs font-bold text-slate-900 truncate">{user?.email || 'founder@startup.com'}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Founder Account</span>
-                      {isVisitor && (
-                        <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 rounded-full">
-                          View Only
-                        </span>
-                      )}
+                  <div className="flex items-center gap-3 px-2 py-2 mb-1">
+                    <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                      {(user?.displayName?.trim() || user?.email?.trim() || 'F').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-900 truncate">
+                        {user?.displayName || user?.email || 'Founder'}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Founder Account</span>
+                        {isVisitor && (
+                          <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 rounded-full">
+                            View Only
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
                   <DropdownMenuItem
                     onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                    className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
+                    className="cursor-pointer gap-2.5 py-2.5 px-3 text-xs font-semibold text-slate-700 hover:text-slate-900 focus:text-slate-900 focus:bg-slate-100 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900 rounded-xl transition-colors"
                   >
-                    <User className="w-4 h-4 text-slate-500" />
-                    <span>Profile</span>
+                    <User className="w-4 h-4 text-slate-500 shrink-0" />
+                    <span className="text-slate-700 hover:text-slate-900 focus:text-slate-900">Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                    className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
+                    className="cursor-pointer gap-2.5 py-2.5 px-3 text-xs font-semibold text-slate-700 hover:text-slate-900 focus:text-slate-900 focus:bg-slate-100 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900 rounded-xl transition-colors"
                   >
-                    <Settings className="w-4 h-4 text-slate-500" />
-                    <span>Settings</span>
+                    <Settings className="w-4 h-4 text-slate-500 shrink-0" />
+                    <span className="text-slate-700 hover:text-slate-900 focus:text-slate-900">Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
                   <DropdownMenuItem
                     onClick={() => { initiateSignOut(auth); setIsProfileOpen(false); }}
-                    className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-xl"
+                    className="cursor-pointer gap-2.5 py-2.5 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 focus:text-rose-700 focus:bg-rose-50 data-[highlighted]:bg-rose-50 data-[highlighted]:text-rose-700 rounded-xl transition-colors"
                   >
-                    <LogOut className="w-4 h-4 text-rose-500" />
-                    <span>Logout</span>
+                    <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
+                    <span className="text-rose-600 hover:text-rose-700">Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
