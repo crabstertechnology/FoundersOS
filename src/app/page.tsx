@@ -703,12 +703,8 @@ export default function FounderOSPage() {
               </span>
             </div>
 
-            {/* Breadcrumb Context Navigation */}
-            <div className="hidden sm:flex items-center gap-2.5">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Founder Dashboard
-              </span>
-              <span className="text-slate-300">/</span>
+            {/* Page Title Header Navigation */}
+            <div className="hidden sm:flex items-center">
               <h2 className="text-sm font-bold text-slate-900 tracking-tight" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                 {getPageTitle()}
               </h2>

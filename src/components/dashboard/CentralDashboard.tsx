@@ -1701,11 +1701,8 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
         </div>
       </div>
 
-      {/* Combined 12-Month Strategic Roadmap & Milestones (Left) & Visual AI Strategic Insight (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Column: Highlighted 12-Month Roadmap & Milestones (Flagship Strategic Compass) - approx 64% width */}
-        <div className="lg:col-span-8 relative rounded-3xl bg-white border-2 border-indigo-500/35 shadow-[0_20px_50px_-10px_rgba(79,70,229,0.18),0_8px_24px_-4px_rgba(15,23,42,0.06)] hover:shadow-[0_24px_64px_-10px_rgba(79,70,229,0.24)] transition-all duration-300 p-6 md:p-7 space-y-6 overflow-hidden ring-4 ring-indigo-50/80">
+      {/* 12-Month Strategic Roadmap & Milestones (Full Width) */}
+      <div className="w-full relative rounded-3xl bg-white border-2 border-indigo-500/35 shadow-[0_20px_50px_-10px_rgba(79,70,229,0.18),0_8px_24px_-4px_rgba(15,23,42,0.06)] hover:shadow-[0_24px_64px_-10px_rgba(79,70,229,0.24)] transition-all duration-300 p-6 md:p-7 space-y-6 overflow-hidden ring-4 ring-indigo-50/80">
           
           {/* Ambient Diffused Glows (Color Theory: Subconscious Elevation & Depth) */}
           <div className="absolute -top-24 -right-24 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -2068,78 +2065,81 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
           )}
         </div>
 
-        {/* Right Column: AI Strategic Insight - approx 36% width */}
-        <div className="lg:col-span-4 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.09),0_4px_16px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_46px_-6px_rgba(0,0,0,0.12)] transition-shadow duration-300 p-6 md:p-7 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between gap-2 pb-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-                <h3 className="text-sm font-black text-slate-900 tracking-tight">AI Strategic Insight</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAnalysisModalOpen(true)}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
-              >
-                View Full Analysis <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+      {/* AI Strategic Insight (Positioned directly below 12-Month Roadmap & Milestones) */}
+      <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.09),0_4px_16px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_46px_-6px_rgba(0,0,0,0.12)] transition-shadow duration-300 p-6 md:p-7 space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+            <h3 className="text-sm font-black text-slate-900 tracking-tight">AI Strategic Insight</h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAnalysisModalOpen(true)}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            View Full Analysis <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
-            {/* Visual Donut Chart */}
-            <div className="py-2 flex items-center justify-center gap-6">
-              <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="38" stroke="#e2e8f0" strokeWidth="9" fill="transparent" />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    stroke="#4f46e5"
-                    strokeWidth="9"
-                    strokeDasharray={238.76}
-                    strokeDashoffset={238.76 * (1 - (activeProducts[0]?.progress || 75) / 100)}
-                    strokeLinecap="round"
-                    fill="transparent"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-base font-black text-slate-900">{activeProducts[0]?.progress || 75}%</span>
-                </div>
-              </div>
-
-              {/* Chart Legend */}
-              <div className="space-y-2 text-xs font-bold">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-2 text-slate-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
-                    <span className="max-w-[100px] truncate">{activeProducts[0]?.name || "Core Product"}</span>
-                  </span>
-                  <span className="text-slate-900 font-black">{activeProducts[0]?.progress || 75}%</span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-2 text-slate-500">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
-                    <span className="max-w-[100px] truncate">{activeProducts[1]?.name || "Secondary Product"}</span>
-                  </span>
-                  <span className="text-slate-500 font-bold">{100 - (activeProducts[0]?.progress || 75)}%</span>
-                </div>
+        {/* Content Row: Donut Chart (Left), Signals & Recommendation (Center), Co-Pilot Action (Right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pt-1">
+          {/* Visual Donut Chart & Legend */}
+          <div className="lg:col-span-4 flex items-center justify-center lg:justify-start gap-6">
+            <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="38" stroke="#e2e8f0" strokeWidth="9" fill="transparent" />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  stroke="#4f46e5"
+                  strokeWidth="9"
+                  strokeDasharray={238.76}
+                  strokeDashoffset={238.76 * (1 - (activeProducts[0]?.progress || 75) / 100)}
+                  strokeLinecap="round"
+                  fill="transparent"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-base font-black text-slate-900">{activeProducts[0]?.progress || 75}%</span>
               </div>
             </div>
 
-            {/* Visual Strategic Tags & Key Signals (Clean visual breakdown instead of big text) */}
-            <div className="mt-3 grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-1">
+            {/* Chart Legend */}
+            <div className="space-y-2 text-xs font-bold">
+              <div className="flex items-center justify-between gap-4">
+                <span className="flex items-center gap-2 text-slate-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
+                  <span className="max-w-[130px] truncate">{activeProducts[0]?.name || "Core Product"}</span>
+                </span>
+                <span className="text-slate-900 font-black">{activeProducts[0]?.progress || 75}%</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="flex items-center gap-2 text-slate-500">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
+                  <span className="max-w-[130px] truncate">{activeProducts[1]?.name || "Secondary Product"}</span>
+                </span>
+                <span className="text-slate-500 font-bold">{100 - (activeProducts[0]?.progress || 75)}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Visual Strategic Tags & Key Signals */}
+          <div className="lg:col-span-5 space-y-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Stance</span>
                 <span className="text-xs font-black text-indigo-600 block truncate">Traction &amp; Cashflow</span>
               </div>
-              <div className="p-3 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Lead Driver</span>
                 <span className="text-xs font-black text-slate-800 block truncate">{activeProducts[0]?.name || "Core Product"}</span>
               </div>
             </div>
 
             {/* Concise Visual Highlight Callout */}
-            <div className="mt-2.5 p-3.5 rounded-3xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
+            <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
                 <span className="text-xs font-bold text-slate-800 truncate">
@@ -2149,7 +2149,7 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
               <button
                 type="button"
                 onClick={() => setIsAnalysisModalOpen(true)}
-                className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-100/90 text-amber-800 hover:bg-amber-200/90 shrink-0 transition-colors shadow-2xs"
+                className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-100/90 text-amber-800 hover:bg-amber-200/90 shrink-0 transition-colors shadow-2xs cursor-pointer"
               >
                 Details
               </button>
@@ -2157,13 +2157,15 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
           </div>
 
           {/* Action Button */}
-          <Button
-            type="button"
-            onClick={() => hasPlan ? setIsChatOpen(true) : setIsGoalsModalOpen(true)}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 rounded-full gap-1.5 shadow-sm mt-3"
-          >
-            {hasPlan ? "Consult Roadmap Co-Pilot" : "Generate 12-Month Plan"} <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
+          <div className="lg:col-span-3 flex flex-col justify-center items-stretch lg:items-end">
+            <Button
+              type="button"
+              onClick={() => hasPlan ? setIsChatOpen(true) : setIsGoalsModalOpen(true)}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 rounded-full gap-1.5 shadow-sm cursor-pointer"
+            >
+              {hasPlan ? "Consult Roadmap Co-Pilot" : "Generate 12-Month Plan"} <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
 
