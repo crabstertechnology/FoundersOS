@@ -71,7 +71,7 @@ export function WeeklyDailyHub({
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-300">
       {/* Top Header & Breadcrumb */}
-      <div className="pb-4 border-b border-slate-200/80 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
             <button
@@ -103,7 +103,7 @@ export function WeeklyDailyHub({
         </div>
 
         {/* Cadence Switcher (Weekly vs Daily) */}
-        <div className="shrink-0">
+        <div className="w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none shrink-0">
           <GliderNav
             value={cadence}
             onChange={(val) => setCadence(val as CadenceType)}
@@ -121,7 +121,7 @@ export function WeeklyDailyHub({
           <Layers className="w-4 h-4 text-indigo-600" />
           <span>Sector:</span>
         </div>
-        <div className="overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+        <div className="overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
           <GliderNav
             value={sector}
             onChange={(val) => setSector(val as SectorType)}

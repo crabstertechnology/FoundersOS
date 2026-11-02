@@ -750,3 +750,26 @@
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, width, height;
 }
+
+
+/* ─────────────────────────────────────────────────────────────────
+   RESPONSIVE MOBILE & MEDIA QUERY ENHANCEMENTS
+──────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Prevent horizontal document blowout */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* Smooth momentum touch scrolling for all horizontal scrollable tab strips */
+  .glider-tabs,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Compact button text padding */
+  .glider-tab {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

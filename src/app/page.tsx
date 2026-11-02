@@ -696,10 +696,285 @@ export default function FounderOSPage() {
         </nav>
       </aside>
 
+      {/* Mobile Drawer (Slide-over overlay for small screens < md) */}
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" 
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Content */}
+          <div className="relative w-[280px] max-w-[85vw] bg-[#0B0F28] text-slate-100 h-full flex flex-col z-10 shadow-2xl animate-in slide-in-from-left duration-250 select-none">
+            {/* Mobile Sidebar Header */}
+            <div className="h-16 border-b border-slate-800/80 flex items-center justify-between px-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30">
+                  <span className="text-white font-bold text-sm" style={{ fontFamily: "'Google Sans', sans-serif" }}>F</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[15px] tracking-tight text-white leading-none" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                    Founder<span className="text-indigo-400">OS</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-1">
+                    Command Center
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="Close Mobile Navigation"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Navigation List */}
+            <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1.5 scrollbar-none">
+              {/* 1. Central Console */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'dashboard'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Home className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                <span className="text-[13.5px]">Central Console</span>
+              </button>
+
+              {/* 2. Product Suite */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('product'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'product'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Box className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                <span className="text-[13.5px]">Product Suite</span>
+              </button>
+
+              {/* 3. Digital Marketing */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('dm'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center justify-between h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'dm'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center">
+                  <Megaphone className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                  <span className="text-[13.5px]">Digital Marketing</span>
+                </div>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase bg-orange-500 text-white">NEW</span>
+              </button>
+
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+              {/* 4. Sales Tracker (with Expandable Submenu) */}
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => setIsSalesExpanded(prev => !prev)}
+                  className={`w-full flex items-center justify-between h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                    activeTab === 'sales'
+                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                    <span className="text-[13.5px]">Sales Tracker</span>
+                  </div>
+                  {isSalesExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </button>
+                {isSalesExpanded && (
+                  <div className="pl-9 pr-2 py-1 space-y-1 border-l border-slate-700/60 ml-5 my-1">
+                    {[
+                      { sub: 'strategy', label: 'Sales Strategy' },
+                      { sub: 'leads', label: 'Lead Tracker' },
+                      { sub: 'workshops', label: 'Workshop Tracker' },
+                      { sub: 'products', label: 'Product Sales' },
+                    ].map(({ sub, label }) => (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); setIsMobileSidebarOpen(false); }}
+                        className="w-full text-left px-3 py-1.5 rounded-lg text-[13px] text-slate-400 hover:text-white hover:bg-white/5 font-medium transition-colors cursor-pointer"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+              {/* 5. Finance Suite (with Expandable Submenu) */}
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => setIsFinanceExpanded(prev => !prev)}
+                  className={`w-full flex items-center justify-between h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                    activeTab === 'finance'
+                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <Calculator className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                    <span className="text-[13.5px]">Finance Suite</span>
+                  </div>
+                  {isFinanceExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </button>
+                {isFinanceExpanded && (
+                  <div className="pl-9 pr-2 py-1 space-y-1 border-l border-slate-700/60 ml-5 my-1">
+                    {[
+                      { sub: 'calc', label: 'Valuation Calculator' },
+                      { sub: 'tracker', label: 'Cap Table Tracker' },
+                      { sub: 'exit', label: 'Exit Simulator' },
+                      { sub: 'negotiate', label: 'Term Sheet Assistant' },
+                      { sub: 'qa', label: 'Term Sheet Q&A' },
+                      { sub: 'glossary', label: "Founder's Glossary" },
+                    ].map(({ sub, label }) => (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => { setActiveTab('finance'); setFinanceTab(sub); setIsMobileSidebarOpen(false); }}
+                        className="w-full text-left px-3 py-1.5 rounded-lg text-[13px] text-slate-400 hover:text-white hover:bg-white/5 font-medium transition-colors cursor-pointer"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+              {/* 6. Operations Hub */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('operations'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'operations'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Activity className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                <span className="text-[13.5px]">Operations Hub</span>
+              </button>
+
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+              {/* 7. Task Workspace */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('tasks'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'tasks'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <ListChecks className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                <span className="text-[13.5px]">Task Workspace</span>
+              </button>
+
+              {/* 8. Weekly & Daily Hub */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('cadence'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center justify-between h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'cadence'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center">
+                  <CalendarDays className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                  <span className="text-[13.5px]">Weekly &amp; Daily Hub</span>
+                </div>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase bg-indigo-500/30 text-indigo-200">
+                  Sectors
+                </span>
+              </button>
+
+              {/* 9. Team Workspace Chat */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('chat'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'chat'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <MessageSquare className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                <span className="text-[13.5px]">Team Chat</span>
+              </button>
+
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+              {/* 10. Settings */}
+              <button
+                type="button"
+                onClick={() => { setActiveTab('settings'); setIsMobileSidebarOpen(false); }}
+                className={`w-full flex items-center h-11 px-3 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <Settings className="w-5 h-5 mr-3 text-slate-400 shrink-0" />
+                <span className="text-[13.5px]">Settings</span>
+              </button>
+            </nav>
+
+            {/* Mobile Footer */}
+            <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-white truncate">{user?.email || 'Founder'}</p>
+                    <p className="text-[10px] text-slate-400 capitalize">{userRole}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => initiateSignOut(auth)}
+                  className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Area: Merged Top Header + Scrollable Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Merged Consolidated Top Navigation Bar */}
-        <header className="h-16 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 shrink-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <header className="h-16 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-xl flex items-center justify-between px-2.5 sm:px-6 shrink-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-3">
             {/* Mobile Drawer Toggle (Only for small screens where sidebar is hidden) */}
             <button
@@ -729,7 +1004,7 @@ export default function FounderOSPage() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2.5">
             {/* Quick Calendar Popover (Notification & Calculator Style) */}
             <QuickCalendar />
 
