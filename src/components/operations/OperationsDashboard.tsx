@@ -538,21 +538,21 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {activeSubTab === undefined && (
-          <div className="flex border-b pb-3 mb-6 overflow-hidden">
-            <TabsList className="w-full overflow-x-auto flex justify-start p-1 bg-slate-100/80 rounded-xl md:rounded-full gap-0.5 border-none h-auto md:h-10 whitespace-nowrap scrollbar-none shrink-0">
-              <TabsTrigger value="ops" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
+          <div className="flex justify-start mb-6 overflow-x-auto pb-1 scrollbar-none">
+            <TabsList className="shrink-0">
+              <TabsTrigger value="ops">
                 <Activity className="w-3.5 h-3.5" /> Runway & SaaS Burn
               </TabsTrigger>
-              <TabsTrigger value="tasks" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
+              <TabsTrigger value="tasks">
                 <ListChecks className="w-3.5 h-3.5" /> Task Workspace
               </TabsTrigger>
-              <TabsTrigger value="chat" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
+              <TabsTrigger value="chat">
                 <MessageSquare className="w-3.5 h-3.5" /> Team Chat
               </TabsTrigger>
-              <TabsTrigger value="weekly" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
+              <TabsTrigger value="weekly">
                 <Activity className="w-3.5 h-3.5" /> Weekly Dashboard
               </TabsTrigger>
-              <TabsTrigger value="activity" className="rounded-full px-3 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-teal-700 transition-all gap-1.5 shrink-0">
+              <TabsTrigger value="activity">
                 <Activity className="w-3.5 h-3.5" /> Daily Activity
               </TabsTrigger>
             </TabsList>

@@ -256,7 +256,7 @@ export function ExitSimulator({ userId, companyProfileId, readOnly }: ExitSimula
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex justify-center mb-8">
         <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="w-full max-w-md">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="live" className="gap-2">
               <Database className="w-4 h-4" /> Live Sync
             </TabsTrigger>

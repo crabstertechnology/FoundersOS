@@ -60,12 +60,14 @@ export function GlossarySection({ userId, companyProfileId, readOnly }: Glossary
     <div className="max-w-7xl mx-auto space-y-12">
       <Tabs defaultValue="chat" className="w-full space-y-8 animate-in fade-in duration-300">
         <div className="flex justify-center border-b pb-4">
-          <TabsList className="bg-slate-100 p-1 rounded-xl w-full max-w-md grid grid-cols-2">
-            <TabsTrigger value="chat" className="rounded-lg py-2 text-xs font-bold transition-all flex items-center justify-center gap-2 data-[state=active]:bg-white data-[state=active]:text-primary shadow-none">
-              <MessageSquare className="w-4 h-4" /> AI Term Sheet Q&A
+          <TabsList className="w-full max-w-md grid grid-cols-2">
+            <TabsTrigger value="chat" className="gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              Ask AI Assistant
             </TabsTrigger>
-            <TabsTrigger value="dictionary" className="rounded-lg py-2 text-xs font-bold transition-all flex items-center justify-center gap-2 data-[state=active]:bg-white data-[state=active]:text-primary shadow-none">
-              <BookOpen className="w-4 h-4" /> Jargon Dictionary
+            <TabsTrigger value="dictionary" className="gap-2">
+              <BookOpen className="w-4 h-4 text-indigo-600" />
+              Venture Glossary
             </TabsTrigger>
           </TabsList>
         </div>

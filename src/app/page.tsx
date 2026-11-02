@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc } from 'firebase/firestore';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger, GliderNav } from '@/components/ui/tabs';
 import { 
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
@@ -808,8 +808,10 @@ export default function FounderOSPage() {
             <TabsContent value="finance" className="mt-0 focus-visible:outline-none">
               {/* Sub-suite Segmented Navigation Bar */}
               <div className="mb-6 overflow-x-auto pb-2 scrollbar-none">
-                <div className="inline-flex items-center gap-1.5 p-1.5 bg-slate-100/90 border border-slate-200/80 rounded-2xl backdrop-blur-md shadow-xs">
-                  {[
+                <GliderNav
+                  value={financeTab}
+                  onChange={setFinanceTab}
+                  options={[
                     { id: 'calc', label: 'Valuation Calculator', icon: Calculator },
                     { id: 'tracker', label: 'Cap Table Tracker', icon: PieChart },
                     { id: 'exit', label: 'Exit Simulator', icon: TrendingUp },
@@ -818,25 +820,8 @@ export default function FounderOSPage() {
                     { id: 'glossary', label: 'Glossary', icon: BookOpen },
                     { id: 'weekly', label: 'Weekly Dashboard', icon: LayoutDashboard },
                     { id: 'activity', label: 'Daily Activity', icon: Activity },
-                  ].map((subItem) => {
-                    const SubIcon = subItem.icon;
-                    const isActive = financeTab === subItem.id;
-                    return (
-                      <button
-                        key={subItem.id}
-                        onClick={() => setFinanceTab(subItem.id)}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                          isActive
-                            ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/80 font-extrabold'
-                            : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
-                        }`}
-                      >
-                        <SubIcon className={`w-3.5 h-3.5 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`} />
-                        <span>{subItem.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                  ]}
+                />
               </div>
 
               <Tabs value={financeTab} className="w-full animate-in fade-in duration-300">

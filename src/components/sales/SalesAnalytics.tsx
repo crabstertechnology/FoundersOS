@@ -469,9 +469,12 @@ export function SalesAnalytics({
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {activeSubTab === undefined && (
           <div className="flex items-center justify-between border-b pb-3 mb-6 gap-4 flex-wrap">
-            <TabsList className="bg-slate-100/80 p-1 rounded-full gap-0.5 border-none h-10">
-              <TabsTrigger value="ezcirkit" className="rounded-full px-5 py-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-700 transition-all gap-1.5">
-                <Zap className="w-3.5 h-3.5" /> EZCirkit Sales Tracker
+            <TabsList className="shrink-0">
+              <TabsTrigger value="ezcirkit">
+                <Target className="w-3.5 h-3.5" /> EZCirkit Revenue Engines
+              </TabsTrigger>
+              <TabsTrigger value="crm">
+                <TrendingUp className="w-3.5 h-3.5" /> Enterprise CRM Pipeline
               </TabsTrigger>
             </TabsList>
           </div>

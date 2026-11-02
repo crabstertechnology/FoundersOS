@@ -228,14 +228,14 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
         <div className="lg:col-span-2">
           <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
             <div className="flex items-center justify-between mb-4">
-              <TabsList className="bg-muted/50 p-1 rounded-xl">
-                <TabsTrigger value="registry" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <TabsList>
+                <TabsTrigger value="registry" className="gap-1.5">
                   <User className="w-3.5 h-3.5" /> Ownership Registry
                 </TabsTrigger>
-                <TabsTrigger value="rounds" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="rounds" className="gap-1.5">
                   <History className="w-3.5 h-3.5" /> History
                 </TabsTrigger>
-                <TabsTrigger value="simulator" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm text-primary font-bold">
+                <TabsTrigger value="simulator" className="gap-1.5">
                   <ArrowRightLeft className="w-3.5 h-3.5" /> Dilution Engine
                 </TabsTrigger>
               </TabsList>
