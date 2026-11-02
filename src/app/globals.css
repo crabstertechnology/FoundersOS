@@ -696,7 +696,7 @@
   display: inline-flex;
 }
 
-.glider-tabs {
+.glider-tabs:not(.flex-col) {
   position: relative;
   background-color: #ffffff;
   box-shadow: 0 0 1px 0 rgba(24, 94, 224, 0.15), 0 6px 12px 0 rgba(24, 94, 224, 0.15);
@@ -715,8 +715,8 @@
   color: #185ee0;
 }
 
-.glider-tab.active,
-.glider-tabs [data-state="active"] {
+.glider-tabs:not(.flex-col) .glider-tab.active,
+.glider-tabs:not(.flex-col) [data-state="active"] {
   color: #185ee0 !important;
   font-weight: 700 !important;
   background-color: transparent !important;

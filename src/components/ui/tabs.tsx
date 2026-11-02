@@ -13,7 +13,20 @@ const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
 >(({ className, children, ...props }, ref) => {
+  const isVertical = typeof className === 'string' && (className.includes('flex-col') || className.includes('bg-transparent'));
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  if (isVertical) {
+    return (
+      <TabsPrimitive.List
+        ref={ref}
+        className={cn("flex flex-col w-full h-auto bg-transparent gap-1 p-0", className)}
+        {...props}
+      >
+        {children}
+      </TabsPrimitive.List>
+    );
+  }
   const [glider, setGlider] = React.useState<{
     left: number;
     top: number;

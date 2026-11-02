@@ -21,6 +21,7 @@ import { AuthDialog } from '@/components/auth/AuthDialog';
 import { useUser, useAuth, initiateSignOut, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { QuickCalculator } from '@/components/calculator/QuickCalculator';
+import { QuickCalendar } from '@/components/calendar/QuickCalendar';
 import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
 import { TermSheetAnalyzer } from '@/components/negotiation/TermSheetAnalyzer';
 import { FeatureBrochure } from '@/components/FeatureBrochure';
@@ -729,15 +730,8 @@ export default function FounderOSPage() {
           </div>
           
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => router.push('/calendar')}
-              className="rounded-xl h-9 w-9 border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all shrink-0 cursor-pointer"
-              title="Calendar"
-            >
-              <Calendar className="w-4 h-4 text-indigo-600" />
-            </Button>
+            {/* Quick Calendar Popover (Notification & Calculator Style) */}
+            <QuickCalendar />
 
             {/* Team Chat Header Button (Opens Full Page) */}
             <Button

@@ -488,43 +488,43 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
               <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Control Center
               </div>
-              <TabsList className="flex flex-col w-full h-auto bg-transparent gap-1 p-0">
+              <TabsList className="flex flex-col w-full h-auto bg-transparent gap-1.5 p-0 border-0 shadow-none rounded-none">
                 <TabsTrigger
                   value="profile"
-                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                  className="w-full justify-start rounded-xl px-3.5 py-2.5 text-xs font-semibold gap-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:font-bold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-slate-200/80 transition-all cursor-pointer group"
                 >
-                  <User className="w-4 h-4 text-slate-500" />
-                  My Details
+                  <User className="w-4 h-4 text-slate-400 group-data-[state=active]:text-indigo-600 transition-colors shrink-0" />
+                  <span>My Details</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="notifications"
-                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                  className="w-full justify-start rounded-xl px-3.5 py-2.5 text-xs font-semibold gap-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:font-bold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-slate-200/80 transition-all cursor-pointer group"
                 >
-                  <Bell className="w-4 h-4 text-slate-500" />
-                  Notifications
+                  <Bell className="w-4 h-4 text-slate-400 group-data-[state=active]:text-indigo-600 transition-colors shrink-0" />
+                  <span>Notifications</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="tasks"
-                  className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                  className="w-full justify-start rounded-xl px-3.5 py-2.5 text-xs font-semibold gap-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:font-bold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-slate-200/80 transition-all cursor-pointer group"
                 >
-                  <ListChecks className="w-4 h-4 text-slate-500" />
-                  My Tasks
+                  <ListChecks className="w-4 h-4 text-slate-400 group-data-[state=active]:text-indigo-600 transition-colors shrink-0" />
+                  <span>My Tasks</span>
                 </TabsTrigger>
                 {isAdmin && (
                   <>
                     <TabsTrigger
                       value="invites"
-                      className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                      className="w-full justify-start rounded-xl px-3.5 py-2.5 text-xs font-semibold gap-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:font-bold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-slate-200/80 transition-all cursor-pointer group"
                     >
-                      <Key className="w-4 h-4 text-slate-500" />
-                      Invite Links
+                      <Key className="w-4 h-4 text-slate-400 group-data-[state=active]:text-indigo-600 transition-colors shrink-0" />
+                      <span>Invite Links</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="members"
-                      className="w-full justify-start rounded-lg px-3 py-2.5 text-xs font-bold gap-2.5 data-[state=active]:bg-white data-[state=active]:text-primary border border-transparent data-[state=active]:border-slate-200 transition-all text-slate-600"
+                      className="w-full justify-start rounded-xl px-3.5 py-2.5 text-xs font-semibold gap-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:font-bold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-slate-200/80 transition-all cursor-pointer group"
                     >
-                      <Users className="w-4 h-4 text-slate-500" />
-                      Team Management
+                      <Users className="w-4 h-4 text-slate-400 group-data-[state=active]:text-indigo-600 transition-colors shrink-0" />
+                      <span>Team Management</span>
                     </TabsTrigger>
                   </>
                 )}
