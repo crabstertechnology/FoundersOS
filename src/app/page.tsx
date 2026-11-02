@@ -314,7 +314,7 @@ export default function FounderOSPage() {
         aria-hidden="true" 
       />
 
-      {/* Desktop Left Sidebar — OVERLAP SIDEBAR (Full-Height Seamlessly Merged) */}
+      {/* Desktop Left Sidebar — OVERLAP SIDEBAR (Shiprocket-style Unified Structure) */}
       <aside 
         onMouseEnter={() => {
           if (isSidebarMinimized) setIsSidebarMinimized(false);
@@ -324,328 +324,343 @@ export default function FounderOSPage() {
             setIsSidebarMinimized(true);
           }
         }}
-        className={`hidden md:flex flex-col h-screen select-none fixed top-0 left-0 bottom-0 z-40 bg-[#0B0F28] text-slate-100 border-r border-slate-800/80 transition-all duration-300 ease-out font-sidebar ${
+        className={`hidden md:flex flex-col h-screen select-none fixed top-0 left-0 bottom-0 z-40 bg-[#0B0F28] text-slate-100 border-r border-slate-800/80 transition-all duration-300 ease-out font-sidebar overflow-hidden ${
           isSidebarMinimized 
             ? 'w-[72px] shadow-[2px_0_12px_rgba(0,0,0,0.25)]' 
             : 'w-[264px] shadow-[8px_0_36px_rgba(0,0,0,0.45)]'
         }`}
         style={{ fontFamily: "'Google Sans Text', 'Google Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
       >
-        {/* Sidebar Header (Aligned with Top Header: height h-16 / 64px) */}
-        <div className={`h-16 border-b border-slate-800/80 flex items-center ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-3.5'} transition-all duration-300 shrink-0`}>
-          {isSidebarMinimized ? (
-            <button
-              onClick={() => setIsSidebarMinimized(false)}
-              className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer"
-              title="Expand Sidebar"
-              aria-label="Expand Sidebar"
-            >
-              <PanelLeftOpen className="w-5 h-5 stroke-[2] text-white" />
-            </button>
-          ) : (
-            <>
-              {/* Brand & Sidebar Toggle Button (Identical styling to closed state) */}
-              <div className="flex items-center gap-2.5">
-                <button
-                  onClick={() => {
-                    setIsSidebarMinimized(true);
-                    if (isSidebarPinned) {
-                      setIsSidebarPinned(false);
-                      if (typeof window !== 'undefined') {
-                        localStorage.setItem('sidebarPinnedPreference', 'false');
-                      }
-                    }
-                  }}
-                  className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer shrink-0"
-                  title="Close Sidebar"
-                  aria-label="Close Sidebar"
-                >
-                  <PanelLeftClose className="w-5 h-5 stroke-[2] text-white" />
-                </button>
-                <div className="flex flex-col">
-                  <span className="font-bold text-[15px] tracking-tight text-white leading-none" style={{ fontFamily: "'Google Sans', sans-serif" }}>
-                    Founder<span className="text-indigo-400">OS</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-1">
-                    Command Center
-                  </span>
-                </div>
-              </div>
+        {/* Sidebar Header (Aligned with Top Header: height h-16 / 64px) - 100% Identical Icon & Alignment */}
+        <div className="h-16 border-b border-slate-800/80 flex items-center px-4 shrink-0 overflow-hidden">
+          <div 
+            onClick={() => {
+              if (isSidebarMinimized) setIsSidebarMinimized(false);
+              else setActiveTab('dashboard');
+            }}
+            className="flex items-center gap-3 cursor-pointer select-none shrink-0"
+            title={isSidebarMinimized ? "Click to expand sidebar" : "FounderOS Command Center"}
+          >
+            {/* Logo: Always at exact same position in both collapsed and open states */}
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30 hover:scale-105 transition-all">
+              <span className="text-white font-bold text-sm" style={{ fontFamily: "'Google Sans', sans-serif" }}>F</span>
+            </div>
+            {/* Title: Unfolds to the right when open, perfectly hidden when collapsed */}
+            <div className={`flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="font-bold text-[15px] tracking-tight text-white leading-none" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                Founder<span className="text-indigo-400">OS</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-1">
+                Command Center
+              </span>
+            </div>
+          </div>
 
-              {/* Pin Sidebar button */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={toggleSidebarPin}
-                  className={`p-1.5 rounded-lg transition-all duration-150 cursor-pointer ${
-                    isSidebarPinned 
-                      ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 shadow-xs' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/10'
-                  }`}
-                  title={isSidebarPinned ? 'Unpin Sidebar (Overlaps & auto-closes on mouse leave)' : 'Pin Sidebar (Locks sidebar in layout)'}
-                  aria-label="Pin Sidebar"
-                >
-                  <Pin className={`w-3.5 h-3.5 transition-transform ${isSidebarPinned ? 'fill-indigo-400 rotate-45 text-indigo-400' : ''}`} />
-                </button>
-              </div>
-            </>
-          )}
+          {/* Pin Sidebar Button (smoothly revealed on far right when open) */}
+          <div className={`ml-auto flex items-center gap-1 shrink-0 transition-opacity duration-200 ${
+            isSidebarMinimized ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}>
+            <button
+              onClick={toggleSidebarPin}
+              className={`p-1.5 rounded-lg transition-all duration-150 cursor-pointer ${
+                isSidebarPinned 
+                  ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 shadow-xs' 
+                  : 'text-slate-400 hover:text-white hover:bg-white/10'
+              }`}
+              title={isSidebarPinned ? 'Unpin Sidebar (Auto-collapse on leave)' : 'Pin Sidebar (Lock expanded)'}
+              aria-label="Pin Sidebar"
+            >
+              <Pin className={`w-3.5 h-3.5 transition-transform ${isSidebarPinned ? 'fill-indigo-400 rotate-45 text-indigo-400' : ''}`} />
+            </button>
+          </div>
         </div>
 
-        {/* Scrollable Navigation List */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-1">
-          {isSidebarMinimized ? (
-            <div className="flex flex-col items-center gap-1.5">
-              {[
-                { tab: 'dashboard', icon: Home, label: 'Central Console' },
-                { tab: 'product', icon: Box, label: 'Product Suite' },
-                { tab: 'dm', icon: Megaphone, label: 'Digital Marketing' },
-                { tab: 'sales', icon: TrendingUp, label: 'Sales Tracker' },
-                { tab: 'finance', icon: Calculator, label: 'Finance Suite' },
-                { tab: 'operations', icon: Activity, label: 'Operations Hub' },
-                { tab: 'settings', icon: Settings, label: 'Settings' },
-              ].map(({ tab, icon: Icon, label }) => {
-                const isActive = activeTab === tab;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer ${
-                      isActive
-                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/35 font-bold'
-                        : 'text-slate-400 hover:text-white hover:bg-white/10'
-                    }`}
-                    title={label}
-                  >
-                    <Icon className={`w-5 h-5 stroke-[2] ${isActive ? 'text-white' : 'text-slate-300'}`} />
-                  </button>
-                );
-              })}
+        {/* Scrollable Navigation List - SINGLE UNIFIED TREE: Icons NEVER shift position */}
+        <nav className="flex-1 overflow-y-auto py-3 px-3.5 space-y-1.5 scrollbar-none">
+          {/* 1. Central Console */}
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 cursor-pointer group overflow-hidden ${
+              activeTab === 'dashboard'
+                ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+            }`}
+            title={isSidebarMinimized ? 'Central Console' : undefined}
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <Home className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'dashboard' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
             </div>
-          ) : (
-            <>
-              {/* Central Console */}
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
-                  activeTab === 'dashboard'
-                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <Home className={`w-4.5 h-4.5 shrink-0 stroke-[2] ${activeTab === 'dashboard' ? 'text-white' : 'text-slate-400'}`} />
-                <span>Central Console</span>
-              </button>
+            <div className={`flex items-center flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="text-[13.5px] truncate">Central Console</span>
+            </div>
+          </button>
 
-              {/* Product Suite */}
-              <button
-                onClick={() => setActiveTab('product')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
-                  activeTab === 'product'
-                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Box className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'product' ? 'text-white' : 'text-slate-400'}`} />
-                  <span>Product Suite</span>
-                </div>
-              </button>
+          {/* 2. Product Suite */}
+          <button
+            onClick={() => setActiveTab('product')}
+            className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 cursor-pointer group overflow-hidden ${
+              activeTab === 'product'
+                ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+            }`}
+            title={isSidebarMinimized ? 'Product Suite' : undefined}
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <Box className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'product' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+            </div>
+            <div className={`flex items-center flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="text-[13.5px] truncate">Product Suite</span>
+            </div>
+          </button>
 
-              {/* Digital Marketing */}
-              <button
-                onClick={() => setActiveTab('dm')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
-                  activeTab === 'dm'
-                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Megaphone className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'dm' ? 'text-white' : 'text-slate-400'}`} />
-                  <span>Digital Marketing</span>
-                </div>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                  activeTab === 'dm' ? 'bg-white text-indigo-700' : 'bg-orange-500 text-white'
-                }`}>
-                  NEW
-                </span>
-              </button>
+          {/* 3. Digital Marketing */}
+          <button
+            onClick={() => setActiveTab('dm')}
+            className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 cursor-pointer group overflow-hidden ${
+              activeTab === 'dm'
+                ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+            }`}
+            title={isSidebarMinimized ? 'Digital Marketing' : undefined}
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <Megaphone className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'dm' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+            </div>
+            <div className={`flex items-center justify-between flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="text-[13.5px] truncate">Digital Marketing</span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 ml-2 ${
+                activeTab === 'dm' ? 'bg-white text-indigo-700' : 'bg-orange-500 text-white'
+              }`}>
+                NEW
+              </span>
+            </div>
+          </button>
 
-              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+          <div className="h-px bg-slate-800/80 my-2 mx-1" />
 
-              {/* Sales Section */}
-              <div className="space-y-0.5">
-                <button
-                  onClick={() => setIsSalesExpanded(!isSalesExpanded)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 group cursor-pointer ${
-                    activeTab === 'sales'
-                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'sales' ? 'text-white' : 'text-slate-400'}`} />
-                    <span>Sales Tracker</span>
-                  </div>
-                  {isSalesExpanded ? (
-                    <ChevronDown className={`w-4 h-4 transition-transform ${activeTab === 'sales' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                  ) : (
-                    <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'sales' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                  )}
-                </button>
-
-                {isSalesExpanded && (
-                  <div className="pl-3 pr-1 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
-                    {[
-                      { sub: 'strategy', label: 'Sales Strategy' },
-                      { sub: 'leads', label: 'Lead Tracker' },
-                      { sub: 'workshops', label: 'Workshop Tracker' },
-                      { sub: 'products', label: 'Product Sales' },
-                      { sub: 'weekly', label: 'Weekly Dashboard' },
-                      { sub: 'activity', label: 'Daily Activity' },
-                    ].map(({ sub, label }) => {
-                      const isActive = activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === sub;
-                      return (
-                        <button
-                          key={sub}
-                          onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
-                          className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
-                            isActive
-                              ? 'text-indigo-400 font-semibold bg-indigo-500/15'
-                              : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
+          {/* 4. Sales Tracker (with Expandable Submenu) */}
+          <div className="space-y-0.5">
+            <button
+              onClick={() => {
+                if (isSidebarMinimized) {
+                  setActiveTab('sales');
+                  setIsSidebarMinimized(false);
+                  setIsSalesExpanded(true);
+                } else {
+                  setIsSalesExpanded(!isSalesExpanded);
+                }
+              }}
+              className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 group cursor-pointer overflow-hidden ${
+                activeTab === 'sales'
+                  ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                  : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+              }`}
+              title={isSidebarMinimized ? 'Sales Tracker' : undefined}
+            >
+              <div className="w-11 h-11 flex items-center justify-center shrink-0">
+                <TrendingUp className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'sales' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+              </div>
+              <div className={`flex items-center justify-between flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+                isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+              }`}>
+                <span className="text-[13.5px] truncate">Sales Tracker</span>
+                {isSalesExpanded ? (
+                  <ChevronDown className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'sales' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                ) : (
+                  <ChevronRight className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'sales' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                 )}
               </div>
+            </button>
 
-              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+            {isSalesExpanded && !isSidebarMinimized && (
+              <div className="pl-11 pr-2 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
+                {[
+                  { sub: 'strategy', label: 'Sales Strategy' },
+                  { sub: 'leads', label: 'Lead Tracker' },
+                  { sub: 'workshops', label: 'Workshop Tracker' },
+                  { sub: 'products', label: 'Product Sales' },
+                  { sub: 'weekly', label: 'Weekly Dashboard' },
+                  { sub: 'activity', label: 'Daily Activity' },
+                ].map(({ sub, label }) => {
+                  const isActive = activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === sub;
+                  return (
+                    <button
+                      key={sub}
+                      onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
+                        isActive
+                          ? 'text-indigo-400 font-semibold bg-indigo-500/15'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-              {/* Finance Section */}
-              <div className="space-y-0.5">
-                <button
-                  onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 group cursor-pointer ${
-                    activeTab === 'finance'
-                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Calculator className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'finance' ? 'text-white' : 'text-slate-400'}`} />
-                    <span>Finance Suite</span>
-                  </div>
-                  {isFinanceExpanded ? (
-                    <ChevronDown className={`w-4 h-4 transition-transform ${activeTab === 'finance' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                  ) : (
-                    <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'finance' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                  )}
-                </button>
+          <div className="h-px bg-slate-800/80 my-2 mx-1" />
 
-                {isFinanceExpanded && (
-                  <div className="pl-3 pr-1 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
-                    {[
-                      { sub: 'calc', label: 'Valuation Calculator' },
-                      { sub: 'tracker', label: 'Cap Table Tracker' },
-                      { sub: 'exit', label: 'Exit Simulator' },
-                      { sub: 'negotiate', label: 'Term Sheet Assistant' },
-                      { sub: 'qa', label: 'Term Sheet Q&A' },
-                      { sub: 'glossary', label: "Founder's Glossary" },
-                      { sub: 'weekly', label: 'Weekly Dashboard' },
-                      { sub: 'activity', label: 'Daily Activity' },
-                    ].map(({ sub, label }) => {
-                      const isActive = activeTab === 'finance' && financeTab === sub;
-                      return (
-                        <button
-                          key={sub}
-                          onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
-                          className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
-                            isActive
-                              ? 'text-indigo-400 font-semibold bg-indigo-500/15'
-                              : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
+          {/* 5. Finance Section (with Expandable Submenu) */}
+          <div className="space-y-0.5">
+            <button
+              onClick={() => {
+                if (isSidebarMinimized) {
+                  setActiveTab('finance');
+                  setIsSidebarMinimized(false);
+                  setIsFinanceExpanded(true);
+                } else {
+                  setIsFinanceExpanded(!isFinanceExpanded);
+                }
+              }}
+              className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 group cursor-pointer overflow-hidden ${
+                activeTab === 'finance'
+                  ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                  : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+              }`}
+              title={isSidebarMinimized ? 'Finance Suite' : undefined}
+            >
+              <div className="w-11 h-11 flex items-center justify-center shrink-0">
+                <Calculator className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'finance' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+              </div>
+              <div className={`flex items-center justify-between flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+                isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+              }`}>
+                <span className="text-[13.5px] truncate">Finance Suite</span>
+                {isFinanceExpanded ? (
+                  <ChevronDown className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'finance' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                ) : (
+                  <ChevronRight className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'finance' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                 )}
               </div>
+            </button>
 
-              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+            {isFinanceExpanded && !isSidebarMinimized && (
+              <div className="pl-11 pr-2 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
+                {[
+                  { sub: 'calc', label: 'Valuation Calculator' },
+                  { sub: 'tracker', label: 'Cap Table Tracker' },
+                  { sub: 'exit', label: 'Exit Simulator' },
+                  { sub: 'negotiate', label: 'Term Sheet Assistant' },
+                  { sub: 'qa', label: 'Term Sheet Q&A' },
+                  { sub: 'glossary', label: "Founder's Glossary" },
+                  { sub: 'weekly', label: 'Weekly Dashboard' },
+                  { sub: 'activity', label: 'Daily Activity' },
+                ].map(({ sub, label }) => {
+                  const isActive = activeTab === 'finance' && financeTab === sub;
+                  return (
+                    <button
+                      key={sub}
+                      onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
+                        isActive
+                          ? 'text-indigo-400 font-semibold bg-indigo-500/15'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-              {/* Operations Section */}
-              <div className="space-y-0.5">
-                <button
-                  onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 group cursor-pointer ${
-                    activeTab === 'operations'
-                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Activity className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'operations' ? 'text-white' : 'text-slate-400'}`} />
-                    <span>Operations Hub</span>
-                  </div>
-                  {isOperationsExpanded ? (
-                    <ChevronDown className={`w-4 h-4 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                  ) : (
-                    <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                  )}
-                </button>
+          <div className="h-px bg-slate-800/80 my-2 mx-1" />
 
-                {isOperationsExpanded && (
-                  <div className="pl-3 pr-1 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
-                    {[
-                      { sub: 'ops', label: 'Runway & SaaS Burn' },
-                      { sub: 'tasks', label: 'Task Workspace' },
-                      { sub: 'chat', label: 'Team Chat' },
-                      { sub: 'weekly', label: 'Weekly Dashboard' },
-                      { sub: 'activity', label: 'Daily Activity' },
-                    ].map(({ sub, label }) => {
-                      const isActive = activeTab === 'operations' && operationsTab === sub;
-                      return (
-                        <button
-                          key={sub}
-                          onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
-                          className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
-                            isActive
-                              ? 'text-indigo-400 font-semibold bg-indigo-500/15'
-                              : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
+          {/* 6. Operations Section (with Expandable Submenu) */}
+          <div className="space-y-0.5">
+            <button
+              onClick={() => {
+                if (isSidebarMinimized) {
+                  setActiveTab('operations');
+                  setIsSidebarMinimized(false);
+                  setIsOperationsExpanded(true);
+                } else {
+                  setIsOperationsExpanded(!isOperationsExpanded);
+                }
+              }}
+              className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 group cursor-pointer overflow-hidden ${
+                activeTab === 'operations'
+                  ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                  : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+              }`}
+              title={isSidebarMinimized ? 'Operations Hub' : undefined}
+            >
+              <div className="w-11 h-11 flex items-center justify-center shrink-0">
+                <Activity className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+              </div>
+              <div className={`flex items-center justify-between flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+                isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+              }`}>
+                <span className="text-[13.5px] truncate">Operations Hub</span>
+                {isOperationsExpanded ? (
+                  <ChevronDown className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                ) : (
+                  <ChevronRight className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                 )}
               </div>
+            </button>
 
-              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+            {isOperationsExpanded && !isSidebarMinimized && (
+              <div className="pl-11 pr-2 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
+                {[
+                  { sub: 'ops', label: 'Runway & SaaS Burn' },
+                  { sub: 'tasks', label: 'Task Workspace' },
+                  { sub: 'chat', label: 'Team Chat' },
+                  { sub: 'weekly', label: 'Weekly Dashboard' },
+                  { sub: 'activity', label: 'Daily Activity' },
+                ].map(({ sub, label }) => {
+                  const isActive = activeTab === 'operations' && operationsTab === sub;
+                  return (
+                    <button
+                      key={sub}
+                      onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
+                        isActive
+                          ? 'text-indigo-400 font-semibold bg-indigo-500/15'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-              {/* Settings */}
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
-                  activeTab === 'settings'
-                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Settings className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'settings' ? 'text-white' : 'text-slate-400'}`} />
-                  <span>Settings</span>
-                </div>
-              </button>
-            </>
-          )}
+          <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+          {/* 7. Settings */}
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 cursor-pointer group overflow-hidden ${
+              activeTab === 'settings'
+                ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+            }`}
+            title={isSidebarMinimized ? 'Settings' : undefined}
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <Settings className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'settings' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+            </div>
+            <div className={`flex items-center flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="text-[13.5px] truncate">Settings</span>
+            </div>
+          </button>
         </nav>
       </aside>
 
