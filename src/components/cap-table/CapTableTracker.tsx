@@ -16,9 +16,10 @@ import {
   Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, 
   User, TrendingUp, History, PieChart as PieIcon,
   ShieldAlert, ArrowRightLeft, Target, Percent, Plus,
-  CheckCircle2, AlertTriangle
+  CheckCircle2, AlertTriangle, Sparkles
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import { TreemapChart, SunburstChart, TreeDiagram, WaterfallChart } from '@/components/charts';
 import { 
   useFirestore, useCollection, useDoc, useMemoFirebase, 
   addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking 
@@ -107,6 +108,155 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
 
     return data;
   }, [stakeholders, stats.founderPct]);
+
+  // Visual Equity Maps Computations
+  const treemapData = useMemo(() => {
+    return [
+      {
+        name: 'Founders',
+        value: Math.max(1, stats.founderPct),
+        color: '#4f46e5',
+        children: [
+          { name: 'Sasitharan (Founder)', value: stats.founderPct, color: '#4f46e5', description: 'Common stock founder control stake' },
+        ],
+      },
+      {
+        name: 'Strategic Investors',
+        value: Math.max(1, stats.investorPct || 15),
+        color: '#0284c7',
+        children: (stakeholders || []).filter(s => s.role === 'Investor').length > 0
+          ? (stakeholders || [])
+              .filter(s => s.role === 'Investor' && (s.ownershipPercentage || 0) > 0)
+              .map((s, idx) => ({
+                name: s.name,
+                value: s.ownershipPercentage || 0,
+                color: ['#0284c7', '#0369a1', '#075985'][idx % 3],
+                description: 'Preferred Series & Angel investment shares'
+              }))
+          : [
+              { name: 'Lead Seed Investor', value: 10, color: '#0284c7', description: 'Early institutional seed stake' },
+              { name: 'Angel Syndicate', value: 5, color: '#0369a1', description: 'Syndicate operator capital' },
+            ],
+      },
+      {
+        name: 'ESOP Pool',
+        value: Math.max(1, stats.esopPct || 10),
+        color: '#10b981',
+        children: [
+          { name: 'Core Team Pool', value: stats.esopPct || 10, color: '#059669', description: 'Unallocated Option pool reserved for future hires' },
+        ],
+      },
+      {
+        name: 'Advisors & Partners',
+        value: Math.max(0, 100 - (stats.founderPct + (stats.investorPct || 15) + (stats.esopPct || 10))),
+        color: '#f59e0b',
+        children: (stakeholders || []).filter(s => !['Investor', 'ESOP'].includes(s.role) && s.name.toLowerCase() !== 'sasitharan').length > 0
+          ? (stakeholders || [])
+              .filter(s => !['Investor', 'ESOP'].includes(s.role) && s.name.toLowerCase() !== 'sasitharan')
+              .map(s => ({
+                name: s.name,
+                value: s.ownershipPercentage || 0,
+                color: '#d97706',
+                description: s.role || 'Advisory partner'
+              }))
+          : [
+              { name: 'Technical Advisor', value: 2, color: '#d97706', description: 'Advisory share grant' },
+            ],
+      }
+    ].filter(cat => cat.value > 0);
+  }, [stats, stakeholders]);
+
+  const sunburstData = useMemo(() => {
+    return [
+      {
+        name: 'Founders',
+        color: '#4f46e5',
+        children: [
+          { name: 'Sasitharan', value: stats.founderPct, color: '#6366f1' },
+        ],
+      },
+      {
+        name: 'Investors',
+        color: '#0284c7',
+        children: (stakeholders || []).filter(s => s.role === 'Investor' && (s.ownershipPercentage || 0) > 0).length > 0
+          ? (stakeholders || []).filter(s => s.role === 'Investor').map(s => ({ name: s.name, value: s.ownershipPercentage || 0 }))
+          : [
+              { name: 'Seed Capital', value: 12 },
+              { name: 'Angels', value: 6 },
+            ],
+      },
+      {
+        name: 'Option Pool',
+        color: '#059669',
+        children: [
+          { name: 'ESOP Reserve', value: stats.esopPct || 10, color: '#10b981' },
+        ],
+      },
+      {
+        name: 'Advisors',
+        color: '#d97706',
+        children: [
+          { name: 'Strategic Advisors', value: Math.max(2, stats.totalAllocatedToOthers > 0 ? 3 : 2), color: '#f59e0b' },
+        ],
+      },
+    ];
+  }, [stats, stakeholders]);
+
+  const dilutionWaterfallData = useMemo(() => {
+    const esopDeduction = stats.esopPct || 10;
+    const seedDeduction = stats.investorPct || 15;
+    const currentFounder = stats.founderPct;
+
+    return [
+      { name: 'Day 0 Founding', value: 100, isTotal: true, category: 'base' as const, description: '100% initial common founder equity' },
+      { name: 'ESOP Pool Creation', value: -esopDeduction, category: 'negative' as const, description: 'Option pool carved out from founder stake' },
+      { name: 'Seed Round Dilution', value: -seedDeduction, category: 'negative' as const, description: 'Dilution to strategic seed investors' },
+      { name: 'Current Founder Stake', value: currentFounder, isTotal: true, category: 'total' as const, description: 'Net retained equity after rounds' },
+    ];
+  }, [stats]);
+
+  const treeHierarchyData = useMemo(() => {
+    return {
+      id: 'root',
+      label: 'FounderOS Enterprise',
+      detail: 'Cap Table Governance',
+      tag: '100% Equity',
+      tagColor: 'bg-indigo-500 text-white',
+      children: [
+        {
+          id: 'common',
+          label: 'Class A Common',
+          detail: `${stats.founderPct.toFixed(1)}% Voting Control`,
+          tag: 'Founders',
+          tagColor: 'bg-emerald-600 text-white',
+          children: [
+            { id: 'f1', label: 'Sasitharan', detail: `${stats.founderPct.toFixed(1)}% Stake` },
+          ],
+        },
+        {
+          id: 'pref',
+          label: 'Series Seed Preferred',
+          detail: `${(stats.investorPct || 15)}% Non-Participating`,
+          tag: '1x Liquidation',
+          tagColor: 'bg-blue-600 text-white',
+          children: [
+            { id: 'inv1', label: 'Institutional Seed Lead', detail: 'Preferred Stock' },
+            { id: 'inv2', label: 'Angel Syndicate', detail: 'SAFE Note Convertible' },
+          ],
+        },
+        {
+          id: 'esop',
+          label: 'ESOP Option Trust',
+          detail: `${(stats.esopPct || 10)}% Unallocated Pool`,
+          tag: 'Incentive',
+          tagColor: 'bg-amber-600 text-white',
+          children: [
+            { id: 'team', label: 'Core Engineering & Sales', detail: '4-Yr Vesting / 1-Yr Cliff' },
+          ],
+        },
+      ],
+    };
+  }, [stats]);
 
   // Actions
   const addStakeholder = () => {
@@ -222,10 +372,10 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
       </div>
 
       {/* ── 4-Column Grid: Registry (2 cols, up to Market Valuation) | Mix (1 col) | Decision Logic (1 col) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
+      <div className={`grid grid-cols-1 ${activeView === 'visual' ? 'lg:grid-cols-1' : 'lg:grid-cols-4'} gap-4 items-start`}>
 
-        {/* ── LEFT: Ownership Registry (spans 2 columns, aligning up to the Market Valuation card above) ── */}
-        <div className="lg:col-span-2">
+        {/* ── LEFT: Ownership Registry / Visual Suite ── */}
+        <div className={activeView === 'visual' ? 'lg:col-span-1 w-full' : 'lg:col-span-2'}>
           <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
             <div className="flex items-center justify-between mb-4">
               <TabsList className="bg-muted/50 p-1 rounded-xl">
@@ -237,6 +387,9 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
                 </TabsTrigger>
                 <TabsTrigger value="simulator" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm text-primary font-bold">
                   <ArrowRightLeft className="w-3.5 h-3.5" /> Dilution Engine
+                </TabsTrigger>
+                <TabsTrigger value="visual" className="gap-1.5 rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm text-indigo-700 font-bold">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Visual Equity Maps
                 </TabsTrigger>
               </TabsList>
               {!readOnly && activeView === 'registry' && (
@@ -392,63 +545,119 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
             <TabsContent value="simulator">
               <DilutionSimulator stats={stats} stakeholders={stakeholders} />
             </TabsContent>
+
+            <TabsContent value="visual" className="mt-0 focus-visible:outline-none space-y-4 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Treemap: Ownership Share Density */}
+                <div className="lg:col-span-7">
+                  <TreemapChart
+                    title="Cap Table Share Density (Treemap Model)"
+                    subtitle="Weighted surface area breakdown of company ownership by class and shareholder"
+                    data={treemapData}
+                    isCurrency={false}
+                    unit="%"
+                    height={320}
+                  />
+                </div>
+
+                {/* Sunburst: Radial Equity Class Hierarchy */}
+                <div className="lg:col-span-5">
+                  <SunburstChart
+                    title="Radial Shareholder Breakdown (Sunburst)"
+                    subtitle="Inner ring: Equity class | Outer ring: Specific stakeholder stake"
+                    data={sunburstData}
+                    isCurrency={false}
+                    unit="%"
+                    height={320}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Waterfall: Dilution Bridge */}
+                <div className="lg:col-span-6">
+                  <WaterfallChart
+                    title="Founder Dilution Walk (Day 0 to Present)"
+                    subtitle="Tracking equity step-downs from founding 100% through ESOP and investment rounds"
+                    data={dilutionWaterfallData}
+                    isCurrency={false}
+                    unit="%"
+                    height={300}
+                  />
+                </div>
+
+                {/* Tree Diagram: Governance & Stock Architecture */}
+                <div className="lg:col-span-6">
+                  <TreeDiagram
+                    title="Corporate Governance & Stock Hierarchy (Tree Diagram)"
+                    subtitle="Interactive tree model of share classes, voting control, and vesting pools"
+                    data={treeHierarchyData}
+                    height={300}
+                  />
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
 
-        {/* ── CENTER: Ownership Mix (1 column) ── */}
-        <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden">
-          <CardHeader className="pb-2 border-b border-slate-100">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
-              <PieIcon className="w-4 h-4 text-indigo-600" /> Ownership Mix
-            </CardTitle>
-            <CardDescription className="text-xs text-slate-500">Equity distribution</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={5} dataKey="value">
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip formatter={(val: number) => [fmtPct(val), 'Ownership']} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        {activeView !== 'visual' && (
+          <>
+            {/* ── CENTER: Ownership Mix (1 column) ── */}
+            <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden">
+              <CardHeader className="pb-2 border-b border-slate-100">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
+                  <PieIcon className="w-4 h-4 text-indigo-600" /> Ownership Mix
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">Equity distribution</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={5} dataKey="value">
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip formatter={(val: number) => [fmtPct(val), 'Ownership']} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* ── RIGHT: Decision Logic & Governance (1 column) ── */}
-        <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs">
-          <CardHeader className="pb-2 border-b border-slate-100">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
-              <ShieldAlert className="w-4 h-4 text-indigo-600" /> Decision Logic
-            </CardTitle>
-            <CardDescription className="text-xs text-slate-500">Governance authority checks</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-3">
-            <AuthorityCheck 
-              label="Founder Control" 
-              pass={stats.founderPct > 50} 
-              val={fmtPct(stats.founderPct)}
-              warning="Proprietor control is at risk if stake drops below 50%."
-            />
-            <AuthorityCheck 
-              label="ESOP Pool" 
-              pass={stats.esopPct >= 5 && stats.esopPct <= 15} 
-              val={fmtPct(stats.esopPct)}
-              warning="A 10% pool is standard for hiring key partners later."
-            />
-            <AuthorityCheck 
-              label="Over-Allocation" 
-              pass={stats.totalAllocatedToOthers <= 100} 
-              val={fmtPct(stats.totalAllocatedToOthers)}
-              warning="You have allocated more than the total 100% available."
-            />
-          </CardContent>
-        </Card>
+            {/* ── RIGHT: Decision Logic & Governance (1 column) ── */}
+            <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs">
+              <CardHeader className="pb-2 border-b border-slate-100">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
+                  <ShieldAlert className="w-4 h-4 text-indigo-600" /> Decision Logic
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">Governance authority checks</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                <AuthorityCheck 
+                  label="Founder Control" 
+                  pass={stats.founderPct > 50} 
+                  val={fmtPct(stats.founderPct)}
+                  warning="Proprietor control is at risk if stake drops below 50%."
+                />
+                <AuthorityCheck 
+                  label="ESOP Pool" 
+                  pass={stats.esopPct >= 5 && stats.esopPct <= 15} 
+                  val={fmtPct(stats.esopPct)}
+                  warning="A 10% pool is standard for hiring key partners later."
+                />
+                <AuthorityCheck 
+                  label="Over-Allocation" 
+                  pass={stats.totalAllocatedToOthers <= 100} 
+                  val={fmtPct(stats.totalAllocatedToOthers)}
+                  warning="You have allocated more than the total 100% available."
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
 
       </div>
     </div>

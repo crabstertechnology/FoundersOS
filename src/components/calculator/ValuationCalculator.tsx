@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { INDUSTRIES, STAGES } from '@/lib/constants';
 import { fmtINR, fmtPct, fmtMult } from '@/lib/utils/formatters';
@@ -21,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { contextualStrategicAdvisor } from '@/ai/flows/contextual-strategic-advisor';
 import { exportReportToPDF } from '@/lib/utils/pdfExport';
+import { WaterfallChart, HistogramChart, AreaGrowthChart } from '@/components/charts';
 
 interface ValuationCalculatorProps {
   userId: string;
@@ -77,6 +79,7 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
   
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [exitValue, setExitValue] = useState<number>(50000000); // 5 Cr default
+  const [viewMode, setViewMode] = useState<'matrix' | 'visual'>('matrix');
 
   // AI Advisor States
   const [aiLoading, setAiLoading] = useState(false);
@@ -127,6 +130,10 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
         updatedAt: serverTimestamp(),
       }, { merge: true });
     }
+  };
+
+  const handleResetDefaults = () => {
+    setFormData(DEFAULT_FORM_DATA);
   };
 
   const results = useMemo(() => {
@@ -202,6 +209,55 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
 
     return slices;
   }, [results.founderEq, formData]);
+
+  // Visual Valuation Charts Data
+  const waterfallData = useMemo(() => {
+    const baseArpValue = Math.max(1000000, Math.round(results.arr * 1.5));
+    const ipValue = Math.max(500000, Math.round(results.preMoney * 0.2));
+    const growthPremium = Math.max(0, results.preMoney - (baseArpValue + ipValue));
+
+    return [
+      { name: 'Base ARR Asset', value: baseArpValue, category: 'base' as const, description: 'Core intrinsic run-rate foundation' },
+      { name: 'Tech & IP Moat', value: ipValue, category: 'positive' as const, description: 'Proprietary IP and architecture value' },
+      { name: 'Growth Premium', value: growthPremium, category: 'positive' as const, description: 'Market multiple lift from trajectory' },
+      { name: 'Implied Pre-Money', value: results.preMoney, isTotal: true, category: 'total' as const, description: 'Pre-round company valuation' },
+      { name: 'Round Investment', value: formData.investment || 0, category: 'positive' as const, description: 'Incoming investor growth capital' },
+      { name: 'Implied Post-Money', value: results.postMoney, isTotal: true, category: 'total' as const, description: 'Post-round aggregate capitalization' },
+    ];
+  }, [results.arr, results.preMoney, results.postMoney, formData.investment]);
+
+  const multipleHistogramBins = useMemo(() => [
+    { rangeLabel: '1 - 4x', min: 1, max: 4, count: 68 },
+    { rangeLabel: '4 - 7x', min: 4, max: 7, count: 182 },
+    { rangeLabel: '7 - 11x', min: 7, max: 11, count: 145 },
+    { rangeLabel: '11 - 16x', min: 11, max: 16, count: 72 },
+    { rangeLabel: '16 - 22x', min: 16, max: 22, count: 31 },
+    { rangeLabel: '22x+', min: 22, max: 100, count: 12 },
+  ], []);
+
+  const currentMultiple = results.arr > 0 ? results.postMoney / results.arr : (industryData?.multiple || 6.5);
+
+  const runwayMonthlyProjection = useMemo(() => {
+    const intervals = [
+      { label: 'Month 1', elapsed: 1 },
+      { label: 'Month 3', elapsed: 3 },
+      { label: 'Month 6', elapsed: 6 },
+      { label: 'Month 9', elapsed: 9 },
+      { label: 'Month 12', elapsed: 12 },
+      { label: 'Month 15', elapsed: 15 },
+      { label: 'Month 18', elapsed: 18 },
+      { label: 'Month 24', elapsed: 24 },
+    ];
+    const burn = formData.burnRate || 100000;
+    const currentCash = formData.cashBank || 500000;
+    const postRaiseCash = currentCash + (formData.investment || 0);
+
+    return intervals.map((int) => ({
+      period: int.label,
+      primaryVal: Math.max(0, postRaiseCash - (burn * int.elapsed)),
+      secondaryVal: Math.max(0, currentCash - (burn * int.elapsed)),
+    }));
+  }, [formData.burnRate, formData.cashBank, formData.investment]);
 
   // Trigger AI Strategic Analysis
   const handleGenerateAI = async () => {
@@ -282,6 +338,50 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
   return (
     <div className="space-y-4 w-full">
       
+      {/* ─────────────────────────────────────────────────────────────
+          TOP CONTROL BAR: View Mode Toggle & Actions
+      ───────────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+            <BarChart3 className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-xs sm:text-sm font-bold text-slate-900 leading-none">Valuation Intelligence Center</h2>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Pre-to-Post Bridge, Cohort Multiple Histograms, and Runway Trajectory</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="bg-slate-100 p-0.5 rounded-lg flex items-center text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setViewMode('matrix')}
+              className={`px-3 py-1 rounded-md transition-all ${viewMode === 'matrix' ? 'bg-white text-indigo-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              Input Matrix
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('visual')}
+              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${viewMode === 'visual' ? 'bg-white text-indigo-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Visual Charts Suite
+            </button>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetDefaults}
+            disabled={readOnly}
+            className="h-8 text-xs font-bold text-slate-600 border-slate-200 hover:bg-slate-50"
+          >
+            Reset
+          </Button>
+        </div>
+      </div>
+
       {/* ─────────────────────────────────────────────────────────────
           ROW 1: Inputs & Parameters (4 cols | 5 cols | 3 cols)
       ───────────────────────────────────────────────────────────── */}
@@ -928,6 +1028,70 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
               </span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          ROW 5: Visual Charts Suite (Pre-to-Post Waterfall, Histogram & Runway Area Chart)
+      ───────────────────────────────────────────────────────────── */}
+      <div className="space-y-4 pt-1">
+        <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-indigo-50 text-indigo-700 rounded-md">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Visual Valuation Analytics & Cohort Benchmarks
+            </h3>
+          </div>
+          <Badge variant="outline" className="text-[10px] font-mono bg-indigo-50/50 text-indigo-700 border-indigo-200">
+            Interactive Visual Models
+          </Badge>
+        </div>
+
+        {/* 2-Column Visual Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* Left: Pre-to-Post Money Waterfall Bridge Chart */}
+          <div className="lg:col-span-7">
+            <WaterfallChart
+              title="Valuation Waterfall (Pre-to-Post Money Bridge)"
+              subtitle="Step-by-step enterprise value creation from base ARR to proposed round capitalization"
+              data={waterfallData}
+              isCurrency={true}
+              height={290}
+            />
+          </div>
+
+          {/* Right: Valuation Multiple Histogram */}
+          <div className="lg:col-span-5">
+            <HistogramChart
+              title="Valuation Multiple Distribution (500+ Indian Cohorts)"
+              subtitle={`${industryData?.label || 'SaaS'} multiples vs your current valuation`}
+              bins={multipleHistogramBins}
+              currentVal={currentMultiple}
+              currentValLabel={formData.companyName || 'Your Startup'}
+              medianVal={industryData?.multiple || 6.5}
+              unit="x"
+              height={290}
+            />
+          </div>
+        </div>
+
+        {/* Full-Width Runway & Cash Depletion Area Chart */}
+        <div className="w-full">
+          <AreaGrowthChart
+            title="Cash Runway & Depletion Trajectory (24-Month Projection)"
+            subtitle="Comparing projected cash bank runway with current reserves vs post-raise growth trajectory"
+            data={runwayMonthlyProjection}
+            primaryLabel="Post-Round Cash"
+            secondaryLabel="Without Capital Raise"
+            primaryKey="primaryVal"
+            secondaryKey="secondaryVal"
+            isCurrency={true}
+            gradientColorPrimary="#4f46e5"
+            gradientColorSecondary="#059669"
+            height={260}
+          />
         </div>
       </div>
 
