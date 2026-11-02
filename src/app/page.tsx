@@ -712,11 +712,6 @@ export default function FounderOSPage() {
           </div>
           
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live Engine</span>
-            </div>
-
             <Button
               variant="outline"
               size="icon"
@@ -729,19 +724,13 @@ export default function FounderOSPage() {
             <NotificationCenter />
             <QuickCalculator />
 
-            {/* Founder Profile */}
-            <div 
-              className="relative flex items-center"
-              onMouseEnter={() => setIsProfileOpen(true)}
-              onMouseLeave={() => setIsProfileOpen(false)}
-            >
+            {/* Founder Profile (Click-to-open only) */}
+            <div className="relative flex items-center">
               <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="w-9 h-9 rounded-full bg-linear-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-xs ring-2 ring-indigo-200/70 hover:ring-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none"
-                    title="Founder Profile"
                     aria-label="Founder Profile"
                   >
                     <User className="w-4.5 h-4.5 text-white" />
@@ -750,8 +739,6 @@ export default function FounderOSPage() {
                 <DropdownMenuContent 
                   align="end" 
                   sideOffset={8}
-                  onMouseEnter={() => setIsProfileOpen(true)}
-                  onMouseLeave={() => setIsProfileOpen(false)}
                   className="w-56 p-1.5 shadow-xl border-slate-200/80 bg-white/95 backdrop-blur-md rounded-2xl animate-in fade-in zoom-in-95 duration-150 z-50"
                 >
                   <div className="px-2 py-1.5 mb-1">
