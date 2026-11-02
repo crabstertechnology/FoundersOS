@@ -43,10 +43,10 @@ export default function FounderOSPage() {
   const [ezCirkitTab, setEzCirkitTab] = useState('strategy');
   const [financeTab, setFinanceTab] = useState('calc');
   const [operationsTab, setOperationsTab] = useState('ops');
-  const [isSalesExpanded, setIsSalesExpanded] = useState(true);
-  const [isEZCirkitExpanded, setIsEZCirkitExpanded] = useState(true);
-  const [isFinanceExpanded, setIsFinanceExpanded] = useState(true);
-  const [isOperationsExpanded, setIsOperationsExpanded] = useState(true);
+  const [isSalesExpanded, setIsSalesExpanded] = useState(false);
+  const [isEZCirkitExpanded, setIsEZCirkitExpanded] = useState(false);
+  const [isFinanceExpanded, setIsFinanceExpanded] = useState(false);
+  const [isOperationsExpanded, setIsOperationsExpanded] = useState(false);
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
@@ -317,11 +317,19 @@ export default function FounderOSPage() {
       {/* Desktop Left Sidebar — OVERLAP SIDEBAR (Shiprocket-style Unified Structure) */}
       <aside 
         onMouseEnter={() => {
-          if (isSidebarMinimized) setIsSidebarMinimized(false);
+          if (isSidebarMinimized) {
+            setIsSidebarMinimized(false);
+            setIsSalesExpanded(false);
+            setIsFinanceExpanded(false);
+            setIsOperationsExpanded(false);
+          }
         }}
         onMouseLeave={() => {
           if (!isSidebarPinned) {
             setIsSidebarMinimized(true);
+            setIsSalesExpanded(false);
+            setIsFinanceExpanded(false);
+            setIsOperationsExpanded(false);
           }
         }}
         className={`hidden md:flex flex-col h-screen select-none fixed top-0 left-0 bottom-0 z-40 bg-[#0B0F28] text-slate-100 border-r border-slate-800/80 transition-all duration-300 ease-out font-sidebar overflow-hidden ${
@@ -335,8 +343,14 @@ export default function FounderOSPage() {
         <div className="h-16 border-b border-slate-800/80 flex items-center px-4 shrink-0 overflow-hidden">
           <div 
             onClick={() => {
-              if (isSidebarMinimized) setIsSidebarMinimized(false);
-              else setActiveTab('dashboard');
+              if (isSidebarMinimized) {
+                setIsSidebarMinimized(false);
+                setIsSalesExpanded(false);
+                setIsFinanceExpanded(false);
+                setIsOperationsExpanded(false);
+              } else {
+                setActiveTab('dashboard');
+              }
             }}
             className="flex items-center gap-3 cursor-pointer select-none shrink-0"
             title={isSidebarMinimized ? "Click to expand sidebar" : "FounderOS Command Center"}
@@ -450,12 +464,12 @@ export default function FounderOSPage() {
           <div className="space-y-0.5">
             <button
               onClick={() => {
+                setActiveTab('sales');
                 if (isSidebarMinimized) {
-                  setActiveTab('sales');
                   setIsSidebarMinimized(false);
-                  setIsSalesExpanded(true);
+                  setIsSalesExpanded(false);
                 } else {
-                  setIsSalesExpanded(!isSalesExpanded);
+                  setIsSalesExpanded(prev => !prev);
                 }
               }}
               className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 group cursor-pointer overflow-hidden ${
@@ -515,12 +529,12 @@ export default function FounderOSPage() {
           <div className="space-y-0.5">
             <button
               onClick={() => {
+                setActiveTab('finance');
                 if (isSidebarMinimized) {
-                  setActiveTab('finance');
                   setIsSidebarMinimized(false);
-                  setIsFinanceExpanded(true);
+                  setIsFinanceExpanded(false);
                 } else {
-                  setIsFinanceExpanded(!isFinanceExpanded);
+                  setIsFinanceExpanded(prev => !prev);
                 }
               }}
               className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 group cursor-pointer overflow-hidden ${
@@ -582,12 +596,12 @@ export default function FounderOSPage() {
           <div className="space-y-0.5">
             <button
               onClick={() => {
+                setActiveTab('operations');
                 if (isSidebarMinimized) {
-                  setActiveTab('operations');
                   setIsSidebarMinimized(false);
-                  setIsOperationsExpanded(true);
+                  setIsOperationsExpanded(false);
                 } else {
-                  setIsOperationsExpanded(!isOperationsExpanded);
+                  setIsOperationsExpanded(prev => !prev);
                 }
               }}
               className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 group cursor-pointer overflow-hidden ${
