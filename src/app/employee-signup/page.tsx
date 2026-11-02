@@ -8,6 +8,7 @@ import { Loader2, UserPlus, ShieldCheck, Building2, Lock, Mail, User, Hash, Arro
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 // The admin's UID — this is the founder account (crabstertechnology@gmail.com)
 // When an employee signs up with the correct invite code, their profile is linked to this admin.
@@ -141,9 +142,9 @@ export default function EmployeeSignupPage() {
               </Button>
             </form>
             <div className="text-center">
-              <a href="/" className="text-xs text-muted-foreground hover:text-teal-600 font-bold transition-colors">
+              <Link href="/" className="text-xs text-muted-foreground hover:text-teal-600 font-bold transition-colors">
                 Already have an account? Sign In →
-              </a>
+              </Link>
             </div>
           </div>
         )}
@@ -221,11 +222,11 @@ export default function EmployeeSignupPage() {
               Your employee account has been created and linked to <span className="font-bold text-teal-700">{companyName}</span>.
               Your admin will assign tasks to you shortly.
             </p>
-            <a href="/" className="block pt-2">
+            <Link href="/" className="block pt-2">
               <Button className="bg-teal-600 hover:bg-teal-700 text-white font-black gap-2 w-full h-12 rounded-full shadow-md shadow-teal-600/25">
                 Go to Dashboard <ArrowRight className="w-4 h-4" />
               </Button>
-            </a>
+            </Link>
           </div>
         )}
       </div>

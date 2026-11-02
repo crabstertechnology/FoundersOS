@@ -280,40 +280,40 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
   }
 
   return (
-    <div className="space-y-3.5 w-full max-w-7xl mx-auto">
+    <div className="space-y-4 w-full">
       
       {/* ─────────────────────────────────────────────────────────────
-          ROW 1: Inputs & Parameters (3 Columns: 3 cols | 6 cols | 3 cols)
+          ROW 1: Inputs & Parameters (4 cols | 5 cols | 3 cols)
       ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         
-        {/* Column 1: Startup Profile & Deal Terms (lg:col-span-3) */}
-        <div className="lg:col-span-3 space-y-2.5">
+        {/* Column 1: Startup Profile & Deal Terms (lg:col-span-4) */}
+        <div className="lg:col-span-4 space-y-3">
           {/* Startup Profile */}
-          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
-            <div className="flex items-center gap-1.5">
-              <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
-                <Award className="w-3.5 h-3.5" />
+          <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-md text-slate-700 shrink-0">
+                <Award className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Startup Profile</h3>
             </div>
 
-            <fieldset disabled={readOnly} className="space-y-2">
+            <fieldset disabled={readOnly} className="space-y-2.5">
               <div>
                 <LabelWithInfo label="Company Name" info="The official registered name of your company." />
                 <Input 
                   placeholder="e.g. CRABSTER TECHNOLOGY"
                   value={formData.companyName} 
                   onChange={e => handleChange('companyName', e.target.value)}
-                  className="h-7.5 text-xs font-medium uppercase tracking-wider bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                  className="h-8.5 text-xs font-semibold uppercase tracking-wider bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <LabelWithInfo label="Stage" info="Idea (Pre-revenue), MVP (Early traction), or Seed." />
                   <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
-                    <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
@@ -323,7 +323,7 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                 <div>
                   <LabelWithInfo label="Industry" info="Determines the market revenue multiple applied to your startup." />
                   <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
-                    <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {INDUSTRIES.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
                     </SelectContent>
@@ -334,19 +334,19 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
           </div>
 
           {/* Deal Terms */}
-          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
-            <div className="flex items-center gap-1.5">
-              <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
-                <Scale className="w-3.5 h-3.5" />
+          <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-md text-slate-700 shrink-0">
+                <Scale className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Deal Terms</h3>
             </div>
 
-            <fieldset disabled={readOnly} className="grid grid-cols-2 gap-2">
+            <fieldset disabled={readOnly} className="grid grid-cols-2 gap-2.5">
               <div>
                 <LabelWithInfo label="Pref Multiple" info="1x is standard VC. 2x is aggressive liquidation preference." />
                 <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
-                  <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">1x</SelectItem>
                     <SelectItem value="1.5">1.5x</SelectItem>
@@ -358,7 +358,7 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
               <div>
                 <LabelWithInfo label="Type" info="Non-participating is founder-friendly standard." />
                 <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
-                  <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nonparticipating">Non-Participating</SelectItem>
                     <SelectItem value="participating">Participating</SelectItem>
@@ -369,24 +369,24 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
           </div>
         </div>
 
-        {/* Column 2: Strategic Fundraising Inputs (lg:col-span-6) */}
-        <div className="lg:col-span-6 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
-          <div className="flex items-center gap-1.5">
-            <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
-              <Coins className="w-3.5 h-3.5" />
+        {/* Column 2: Strategic Fundraising Inputs (lg:col-span-5) */}
+        <div className="lg:col-span-5 rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-slate-100 rounded-md text-slate-700 shrink-0">
+              <Coins className="w-4 h-4" />
             </div>
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Strategic Fundraising Inputs</h3>
           </div>
 
-          <fieldset disabled={readOnly} className="space-y-2">
-            <div className="grid grid-cols-3 gap-2">
+          <fieldset disabled={readOnly} className="space-y-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <LabelWithInfo label="Investment Amount" info="The total capital being raised in this round." />
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pl-6 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 5000000"
                     value={formData.investment || ''} 
                     onChange={e => handleChange('investment', Number(e.target.value))}
@@ -399,38 +399,24 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pr-6 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 10"
                     value={formData.equityOffered || ''} 
                     onChange={e => handleChange('equityOffered', Number(e.target.value))}
                   />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">%</span>
-                </div>
-              </div>
-
-              <div>
-                <LabelWithInfo label="Override Post-Money" info="Manual override for Post-Money valuation." />
-                <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
-                    placeholder="Optional..."
-                    value={formData.overridePostMoney !== null && formData.overridePostMoney !== undefined ? formData.overridePostMoney : ''} 
-                    onChange={e => handleChange('overridePostMoney', e.target.value === '' ? null : Number(e.target.value))}
-                  />
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">%</span>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <LabelWithInfo label="Monthly Revenue" info="Current Monthly Recurring Revenue (MRR)." />
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pl-6 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 50000"
                     value={formData.mRevenue || ''} 
                     onChange={e => handleChange('mRevenue', Number(e.target.value))}
@@ -441,39 +427,55 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
               <div>
                 <LabelWithInfo label="Monthly Burn" info="Net monthly operational cash outflow." />
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pl-6 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 30000"
                     value={formData.burnRate || ''} 
                     onChange={e => handleChange('burnRate', Number(e.target.value))}
                   />
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <LabelWithInfo label="Cash in Bank" info="Total current liquid bank reserves." />
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pl-6 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 500000"
                     value={formData.cashBank || ''} 
                     onChange={e => handleChange('cashBank', Number(e.target.value))}
                   />
                 </div>
               </div>
+
+              <div>
+                <LabelWithInfo label="Override Post-Money" info="Manual override for Post-Money valuation." />
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-6 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    placeholder="Optional..."
+                    value={formData.overridePostMoney !== null && formData.overridePostMoney !== undefined ? formData.overridePostMoney : ''} 
+                    onChange={e => handleChange('overridePostMoney', e.target.value === '' ? null : Number(e.target.value))}
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5 pt-0.5">
               <div>
-                <LabelWithInfo label="ESOP Pool %" info="Stock option pool reserved for team hires." />
+                <LabelWithInfo label="ESOP %" info="Stock option pool reserved for team hires." />
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pr-5 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="10"
                     value={formData.esopPool || ''} 
                     onChange={e => handleChange('esopPool', Number(e.target.value))}
@@ -483,11 +485,11 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
               </div>
 
               <div>
-                <LabelWithInfo label="Advisor Equity %" info="Equity pool allocated to board advisors." />
+                <LabelWithInfo label="Advisor %" info="Equity pool allocated to board advisors." />
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pr-5 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 2"
                     value={formData.advisorEquity || ''} 
                     onChange={e => handleChange('advisorEquity', Number(e.target.value))}
@@ -501,7 +503,7 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pr-5 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 8"
                     value={formData.coFounderEq || ''} 
                     onChange={e => handleChange('coFounderEq', Number(e.target.value))}
@@ -513,18 +515,18 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
           </fieldset>
         </div>
 
-        {/* Column 3: Unit Econ Inputs & Founder Stake (lg:col-span-3 - Shrunk Horizontal Length) */}
-        <div className="lg:col-span-3 space-y-2.5">
+        {/* Column 3: Unit Econ Inputs & Founder Stake (lg:col-span-3) */}
+        <div className="lg:col-span-3 space-y-3">
           {/* Unit Econ Inputs */}
-          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
-            <div className="flex items-center gap-1.5">
-              <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
-                <FileText className="w-3.5 h-3.5" />
+          <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-md text-slate-700 shrink-0">
+                <FileText className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Unit Econ Inputs</h3>
             </div>
 
-            <fieldset disabled={readOnly} className="space-y-1.5">
+            <fieldset disabled={readOnly} className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <LabelWithInfo label="Profit/Order" info="Gross Profit per transaction (Revenue - COGS)." />
@@ -532,7 +534,7 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                     <Input 
                       type="number" 
-                      className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                      className="pl-5 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                       placeholder="e.g. 500"
                       value={formData.profitPerOrder || ''} 
                       onChange={e => handleChange('profitPerOrder', Number(e.target.value))}
@@ -544,7 +546,7 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                   <LabelWithInfo label="Orders/Cust" info="Avg frequency of repeat orders over customer lifetime." />
                   <Input 
                     type="number" 
-                    className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="1"
                     value={formData.ordersPerCustomer || ''} 
                     onChange={e => handleChange('ordersPerCustomer', Number(e.target.value))}
@@ -555,10 +557,10 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
               <div>
                 <LabelWithInfo label="Avg CAC" info="Total Sales & Marketing cost spent per new customer acquired." />
                 <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    className="pl-6 h-8.5 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 1000"
                     value={formData.cac || ''} 
                     onChange={e => handleChange('cac', Number(e.target.value))}
@@ -568,8 +570,8 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
             </fieldset>
           </div>
 
-          {/* Founder Stake Box (Proper Normal Horizontal Length) */}
-          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+          {/* Founder Stake Box */}
+          <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
@@ -577,20 +579,20 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                 </div>
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Founder Stake</h3>
               </div>
-              <span className="text-base font-black text-slate-900 tracking-tight">
+              <span className="text-xl font-black text-slate-900 tracking-tight">
                 {results.founderEq.toFixed(1)}%
               </span>
             </div>
 
-            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
               <div 
                 className="h-full bg-slate-900 rounded-full transition-all duration-300"
                 style={{ width: `${Math.min(100, Math.max(0, results.founderEq))}%` }}
               />
             </div>
 
-            <div className="flex justify-between items-center text-[10px] text-slate-500 font-medium">
-              <span>Dilution: {Math.round(100 - results.founderEq)}%</span>
+            <div className="flex justify-between items-center text-xs text-slate-500 font-medium">
+              <span>Retained Equity</span>
               <span className="font-mono text-slate-400">100 - {Math.round(100 - results.founderEq)}%</span>
             </div>
           </div>
@@ -599,285 +601,292 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          ROW 2: Key Metrics & Implied Valuation (Compact 6-Card KPI Strip)
+          ROW 2: Key Metrics & Valuation Outputs (6-Card KPI Strip)
       ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Runway */}
-        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block truncate">
             Runway
           </span>
-          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+          <span className="text-xl font-black text-slate-900 block truncate mt-1">
             {results.runway === 999 ? '∞' : `${Math.round(results.runway)} mo`}
           </span>
-          <span className="text-[9px] text-slate-400 font-medium block truncate">
+          <span className="text-[10px] text-slate-400 font-medium block truncate mt-1">
             Bank ÷ Burn
           </span>
         </div>
 
         {/* ARR */}
-        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block truncate">
             ARR
           </span>
-          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+          <span className="text-xl font-black text-slate-900 block truncate mt-1">
             {fmtINR(results.arr)}
           </span>
-          <span className="text-[9px] text-slate-400 font-medium block truncate">
+          <span className="text-[10px] text-slate-400 font-medium block truncate mt-1">
             MRR × 12
           </span>
         </div>
 
         {/* Burn Rate */}
-        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block truncate">
             Burn Rate
           </span>
-          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+          <span className="text-xl font-black text-slate-900 block truncate mt-1">
             {fmtINR(formData.burnRate)}
           </span>
-          <span className="text-[9px] text-slate-400 font-medium block truncate">
+          <span className="text-[10px] text-slate-400 font-medium block truncate mt-1">
             Monthly Outflow
           </span>
         </div>
 
         {/* Pre-Money */}
-        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block truncate">
             Pre-Money
           </span>
-          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+          <span className="text-xl font-black text-slate-900 block truncate mt-1">
             {fmtINR(results.preMoney)}
           </span>
-          <span className="text-[9px] text-slate-400 font-medium block truncate">
-            Post - Inv
+          <span className="text-[10px] text-slate-400 font-medium block truncate mt-1">
+            Post - Investment
           </span>
         </div>
 
         {/* Post-Money */}
-        <div className="py-2 px-2.5 rounded-xl bg-indigo-50/60 border border-indigo-200/80 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block truncate">
+        <div className="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-200/90 shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 block truncate">
             Post-Money
           </span>
-          <span className="text-base font-black text-indigo-950 block truncate mt-0.5">
+          <span className="text-xl font-black text-indigo-950 block truncate mt-1">
             {fmtINR(results.postMoney)}
           </span>
-          <span className="text-[9px] text-indigo-600/80 font-medium block truncate">
+          <span className="text-[10px] text-indigo-600/80 font-medium block truncate mt-1">
             Inv ÷ Eq%
           </span>
         </div>
 
         {/* Revenue Multiple */}
-        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block truncate">
             Rev Multiple
           </span>
-          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+          <span className="text-xl font-black text-slate-900 block truncate mt-1">
             {fmtINR(revValuation)}
           </span>
-          <span className="text-[9px] text-slate-400 font-medium block truncate">
+          <span className="text-[10px] text-slate-400 font-medium block truncate mt-1">
             {industryData?.multiple || 3}x ({industryData?.label || 'Market'})
           </span>
         </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          ROW 3: Unit Economics (5 cols) | Valuation Breakdown (3 cols) | Strategic Advisor (4 cols)
+          ROW 3: Unit Economics (6 cols) & Breakdown + Advisor (6 cols)
       ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         
-        {/* Left: Unit Economics (lg:col-span-5) */}
-        <div className="lg:col-span-5 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
-          <div className="flex items-center gap-1.5">
-            <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
-              <Coins className="w-3.5 h-3.5" />
-            </div>
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Unit Economics</h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2">
-            {/* LTV */}
-            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">LTV</span>
-              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.ltv)}</span>
-              <span className="text-[9px] text-slate-400 font-medium block truncate">Profit × Orders</span>
+        {/* Left: Unit Economics (lg:col-span-6) */}
+        <div className="lg:col-span-6 rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-3.5 flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-md text-slate-700 shrink-0">
+                <Coins className="w-4 h-4" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Unit Economics</h3>
             </div>
 
-            {/* LTV / CAC */}
-            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">LTV / CAC</span>
-              <span className={`text-xs sm:text-sm font-black block truncate mt-0.5 ${results.ltvCac >= 3 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {fmtMult(results.ltvCac)}
-              </span>
-              <span className="text-[9px] text-slate-400 font-medium block truncate">LTV ÷ CAC</span>
-            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* LTV */}
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/60">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">LTV</span>
+                <span className="text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.ltv)}</span>
+                <span className="text-[9px] text-slate-400 font-medium block truncate mt-0.5">Profit × Orders</span>
+              </div>
 
-            {/* Net Profit / Customer */}
-            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">Net Profit</span>
-              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.profitPerCustomer)}</span>
-              <span className="text-[9px] text-slate-400 font-medium block truncate">LTV - CAC</span>
-            </div>
+              {/* LTV / CAC */}
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/60">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">LTV / CAC</span>
+                <span className={`text-sm font-black block truncate mt-0.5 ${results.ltvCac >= 3 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {fmtMult(results.ltvCac)}
+                </span>
+                <span className="text-[9px] text-slate-400 font-medium block truncate mt-0.5">LTV ÷ CAC</span>
+              </div>
 
-            {/* Break-even CAC */}
-            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">Break-even</span>
-              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.breakEvenCac)}</span>
-              <span className="text-[9px] text-slate-400 font-medium block truncate">Max CAC</span>
+              {/* Net Profit / Customer */}
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/60">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">Net Profit</span>
+                <span className="text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.profitPerCustomer)}</span>
+                <span className="text-[9px] text-slate-400 font-medium block truncate mt-0.5">LTV - CAC</span>
+              </div>
+
+              {/* Break-even CAC */}
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/60">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">Break-even</span>
+                <span className="text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.breakEvenCac)}</span>
+                <span className="text-[9px] text-slate-400 font-medium block truncate mt-0.5">Max CAC</span>
+              </div>
             </div>
           </div>
 
           {/* Alert Banner */}
-          <div className={`py-1.5 px-2.5 rounded-lg border text-[11px] font-medium flex items-center gap-2 ${
+          <div className={`p-3 rounded-lg border text-xs font-semibold flex items-center gap-2.5 ${
             results.ltvCac >= 3 
               ? 'bg-emerald-50/60 border-emerald-200 text-emerald-900' 
               : 'bg-amber-50/60 border-amber-200 text-amber-900'
           }`}>
             {results.ltvCac >= 3 ? (
               <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="truncate">Unit economics healthy ({fmtMult(results.ltvCac)} ratio with ₹{fmtINR(results.profitPerCustomer)} profit/cust).</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Healthy unit economics: {fmtMult(results.ltvCac)} LTV/CAC with ₹{fmtINR(results.profitPerCustomer)} net profit/customer.</span>
               </>
             ) : (
               <>
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span className="truncate">Efficiency is below 3x ({fmtMult(results.ltvCac)}). Reduce CAC or increase retention.</span>
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Unit economics below 3x ({fmtMult(results.ltvCac)}). Focus on optimizing CAC or increasing repeat purchase frequency.</span>
               </>
             )}
           </div>
         </div>
 
-        {/* Middle: Valuation Breakdown Donut (lg:col-span-3 - Shrunk Horizontal Length) */}
-        <div className="lg:col-span-3 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
-          <div className="flex items-center gap-1.5">
-            <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
-              <PieChart className="w-3.5 h-3.5" />
-            </div>
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Valuation Breakdown</h3>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {/* SVG Donut Chart */}
-            <div className="relative w-16 h-16 shrink-0">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                <circle cx="50" cy="50" r="36" fill="none" stroke="#f1f5f9" strokeWidth="14" />
-                {(() => {
-                  const circumference = 2 * Math.PI * 36;
-                  let currentOffset = 0;
-                  return donutData.map((slice, i) => {
-                    const strokeLen = (slice.pct / 100) * circumference;
-                    const dashArray = `${strokeLen} ${circumference - strokeLen}`;
-                    const offset = currentOffset;
-                    currentOffset -= strokeLen;
-                    return (
-                      <circle
-                        key={i}
-                        cx="50"
-                        cy="50"
-                        r="36"
-                        fill="none"
-                        stroke={slice.color}
-                        strokeWidth="14"
-                        strokeDasharray={dashArray}
-                        strokeDashoffset={offset}
-                        className="transition-all duration-300"
-                      />
-                    );
-                  });
-                })()}
-              </svg>
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-xs font-black text-slate-900 leading-none">
-                  {Math.round(results.founderEq)}%
-                </span>
-                <span className="text-[8px] font-bold text-slate-400 mt-0.5">
-                  Founder
-                </span>
+        {/* Right: Breakdown & Advisor Split (lg:col-span-6) */}
+        <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Valuation Breakdown Donut */}
+          <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-slate-100 rounded-md text-slate-700 shrink-0">
+                <PieChart className="w-4 h-4" />
               </div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Valuation Breakdown</h3>
             </div>
 
-            {/* Compact Legend */}
-            <div className="space-y-1 text-xs font-medium flex-1 min-w-0">
-              {donutData.map((slice, i) => (
-                <div key={i} className="flex items-center justify-between gap-1">
-                  <div className="flex items-center gap-1 truncate">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
-                    <span className="text-slate-600 truncate text-[10px]">{slice.label}</span>
-                  </div>
-                  <span className="text-slate-900 font-bold shrink-0 text-[10px]">{slice.pct}%</span>
+            <div className="flex items-center justify-between gap-3">
+              {/* SVG Donut Chart */}
+              <div className="relative w-20 h-20 shrink-0">
+                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                  <circle cx="50" cy="50" r="36" fill="none" stroke="#f1f5f9" strokeWidth="14" />
+                  {(() => {
+                    const circumference = 2 * Math.PI * 36;
+                    let currentOffset = 0;
+                    return donutData.map((slice, i) => {
+                      const strokeLen = (slice.pct / 100) * circumference;
+                      const dashArray = `${strokeLen} ${circumference - strokeLen}`;
+                      const offset = currentOffset;
+                      currentOffset -= strokeLen;
+                      return (
+                        <circle
+                          key={i}
+                          cx="50"
+                          cy="50"
+                          r="36"
+                          fill="none"
+                          stroke={slice.color}
+                          strokeWidth="14"
+                          strokeDasharray={dashArray}
+                          strokeDashoffset={offset}
+                          className="transition-all duration-300"
+                        />
+                      );
+                    });
+                  })()}
+                </svg>
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-sm font-black text-slate-900 leading-none">
+                    {Math.round(results.founderEq)}%
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 mt-0.5">
+                    Founder
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right: FounderOS Strategic Advisor (lg:col-span-4 - Shrunk Horizontal Length) */}
-        <div className="lg:col-span-4 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <div className="p-1 bg-indigo-50 rounded text-indigo-600 shrink-0">
-                <Sparkles className="w-3.5 h-3.5" />
               </div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Strategic Advisor</h3>
+
+              {/* Legend */}
+              <div className="space-y-1.5 text-xs font-medium flex-1 min-w-0">
+                {donutData.map((slice, i) => (
+                  <div key={i} className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
+                      <span className="text-slate-600 truncate text-[11px]">{slice.label}</span>
+                    </div>
+                    <span className="text-slate-900 font-bold shrink-0 text-[11px]">{slice.pct}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowHistoryModal(true)}
-              className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-            >
-              <FileText className="w-3 h-3" />
-              Saved ({savedReports?.length || 0})
-            </button>
           </div>
 
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            AI-powered valuation insights, fundraising strategy & deal negotiation advice.
-          </p>
+          {/* FounderOS Strategic Advisor */}
+          <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <div className="p-1 bg-indigo-50 rounded text-indigo-600 shrink-0">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Strategic Advisor</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowHistoryModal(true)}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                >
+                  <FileText className="w-3 h-3" />
+                  Saved ({savedReports?.length || 0})
+                </button>
+              </div>
 
-          <Button
-            type="button"
-            onClick={handleGenerateAI}
-            disabled={aiLoading || readOnly}
-            className="w-full bg-slate-900 text-white hover:bg-slate-800 font-bold text-xs h-8 gap-1.5 shadow-xs"
-          >
-            {aiLoading ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                Generating Analysis...
-              </>
-            ) : (
-              <>
-                Generate Strategic Analysis <ArrowRight className="w-3.5 h-3.5" />
-              </>
-            )}
-          </Button>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                AI-driven analysis of your valuation posture, cap table health, and investor negotiation strategy.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleGenerateAI}
+              disabled={aiLoading || readOnly}
+              className="w-full bg-slate-900 text-white hover:bg-slate-800 font-bold text-xs h-9 gap-1.5 shadow-xs"
+            >
+              {aiLoading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                  Generating Analysis...
+                </>
+              ) : (
+                <>
+                  Generate Strategic Analysis <ArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          ROW 4: Exit Value Simulator (Compact Balanced Toolbar Card)
+          ROW 4: Exit Value Simulator (Full-Width Responsive Card)
       ───────────────────────────────────────────────────────────── */}
-      <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+      <div className="rounded-xl bg-white border border-slate-200 p-4 shadow-xs w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
           {/* Slider Side (lg:col-span-5) */}
-          <div className="lg:col-span-5 space-y-1.5">
+          <div className="lg:col-span-5 space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
-                  <Target className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-slate-100 rounded-md text-slate-700 shrink-0">
+                  <Target className="w-4 h-4" />
                 </div>
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Exit Value Simulator</h3>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-[10px] text-slate-400 font-bold uppercase">Target:</span>
-                <span className="text-xs font-black text-slate-900 font-mono">{fmtINR(exitValue)}</span>
+              <div className="flex items-baseline gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/80">
+                <span className="text-[10px] text-slate-500 font-bold uppercase">Target:</span>
+                <span className="text-sm font-black text-slate-900 font-mono">{fmtINR(exitValue)}</span>
               </div>
             </div>
 
             {/* Slider */}
-            <div className="pt-1 pb-0.5">
+            <div className="pt-2 pb-0.5">
               <input
                 type="range"
                 min={5000000}
@@ -885,36 +894,36 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                 step={5000000}
                 value={exitValue}
                 onChange={e => setExitValue(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
               />
             </div>
           </div>
 
           {/* Metric Tiles Side (lg:col-span-7) */}
-          <div className="lg:col-span-7 grid grid-cols-3 gap-2">
-            <div className="py-1.5 px-2 bg-slate-50 rounded-lg border border-slate-200/80">
+          <div className="lg:col-span-7 grid grid-cols-3 gap-2.5">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
                 Founder Return
               </span>
-              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">
+              <span className="text-sm sm:text-base font-black text-slate-900 block truncate mt-1">
                 {fmtINR(simResults.founderReturn)}
               </span>
             </div>
 
-            <div className="py-1.5 px-2 bg-slate-50 rounded-lg border border-slate-200/80">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
                 Investor Return
               </span>
-              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">
+              <span className="text-sm sm:text-base font-black text-slate-900 block truncate mt-1">
                 {fmtINR(simResults.investorReturn)}
               </span>
             </div>
 
-            <div className="py-1.5 px-2 bg-slate-50 rounded-lg border border-slate-200/80">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
                 Total Return
               </span>
-              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">
+              <span className="text-sm sm:text-base font-black text-slate-900 block truncate mt-1">
                 {fmtINR(exitValue)}
               </span>
             </div>
