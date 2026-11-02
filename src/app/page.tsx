@@ -336,19 +336,32 @@ export default function FounderOSPage() {
           {isSidebarMinimized ? (
             <button
               onClick={() => setIsSidebarMinimized(false)}
-              className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer"
               title="Expand Sidebar"
               aria-label="Expand Sidebar"
             >
-              <span className="font-bold text-sm" style={{ fontFamily: "'Google Sans', sans-serif" }}>F</span>
+              <PanelLeftOpen className="w-5 h-5 stroke-[2] text-white" />
             </button>
           ) : (
             <>
-              {/* Brand Logo & Title */}
+              {/* Brand & Sidebar Toggle Button (Identical styling to closed state) */}
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30">
-                  <span className="text-white font-bold text-sm" style={{ fontFamily: "'Google Sans', sans-serif" }}>F</span>
-                </div>
+                <button
+                  onClick={() => {
+                    setIsSidebarMinimized(true);
+                    if (isSidebarPinned) {
+                      setIsSidebarPinned(false);
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('sidebarPinnedPreference', 'false');
+                      }
+                    }
+                  }}
+                  className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer shrink-0"
+                  title="Close Sidebar"
+                  aria-label="Close Sidebar"
+                >
+                  <PanelLeftClose className="w-5 h-5 stroke-[2] text-white" />
+                </button>
                 <div className="flex flex-col">
                   <span className="font-bold text-[15px] tracking-tight text-white leading-none" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                     Founder<span className="text-indigo-400">OS</span>
@@ -359,7 +372,7 @@ export default function FounderOSPage() {
                 </div>
               </div>
 
-              {/* Pin & Proper Close Sidebar button */}
+              {/* Pin Sidebar button */}
               <div className="flex items-center gap-1">
                 <button
                   onClick={toggleSidebarPin}
@@ -372,22 +385,6 @@ export default function FounderOSPage() {
                   aria-label="Pin Sidebar"
                 >
                   <Pin className={`w-3.5 h-3.5 transition-transform ${isSidebarPinned ? 'fill-indigo-400 rotate-45 text-indigo-400' : ''}`} />
-                </button>
-                <button
-                  onClick={() => {
-                    setIsSidebarMinimized(true);
-                    if (isSidebarPinned) {
-                      setIsSidebarPinned(false);
-                      if (typeof window !== 'undefined') {
-                        localStorage.setItem('sidebarPinnedPreference', 'false');
-                      }
-                    }
-                  }}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
-                  title="Close Sidebar"
-                  aria-label="Close Sidebar"
-                >
-                  <PanelLeftClose className="w-4.5 h-4.5" />
                 </button>
               </div>
             </>
