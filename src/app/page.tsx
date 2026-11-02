@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
-  Menu, X, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
+  Menu, X, PanelLeftOpen, PanelLeftClose, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
   ShieldAlert, Calendar, Box, Megaphone, Pin, User
 } from 'lucide-react';
 import { 
@@ -305,524 +305,200 @@ export default function FounderOSPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50/70 text-slate-900 overflow-hidden">
-      {/* Minimal Consolidated Top Navigation Bar (Edge to Edge, Spans Full Width) */}
-      <header className="h-16 w-full border-b border-slate-100 bg-white/95 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-        <div className="flex items-center gap-3">
-          {/* Sidebar Toggle Button (Opens sidebar on hover and click) */}
-          <button
-            onClick={() => {
-              if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                setIsMobileSidebarOpen(prev => !prev);
-              } else {
-                setIsSidebarMinimized(prev => {
-                  const next = !prev;
-                  if (next && isSidebarPinned) {
-                    setIsSidebarPinned(false);
-                    if (typeof window !== 'undefined') {
-                      localStorage.setItem('sidebarPinnedPreference', 'false');
-                    }
-                  }
-                  return next;
-                });
-              }
-            }}
-            onMouseEnter={() => {
-              if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                setIsMobileSidebarOpen(true);
-              } else {
-                setIsSidebarMinimized(false);
-              }
-            }}
-            className="p-2 hover:bg-slate-100/90 text-slate-700 hover:text-indigo-600 rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0"
-            title="Toggle Sidebar"
-            aria-label="Toggle Sidebar"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+    <div className="h-screen w-screen flex bg-slate-50/70 text-slate-900 overflow-hidden relative">
+      {/* Layout Spacer: Desktop placeholder rail that reserves layout width so content never shifts */}
+      <div 
+        className={`hidden md:block shrink-0 transition-all duration-300 ease-out pointer-events-none ${
+          isSidebarPinned ? 'w-[264px]' : 'w-[72px]'
+        }`} 
+        aria-hidden="true" 
+      />
 
-          {/* FounderOS Company Name in Nav Bar */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-xs">
-              <span className="text-white font-black text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>F</span>
-            </div>
-            <span className="font-extrabold text-base tracking-tight text-slate-950" style={{ letterSpacing: '-0.02em', fontFamily: "'Outfit', sans-serif" }}>
-              Founder<span className="text-indigo-600">OS</span>
-            </span>
-          </div>
-
-          <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
-
-          <h2 className="text-xs font-bold text-slate-500 tracking-wider uppercase font-code hidden sm:block">
-            {getPageTitle()}
-          </h2>
-        </div>
-        
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.push('/calendar')}
-            className="rounded-full h-9 w-9 border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all shrink-0 cursor-pointer"
-            title="Calendar"
-          >
-            <Calendar className="w-4 h-4 text-indigo-600" />
-          </Button>
-          <NotificationCenter />
-          <QuickCalculator />
-
-          {/* Founder Profile - Soft circle shape, only icon on top right corner; opens dropdown on hover and press */}
-          <div 
-            className="relative flex items-center"
-            onMouseEnter={() => setIsProfileOpen(true)}
-            onMouseLeave={() => setIsProfileOpen(false)}
-          >
-            <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="w-9 h-9 rounded-full bg-linear-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-xs ring-2 ring-indigo-200/70 hover:ring-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none"
-                  title="Founder Profile"
-                  aria-label="Founder Profile"
-                >
-                  <User className="w-4.5 h-4.5 text-white" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
-                sideOffset={8}
-                onMouseEnter={() => setIsProfileOpen(true)}
-                onMouseLeave={() => setIsProfileOpen(false)}
-                className="w-56 p-1.5 shadow-xl border-slate-200/80 bg-white/95 backdrop-blur-md rounded-2xl animate-in fade-in zoom-in-95 duration-150 z-50"
-              >
-                <div className="px-2 py-1.5 mb-1">
-                  <p className="text-xs font-bold text-slate-900 truncate">{user?.email || 'founder@startup.com'}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Founder Account</span>
-                    {isVisitor && (
-                      <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 rounded-full">
-                        View Only
-                      </span>
-                    )}
-                  </div>
+      {/* Desktop Left Sidebar — OVERLAP SIDEBAR (Full-Height Seamlessly Merged) */}
+      <aside 
+        onMouseEnter={() => {
+          if (isSidebarMinimized) setIsSidebarMinimized(false);
+        }}
+        onMouseLeave={() => {
+          if (!isSidebarPinned) {
+            setIsSidebarMinimized(true);
+          }
+        }}
+        className={`hidden md:flex flex-col h-screen select-none fixed top-0 left-0 bottom-0 z-40 bg-[#0B0F28] text-slate-100 border-r border-slate-800/80 transition-all duration-300 ease-out font-sidebar ${
+          isSidebarMinimized 
+            ? 'w-[72px] shadow-[2px_0_12px_rgba(0,0,0,0.25)]' 
+            : 'w-[264px] shadow-[8px_0_36px_rgba(0,0,0,0.45)]'
+        }`}
+        style={{ fontFamily: "'Google Sans Text', 'Google Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
+      >
+        {/* Sidebar Header (Aligned with Top Header: height h-16 / 64px) */}
+        <div className={`h-16 border-b border-slate-800/80 flex items-center ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-3.5'} transition-all duration-300 shrink-0`}>
+          {isSidebarMinimized ? (
+            <button
+              onClick={() => setIsSidebarMinimized(false)}
+              className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer"
+              title="Expand Sidebar"
+              aria-label="Expand Sidebar"
+            >
+              <span className="font-bold text-sm" style={{ fontFamily: "'Google Sans', sans-serif" }}>F</span>
+            </button>
+          ) : (
+            <>
+              {/* Brand Logo & Title */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30">
+                  <span className="text-white font-bold text-sm" style={{ fontFamily: "'Google Sans', sans-serif" }}>F</span>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
-                >
-                  <User className="w-4 h-4 text-slate-500" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
-                >
-                  <Settings className="w-4 h-4 text-slate-500" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => { initiateSignOut(auth); setIsProfileOpen(false); }}
-                  className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-xl"
-                >
-                  <LogOut className="w-4 h-4 text-rose-500" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[15px] tracking-tight text-white leading-none" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                    Founder<span className="text-indigo-400">OS</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase mt-1">
+                    Command Center
+                  </span>
+                </div>
+              </div>
 
-      {/* Main Container below Navigation Bar */}
-      <div className="flex flex-1 min-h-0 overflow-hidden relative">
-        {/* Desktop Left Sidebar (Below Top Navbar with Transparent Glassmorphism & Bold Dark Curvy Font) */}
-        <aside 
-          onMouseEnter={() => {
-            if (isSidebarMinimized) setIsSidebarMinimized(false);
-          }}
-          onMouseLeave={() => {
-            if (!isSidebarPinned) {
-              setIsSidebarMinimized(true);
-            }
-          }}
-          className={`hidden md:flex flex-col h-full select-none bg-white/95 backdrop-blur-xl border-r border-slate-100 shadow-[2px_0_12px_rgba(0,0,0,0.015)] text-slate-900 transition-all duration-300 ease-spring shrink-0 ${isSidebarMinimized ? 'w-[72px]' : 'w-[264px]'} font-sidebar`}
-          style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
-        >
-          {/* Sidebar Controls Header */}
-          <div className={`h-12 border-b border-slate-200/60 flex items-center ${isSidebarMinimized ? 'justify-center px-2' : 'justify-between px-3'} transition-all duration-300`}>
-            {!isSidebarMinimized && (
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
-                Navigation
-              </span>
-            )}
-            <div className="flex items-center gap-1">
-              {!isSidebarMinimized && (
+              {/* Pin & Proper Close Sidebar button */}
+              <div className="flex items-center gap-1">
                 <button
                   onClick={toggleSidebarPin}
-                  className={`p-1.5 rounded-xl transition-all duration-150 cursor-pointer ${
+                  className={`p-1.5 rounded-lg transition-all duration-150 cursor-pointer ${
                     isSidebarPinned 
-                      ? 'bg-indigo-50 text-indigo-600 border border-indigo-200/80 shadow-2xs' 
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-900/5'
+                      ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 shadow-xs' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/10'
                   }`}
-                  title={isSidebarPinned ? 'Unpin Sidebar (Auto-closes when cursor leaves)' : 'Pin Sidebar (Keep sidebar open permanently)'}
+                  title={isSidebarPinned ? 'Unpin Sidebar (Overlaps & auto-closes on mouse leave)' : 'Pin Sidebar (Locks sidebar in layout)'}
+                  aria-label="Pin Sidebar"
                 >
-                  <Pin className={`w-3.5 h-3.5 transition-transform ${isSidebarPinned ? 'fill-indigo-600 rotate-45 text-indigo-600' : ''}`} />
+                  <Pin className={`w-3.5 h-3.5 transition-transform ${isSidebarPinned ? 'fill-indigo-400 rotate-45 text-indigo-400' : ''}`} />
                 </button>
-              )}
-              <button
-                onClick={() => {
-                  const next = !isSidebarMinimized;
-                  setIsSidebarMinimized(next);
-                  if (next && isSidebarPinned) {
-                    setIsSidebarPinned(false);
-                    if (typeof window !== 'undefined') {
-                      localStorage.setItem('sidebarPinnedPreference', 'false');
+                <button
+                  onClick={() => {
+                    setIsSidebarMinimized(true);
+                    if (isSidebarPinned) {
+                      setIsSidebarPinned(false);
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('sidebarPinnedPreference', 'false');
+                      }
                     }
-                  }
-                }}
-                className="text-slate-500 hover:text-slate-900 p-1.5 hover:bg-slate-900/5 rounded-xl hidden md:flex items-center justify-center shrink-0 transition-all duration-150 cursor-pointer"
-                title={isSidebarMinimized ? 'Expand Sidebar' : 'Minimize Sidebar'}
-              >
-                {isSidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Scrollable Navigation List with Bold Dark Curvy Font & Rounded Active Corners */}
-          <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
-            {isSidebarMinimized ? (
-              <div className="flex flex-col items-center gap-1.5">
-                {[
-                  { tab: 'dashboard', icon: Home, label: 'Central Console' },
-                  { tab: 'product', icon: Box, label: 'Product Suite' },
-                  { tab: 'dm', icon: Megaphone, label: 'Digital Marketing' },
-                  { tab: 'sales', icon: TrendingUp, label: 'Sales Tracker' },
-                  { tab: 'finance', icon: Calculator, label: 'Finance Suite' },
-                  { tab: 'operations', icon: Activity, label: 'Operations Hub' },
-                ].map(({ tab, icon: Icon, label }) => {
-                  const isActive = activeTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-150 ${
-                        isActive
-                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 font-extrabold'
-                          : 'hover:bg-slate-900/5 hover:text-slate-950 text-slate-700'
-                      }`}
-                      title={label}
-                    >
-                      <Icon className={`w-5 h-5 stroke-[2.2] ${isActive ? 'text-white' : 'text-slate-700'}`} />
-                    </button>
-                  );
-                })}
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+                  title="Close Sidebar"
+                  aria-label="Close Sidebar"
+                >
+                  <PanelLeftClose className="w-4.5 h-4.5" />
+                </button>
               </div>
-            ) : (
-              <>
-                {/* Central Console */}
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
-                    activeTab === 'dashboard'
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
-                  }`}
-                >
-                  <Home className={`w-4.5 h-4.5 shrink-0 stroke-[2.2] ${activeTab === 'dashboard' ? 'text-white' : 'text-slate-700'}`} />
-                  <span>Central Console</span>
-                </button>
+            </>
+          )}
+        </div>
 
-                {/* Product Suite */}
-                <button
-                  onClick={() => setActiveTab('product')}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
-                    activeTab === 'product'
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Box className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'product' ? 'text-white' : 'text-slate-700'}`} />
-                    <span>Product Suite</span>
-                  </div>
-                </button>
-
-                {/* Digital Marketing */}
-                <button
-                  onClick={() => setActiveTab('dm')}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
-                    activeTab === 'dm'
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Megaphone className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'dm' ? 'text-white' : 'text-slate-700'}`} />
-                    <span>Digital Marketing</span>
-                  </div>
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                    activeTab === 'dm' ? 'bg-white text-indigo-700' : 'bg-[#f97316] text-white'
-                  }`}>
-                    NEW
-                  </span>
-                </button>
-
-                <div className="h-px bg-slate-200/70 my-2 mx-1" />
-
-                {/* Sales Section */}
-                <div className="space-y-0.5">
+        {/* Scrollable Navigation List */}
+        <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-1">
+          {isSidebarMinimized ? (
+            <div className="flex flex-col items-center gap-1.5">
+              {[
+                { tab: 'dashboard', icon: Home, label: 'Central Console' },
+                { tab: 'product', icon: Box, label: 'Product Suite' },
+                { tab: 'dm', icon: Megaphone, label: 'Digital Marketing' },
+                { tab: 'sales', icon: TrendingUp, label: 'Sales Tracker' },
+                { tab: 'finance', icon: Calculator, label: 'Finance Suite' },
+                { tab: 'operations', icon: Activity, label: 'Operations Hub' },
+                { tab: 'settings', icon: Settings, label: 'Settings' },
+              ].map(({ tab, icon: Icon, label }) => {
+                const isActive = activeTab === tab;
+                return (
                   <button
-                    onClick={() => setIsSalesExpanded(!isSalesExpanded)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
-                      activeTab === 'sales'
-                        ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                        : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer ${
+                      isActive
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/35 font-bold'
+                        : 'text-slate-400 hover:text-white hover:bg-white/10'
                     }`}
+                    title={label}
                   >
-                    <div className="flex items-center gap-3">
-                      <TrendingUp className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'sales' ? 'text-white' : 'text-slate-700'}`} />
-                      <span>Sales Tracker</span>
-                    </div>
-                    {isSalesExpanded ? (
-                      <ChevronDown className={`w-4 h-4 ${activeTab === 'sales' ? 'text-white' : 'text-slate-700'}`} />
-                    ) : (
-                      <ChevronRight className={`w-4 h-4 ${activeTab === 'sales' ? 'text-white' : 'text-slate-700 group-hover:text-black'}`} />
-                    )}
+                    <Icon className={`w-5 h-5 stroke-[2] ${isActive ? 'text-white' : 'text-slate-300'}`} />
                   </button>
-
-                  {isSalesExpanded && (
-                    <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5 animate-in slide-in-from-top-1 duration-200">
-                      {[
-                        { sub: 'strategy', label: 'Sales Strategy' },
-                        { sub: 'leads', label: 'Lead Tracker' },
-                        { sub: 'workshops', label: 'Workshop Tracker' },
-                        { sub: 'products', label: 'Product Sales' },
-                        { sub: 'weekly', label: 'Weekly Dashboard' },
-                        { sub: 'activity', label: 'Daily Activity' },
-                      ].map(({ sub, label }) => {
-                        const isActive = activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === sub;
-                        return (
-                          <button
-                            key={sub}
-                            onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
-                              isActive
-                                ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
-                                : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <div className="h-px bg-slate-200/70 my-2 mx-1" />
-
-                {/* Finance Section */}
-                <div className="space-y-0.5">
-                  <button
-                    onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
-                      activeTab === 'finance'
-                        ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                        : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Calculator className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'finance' ? 'text-white' : 'text-slate-700'}`} />
-                      <span>Finance Suite</span>
-                    </div>
-                    {isFinanceExpanded ? (
-                      <ChevronDown className={`w-4 h-4 ${activeTab === 'finance' ? 'text-white' : 'text-slate-700'}`} />
-                    ) : (
-                      <ChevronRight className={`w-4 h-4 ${activeTab === 'finance' ? 'text-white' : 'text-slate-700 group-hover:text-black'}`} />
-                    )}
-                  </button>
-
-                  {isFinanceExpanded && (
-                    <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5 animate-in slide-in-from-top-1 duration-200">
-                      {[
-                        { sub: 'calc', label: 'Valuation Calculator' },
-                        { sub: 'tracker', label: 'Cap Table Tracker' },
-                        { sub: 'exit', label: 'Exit Simulator' },
-                        { sub: 'negotiate', label: 'Term Sheet Assistant' },
-                        { sub: 'qa', label: 'Term Sheet Q&A' },
-                        { sub: 'glossary', label: "Founder's Glossary" },
-                        { sub: 'weekly', label: 'Weekly Dashboard' },
-                        { sub: 'activity', label: 'Daily Activity' },
-                      ].map(({ sub, label }) => {
-                        const isActive = activeTab === 'finance' && financeTab === sub;
-                        return (
-                          <button
-                            key={sub}
-                            onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
-                              isActive
-                                ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
-                                : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <div className="h-px bg-slate-200/70 my-2 mx-1" />
-
-                {/* Operations Section */}
-                <div className="space-y-0.5">
-                  <button
-                    onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
-                      activeTab === 'operations'
-                        ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                        : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Activity className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'operations' ? 'text-white' : 'text-slate-700'}`} />
-                      <span>Operations Hub</span>
-                    </div>
-                    {isOperationsExpanded ? (
-                      <ChevronDown className={`w-4 h-4 ${activeTab === 'operations' ? 'text-white' : 'text-slate-700'}`} />
-                    ) : (
-                      <ChevronRight className={`w-4 h-4 ${activeTab === 'operations' ? 'text-white' : 'text-slate-700 group-hover:text-black'}`} />
-                    )}
-                  </button>
-
-                  {isOperationsExpanded && (
-                    <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5 animate-in slide-in-from-top-1 duration-200">
-                      {[
-                        { sub: 'ops', label: 'Runway & SaaS Burn' },
-                        { sub: 'tasks', label: 'Task Workspace' },
-                        { sub: 'chat', label: 'Team Chat' },
-                        { sub: 'weekly', label: 'Weekly Dashboard' },
-                        { sub: 'activity', label: 'Daily Activity' },
-                      ].map(({ sub, label }) => {
-                        const isActive = activeTab === 'operations' && operationsTab === sub;
-                        return (
-                          <button
-                            key={sub}
-                            onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
-                            className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
-                              isActive
-                                ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
-                                : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </nav>
-        </aside>
-
-      {/* Mobile Drawer Navigation */}
-      {isMobileSidebarOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex md:hidden bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300"
-          onClick={() => setIsMobileSidebarOpen(false)}
-        >
-          <aside 
-            onClick={(e) => e.stopPropagation()}
-            onMouseLeave={() => setIsMobileSidebarOpen(false)}
-            className="w-72 bg-white/80 backdrop-blur-2xl text-slate-950 flex flex-col h-full animate-in slide-in-from-left duration-300 relative border-r border-slate-200/60 shadow-2xl font-sidebar"
-            style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
-          >
-            <div className="h-14 border-b border-slate-200/60 flex items-center justify-end px-4 shrink-0">
-              <button
-                onClick={() => setIsMobileSidebarOpen(false)}
-                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-900/5 transition-colors"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+                );
+              })}
             </div>
-
-            <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+          ) : (
+            <>
+              {/* Central Console */}
               <button
-                onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                onClick={() => setActiveTab('dashboard')}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
                   activeTab === 'dashboard'
-                    ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                    : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Home className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'dashboard' ? 'text-white' : 'text-slate-700'}`} />
-                  <span>Central Console</span>
-                </div>
+                <Home className={`w-4.5 h-4.5 shrink-0 stroke-[2] ${activeTab === 'dashboard' ? 'text-white' : 'text-slate-400'}`} />
+                <span>Central Console</span>
               </button>
 
+              {/* Product Suite */}
               <button
-                onClick={() => { setActiveTab('product'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                onClick={() => setActiveTab('product')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
                   activeTab === 'product'
-                    ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                    : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Box className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'product' ? 'text-white' : 'text-slate-700'}`} />
+                  <Box className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'product' ? 'text-white' : 'text-slate-400'}`} />
                   <span>Product Suite</span>
                 </div>
               </button>
 
+              {/* Digital Marketing */}
               <button
-                onClick={() => { setActiveTab('dm'); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 ${
+                onClick={() => setActiveTab('dm')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
                   activeTab === 'dm'
-                    ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                    : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Megaphone className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'dm' ? 'text-white' : 'text-slate-700'}`} />
+                  <Megaphone className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'dm' ? 'text-white' : 'text-slate-400'}`} />
                   <span>Digital Marketing</span>
                 </div>
-                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                  activeTab === 'dm' ? 'bg-white text-indigo-700' : 'bg-[#f97316] text-white'
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                  activeTab === 'dm' ? 'bg-white text-indigo-700' : 'bg-orange-500 text-white'
                 }`}>
                   NEW
                 </span>
               </button>
 
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
               {/* Sales Section */}
               <div className="space-y-0.5">
                 <button
                   onClick={() => setIsSalesExpanded(!isSalesExpanded)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 group cursor-pointer ${
                     activeTab === 'sales'
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <TrendingUp className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'sales' ? 'text-white' : 'text-slate-700'}`} />
+                    <TrendingUp className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'sales' ? 'text-white' : 'text-slate-400'}`} />
                     <span>Sales Tracker</span>
                   </div>
                   {isSalesExpanded ? (
-                    <ChevronDown className={`w-4 h-4 ${activeTab === 'sales' ? 'text-white' : 'text-slate-700'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${activeTab === 'sales' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                   ) : (
-                    <ChevronRight className={`w-4 h-4 ${activeTab === 'sales' ? 'text-white' : 'text-slate-700'}`} />
+                    <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'sales' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                   )}
                 </button>
+
                 {isSalesExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5">
+                  <div className="pl-3 pr-1 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
                     {[
                       { sub: 'strategy', label: 'Sales Strategy' },
                       { sub: 'leads', label: 'Lead Tracker' },
@@ -835,11 +511,11 @@ export default function FounderOSPage() {
                       return (
                         <button
                           key={sub}
-                          onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); setIsMobileSidebarOpen(false); }}
-                          className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
+                          onClick={() => { setActiveTab('sales'); setSalesTab('ezcirkit'); setEzCirkitTab(sub); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
                             isActive
-                              ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
-                              : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
+                              ? 'text-indigo-400 font-semibold bg-indigo-500/15'
+                              : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
                           }`}
                         >
                           {label}
@@ -850,31 +526,31 @@ export default function FounderOSPage() {
                 )}
               </div>
 
-              <div className="h-px bg-slate-200/70 my-2 mx-1" />
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
 
               {/* Finance Section */}
               <div className="space-y-0.5">
                 <button
                   onClick={() => setIsFinanceExpanded(!isFinanceExpanded)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 group cursor-pointer ${
                     activeTab === 'finance'
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Calculator className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'finance' ? 'text-white' : 'text-slate-700'}`} />
+                    <Calculator className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'finance' ? 'text-white' : 'text-slate-400'}`} />
                     <span>Finance Suite</span>
                   </div>
                   {isFinanceExpanded ? (
-                    <ChevronDown className={`w-4 h-4 ${activeTab === 'finance' ? 'text-white' : 'text-slate-700'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${activeTab === 'finance' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                   ) : (
-                    <ChevronRight className={`w-4 h-4 ${activeTab === 'finance' ? 'text-white' : 'text-slate-700'}`} />
+                    <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'finance' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                   )}
                 </button>
 
                 {isFinanceExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5">
+                  <div className="pl-3 pr-1 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
                     {[
                       { sub: 'calc', label: 'Valuation Calculator' },
                       { sub: 'tracker', label: 'Cap Table Tracker' },
@@ -889,11 +565,11 @@ export default function FounderOSPage() {
                       return (
                         <button
                           key={sub}
-                          onClick={() => { setActiveTab('finance'); setFinanceTab(sub); setIsMobileSidebarOpen(false); }}
-                          className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
+                          onClick={() => { setActiveTab('finance'); setFinanceTab(sub); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
                             isActive
-                              ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
-                              : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
+                              ? 'text-indigo-400 font-semibold bg-indigo-500/15'
+                              : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
                           }`}
                         >
                           {label}
@@ -904,31 +580,31 @@ export default function FounderOSPage() {
                 )}
               </div>
 
-              <div className="h-px bg-slate-200/70 my-2 mx-1" />
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
 
               {/* Operations Section */}
               <div className="space-y-0.5">
                 <button
                   onClick={() => setIsOperationsExpanded(!isOperationsExpanded)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[14px] transition-all duration-150 group ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 group cursor-pointer ${
                     activeTab === 'operations'
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                      : 'text-slate-900 font-bold hover:bg-slate-900/5 hover:text-black'
+                      ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                      : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Activity className={`w-4.5 h-4.5 stroke-[2.2] ${activeTab === 'operations' ? 'text-white' : 'text-slate-700'}`} />
+                    <Activity className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'operations' ? 'text-white' : 'text-slate-400'}`} />
                     <span>Operations Hub</span>
                   </div>
                   {isOperationsExpanded ? (
-                    <ChevronDown className={`w-4 h-4 ${activeTab === 'operations' ? 'text-white' : 'text-slate-700'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                   ) : (
-                    <ChevronRight className={`w-4 h-4 ${activeTab === 'operations' ? 'text-white' : 'text-slate-700'}`} />
+                    <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                   )}
                 </button>
 
                 {isOperationsExpanded && (
-                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-300/80 ml-5">
+                  <div className="pl-3 pr-1 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
                     {[
                       { sub: 'ops', label: 'Runway & SaaS Burn' },
                       { sub: 'tasks', label: 'Task Workspace' },
@@ -940,11 +616,11 @@ export default function FounderOSPage() {
                       return (
                         <button
                           key={sub}
-                          onClick={() => { setActiveTab('operations'); setOperationsTab(sub); setIsMobileSidebarOpen(false); }}
-                          className={`w-full text-left px-3 py-1.5 rounded-xl text-[13px] transition-all ${
+                          onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
                             isActive
-                              ? 'text-indigo-600 font-extrabold bg-indigo-50/90 shadow-2xs'
-                              : 'text-slate-800 hover:text-black hover:bg-slate-900/5 font-bold'
+                              ? 'text-indigo-400 font-semibold bg-indigo-500/15'
+                              : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
                           }`}
                         >
                           {label}
@@ -954,23 +630,152 @@ export default function FounderOSPage() {
                   </div>
                 )}
               </div>
-            </nav>
-          </aside>
-        </div>
-      )}
 
-      {/* Main Panel Content Area (Scrollable below Top Navigation Bar) */}
-      <div 
-        className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto bg-slate-50/70"
-        onMouseEnter={() => {
-          if (!isSidebarPinned) {
-            setIsSidebarMinimized(true);
-          }
-        }}
-      >
-        {/* Dynamic Inner Tab Switcher */}
-        <main className="flex-1 p-3 sm:p-5 md:p-6 w-full">
-          <Tabs value={activeTab} className="w-full">
+              <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+              {/* Settings */}
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                    : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className={`w-4.5 h-4.5 stroke-[2] ${activeTab === 'settings' ? 'text-white' : 'text-slate-400'}`} />
+                  <span>Settings</span>
+                </div>
+              </button>
+            </>
+          )}
+        </nav>
+      </aside>
+
+      {/* Main Area: Merged Top Header + Scrollable Content */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Merged Consolidated Top Navigation Bar */}
+        <header className="h-16 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 shrink-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-3">
+            {/* Mobile Drawer Toggle (Only for small screens where sidebar is hidden) */}
+            <button
+              onClick={() => setIsMobileSidebarOpen(prev => !prev)}
+              className="md:hidden p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0"
+              title="Open Navigation Menu"
+              aria-label="Open Navigation Menu"
+            >
+              <PanelLeftOpen className="w-5 h-5" />
+            </button>
+
+            {/* Mobile Brand Mark (shown only on small screens) */}
+            <div className="flex md:hidden items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-xs">
+                <span className="text-white font-bold text-sm" style={{ fontFamily: "'Google Sans', sans-serif" }}>F</span>
+              </div>
+              <span className="font-bold text-base tracking-tight text-slate-950" style={{ letterSpacing: '-0.02em', fontFamily: "'Google Sans', sans-serif" }}>
+                Founder<span className="text-indigo-600">OS</span>
+              </span>
+            </div>
+
+            {/* Breadcrumb Context Navigation */}
+            <div className="hidden sm:flex items-center gap-2.5">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                Founder Dashboard
+              </span>
+              <span className="text-slate-300">/</span>
+              <h2 className="text-sm font-bold text-slate-900 tracking-tight" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                {getPageTitle()}
+              </h2>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live Engine</span>
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.push('/calendar')}
+              className="rounded-xl h-9 w-9 border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all shrink-0 cursor-pointer"
+              title="Calendar"
+            >
+              <Calendar className="w-4 h-4 text-indigo-600" />
+            </Button>
+            <NotificationCenter />
+            <QuickCalculator />
+
+            {/* Founder Profile */}
+            <div 
+              className="relative flex items-center"
+              onMouseEnter={() => setIsProfileOpen(true)}
+              onMouseLeave={() => setIsProfileOpen(false)}
+            >
+              <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="w-9 h-9 rounded-full bg-linear-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-xs ring-2 ring-indigo-200/70 hover:ring-indigo-400 hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none"
+                    title="Founder Profile"
+                    aria-label="Founder Profile"
+                  >
+                    <User className="w-4.5 h-4.5 text-white" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  sideOffset={8}
+                  onMouseEnter={() => setIsProfileOpen(true)}
+                  onMouseLeave={() => setIsProfileOpen(false)}
+                  className="w-56 p-1.5 shadow-xl border-slate-200/80 bg-white/95 backdrop-blur-md rounded-2xl animate-in fade-in zoom-in-95 duration-150 z-50"
+                >
+                  <div className="px-2 py-1.5 mb-1">
+                    <p className="text-xs font-bold text-slate-900 truncate">{user?.email || 'founder@startup.com'}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Founder Account</span>
+                      {isVisitor && (
+                        <span className="text-[9px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 rounded-full">
+                          View Only
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
+                    className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
+                  >
+                    <User className="w-4 h-4 text-slate-500" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
+                    className="cursor-pointer gap-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 focus:bg-slate-100 rounded-xl"
+                  >
+                    <Settings className="w-4 h-4 text-slate-500" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => { initiateSignOut(auth); setIsProfileOpen(false); }}
+                    className="cursor-pointer gap-2.5 py-2 text-xs font-semibold text-rose-600 focus:text-rose-700 focus:bg-rose-50 rounded-xl"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-500" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Panel Content Area (Scrollable below Merged Navigation Bar) */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto bg-slate-50/70">
+          <main className="flex-1 p-3 sm:p-5 md:p-6 w-full">
+            <Tabs value={activeTab} className="w-full">
             {/* Console Landing Dashboard */}
             <TabsContent value="dashboard" className="mt-0 focus-visible:outline-none w-full">
               <CentralDashboard userId={userId!} companyProfileId={companyProfileId} onNavigate={handleNavigate} readOnly={isVisitor} />

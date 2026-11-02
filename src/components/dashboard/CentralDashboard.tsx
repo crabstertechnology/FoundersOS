@@ -82,7 +82,7 @@ interface Employee {
   isActive: boolean;
 }
 
-export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnly = false }: CentralDashboardProps) {
+export const CentralDashboard = React.memo(function CentralDashboard({ userId, companyProfileId, onNavigate, readOnly = false }: CentralDashboardProps) {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -2943,4 +2943,4 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       </Dialog>
     </div>
   );
-}
+});

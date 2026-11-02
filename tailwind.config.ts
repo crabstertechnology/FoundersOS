@@ -10,14 +10,14 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        body: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        sidebar: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        heading: ['Rubik', 'system-ui', '-apple-system', 'sans-serif'],
-        headline: ['Rubik', 'system-ui', '-apple-system', 'sans-serif'],
-        tile: ['Raleway', 'system-ui', '-apple-system', 'sans-serif'],
-        content: ['Soria', 'Lora', 'Georgia', 'serif'],
-        soria: ['Soria', 'Lora', 'Georgia', 'serif'],
+        sans: ['"Google Sans Text"', '"Google Sans"', '"Plus Jakarta Sans"', 'Roboto', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        body: ['"Google Sans Text"', '"Google Sans"', '"Plus Jakarta Sans"', 'Roboto', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sidebar: ['"Google Sans Text"', '"Google Sans"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['"Google Sans"', '"Google Sans Text"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        headline: ['"Google Sans"', '"Google Sans Text"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        tile: ['"Google Sans"', '"Google Sans Text"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        content: ['"Google Sans Text"', 'Lora', 'Georgia', 'serif'],
+        soria: ['"Google Sans"', 'Lora', 'Georgia', 'serif'],
         code: ['JetBrains Mono', 'DM Mono', 'Fira Code', 'monospace'],
       },
       colors: {
