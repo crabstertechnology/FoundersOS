@@ -52,11 +52,11 @@ const DEFAULT_FORM_DATA = {
 
 function LabelWithInfo({ label, info }: { label: string; info: string }) {
   return (
-    <div className="flex items-center gap-1.5 mb-1.5">
-      <Label className="text-xs font-bold text-slate-700">{label}</Label>
+    <div className="flex items-center gap-1.5 mb-1">
+      <Label className="text-xs font-semibold text-slate-700">{label}</Label>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Info className="w-3.5 h-3.5 text-slate-400 hover:text-indigo-600 transition-colors cursor-help" />
+          <Info className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-help" />
         </TooltipTrigger>
         <TooltipContent className="max-w-[220px] text-xs font-medium">
           {info}
@@ -76,7 +76,6 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
   const { data: profileDoc, isLoading: isDocLoading } = useDoc(profileRef);
   
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
-  const [isScenarioPreMoney, setIsScenarioPreMoney] = useState(false);
   const [exitValue, setExitValue] = useState<number>(50000000); // 5 Cr default
 
   // AI Advisor States
@@ -194,11 +193,11 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
     const cofounders = Math.max(0, formData.coFounderEq || 0);
 
     const slices = [
-      { label: 'Founder', pct: founder, color: '#3b82f6' },      // blue
-      { label: 'Investor', pct: investor, color: '#ef4444' },    // red
-      { label: 'ESOP', pct: esop, color: '#a855f7' },            // purple
+      { label: 'Founder', pct: founder, color: '#4f46e5' },      // indigo
+      { label: 'Investor', pct: investor, color: '#0284c7' },    // sky
+      { label: 'ESOP', pct: esop, color: '#10b981' },            // emerald
       { label: 'Advisors', pct: advisors, color: '#f59e0b' },    // amber
-      { label: 'Co-founders', pct: cofounders, color: '#06b6d4' } // cyan
+      { label: 'Co-founders', pct: cofounders, color: '#64748b' } // slate
     ];
 
     return slices;
@@ -280,83 +279,74 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
     );
   }
 
-  // Funding Scenario Round Projections
-  const currentVal = isScenarioPreMoney ? results.preMoney : results.postMoney;
-  const scenarioRounds = [
-    { label: 'Current', val: currentVal || 0 },
-    { label: 'Seed', val: Math.max(currentVal * 2.5, 15000000) },
-    { label: 'Series A', val: Math.max(currentVal * 6, 60000000) },
-    { label: 'Series B', val: Math.max(currentVal * 15, 180000000) },
-    { label: 'Series C', val: Math.max(currentVal * 35, 450000000) },
-  ];
-  const maxScenarioVal = Math.max(...scenarioRounds.map(r => r.val), 1);
-
   return (
-    <div className="space-y-5 w-full">
+    <div className="space-y-3.5 w-full max-w-7xl mx-auto">
       
       {/* ─────────────────────────────────────────────────────────────
-          ROW 1: Inputs & Parameters (3 Columns)
+          ROW 1: Inputs & Parameters (3 Columns: 3 cols | 6 cols | 3 cols)
       ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
         
         {/* Column 1: Startup Profile & Deal Terms (lg:col-span-3) */}
-        <div className="lg:col-span-3 space-y-5 flex flex-col justify-between">
-          {/* Startup Profile: Deep Indigo Tint with Asymmetric Corner Cut */}
-          <div className="rounded-tl-3xl rounded-br-3xl rounded-tr-xl rounded-bl-xl bg-gradient-to-br from-indigo-50/70 via-white to-slate-50/80 border-2 border-indigo-200/90 border-l-4 border-l-indigo-600 p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                <Award className="w-4 h-4" />
+        <div className="lg:col-span-3 space-y-2.5">
+          {/* Startup Profile */}
+          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
+                <Award className="w-3.5 h-3.5" />
               </div>
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Startup Profile</h3>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Startup Profile</h3>
             </div>
 
-            <fieldset disabled={readOnly} className="space-y-3">
+            <fieldset disabled={readOnly} className="space-y-2">
               <div>
                 <LabelWithInfo label="Company Name" info="The official registered name of your company." />
                 <Input 
                   placeholder="e.g. CRABSTER TECHNOLOGY"
                   value={formData.companyName} 
                   onChange={e => handleChange('companyName', e.target.value)}
-                  className="h-9 text-xs font-semibold uppercase tracking-wider bg-white/90 border-indigo-200 focus-visible:ring-indigo-500"
+                  className="h-7.5 text-xs font-medium uppercase tracking-wider bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                 />
               </div>
 
-              <div>
-                <LabelWithInfo label="Stage" info="Idea (Pre-revenue), MVP (Early traction), or Seed." />
-                <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
-                  <SelectTrigger className="h-9 text-xs font-semibold bg-white/90 border-indigo-200"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <LabelWithInfo label="Stage" info="Idea (Pre-revenue), MVP (Early traction), or Seed." />
+                  <Select value={formData.stage} onValueChange={v => handleChange('stage', v)}>
+                    <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <LabelWithInfo label="Industry" info="Determines the market revenue multiple applied to your startup." />
-                <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
-                  <SelectTrigger className="h-9 text-xs font-semibold bg-white/90 border-indigo-200"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {INDUSTRIES.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <LabelWithInfo label="Industry" info="Determines the market revenue multiple applied to your startup." />
+                  <Select value={formData.industry} onValueChange={v => handleChange('industry', v)}>
+                    <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {INDUSTRIES.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </fieldset>
           </div>
 
-          {/* Deal Terms: Cyan / Teal Law Card with Inverted Asymmetric Cut */}
-          <div className="rounded-tr-3xl rounded-bl-3xl rounded-tl-xl rounded-br-xl bg-gradient-to-br from-cyan-50/70 via-white to-teal-50/60 border-2 border-cyan-200/90 border-l-4 border-l-cyan-600 p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-cyan-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                <Scale className="w-4 h-4" />
+          {/* Deal Terms */}
+          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
+                <Scale className="w-3.5 h-3.5" />
               </div>
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Deal Terms</h3>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Deal Terms</h3>
             </div>
 
-            <fieldset disabled={readOnly} className="grid grid-cols-2 gap-3">
+            <fieldset disabled={readOnly} className="grid grid-cols-2 gap-2">
               <div>
                 <LabelWithInfo label="Pref Multiple" info="1x is standard VC. 2x is aggressive liquidation preference." />
                 <Select value={formData.prefMultiple} onValueChange={v => handleChange('prefMultiple', v)}>
-                  <SelectTrigger className="h-9 text-xs font-semibold bg-white/90 border-cyan-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">1x</SelectItem>
                     <SelectItem value="1.5">1.5x</SelectItem>
@@ -368,7 +358,7 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
               <div>
                 <LabelWithInfo label="Type" info="Non-participating is founder-friendly standard." />
                 <Select value={formData.prefType} onValueChange={v => handleChange('prefType', v)}>
-                  <SelectTrigger className="h-9 text-xs font-semibold bg-white/90 border-cyan-200"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nonparticipating">Non-Participating</SelectItem>
                     <SelectItem value="participating">Participating</SelectItem>
@@ -379,109 +369,24 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
           </div>
         </div>
 
-        {/* Column 2: Unit Econ Inputs & Founder Stake (lg:col-span-4) */}
-        <div className="lg:col-span-4 space-y-5 flex flex-col justify-between">
-          {/* Unit Econ Inputs: Emerald Top-Bordered Shape */}
-          <div className="rounded-3xl bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 border-2 border-emerald-200/90 border-t-4 border-t-emerald-600 p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                <FileText className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Unit Econ Inputs</h3>
+        {/* Column 2: Strategic Fundraising Inputs (lg:col-span-6) */}
+        <div className="lg:col-span-6 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
+              <Coins className="w-3.5 h-3.5" />
             </div>
-
-            <fieldset disabled={readOnly} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <LabelWithInfo label="Profit per Order" info="Gross Profit per transaction (Revenue - COGS)." />
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-700 font-mono text-xs font-bold">₹</span>
-                    <Input 
-                      type="number" 
-                      className="pl-7 h-9 text-xs font-semibold bg-white/90 border-emerald-200 focus-visible:ring-emerald-500"
-                      placeholder="e.g. 500"
-                      value={formData.profitPerOrder || ''} 
-                      onChange={e => handleChange('profitPerOrder', Number(e.target.value))}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <LabelWithInfo label="Orders per Customer" info="Avg frequency of repeat orders over customer lifetime." />
-                  <Input 
-                    type="number" 
-                    className="h-9 text-xs font-semibold bg-white/90 border-emerald-200 focus-visible:ring-emerald-500"
-                    placeholder="1"
-                    value={formData.ordersPerCustomer || ''} 
-                    onChange={e => handleChange('ordersPerCustomer', Number(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <LabelWithInfo label="Avg CAC" info="Total Sales & Marketing cost spent per new customer acquired." />
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-700 font-mono text-xs font-bold">₹</span>
-                  <Input 
-                    type="number" 
-                    className="pl-7 h-9 text-xs font-semibold bg-white/90 border-emerald-200 focus-visible:ring-emerald-500"
-                    placeholder="e.g. 1000"
-                    value={formData.cac || ''} 
-                    onChange={e => handleChange('cac', Number(e.target.value))}
-                  />
-                </div>
-              </div>
-            </fieldset>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Strategic Fundraising Inputs</h3>
           </div>
 
-          {/* Founder Stake: Electric Violet/Indigo Hero Trophy Box */}
-          <div className="rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white border-2 border-indigo-400/80 shadow-md p-5 space-y-3 relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
-
-            <div className="flex items-center gap-2.5 relative z-10">
-              <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-xs text-white flex items-center justify-center shrink-0">
-                <Users className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-black text-white tracking-tight">Founder Stake</h3>
-            </div>
-
-            <div className="flex items-baseline justify-between relative z-10">
-              <div className="text-3xl font-black text-white tracking-tight drop-shadow-xs">
-                {results.founderEq.toFixed(1)}%
-              </div>
-              <div className="text-xs font-bold text-indigo-200 font-mono">
-                100 - {Math.round(100 - results.founderEq)} = {Math.round(results.founderEq)}%
-              </div>
-            </div>
-
-            {/* Glowing progress slider track */}
-            <div className="relative w-full h-3 bg-black/20 rounded-full overflow-hidden border border-white/20">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-400 to-cyan-300 rounded-full transition-all duration-300 shadow-sm"
-                style={{ width: `${Math.min(100, Math.max(0, results.founderEq))}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Column 3: Strategic Fundraising Inputs (lg:col-span-5) - Amber/Gold Capital Treasury */}
-        <div className="lg:col-span-5 rounded-3xl bg-gradient-to-br from-amber-50/60 via-white to-orange-50/30 border-2 border-amber-200/90 border-r-4 border-r-amber-500 p-5 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-xs shrink-0">
-              <Coins className="w-4 h-4" />
-            </div>
-            <h3 className="text-sm font-black text-slate-900 tracking-tight">Strategic Fundraising Inputs</h3>
-          </div>
-
-          <fieldset disabled={readOnly} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+          <fieldset disabled={readOnly} className="space-y-2">
+            <div className="grid grid-cols-3 gap-2">
               <div>
                 <LabelWithInfo label="Investment Amount" info="The total capital being raised in this round." />
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-700 font-mono text-xs font-bold">₹</span>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-7 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 5000000"
                     value={formData.investment || ''} 
                     onChange={e => handleChange('investment', Number(e.target.value))}
@@ -494,54 +399,52 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-7 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 10"
                     value={formData.equityOffered || ''} 
                     onChange={e => handleChange('equityOffered', Number(e.target.value))}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-700 font-bold text-xs">%</span>
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">%</span>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
               <div>
-                <LabelWithInfo label="Explicit Post-Money (Optional)" info="Manual override for Post-Money valuation." />
+                <LabelWithInfo label="Override Post-Money" info="Manual override for Post-Money valuation." />
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-700 font-mono text-xs font-bold">₹</span>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-7 h-9 text-xs font-semibold bg-amber-50/70 border-amber-200 focus-visible:ring-amber-500"
-                    placeholder="Leave blank..."
+                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    placeholder="Optional..."
                     value={formData.overridePostMoney !== null && formData.overridePostMoney !== undefined ? formData.overridePostMoney : ''} 
                     onChange={e => handleChange('overridePostMoney', e.target.value === '' ? null : Number(e.target.value))}
                   />
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-3 gap-2">
               <div>
                 <LabelWithInfo label="Monthly Revenue" info="Current Monthly Recurring Revenue (MRR)." />
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-700 font-mono text-xs font-bold">₹</span>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-7 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 50000"
                     value={formData.mRevenue || ''} 
                     onChange={e => handleChange('mRevenue', Number(e.target.value))}
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-3 gap-3">
               <div>
                 <LabelWithInfo label="Monthly Burn" info="Net monthly operational cash outflow." />
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-700 font-mono text-xs font-bold">₹</span>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-7 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 30000"
                     value={formData.burnRate || ''} 
                     onChange={e => handleChange('burnRate', Number(e.target.value))}
@@ -552,314 +455,314 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
               <div>
                 <LabelWithInfo label="Cash in Bank" info="Total current liquid bank reserves." />
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-700 font-mono text-xs font-bold">₹</span>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
                   <Input 
                     type="number" 
-                    className="pl-7 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 500000"
                     value={formData.cashBank || ''} 
                     onChange={e => handleChange('cashBank', Number(e.target.value))}
                   />
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-3 gap-2">
               <div>
                 <LabelWithInfo label="ESOP Pool %" info="Stock option pool reserved for team hires." />
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-6 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="10"
                     value={formData.esopPool || ''} 
                     onChange={e => handleChange('esopPool', Number(e.target.value))}
                   />
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-700 font-bold text-xs">%</span>
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">%</span>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
               <div>
                 <LabelWithInfo label="Advisor Equity %" info="Equity pool allocated to board advisors." />
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-6 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 2"
                     value={formData.advisorEquity || ''} 
                     onChange={e => handleChange('advisorEquity', Number(e.target.value))}
                   />
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-700 font-bold text-xs">%</span>
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">%</span>
                 </div>
               </div>
 
               <div>
-                <LabelWithInfo label="Co-Founder Equity %" info="Equity held collectively by other co-founders." />
+                <LabelWithInfo label="Co-Founder %" info="Equity held collectively by other co-founders." />
                 <div className="relative">
                   <Input 
                     type="number" 
-                    className="pr-6 h-9 text-xs font-semibold bg-white/90 border-amber-200 focus-visible:ring-amber-500"
+                    className="pr-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
                     placeholder="e.g. 8"
                     value={formData.coFounderEq || ''} 
                     onChange={e => handleChange('coFounderEq', Number(e.target.value))}
                   />
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-700 font-bold text-xs">%</span>
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">%</span>
                 </div>
               </div>
             </div>
           </fieldset>
         </div>
 
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          ROW 2: Key Metrics & Implied Valuation (2 Curated Cards)
-      ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* Key Metrics: Rounded Card with Multi-Tone Inner Badges */}
-        <div className="lg:col-span-6 rounded-3xl bg-gradient-to-br from-slate-50 via-white to-pink-50/30 border-2 border-slate-200/90 p-5 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-              <Activity className="w-4 h-4" />
-            </div>
-            <h3 className="text-sm font-black text-slate-900 tracking-tight">Key Metrics</h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Runway */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-100/70 via-rose-50 to-white border-2 border-rose-200/90 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Flame className="w-4 h-4" />
+        {/* Column 3: Unit Econ Inputs & Founder Stake (lg:col-span-3 - Shrunk Horizontal Length) */}
+        <div className="lg:col-span-3 space-y-2.5">
+          {/* Unit Econ Inputs */}
+          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
+                <FileText className="w-3.5 h-3.5" />
               </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800/80 block truncate">
-                  Runway
-                </span>
-                <span className="text-base font-black text-slate-900 block truncate">
-                  {results.runway === 999 ? '∞' : `${Math.round(results.runway)} mo`}
-                </span>
-                <span className="text-[9px] font-semibold text-rose-700/70 block truncate">
-                  Bank ÷ Burn
-                </span>
-              </div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Unit Econ Inputs</h3>
             </div>
 
-            {/* ARR */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-100/70 via-emerald-50 to-white border-2 border-emerald-200/90 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <BarChart3 className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800/80 block truncate">
-                  ARR
-                </span>
-                <span className="text-base font-black text-slate-900 block truncate">
-                  {fmtINR(results.arr)}
-                </span>
-                <span className="text-[9px] font-semibold text-emerald-700/70 block truncate">
-                  MRR × 12
-                </span>
-              </div>
-            </div>
-
-            {/* Burn Rate */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-100/70 via-purple-50 to-white border-2 border-purple-200/90 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-800/80 block truncate">
-                  Burn Rate
-                </span>
-                <span className="text-base font-black text-slate-900 block truncate">
-                  {fmtINR(formData.burnRate)}
-                </span>
-                <span className="text-[9px] font-semibold text-purple-700/70 block truncate">
-                  Monthly Cash Outflow
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Implied Valuation: Sapphire/Blue Deck with Elevated Post-Money */}
-        <div className="lg:col-span-6 rounded-3xl bg-gradient-to-br from-slate-50 via-white to-blue-50/30 border-2 border-slate-200/90 p-5 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-            <h3 className="text-sm font-black text-slate-900 tracking-tight">Implied Valuation</h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Pre-Money */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-sky-100/70 via-sky-50 to-white border-2 border-sky-200/90 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Wallet className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-sky-800/80 block truncate">
-                  Pre-Money
-                </span>
-                <span className="text-base font-black text-slate-900 block truncate">
-                  {fmtINR(results.preMoney)}
-                </span>
-                <span className="text-[9px] font-semibold text-sky-700/70 block truncate">
-                  Post - Inv
-                </span>
-              </div>
-            </div>
-
-            {/* Post-Money - Highlighted with Primary Accent */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-100 via-indigo-50 to-white border-2 border-indigo-400 text-indigo-950 flex items-center gap-3 shadow-xs ring-2 ring-indigo-200/60">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Award className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-800 block truncate">
-                  Post-Money
-                </span>
-                <span className="text-base font-black text-indigo-900 block truncate">
-                  {fmtINR(results.postMoney)}
-                </span>
-                <span className="text-[9px] font-semibold text-indigo-600 block truncate">
-                  Inv ÷ Eq%
-                </span>
-              </div>
-            </div>
-
-            {/* Revenue Multiple */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-100 via-slate-50 to-white border-2 border-slate-300/90 flex items-center gap-3 shadow-2xs">
-              <div className="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Target className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block truncate">
-                  Rev Mult ({industryData?.multiple || 3}x)
-                </span>
-                <span className="text-base font-black text-slate-900 block truncate">
-                  {fmtINR(revValuation)}
-                </span>
-                <span className="text-[9px] font-semibold text-slate-500 block truncate">
-                  {industryData?.label || 'Market'} avg
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          ROW 3: Unit Economics & Valuation Breakdown Donut (2 Columns)
-      ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* Left: Unit Economics - Blue-Bordered Dashboard Card (lg:col-span-8) */}
-        <div className="lg:col-span-8 rounded-3xl bg-gradient-to-br from-blue-50/40 via-white to-slate-50 border-2 border-blue-200/90 border-l-6 border-l-blue-600 p-5 shadow-sm space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2.5 mb-3.5">
-              <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                <Coins className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Unit Economics</h3>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {/* LTV */}
-              <div className="p-3 rounded-2xl border-2 border-blue-200/80 bg-white/95 flex items-start gap-2.5 shadow-2xs">
-                <div className="w-7 h-7 rounded-lg bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                  <Coins className="w-3.5 h-3.5" />
+            <fieldset disabled={readOnly} className="space-y-1.5">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <LabelWithInfo label="Profit/Order" info="Gross Profit per transaction (Revenue - COGS)." />
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                    <Input 
+                      type="number" 
+                      className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                      placeholder="e.g. 500"
+                      value={formData.profitPerOrder || ''} 
+                      onChange={e => handleChange('profitPerOrder', Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">LTV</span>
-                  <span className="text-sm font-black text-slate-900 block truncate">{fmtINR(results.ltv)}</span>
-                  <span className="text-[9px] text-slate-400 font-medium block truncate">Profit/Ord × Orders</span>
+
+                <div>
+                  <LabelWithInfo label="Orders/Cust" info="Avg frequency of repeat orders over customer lifetime." />
+                  <Input 
+                    type="number" 
+                    className="h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    placeholder="1"
+                    value={formData.ordersPerCustomer || ''} 
+                    onChange={e => handleChange('ordersPerCustomer', Number(e.target.value))}
+                  />
                 </div>
               </div>
 
-              {/* LTV / CAC */}
-              <div className="p-3 rounded-2xl border-2 border-emerald-200/80 bg-white/95 flex items-start gap-2.5 shadow-2xs">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                  <Target className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">LTV / CAC Ratio</span>
-                  <span className={`text-sm font-black block truncate ${results.ltvCac >= 3 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {fmtMult(results.ltvCac)}
-                  </span>
-                  <span className="text-[9px] text-slate-400 font-medium block truncate">LTV ÷ CAC</span>
+              <div>
+                <LabelWithInfo label="Avg CAC" info="Total Sales & Marketing cost spent per new customer acquired." />
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs font-semibold">₹</span>
+                  <Input 
+                    type="number" 
+                    className="pl-5 h-7.5 text-xs font-medium bg-white border-slate-200 text-slate-900 focus-visible:ring-slate-400"
+                    placeholder="e.g. 1000"
+                    value={formData.cac || ''} 
+                    onChange={e => handleChange('cac', Number(e.target.value))}
+                  />
                 </div>
               </div>
+            </fieldset>
+          </div>
 
-              {/* Net Profit / Customer */}
-              <div className="p-3 rounded-2xl border-2 border-purple-200/80 bg-white/95 flex items-start gap-2.5 shadow-2xs">
-                <div className="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+          {/* Founder Stake Box (Proper Normal Horizontal Length) */}
+          <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
                   <Users className="w-3.5 h-3.5" />
                 </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Net Profit / Cust</span>
-                  <span className="text-sm font-black text-slate-900 block truncate">{fmtINR(results.profitPerCustomer)}</span>
-                  <span className="text-[9px] text-slate-400 font-medium block truncate">LTV - CAC</span>
-                </div>
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Founder Stake</h3>
               </div>
+              <span className="text-base font-black text-slate-900 tracking-tight">
+                {results.founderEq.toFixed(1)}%
+              </span>
+            </div>
 
-              {/* Break-even CAC */}
-              <div className="p-3 rounded-2xl border-2 border-amber-200/80 bg-white/95 flex items-start gap-2.5 shadow-2xs">
-                <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Break-even CAC</span>
-                  <span className="text-sm font-black text-slate-900 block truncate">{fmtINR(results.breakEvenCac)}</span>
-                  <span className="text-[9px] text-slate-400 font-medium block truncate">Based on LTV</span>
-                </div>
-              </div>
+            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+              <div 
+                className="h-full bg-slate-900 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, Math.max(0, results.founderEq))}%` }}
+              />
+            </div>
+
+            <div className="flex justify-between items-center text-[10px] text-slate-500 font-medium">
+              <span>Dilution: {Math.round(100 - results.founderEq)}%</span>
+              <span className="font-mono text-slate-400">100 - {Math.round(100 - results.founderEq)}%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          ROW 2: Key Metrics & Implied Valuation (Compact 6-Card KPI Strip)
+      ───────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        {/* Runway */}
+        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+            Runway
+          </span>
+          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+            {results.runway === 999 ? '∞' : `${Math.round(results.runway)} mo`}
+          </span>
+          <span className="text-[9px] text-slate-400 font-medium block truncate">
+            Bank ÷ Burn
+          </span>
+        </div>
+
+        {/* ARR */}
+        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+            ARR
+          </span>
+          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+            {fmtINR(results.arr)}
+          </span>
+          <span className="text-[9px] text-slate-400 font-medium block truncate">
+            MRR × 12
+          </span>
+        </div>
+
+        {/* Burn Rate */}
+        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+            Burn Rate
+          </span>
+          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+            {fmtINR(formData.burnRate)}
+          </span>
+          <span className="text-[9px] text-slate-400 font-medium block truncate">
+            Monthly Outflow
+          </span>
+        </div>
+
+        {/* Pre-Money */}
+        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+            Pre-Money
+          </span>
+          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+            {fmtINR(results.preMoney)}
+          </span>
+          <span className="text-[9px] text-slate-400 font-medium block truncate">
+            Post - Inv
+          </span>
+        </div>
+
+        {/* Post-Money */}
+        <div className="py-2 px-2.5 rounded-xl bg-indigo-50/60 border border-indigo-200/80 shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 block truncate">
+            Post-Money
+          </span>
+          <span className="text-base font-black text-indigo-950 block truncate mt-0.5">
+            {fmtINR(results.postMoney)}
+          </span>
+          <span className="text-[9px] text-indigo-600/80 font-medium block truncate">
+            Inv ÷ Eq%
+          </span>
+        </div>
+
+        {/* Revenue Multiple */}
+        <div className="py-2 px-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
+            Rev Multiple
+          </span>
+          <span className="text-base font-black text-slate-900 block truncate mt-0.5">
+            {fmtINR(revValuation)}
+          </span>
+          <span className="text-[9px] text-slate-400 font-medium block truncate">
+            {industryData?.multiple || 3}x ({industryData?.label || 'Market'})
+          </span>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          ROW 3: Unit Economics (5 cols) | Valuation Breakdown (3 cols) | Strategic Advisor (4 cols)
+      ───────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+        
+        {/* Left: Unit Economics (lg:col-span-5) */}
+        <div className="lg:col-span-5 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
+              <Coins className="w-3.5 h-3.5" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Unit Economics</h3>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2">
+            {/* LTV */}
+            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">LTV</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.ltv)}</span>
+              <span className="text-[9px] text-slate-400 font-medium block truncate">Profit × Orders</span>
+            </div>
+
+            {/* LTV / CAC */}
+            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">LTV / CAC</span>
+              <span className={`text-xs sm:text-sm font-black block truncate mt-0.5 ${results.ltvCac >= 3 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {fmtMult(results.ltvCac)}
+              </span>
+              <span className="text-[9px] text-slate-400 font-medium block truncate">LTV ÷ CAC</span>
+            </div>
+
+            {/* Net Profit / Customer */}
+            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">Net Profit</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.profitPerCustomer)}</span>
+              <span className="text-[9px] text-slate-400 font-medium block truncate">LTV - CAC</span>
+            </div>
+
+            {/* Break-even CAC */}
+            <div className="py-1.5 px-2 rounded-lg border border-slate-200 bg-slate-50/50">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">Break-even</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">{fmtINR(results.breakEvenCac)}</span>
+              <span className="text-[9px] text-slate-400 font-medium block truncate">Max CAC</span>
             </div>
           </div>
 
           {/* Alert Banner */}
-          <div className={`p-3 rounded-2xl border-2 text-xs font-medium flex items-center gap-2.5 shadow-2xs ${
+          <div className={`py-1.5 px-2.5 rounded-lg border text-[11px] font-medium flex items-center gap-2 ${
             results.ltvCac >= 3 
-              ? 'bg-emerald-50 border-emerald-300 text-emerald-900' 
-              : 'bg-amber-50 border-amber-300 text-amber-900'
+              ? 'bg-emerald-50/60 border-emerald-200 text-emerald-900' 
+              : 'bg-amber-50/60 border-amber-200 text-amber-900'
           }`}>
             {results.ltvCac >= 3 ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Unit economics are healthy. You earn {fmtMult(results.ltvCac)} on acquisition with ₹{fmtINR(results.profitPerCustomer)} net profit per customer.</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="truncate">Unit economics healthy ({fmtMult(results.ltvCac)} ratio with ₹{fmtINR(results.profitPerCustomer)} profit/cust).</span>
               </>
             ) : (
               <>
-                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Efficiency is below 3x. You are only earning {fmtMult(results.ltvCac)} back for every rupee spent on acquisition. Reduce CAC or increase retention.</span>
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="truncate">Efficiency is below 3x ({fmtMult(results.ltvCac)}). Reduce CAC or increase retention.</span>
               </>
             )}
           </div>
         </div>
 
-        {/* Right: Valuation Breakdown Donut - Midnight Navy Nebula Theme (lg:col-span-4) */}
-        <div className="lg:col-span-4 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white border-2 border-indigo-900/80 p-5 shadow-lg space-y-3 relative overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none" />
-
-          <div className="flex items-center gap-2.5 relative z-10">
-            <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center shrink-0">
-              <PieChart className="w-4 h-4" />
+        {/* Middle: Valuation Breakdown Donut (lg:col-span-3 - Shrunk Horizontal Length) */}
+        <div className="lg:col-span-3 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
+              <PieChart className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-sm font-black text-white tracking-tight">Valuation Breakdown</h3>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Valuation Breakdown</h3>
           </div>
 
-          <div className="flex items-center justify-between gap-4 pt-1 relative z-10">
-            {/* SVG Donut Chart with glowing slices */}
-            <div className="relative w-32 h-32 shrink-0">
+          <div className="flex items-center gap-2.5">
+            {/* SVG Donut Chart */}
+            <div className="relative w-16 h-16 shrink-0">
               <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                {/* Background circle */}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#1e293b" strokeWidth="16" />
-                
-                {/* Dynamic SVG donut slices */}
+                <circle cx="50" cy="50" r="36" fill="none" stroke="#f1f5f9" strokeWidth="14" />
                 {(() => {
-                  const circumference = 2 * Math.PI * 38; // ~238.76
+                  const circumference = 2 * Math.PI * 36;
                   let currentOffset = 0;
                   return donutData.map((slice, i) => {
                     const strokeLen = (slice.pct / 100) * circumference;
@@ -871,128 +774,110 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                         key={i}
                         cx="50"
                         cy="50"
-                        r="38"
+                        r="36"
                         fill="none"
                         stroke={slice.color}
-                        strokeWidth="16"
+                        strokeWidth="14"
                         strokeDasharray={dashArray}
                         strokeDashoffset={offset}
-                        className="transition-all duration-500"
+                        className="transition-all duration-300"
                       />
                     );
                   });
                 })()}
               </svg>
 
-              {/* Center text */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-base font-black text-white leading-none">
+                <span className="text-xs font-black text-slate-900 leading-none">
                   {Math.round(results.founderEq)}%
                 </span>
-                <span className="text-[9px] font-bold text-slate-400 mt-0.5">
+                <span className="text-[8px] font-bold text-slate-400 mt-0.5">
                   Founder
                 </span>
               </div>
             </div>
 
-            {/* Legend */}
-            <div className="space-y-1.5 flex-1 min-w-0 text-xs font-semibold">
+            {/* Compact Legend */}
+            <div className="space-y-1 text-xs font-medium flex-1 min-w-0">
               {donutData.map((slice, i) => (
-                <div key={i} className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
-                    <span className="text-slate-300 truncate">{slice.label}</span>
+                <div key={i} className="flex items-center justify-between gap-1">
+                  <div className="flex items-center gap-1 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
+                    <span className="text-slate-600 truncate text-[10px]">{slice.label}</span>
                   </div>
-                  <span className="text-white font-bold shrink-0">{slice.pct}%</span>
+                  <span className="text-slate-900 font-bold shrink-0 text-[10px]">{slice.pct}%</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
+        {/* Right: FounderOS Strategic Advisor (lg:col-span-4 - Shrunk Horizontal Length) */}
+        <div className="lg:col-span-4 rounded-xl bg-white border border-slate-200 p-3 shadow-xs space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1 bg-indigo-50 rounded text-indigo-600 shrink-0">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Strategic Advisor</h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowHistoryModal(true)}
+              className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+            >
+              <FileText className="w-3 h-3" />
+              Saved ({savedReports?.length || 0})
+            </button>
+          </div>
+
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            AI-powered valuation insights, fundraising strategy & deal negotiation advice.
+          </p>
+
+          <Button
+            type="button"
+            onClick={handleGenerateAI}
+            disabled={aiLoading || readOnly}
+            className="w-full bg-slate-900 text-white hover:bg-slate-800 font-bold text-xs h-8 gap-1.5 shadow-xs"
+          >
+            {aiLoading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                Generating Analysis...
+              </>
+            ) : (
+              <>
+                Generate Strategic Analysis <ArrowRight className="w-3.5 h-3.5" />
+              </>
+            )}
+          </Button>
+        </div>
+
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          ROW 4: Funding Scenario, Exit Value Simulator, & Strategic Advisor
+          ROW 4: Exit Value Simulator (Compact Balanced Toolbar Card)
       ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        
-        {/* Funding Scenario Bar Chart: Soft Lavender Deck (lg:col-span-4) */}
-        <div className="lg:col-span-4 rounded-3xl bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/40 border-2 border-indigo-200/90 p-5 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
-                <BarChart3 className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-black text-slate-900 tracking-tight">Funding Scenario</h3>
-            </div>
-
-            {/* Pre / Post Money Toggle */}
-            <div className="flex items-center gap-1.5 text-[11px] font-bold bg-slate-200/80 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setIsScenarioPreMoney(true)}
-                className={`px-2.5 py-0.5 rounded-lg transition-colors ${isScenarioPreMoney ? 'bg-white shadow-xs text-indigo-700 font-extrabold' : 'text-slate-600'}`}
-              >
-                Pre
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsScenarioPreMoney(false)}
-                className={`px-2.5 py-0.5 rounded-lg transition-colors ${!isScenarioPreMoney ? 'bg-indigo-600 shadow-xs text-white font-extrabold' : 'text-slate-600'}`}
-              >
-                Post
-              </button>
-            </div>
-          </div>
-
-          {/* Bar Chart Columns */}
-          <div className="h-32 flex items-end justify-between gap-2 pt-4 px-1">
-            {scenarioRounds.map((r, i) => {
-              const heightPct = Math.max(12, Math.min(100, Math.round((r.val / maxScenarioVal) * 100)));
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
-                  <span className="text-[9px] font-bold text-indigo-900 truncate max-w-full">
-                    {fmtINR(r.val)}
-                  </span>
-                  <div className="w-full bg-slate-100 rounded-t-xl h-full flex items-end overflow-hidden">
-                    <div 
-                      className={`w-full rounded-t-xl transition-all duration-300 ${
-                        i === 0 ? 'bg-indigo-400' : i === 1 ? 'bg-indigo-500' : i === 2 ? 'bg-indigo-600' : 'bg-purple-600'
-                      }`}
-                      style={{ height: `${heightPct}%` }}
-                    />
-                  </div>
-                  <span className="text-[9px] font-extrabold text-slate-600 uppercase tracking-tighter truncate max-w-full">
-                    {r.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Exit Value Simulator: Cyber Teal / Emerald Simulator (lg:col-span-5) */}
-        <div className="lg:col-span-5 rounded-3xl bg-gradient-to-br from-teal-50/60 via-white to-emerald-50/40 border-2 border-teal-200/90 border-t-4 border-t-teal-600 p-5 shadow-sm space-y-4 flex flex-col justify-between">
-          <div>
+      <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+          {/* Slider Side (lg:col-span-5) */}
+          <div className="lg:col-span-5 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
-                  <Target className="w-4 h-4" />
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 bg-slate-100 rounded text-slate-700 shrink-0">
+                  <Target className="w-3.5 h-3.5" />
                 </div>
-                <h3 className="text-sm font-black text-slate-900 tracking-tight">Exit Value Simulator</h3>
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Exit Value Simulator</h3>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] text-teal-800 font-bold uppercase block leading-none">Exit Target</span>
-                <span className="text-xs font-black text-teal-700 font-mono">{fmtINR(exitValue)}</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Target:</span>
+                <span className="text-xs font-black text-slate-900 font-mono">{fmtINR(exitValue)}</span>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 font-medium mt-1">
-              See potential returns for different exit outcomes.
-            </p>
 
             {/* Slider */}
-            <div className="pt-3 pb-1">
+            <div className="pt-1 pb-0.5">
               <input
                 type="range"
                 min={5000000}
@@ -1000,88 +885,41 @@ export function ValuationCalculator({ userId, companyProfileId, readOnly }: Valu
                 step={5000000}
                 value={exitValue}
                 onChange={e => setExitValue(Number(e.target.value))}
-                className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
               />
             </div>
           </div>
 
-          {/* Return Metric Cards */}
-          <div className="grid grid-cols-3 gap-2.5 pt-1">
-            <div className="p-3 bg-indigo-50/90 rounded-2xl border-2 border-indigo-200/90 shadow-2xs">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-700 block truncate">
+          {/* Metric Tiles Side (lg:col-span-7) */}
+          <div className="lg:col-span-7 grid grid-cols-3 gap-2">
+            <div className="py-1.5 px-2 bg-slate-50 rounded-lg border border-slate-200/80">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
                 Founder Return
               </span>
-              <span className="text-xs sm:text-sm font-black text-indigo-950 block truncate">
+              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">
                 {fmtINR(simResults.founderReturn)}
               </span>
             </div>
 
-            <div className="p-3 bg-rose-50/90 rounded-2xl border-2 border-rose-200/90 shadow-2xs">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-rose-700 block truncate">
+            <div className="py-1.5 px-2 bg-slate-50 rounded-lg border border-slate-200/80">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
                 Investor Return
               </span>
-              <span className="text-xs sm:text-sm font-black text-rose-950 block truncate">
+              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">
                 {fmtINR(simResults.investorReturn)}
               </span>
             </div>
 
-            <div className="p-3 bg-emerald-50/90 rounded-2xl border-2 border-emerald-200/90 shadow-2xs">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 block truncate">
+            <div className="py-1.5 px-2 bg-slate-50 rounded-lg border border-slate-200/80">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block truncate">
                 Total Return
               </span>
-              <span className="text-xs sm:text-sm font-black text-emerald-950 block truncate">
+              <span className="text-xs sm:text-sm font-black text-slate-900 block truncate mt-0.5">
                 {fmtINR(exitValue)}
               </span>
             </div>
           </div>
         </div>
-
-        {/* FounderOS Strategic Advisor: Holographic Purple Gradient Card (lg:col-span-3) */}
-        <div className="lg:col-span-3 rounded-3xl bg-gradient-to-br from-purple-800 via-indigo-800 to-slate-900 text-white border-2 border-purple-400/60 shadow-xl p-5 flex flex-col justify-between space-y-4 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-purple-400/20 blur-xl pointer-events-none" />
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-xs text-white flex items-center justify-center shrink-0">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-black text-white tracking-tight">FounderOS Strategic Advisor</h3>
-            </div>
-            <p className="text-xs text-purple-200 font-medium leading-relaxed">
-              Get AI-powered valuation insights, fundraising strategy, and actionable next steps.
-            </p>
-          </div>
-
-          <div className="space-y-2 relative z-10">
-            <Button
-              type="button"
-              onClick={handleGenerateAI}
-              disabled={aiLoading || readOnly}
-              className="w-full bg-white text-indigo-950 hover:bg-indigo-50 font-black text-xs h-10 gap-1.5 shadow-md"
-            >
-              {aiLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-indigo-900" />
-                  Generating Analysis...
-                </>
-              ) : (
-                <>
-                  Generate Strategic Analysis <ArrowRight className="w-3.5 h-3.5" />
-                </>
-              )}
-            </Button>
-
-            <button
-              type="button"
-              onClick={() => setShowHistoryModal(true)}
-              className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-purple-200 hover:text-white transition-colors py-1 cursor-pointer"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              View Saved Reports ({savedReports?.length || 0})
-            </button>
-          </div>
-        </div>
-
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
