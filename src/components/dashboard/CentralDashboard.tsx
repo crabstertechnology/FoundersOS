@@ -23,7 +23,6 @@ import {
   Star
 } from 'lucide-react';
 import { weeklyProgressReportAssistant } from '@/ai/flows/weekly-progress-report-flow';
-import { AreaGrowthChart, ParetoChart, ChordDiagram, TreemapChart } from '@/components/charts';
 
 const loadPdfJs = () => {
   return new Promise<any>((resolve, reject) => {
@@ -128,7 +127,6 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
   
   // Draggable Roadmap Co-Pilot Bot state
   const [botPos, setBotPos] = useState<{ x: number; y: number } | null>(null);
-  const [showVisualCommand, setShowVisualCommand] = useState(true);
   const isDraggingRef = React.useRef(false);
   const dragStartRef = React.useRef({ mouseX: 0, mouseY: 0, posX: 0, posY: 0 });
   const hasMovedRef = React.useRef(false);
@@ -456,75 +454,6 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
       suiteRecommendations: profile?.productSuiteRecommendations || null
     };
   }, [profile]);
-
-  // Visual Command Analytics Data Memos
-  const dashboardRunwayData = useMemo(() => {
-    const currentCash = opsKPIs.cashBank || 1200000;
-    const burn = opsKPIs.totalBurn || 150000;
-    const mrr = salesKPIs.mrr || 80000;
-    const months = ['Month 1', 'Month 3', 'Month 6', 'Month 9', 'Month 12', 'Month 18'];
-    
-    return months.map((m, idx) => {
-      const elapsed = [1, 3, 6, 9, 12, 18][idx];
-      const netBurn = Math.max(20000, burn - (mrr * (1 + 0.1 * elapsed)));
-      const remainingCash = Math.max(0, currentCash - (netBurn * elapsed));
-      const projectedMrr = mrr * Math.pow(1.12, elapsed);
-      return {
-        period: m,
-        primaryVal: remainingCash,
-        secondaryVal: projectedMrr * 8,
-      };
-    });
-  }, [opsKPIs, salesKPIs]);
-
-  const paretoDriversData = useMemo(() => [
-    { label: 'Core SaaS Product', value: Math.max(120000, salesKPIs.mrr * 1.5), category: 'Subscription' },
-    { label: 'Enterprise Pilot Deals', value: 85000, category: 'Contracts' },
-    { label: 'Workshops & Hardware Kits', value: 45000, category: 'Hardware' },
-    { label: 'Inbound Referral Upgrades', value: 25000, category: 'Expansion' },
-    { label: 'Advisory Strategy Services', value: 15000, category: 'Services' },
-  ], [salesKPIs]);
-
-  const capitalFlowLinks = useMemo(() => [
-    { source: 'Founder Capital', target: 'Product & Engineering', value: 350000 },
-    { source: 'Founder Capital', target: 'Runway Reserve', value: 250000 },
-    { source: 'Seed Investors', target: 'Sales & GTM Outreach', value: 300000 },
-    { source: 'Seed Investors', target: 'Core Dev Team', value: 400000 },
-    { source: 'Customer MRR', target: 'Cloud Infrastructure', value: 120000 },
-    { source: 'Customer MRR', target: 'Runway Reserve', value: 80000 },
-  ], []);
-
-  const budgetTreemapData = useMemo(() => [
-    {
-      name: 'Engineering & R&D',
-      value: 450000,
-      color: '#4f46e5',
-      children: [
-        { name: 'Core Engine Dev', value: 250000, color: '#4f46e5' },
-        { name: 'AI Genkit Services', value: 120000, color: '#6366f1' },
-        { name: 'QA & Tooling', value: 80000, color: '#818cf8' },
-      ],
-    },
-    {
-      name: 'Sales & GTM',
-      value: 280000,
-      color: '#0284c7',
-      children: [
-        { name: 'Direct B2B Outreach', value: 160000, color: '#0284c7' },
-        { name: 'Collateral & Demos', value: 70000, color: '#0ea5e9' },
-        { name: 'Event Networking', value: 50000, color: '#38bdf8' },
-      ],
-    },
-    {
-      name: 'Infrastructure & Ops',
-      value: 150000,
-      color: '#059669',
-      children: [
-        { name: 'Firebase & Cloud Run', value: 90000, color: '#059669' },
-        { name: 'Compliance & Legal', value: 60000, color: '#10b981' },
-      ],
-    },
-  ], []);
 
   const handleGenerateWeeklyReport = async () => {
     if (!profileRef) return;
@@ -1667,90 +1596,6 @@ export function CentralDashboard({ userId, companyProfileId, onNavigate, readOnl
             </div>
           </div>
         </button>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          EXECUTIVE VISUAL INTELLIGENCE & FLOW CENTER
-      ───────────────────────────────────────────────────────────── */}
-      <div className="space-y-4 pt-1">
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-indigo-50 text-indigo-700 rounded-xl">
-              <LineChart className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 leading-none">Executive Visual Intelligence Command</h2>
-              <p className="text-[11px] text-slate-500 font-medium mt-0.5">80/20 Revenue Drivers, Runway Trajectory, Capital Flow, & Budget Treemap</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowVisualCommand(!showVisualCommand)}
-              className="h-8 rounded-full border-slate-200 text-xs font-bold gap-1.5 px-3.5 shadow-2xs hover:bg-slate-50 text-slate-700"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              {showVisualCommand ? 'Hide Visual Charts' : 'Show Visual Charts (4 Models)'}
-            </Button>
-          </div>
-        </div>
-
-        {showVisualCommand && (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            {/* Row 1: Area Runway + Pareto 80/20 */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-7">
-                <AreaGrowthChart
-                  title="Runway & Net Cash Depletion (18-Month Trajectory)"
-                  subtitle="Projected cash reserves accounting for monthly burn and forecasted MRR expansion"
-                  data={dashboardRunwayData}
-                  primaryLabel="Remaining Cash"
-                  secondaryLabel="Cumulative Net Revenue"
-                  isCurrency={true}
-                  gradientColorPrimary="#4f46e5"
-                  gradientColorSecondary="#059669"
-                  height={280}
-                />
-              </div>
-
-              <div className="lg:col-span-5">
-                <ParetoChart
-                  title="80/20 Revenue Drivers (Pareto Model)"
-                  subtitle="Highlighting top commercial drivers generating 80% of aggregate cash inflows"
-                  data={paretoDriversData}
-                  isCurrency={true}
-                  height={280}
-                />
-              </div>
-            </div>
-
-            {/* Row 2: Chord Capital Flow + Treemap Budget */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-7">
-                <ChordDiagram
-                  title="Capital Flow & Departmental Allocation (Flow Ribbon)"
-                  subtitle="Tracing inflow sources into engineering, operational runway, and GTM channels"
-                  links={capitalFlowLinks}
-                  sourceLabel="Capital Sources"
-                  targetLabel="Operational Destinations"
-                  isCurrency={true}
-                  height={320}
-                />
-              </div>
-
-              <div className="lg:col-span-5">
-                <TreemapChart
-                  title="Operational Budget Breakdown (Treemap)"
-                  subtitle="Weighted surface area breakdown of monthly operational spend"
-                  data={budgetTreemapData}
-                  isCurrency={true}
-                  height={320}
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* LOADING STATE */}

@@ -180,7 +180,7 @@ export default function FounderOSPage() {
     } else if (['ezcirkit'].includes(tab)) {
       setActiveTab('sales');
       setSalesTab(tab);
-    } else if (['weekly', 'strategy', 'leads', 'workshops', 'products', 'activity', 'analytics'].includes(tab)) {
+    } else if (['weekly', 'strategy', 'leads', 'workshops', 'products', 'activity'].includes(tab)) {
       setActiveTab('sales');
       setSalesTab('ezcirkit');
       setEzCirkitTab(tab);
@@ -216,7 +216,6 @@ export default function FounderOSPage() {
               case 'workshops': return 'Workshop Tracker';
               case 'products': return 'Product Sales';
               case 'activity': return 'Daily Activity';
-              case 'analytics': return 'Sales Visual Analytics';
               default: return 'EZCirkit Sales Tracker';
             }
           default: return 'Sales Funnel Analytics';
