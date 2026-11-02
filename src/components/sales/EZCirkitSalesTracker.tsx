@@ -2,20 +2,17 @@
 
 import React, { useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, BookOpen, Package, Activity, LayoutDashboard, GraduationCap } from 'lucide-react';
+import { BarChart3, BookOpen, Package, GraduationCap } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { EZCirkitLeadTracker } from './EZCirkitLeadTracker';
 import { EZCirkitProductSales } from './EZCirkitProductSales';
-import { EZCirkitDailyActivity } from './EZCirkitDailyActivity';
-import { EZCirkitWeeklyDashboard, DEFAULT_TARGETS } from './EZCirkitWeeklyDashboard';
 import { SalesStrategy } from './SalesStrategy';
+import { WorkshopTracker } from './WorkshopTracker';
 import type { EZLead } from './EZCirkitLeadTracker';
 import type { ProductSale } from './EZCirkitProductSales';
 import type { DailyActivity } from './EZCirkitDailyActivity';
-
-// Re-use the WorkshopTracker that already exists
-import { WorkshopTracker } from './WorkshopTracker';
+import { DEFAULT_TARGETS } from './EZCirkitWeeklyDashboard';
 
 interface EZCirkitSalesTrackerProps {
   userId: string;
@@ -74,12 +71,6 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
               <TabsTrigger value="products">
                 <Package className="w-3.5 h-3.5" /> Product Sales
               </TabsTrigger>
-              <TabsTrigger value="weekly">
-                <LayoutDashboard className="w-3.5 h-3.5" /> Weekly Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="activity">
-                <Activity className="w-3.5 h-3.5" /> Daily Activity
-              </TabsTrigger>
             </TabsList>
           </div>
         )}
@@ -98,21 +89,6 @@ export function EZCirkitSalesTracker({ userId, companyProfileId, activeSubTab, o
 
         <TabsContent value="products" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
           <EZCirkitProductSales profileRef={profileRef} productSales={productSales} readOnly={readOnly} />
-        </TabsContent>
-
-        <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <EZCirkitWeeklyDashboard
-            profileRef={profileRef}
-            leads={leads}
-            productSales={productSales}
-            activities={activities}
-            targets={targets}
-            readOnly={readOnly}
-          />
-        </TabsContent>
-
-        <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <EZCirkitDailyActivity profileRef={profileRef} activities={activities} readOnly={readOnly} />
         </TabsContent>
       </Tabs>
     </div>

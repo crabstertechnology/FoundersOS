@@ -536,72 +536,7 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-500">
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {activeSubTab === undefined && (
-          <div className="flex justify-start mb-6 overflow-x-auto pb-1 scrollbar-none">
-            <TabsList className="shrink-0">
-              <TabsTrigger value="ops">
-                <Activity className="w-3.5 h-3.5" /> Runway & SaaS Burn
-              </TabsTrigger>
-              <TabsTrigger value="tasks">
-                <ListChecks className="w-3.5 h-3.5" /> Task Workspace
-              </TabsTrigger>
-              <TabsTrigger value="chat">
-                <MessageSquare className="w-3.5 h-3.5" /> Team Chat
-              </TabsTrigger>
-              <TabsTrigger value="weekly">
-                <Activity className="w-3.5 h-3.5" /> Weekly Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="activity">
-                <Activity className="w-3.5 h-3.5" /> Daily Activity
-              </TabsTrigger>
-            </TabsList>
-          </div>
-        )}
-
-        <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <OperationsWeeklyDashboard
-            profileRef={profileRef}
-            teamSize={calculatedStats.activeHeadcount || team.length}
-            saasCost={calculatedStats.totalSaasMonthly}
-            targets={profile?.opsWeeklyTargets || DEFAULT_OPS_TARGETS}
-            readOnly={readOnly}
-          />
-        </TabsContent>
-
-        <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <OperationsDailyActivity
-            profileRef={profileRef}
-            activities={profile?.opsDailyActivities || []}
-            readOnly={readOnly}
-          />
-        </TabsContent>
-
-        <TabsContent value="tasks" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <TaskManager
-            userId={userId}
-            companyProfileId={companyProfileId}
-            employees={employees}
-            initialAssigneeUid={preselectedAssigneeUid}
-            userRole={userRole}
-            currentUserUid={currentUserUid}
-          />
-        </TabsContent>
-
-        <TabsContent value="chat" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-          <TeamChat
-            userId={userId}
-            companyProfileId={companyProfileId}
-            employees={employees}
-            onQuickAssign={(empUid) => {
-              setPreselectedAssigneeUid(empUid);
-              setActiveTab('tasks');
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="ops" className="mt-0 focus-visible:outline-none">
-          <RunwayOperationsView
+      <RunwayOperationsView
             profile={profile}
             calculatedStats={calculatedStats}
             subscriptions={subscriptions}
@@ -654,8 +589,6 @@ export function OperationsDashboard({ userId, companyProfileId, activeSubTab, on
             setSimSalariesDelta={setSimSalariesDelta}
             CATEGORIES={CATEGORIES}
           />
-      </TabsContent>
-      </Tabs>
     </div>
   );
 }

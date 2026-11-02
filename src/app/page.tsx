@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query, where } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger, GliderNav } from '@/components/ui/tabs';
 import { 
   Calculator, LayoutDashboard, BookOpen, Loader2, LogOut, Sparkles, 
   ShieldCheck, ArrowRight, Gavel, PieChart, Home, TrendingUp, Activity,
   Menu, X, PanelLeftOpen, PanelLeftClose, ChevronLeft, ChevronDown, ChevronRight, Settings, ListChecks, MessageSquare,
-  ShieldAlert, Calendar, Box, Megaphone, Pin, User
+  ShieldAlert, Calendar, Box, Megaphone, Pin, User, CalendarDays
 } from 'lucide-react';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
@@ -18,7 +18,7 @@ import { ValuationCalculator } from '@/components/calculator/ValuationCalculator
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
 import { AuthDialog } from '@/components/auth/AuthDialog';
-import { useUser, useAuth, initiateSignOut, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useAuth, initiateSignOut, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { QuickCalculator } from '@/components/calculator/QuickCalculator';
 import { TermSheetAssistant } from '@/components/negotiation/TermSheetAssistant';
@@ -34,6 +34,10 @@ import { SettingsPage } from '@/components/operations/SettingsPage';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { ProductDashboard } from '@/components/product/ProductDashboard';
 import { DigitalMarketingHub } from '@/components/sales/DigitalMarketingHub';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { WeeklyDailyHub } from '@/components/execution/WeeklyDailyHub';
+import { TaskManager, type Employee } from '@/components/operations/TaskManager';
+import { TeamChat } from '@/components/operations/TeamChat';
 
 
 export default function FounderOSPage() {
@@ -51,6 +55,7 @@ export default function FounderOSPage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Load sidebar pin preference on mount
   React.useEffect(() => {
@@ -132,6 +137,24 @@ export default function FounderOSPage() {
   }, [firestore, userId, companyProfileId]);
 
   const { data: profile } = useDoc(profileRef);
+
+  // Employees collection for Task Manager & Team Chat
+  const employeesRef = useMemoFirebase(() => {
+    if (!firestore || !userId) return null;
+    return collection(firestore, 'employees');
+  }, [firestore, userId]);
+
+  const employeesQuery = useMemoFirebase(() => {
+    if (!employeesRef) return null;
+    return query(employeesRef, where('adminUid', '==', userId));
+  }, [employeesRef, userId]);
+
+  const { data: rawEmployeesData } = useCollection(employeesQuery);
+  const employees = React.useMemo<Employee[]>(() => (rawEmployeesData || []).map((e: any) => ({
+    id: e.id, uid: e.uid || e.id, name: e.name || 'Unknown',
+    email: e.email || '', department: e.department || '',
+    role: e.role || 'Employee', isActive: e.isActive !== false,
+  })), [rawEmployeesData]);
 
   // If we are checking auth state, show a minimal loader
   if (isUserLoading || (user && isEmployeeLoading)) {
@@ -592,67 +615,70 @@ export default function FounderOSPage() {
 
           <div className="h-px bg-slate-800/80 my-2 mx-1" />
 
-          {/* 6. Operations Section (with Expandable Submenu) */}
-          <div className="space-y-0.5">
-            <button
-              onClick={() => {
-                setActiveTab('operations');
-                if (isSidebarMinimized) {
-                  setIsSidebarMinimized(false);
-                  setIsOperationsExpanded(false);
-                } else {
-                  setIsOperationsExpanded(prev => !prev);
-                }
-              }}
-              className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 group cursor-pointer overflow-hidden ${
-                activeTab === 'operations'
-                  ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                  : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
-              }`}
-              title={isSidebarMinimized ? 'Operations Hub' : undefined}
-            >
-              <div className="w-11 h-11 flex items-center justify-center shrink-0">
-                <Activity className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-              </div>
-              <div className={`flex items-center justify-between flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
-                isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
-              }`}>
-                <span className="text-[13.5px] truncate">Operations Hub</span>
-                {isOperationsExpanded ? (
-                  <ChevronDown className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                ) : (
-                  <ChevronRight className={`w-4 h-4 shrink-0 ml-2 transition-transform ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                )}
-              </div>
-            </button>
+          {/* 6. Operations Hub (Runway & SaaS Burn) */}
+          <button
+            onClick={() => setActiveTab('operations')}
+            className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 cursor-pointer group overflow-hidden ${
+              activeTab === 'operations'
+                ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+            }`}
+            title={isSidebarMinimized ? 'Runway & Operations' : undefined}
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <Activity className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'operations' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+            </div>
+            <div className={`flex items-center flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="text-[13.5px] truncate">Operations Hub</span>
+            </div>
+          </button>
 
-            {isOperationsExpanded && !isSidebarMinimized && (
-              <div className="pl-11 pr-2 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
-                {[
-                  { sub: 'ops', label: 'Runway & SaaS Burn' },
-                  { sub: 'tasks', label: 'Task Workspace' },
-                  { sub: 'chat', label: 'Team Chat' },
-                  { sub: 'weekly', label: 'Weekly Dashboard' },
-                  { sub: 'activity', label: 'Daily Activity' },
-                ].map(({ sub, label }) => {
-                  const isActive = activeTab === 'operations' && operationsTab === sub;
-                  return (
-                    <button
-                      key={sub}
-                      onClick={() => { setActiveTab('operations'); setOperationsTab(sub); }}
-                      className={`w-full text-left px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
-                        isActive
-                          ? 'text-indigo-400 font-semibold bg-indigo-500/15'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 font-medium'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <div className="h-px bg-slate-800/80 my-2 mx-1" />
+
+          {/* 7. Task Workspace (Dedicated Section) */}
+          <button
+            onClick={() => setActiveTab('tasks')}
+            className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 cursor-pointer group overflow-hidden ${
+              activeTab === 'tasks'
+                ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+            }`}
+            title={isSidebarMinimized ? 'Task Workspace' : undefined}
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <ListChecks className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'tasks' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+            </div>
+            <div className={`flex items-center flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="text-[13.5px] truncate">Task Workspace</span>
+            </div>
+          </button>
+
+          {/* 8. Weekly & Daily Hub (Cross-sector Cadence) */}
+          <button
+            onClick={() => setActiveTab('cadence')}
+            className={`w-full flex items-center h-11 rounded-xl transition-all duration-150 cursor-pointer group overflow-hidden ${
+              activeTab === 'cadence'
+                ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
+                : 'text-slate-300 font-medium hover:bg-white/10 hover:text-white'
+            }`}
+            title={isSidebarMinimized ? 'Weekly & Daily Hub' : undefined}
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <CalendarDays className={`w-5 h-5 stroke-[2] transition-colors ${activeTab === 'cadence' ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+            </div>
+            <div className={`flex items-center justify-between flex-1 min-w-0 pr-3 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isSidebarMinimized ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+            }`}>
+              <span className="text-[13.5px] truncate">Weekly &amp; Daily Hub</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 ml-1.5 bg-indigo-500/30 text-indigo-200">
+                Sectors
+              </span>
+            </div>
+          </button>
 
           <div className="h-px bg-slate-800/80 my-2 mx-1" />
 
@@ -721,6 +747,19 @@ export default function FounderOSPage() {
             >
               <Calendar className="w-4 h-4 text-indigo-600" />
             </Button>
+
+            {/* Team Chat Header Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsChatOpen(true)}
+              className="rounded-xl h-9 w-9 border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all shrink-0 cursor-pointer relative"
+              title="Team Workspace Chat"
+              aria-label="Open Team Workspace Chat"
+            >
+              <MessageSquare className="w-4 h-4 text-indigo-600" />
+            </Button>
+
             <NotificationCenter />
             <QuickCalculator />
 
@@ -827,98 +866,11 @@ export default function FounderOSPage() {
                     { id: 'negotiate', label: 'Term Sheet Assistant', icon: Gavel },
                     { id: 'qa', label: 'Term Sheet Q&A', icon: MessageSquare },
                     { id: 'glossary', label: 'Glossary', icon: BookOpen },
-                    { id: 'weekly', label: 'Weekly Dashboard', icon: LayoutDashboard },
-                    { id: 'activity', label: 'Daily Activity', icon: Activity },
                   ]}
                 />
               </div>
 
               <Tabs value={financeTab} className="w-full animate-in fade-in duration-300">
-                <TabsContent value="weekly" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <LayoutDashboard className="w-3.5 h-3.5" /> Weekly Dashboard
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Finance Weekly Dashboard
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        Monitor your funding progress, valuation targets, burn rate limits, and capital runway metrics.
-                      </p>
-                    </div>
-                  </div>
-                  <FinanceWeeklyDashboard
-                    profileRef={profileRef}
-                    cashBank={profile?.cashBank || 0}
-                    burnRate={profile?.burnRate || 0}
-                    runway={profile?.runway || 0}
-                    valuation={profile?.valuation || 0}
-                    capitalRaised={profile?.capitalRaised || 0}
-                    targets={profile?.financeWeeklyTargets || DEFAULT_FINANCE_TARGETS}
-                    readOnly={isReadOnly}
-                  />
-                </TabsContent>
-
-                <TabsContent value="activity" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <Activity className="w-3.5 h-3.5" /> Daily Audit
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Finance Daily Activity Log
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        Log daily cash transactions, categorize software spend, and audit your assigned strategic execution.
-                      </p>
-                    </div>
-                  </div>
-                  <FinanceDailyActivity
-                    profileRef={profileRef}
-                    activities={profile?.financeDailyActivities || []}
-                    readOnly={isReadOnly}
-                  />
-                </TabsContent>
-
                 <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
                   <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
@@ -1157,6 +1109,38 @@ export default function FounderOSPage() {
           </Tabs>
         </main>
       </div>
+
+      {/* Team Chat Slide-over / Modal Dialog */}
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[88vh] max-h-[850px] p-0 overflow-hidden rounded-2xl flex flex-col bg-white">
+          <DialogHeader className="px-6 py-3.5 border-b border-slate-100 flex flex-row items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
+                <MessageSquare className="w-4 h-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-slate-900 leading-none">
+                  Team Workspace Chat
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500 mt-1">
+                  Real-time encrypted internal founder &amp; team communications
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden p-4">
+            <TeamChat
+              userId={userId!}
+              companyProfileId={companyProfileId}
+              employees={employees}
+              onQuickAssign={(empUid) => {
+                setIsChatOpen(false);
+                setActiveTab('tasks');
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   </div>
 );
