@@ -55,7 +55,6 @@ export default function FounderOSPage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Load sidebar pin preference on mount
   React.useEffect(() => {
@@ -233,12 +232,10 @@ export default function FounderOSPage() {
         switch (salesTab) {
           case 'ezcirkit':
             switch (ezCirkitTab) {
-              case 'weekly': return 'Weekly Dashboard';
               case 'strategy': return 'Sales Strategy';
               case 'leads': return 'Lead Tracker';
               case 'workshops': return 'Workshop Tracker';
               case 'products': return 'Product Sales';
-              case 'activity': return 'Daily Activity';
               default: return 'EZCirkit Sales Tracker';
             }
           default: return 'Sales Funnel Analytics';
@@ -253,13 +250,11 @@ export default function FounderOSPage() {
           case 'glossary': return 'Founder\'s Glossary';
           default: return 'Finance Suite';
         }
-      case 'operations':
-        switch (operationsTab) {
-          case 'ops': return 'Runway Operations';
-          case 'tasks': return 'Task Workspace';
-          case 'chat': return 'Team Workspace Chat';
-          default: return 'Operations Hub';
-        }
+      case 'operations': return 'Runway Operations';
+      case 'tasks': return 'Task Workspace';
+      case 'cadence':
+      case 'weekly-daily': return 'Weekly & Daily Hub';
+      case 'chat': return 'Team Workspace Chat';
       case 'settings': return 'Founder Configuration';
       default: return 'FounderOS';
     }
@@ -524,8 +519,6 @@ export default function FounderOSPage() {
                   { sub: 'leads', label: 'Lead Tracker' },
                   { sub: 'workshops', label: 'Workshop Tracker' },
                   { sub: 'products', label: 'Product Sales' },
-                  { sub: 'weekly', label: 'Weekly Dashboard' },
-                  { sub: 'activity', label: 'Daily Activity' },
                 ].map(({ sub, label }) => {
                   const isActive = activeTab === 'sales' && salesTab === 'ezcirkit' && ezCirkitTab === sub;
                   return (
@@ -591,8 +584,6 @@ export default function FounderOSPage() {
                   { sub: 'negotiate', label: 'Term Sheet Assistant' },
                   { sub: 'qa', label: 'Term Sheet Q&A' },
                   { sub: 'glossary', label: "Founder's Glossary" },
-                  { sub: 'weekly', label: 'Weekly Dashboard' },
-                  { sub: 'activity', label: 'Daily Activity' },
                 ].map(({ sub, label }) => {
                   const isActive = activeTab === 'finance' && financeTab === sub;
                   return (
@@ -748,16 +739,20 @@ export default function FounderOSPage() {
               <Calendar className="w-4 h-4 text-indigo-600" />
             </Button>
 
-            {/* Team Chat Header Button */}
+            {/* Team Chat Header Button (Opens Full Page) */}
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setIsChatOpen(true)}
-              className="rounded-xl h-9 w-9 border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all shrink-0 cursor-pointer relative"
+              onClick={() => setActiveTab('chat')}
+              className={`rounded-xl h-9 w-9 border transition-all shrink-0 cursor-pointer relative ${
+                activeTab === 'chat'
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/30'
+                  : 'border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50'
+              }`}
               title="Team Workspace Chat"
               aria-label="Open Team Workspace Chat"
             >
-              <MessageSquare className="w-4 h-4 text-indigo-600" />
+              <MessageSquare className={`w-4 h-4 ${activeTab === 'chat' ? 'text-white' : 'text-indigo-600'}`} />
             </Button>
 
             <NotificationCenter />
@@ -1102,6 +1097,96 @@ export default function FounderOSPage() {
               />
             </TabsContent>
 
+            {/* Dedicated Task Workspace (Full Page) */}
+            <TabsContent value="tasks" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+              <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('dashboard')}
+                      className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <Home className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Console</span>
+                    </button>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="text-indigo-600 font-bold flex items-center gap-1">
+                      <ListChecks className="w-3.5 h-3.5" /> Task Workspace
+                    </span>
+                  </nav>
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
+                    Task Workspace
+                  </h1>
+                  <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
+                    Assign, track, and manage team deliverables, operational sprints, and priority founder tasks.
+                  </p>
+                </div>
+              </div>
+              <TaskManager
+                userId={userId!}
+                companyProfileId={companyProfileId}
+                employees={employees}
+                userRole={userRole}
+                currentUserUid={user?.uid || ''}
+              />
+            </TabsContent>
+
+            {/* Dedicated Weekly & Daily Cadence Hub (Full Page) */}
+            <TabsContent value="cadence" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+              <WeeklyDailyHub
+                userId={userId!}
+                companyProfileId={companyProfileId}
+                readOnly={isReadOnly}
+                onNavigateHome={() => setActiveTab('dashboard')}
+              />
+            </TabsContent>
+
+            <TabsContent value="weekly-daily" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+              <WeeklyDailyHub
+                userId={userId!}
+                companyProfileId={companyProfileId}
+                readOnly={isReadOnly}
+                onNavigateHome={() => setActiveTab('dashboard')}
+              />
+            </TabsContent>
+
+            {/* Dedicated Team Workspace Chat (Full Page) */}
+            <TabsContent value="chat" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
+              <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('dashboard')}
+                      className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <Home className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Console</span>
+                    </button>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="text-indigo-600 font-bold flex items-center gap-1">
+                      <MessageSquare className="w-3.5 h-3.5" /> Team Workspace Chat
+                    </span>
+                  </nav>
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
+                    Team Workspace Chat
+                  </h1>
+                  <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
+                    Real-time encrypted internal founder &amp; team communications and direct messaging.
+                  </p>
+                </div>
+              </div>
+              <TeamChat
+                userId={userId!}
+                companyProfileId={companyProfileId}
+                employees={employees}
+                onQuickAssign={(empUid) => {
+                  setActiveTab('tasks');
+                }}
+              />
+            </TabsContent>
+
             {/* Config & Settings Page */}
             <TabsContent value="settings" className="mt-0 focus-visible:outline-none">
               <SettingsPage userId={userId!} userRole={userRole} />
@@ -1110,38 +1195,7 @@ export default function FounderOSPage() {
         </main>
       </div>
 
-      {/* Team Chat Slide-over / Modal Dialog */}
-      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[88vh] max-h-[850px] p-0 overflow-hidden rounded-2xl flex flex-col bg-white">
-          <DialogHeader className="px-6 py-3.5 border-b border-slate-100 flex flex-row items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
-                <MessageSquare className="w-4 h-4" />
-              </div>
-              <div>
-                <DialogTitle className="text-base font-bold text-slate-900 leading-none">
-                  Team Workspace Chat
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500 mt-1">
-                  Real-time encrypted internal founder &amp; team communications
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden p-4">
-            <TeamChat
-              userId={userId!}
-              companyProfileId={companyProfileId}
-              employees={employees}
-              onQuickAssign={(empUid) => {
-                setIsChatOpen(false);
-                setActiveTab('tasks');
-              }}
-            />
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
   </div>
 );
 }

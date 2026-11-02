@@ -430,7 +430,7 @@ export function TeamChat({ userId, companyProfileId, employees, onQuickAssign }:
   }, [presenceList, user, selectedChat]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 h-[600px] lg:h-[700px] animate-in fade-in duration-300">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 h-[calc(100vh-210px)] min-h-[600px] animate-in fade-in duration-300">
       
       {/* Sidebar - Team Members */}
       <Card className={`lg:col-span-1 border shadow-sm flex flex-col h-full overflow-hidden bg-slate-50/50 ${mobileView === 'chat' ? 'hidden lg:flex' : 'flex'}`}>
