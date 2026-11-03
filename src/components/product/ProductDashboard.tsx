@@ -430,78 +430,62 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
 
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-500">
-      {/* Primary Navigation Tabs */}
-      <div className="flex border-b border-slate-200 overflow-x-auto bg-white rounded-t-xl px-2 gap-2">
-        <button
-          type="button"
-          onClick={() => setMainTab('portfolio')}
-          className={`py-3 px-4 text-xs font-black tracking-wide transition-all border-b-2 flex items-center gap-2 shrink-0 ${
-            mainTab === 'portfolio'
-              ? 'border-indigo-600 text-indigo-700 bg-indigo-50/20'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          Product Portfolio & Tracker
-          <span className="bg-slate-100 text-slate-700 rounded-full px-2 py-0.5 text-[10px] font-black">
-            {products.length}
-          </span>
-        </button>
+      {/* Unified Product Suite Page: Portfolio Tracker + Suite Recommendations */}
+      {mainTab !== 'blueprint' ? (
+        <div className="space-y-12">
+          {/* Section 1: Product Portfolio & Tracker */}
+          <ProductPortfolioTracker
+            products={products}
+            selectedProductId={selectedProductId}
+            onSelectProduct={setSelectedProductId}
+            onOpenAddModal={() => {
+              setEditingProduct(null);
+              setIsProductModalOpen(true);
+            }}
+            onEditProduct={(p) => {
+              setEditingProduct(p);
+              setIsProductModalOpen(true);
+            }}
+            onDeleteProduct={handleDeleteProduct}
+            onUpdateProductStatus={handleUpdateProductStatus}
+            onGoToBlueprint={(pId) => {
+              setSelectedProductId(pId);
+              setMainTab('blueprint');
+            }}
+            onGoToRecommendations={() => {
+              const el = document.getElementById('suite-recommendations');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            readOnly={readOnly}
+          />
 
-        <button
-          type="button"
-          onClick={() => setMainTab('recommendations')}
-          className={`py-3 px-4 text-xs font-black tracking-wide transition-all border-b-2 flex items-center gap-2 shrink-0 ${
-            mainTab === 'recommendations'
-              ? 'border-indigo-600 text-indigo-700 bg-indigo-50/20'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-          }`}
-        >
-          <Compass className="w-4 h-4 text-indigo-600" />
-          Suite Recommendations
-          <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full px-2 py-0.5 text-[10px] font-black uppercase">
-            AI Advisor
-          </span>
-        </button>
-      </div>
-
-      {/* TAB 1: PRODUCT PORTFOLIO & TRACKER */}
-      {mainTab === 'portfolio' && (
-        <ProductPortfolioTracker
-          products={products}
-          selectedProductId={selectedProductId}
-          onSelectProduct={setSelectedProductId}
-          onOpenAddModal={() => {
-            setEditingProduct(null);
-            setIsProductModalOpen(true);
-          }}
-          onEditProduct={(p) => {
-            setEditingProduct(p);
-            setIsProductModalOpen(true);
-          }}
-          onDeleteProduct={handleDeleteProduct}
-          onUpdateProductStatus={handleUpdateProductStatus}
-          onGoToBlueprint={(pId) => {
-            setSelectedProductId(pId);
-            setMainTab('blueprint');
-          }}
-          onGoToRecommendations={() => setMainTab('recommendations')}
-          readOnly={readOnly}
-        />
-      )}
-
-      {/* TAB 2: PRODUCT DEEP-DIVE & AI BLUEPRINT */}
-      {mainTab === 'blueprint' && (
+          {/* Section 2: Product Suite Recommendations & CPO Intelligence */}
+          <div id="suite-recommendations" className="pt-6 border-t border-slate-200/90">
+            <ProductSuiteRecommendations
+              products={products}
+              companyProfile={profile}
+              recommendations={profile?.productSuiteRecommendations || null}
+              onSaveRecommendations={handleSaveRecommendations}
+              onGoToProduct={(productId) => {
+                setSelectedProductId(productId);
+                setMainTab('blueprint');
+              }}
+              readOnly={readOnly}
+            />
+          </div>
+        </div>
+      ) : (
+        /* TAB 2: PRODUCT DEEP-DIVE & AI BLUEPRINT */
         <div className="space-y-6">
-          {/* Back to Portfolio Breadcrumb Bar */}
+          {/* Back to Product Suite Breadcrumb Bar */}
           <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200/90 shadow-sm">
             <button
               type="button"
               onClick={() => setMainTab('portfolio')}
-              className="inline-flex items-center gap-2 text-xs font-black text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-3.5 py-1.5 rounded-lg transition-all shadow-sm"
+              className="inline-flex items-center gap-2 text-xs font-black text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-3.5 py-1.5 rounded-lg transition-all shadow-sm cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Product Portfolio & Tracker
+              Back to Product Suite
             </button>
             <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
               <span className="hidden sm:inline">Active Blueprint:</span>
@@ -527,50 +511,11 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
                   ))}
                 </SelectContent>
               </Select>
-
-              {activeProduct && (
-                <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 font-medium truncate">
-                  <span className="truncate max-w-sm">{activeProduct.description}</span>
-                </div>
-              )}
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              {activeProduct?.aiPlanHistory && activeProduct.aiPlanHistory.length > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsHistoryListModalOpen(true)}
-                  className="border-slate-200 hover:bg-indigo-50 font-bold h-9 px-3 gap-1.5 text-slate-700 text-xs shadow-sm"
-                  title="Saved Strategy History"
-                >
-                  <History className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>History</span>
-                  <span className="bg-indigo-100 text-indigo-700 rounded-full px-1.5 py-0.2 text-[10px] font-black">
-                    {activeProduct.aiPlanHistory.length}
-                  </span>
-                </Button>
-              )}
-
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setEditingProduct(activeProduct);
-                  setIsProductModalOpen(true);
-                }}
-                disabled={readOnly || !activeProduct}
-                className="border-slate-200 font-bold h-9 px-3 gap-1.5 text-slate-700 text-xs shadow-sm"
-              >
-                <Edit3 className="w-3.5 h-3.5 text-slate-500" />
-                Edit Specs
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
                 onClick={() => handleGenerateBlueprint()}
                 disabled={readOnly || !activeProduct || loading}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 px-3.5 gap-1.5 text-xs shadow-sm"
@@ -614,258 +559,144 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
             </Card>
           )}
 
-          {/* Blueprint Card */}
-          {!loading && (
-            <div className="w-full space-y-6">
-              {hasPlan ? (
-                <Card className="border border-slate-200 shadow-md flex flex-col min-h-[600px] bg-white rounded-2xl overflow-hidden">
-                  <CardHeader className="border-b bg-slate-50/50 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <CardTitle className="text-base font-black text-slate-900 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                        AI Strategic Blueprint for <span className="text-indigo-700 font-extrabold">{activeProduct?.name}</span>
-                      </CardTitle>
-                      <CardDescription className="text-xs font-medium">
-                        Synchronized recommendations mapping features to runway constraints.
-                      </CardDescription>
-                    </div>
-
+          {/* Blueprint Content Subtabs & Pitch Viewers */}
+          {!loading && activeProduct && (
+            <div className="space-y-6">
+              {/* Product Info Bar */}
+              <Card className="border border-slate-200/90 shadow-sm bg-white">
+                <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-md">
-                        Pricing: <strong className="text-slate-800 capitalize">{activeProduct?.pricingModel}</strong>
+                      <h3 className="text-xl font-black text-slate-900">{activeProduct.name}</h3>
+                      <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase">
+                        {activeProduct.stage}
                       </span>
-                      {activeProduct?.targetAudience && (
-                        <span className="text-[11px] font-bold text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-md">
-                          ICP: <strong className="text-slate-800">{activeProduct.targetAudience}</strong>
-                        </span>
-                      )}
                     </div>
-                  </CardHeader>
-
-                  {/* Sub Tab selection */}
-                  <div className="flex border-b divide-x overflow-x-auto bg-slate-50/40">
-                    <button
-                      onClick={() => setActiveSubTab('review')}
-                      className={`flex-1 py-3 px-4 text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                        activeSubTab === 'review' 
-                          ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Box className="w-4 h-4" />
-                      Evaluation
-                    </button>
-                    <button
-                      onClick={() => setActiveSubTab('gtm')}
-                      className={`flex-1 py-3 px-4 text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                        activeSubTab === 'gtm' 
-                          ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <TrendingUp className="w-4 h-4" />
-                      How to Sell
-                    </button>
-                    <button
-                      onClick={() => setActiveSubTab('dev')}
-                      className={`flex-1 py-3 px-4 text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                        activeSubTab === 'dev' 
-                          ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Code className="w-4 h-4" />
-                      What to Develop
-                    </button>
-                    <button
-                      onClick={() => setActiveSubTab('finance')}
-                      className={`flex-1 py-3 px-4 text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                        activeSubTab === 'finance' 
-                          ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <DollarSign className="w-4 h-4" />
-                      Runway Impact
-                    </button>
-                    <button
-                      onClick={() => setActiveSubTab('steps')}
-                      className={`flex-1 py-3 px-4 text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                        activeSubTab === 'steps' 
-                          ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <ListTodo className="w-4 h-4" />
-                      Action Items
-                    </button>
-                    <button
-                      onClick={() => setActiveSubTab('pitch')}
-                      className={`flex-1 py-3 px-4 text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                        activeSubTab === 'pitch' 
-                          ? 'bg-white text-indigo-700 border-b-2 border-b-indigo-700' 
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Mic className="w-4 h-4" />
-                      Pitching Scripts
-                    </button>
+                    <p className="text-xs text-slate-500 font-medium max-w-xl">
+                      {activeProduct.description || 'No description provided.'}
+                    </p>
                   </div>
 
-                  <CardContent className="p-6 flex-1 max-h-[650px] overflow-y-auto">
-                    {activeSubTab === 'review' && (
-                      <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-                        <ReactMarkdown>{aiPlan.review}</ReactMarkdown>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsHistoryListModalOpen(true)}
+                      className="h-8 rounded-full border-slate-200 text-xs font-bold gap-1 text-slate-700"
+                    >
+                      <History className="w-3.5 h-3.5 text-slate-500" />
+                      Plan History
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {hasPlan ? (
+                <>
+                  {/* Blueprint Sub-Tabs */}
+                  <div className="flex border-b border-slate-200 overflow-x-auto bg-white rounded-t-xl px-2 gap-1">
+                    {[
+                      { id: 'review', label: '1. Strategic Review' },
+                      { id: 'gtm', label: '2. Go-To-Market Plan' },
+                      { id: 'dev', label: '3. Technical Specs' },
+                      { id: 'finance', label: '4. Financial Targets' },
+                      { id: 'steps', label: '5. Actionable Steps' },
+                      { id: 'pitch', label: '6. Pitch Studio' },
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveSubTab(tab.id as any)}
+                        className={`py-2.5 px-3.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
+                          activeSubTab === tab.id
+                            ? 'border-indigo-600 text-indigo-700 bg-indigo-50/20'
+                            : 'border-transparent text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Subtab Contents */}
+                  {activeSubTab === 'review' && (
+                    <Card className="border border-slate-200/90 shadow-sm bg-white p-6">
+                      <div className="prose prose-slate max-w-none text-xs sm:text-sm">
+                        <ReactMarkdown>{aiPlan?.strategicReview || 'No strategic review available. Click Generate Blueprint above.'}</ReactMarkdown>
                       </div>
-                    )}
+                    </Card>
+                  )}
 
-                    {activeSubTab === 'gtm' && (
-                      <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-                        <ReactMarkdown>{aiPlan.howToSell}</ReactMarkdown>
+                  {activeSubTab === 'gtm' && (
+                    <Card className="border border-slate-200/90 shadow-sm bg-white p-6">
+                      <div className="prose prose-slate max-w-none text-xs sm:text-sm">
+                        <ReactMarkdown>{aiPlan?.gtmStrategy || 'No GTM strategy available.'}</ReactMarkdown>
                       </div>
-                    )}
+                    </Card>
+                  )}
 
-                    {activeSubTab === 'dev' && (
-                      <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-                        <ReactMarkdown>{aiPlan.whatToDevelop}</ReactMarkdown>
+                  {activeSubTab === 'dev' && (
+                    <Card className="border border-slate-200/90 shadow-sm bg-white p-6">
+                      <div className="prose prose-slate max-w-none text-xs sm:text-sm">
+                        <ReactMarkdown>{aiPlan?.devChecklist || 'No tech checklist available.'}</ReactMarkdown>
                       </div>
-                    )}
+                    </Card>
+                  )}
 
-                    {activeSubTab === 'finance' && (
-                      <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-                        <div className="mb-4 flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200 text-amber-800 text-xs font-bold">
-                          <AlertTriangle className="w-4 h-4 shrink-0" />
-                          Runway Cross-Check: {profile?.cashBank ? `₹${(profile.cashBank).toLocaleString('en-IN')}` : '₹0'} cash left.
-                        </div>
-                        <ReactMarkdown>{aiPlan.financialImpact}</ReactMarkdown>
+                  {activeSubTab === 'finance' && (
+                    <Card className="border border-slate-200/90 shadow-sm bg-white p-6">
+                      <div className="prose prose-slate max-w-none text-xs sm:text-sm">
+                        <ReactMarkdown>{aiPlan?.financialForecast || 'No financial forecast available.'}</ReactMarkdown>
                       </div>
-                    )}
+                    </Card>
+                  )}
 
-                    {activeSubTab === 'steps' && (
-                      <div className="space-y-4">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Immediate Roadmap Actions</h4>
-                        <div className="space-y-3">
-                          {aiPlan.immediateSteps?.map((step: string, idx: number) => (
-                            <div key={idx} className="flex items-start gap-3 p-3 rounded-lg border bg-slate-50/50">
-                              <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                                {idx + 1}
-                              </div>
-                              <span className="text-xs font-semibold text-slate-700 leading-relaxed">{step}</span>
-                            </div>
-                          ))}
-                        </div>
+                  {activeSubTab === 'steps' && (
+                    <Card className="border border-slate-200/90 shadow-sm bg-white p-6">
+                      <div className="prose prose-slate max-w-none text-xs sm:text-sm">
+                        <ReactMarkdown>{aiPlan?.actionableSteps || 'No actionable steps available.'}</ReactMarkdown>
                       </div>
-                    )}
+                    </Card>
+                  )}
 
-                    {activeSubTab === 'pitch' && (
-                      <div className="space-y-6 animate-in fade-in duration-300">
-                        {aiPlan?.pitchGuidance ? (
-                          <>
-                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 border-b pb-4">
-                              {[
-                                { id: 'elevator', label: 'Elevator (30s)', icon: Mic },
-                                { id: 'normal', label: 'Standard (2m)', icon: FileText },
-                                { id: 'layperson', label: 'Layperson (ELI5)', icon: HelpCircle },
-                                { id: 'deck', label: 'Pitch Deck', icon: Presentation },
-                                { id: 'objections', label: 'Objections', icon: AlertTriangle }
-                              ].map((t) => {
-                                const Icon = t.icon;
-                                const active = activePitchType === t.id;
-                                return (
-                                  <button
-                                    key={t.id}
-                                    type="button"
-                                    onClick={() => setActivePitchType(t.id as any)}
-                                    className={`flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all ${
-                                      active
-                                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
-                                        : 'bg-white border-slate-100 hover:bg-slate-50 text-slate-600'
-                                    }`}
-                                  >
-                                    <Icon className="w-5 h-5 mb-1.5 text-indigo-500" />
-                                    <span className="text-[11px] font-bold">{t.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-
-                            <Card className="border border-slate-200 bg-slate-50/30">
-                              <CardContent className="pt-6">
-                                {activePitchType === 'elevator' && (
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between border-b pb-3 mb-2">
-                                      <h4 className="text-sm font-black text-slate-800">30-Second Elevator Pitch Script</h4>
-                                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full uppercase">For Quick Intro</span>
-                                    </div>
-                                    <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                      <ReactMarkdown>{aiPlan.pitchGuidance.elevatorPitch || 'No elevator pitch generated yet.'}</ReactMarkdown>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {activePitchType === 'normal' && (
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between border-b pb-3 mb-2">
-                                      <h4 className="text-sm font-black text-slate-800">Standard 2-Minute Pitch Script</h4>
-                                      <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full uppercase">For Meetings/Demo Days</span>
-                                    </div>
-                                    <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                      <ReactMarkdown>{aiPlan.pitchGuidance.normalPitch || 'No standard pitch generated yet.'}</ReactMarkdown>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {activePitchType === 'layperson' && (
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between border-b pb-3 mb-2">
-                                      <h4 className="text-sm font-black text-slate-800">Layperson / ELI5 (Explain Like I'm 5) Script</h4>
-                                      <span className="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full uppercase">For Non-Domain Audience</span>
-                                    </div>
-                                    <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                      <ReactMarkdown>{aiPlan.pitchGuidance.laypersonPitch || 'No layperson pitch generated yet.'}</ReactMarkdown>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {activePitchType === 'deck' && (
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between border-b pb-3 mb-2">
-                                      <h4 className="text-sm font-black text-slate-800">Recommended 10-Slide Pitch Deck Structure</h4>
-                                      <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full uppercase">Investor Outline</span>
-                                    </div>
-                                    <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                      <ReactMarkdown>{aiPlan.pitchGuidance.pitchDeckStructure || 'No deck structure generated yet.'}</ReactMarkdown>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {activePitchType === 'objections' && (
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between border-b pb-3 mb-2">
-                                      <h4 className="text-sm font-black text-slate-800">Investor & Customer Objection Handling</h4>
-                                      <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full uppercase">Q&A Preparation</span>
-                                    </div>
-                                    <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                      <ReactMarkdown>{aiPlan.pitchGuidance.objectionHandling || 'No objection handling generated yet.'}</ReactMarkdown>
-                                    </div>
-                                  </div>
-                                )}
-                              </CardContent>
-                            </Card>
-                          </>
-                        ) : (
-                          <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                            <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                            <h4 className="text-sm font-black text-slate-800 mb-1">Pitch Scripts Not Available</h4>
-                            <p className="text-xs text-slate-500 max-w-md mx-auto">
-                              Please click <strong>Re-generate Blueprint</strong> above to formulate fresh pitching scripts and investor decks.
-                            </p>
-                          </div>
-                        )}
+                  {activeSubTab === 'pitch' && (
+                    <Card className="border border-slate-200/90 shadow-sm bg-white p-6 space-y-4">
+                      <div className="flex flex-wrap gap-2 pb-3 border-b border-slate-100">
+                        {[
+                          { id: 'elevator', label: 'Elevator Pitch' },
+                          { id: 'normal', label: 'Customer Pitch' },
+                          { id: 'layperson', label: 'Layperson Pitch' },
+                          { id: 'deck', label: 'Pitch Deck Slide' },
+                          { id: 'objections', label: 'Handle Objections' },
+                        ].map(pTab => (
+                          <button
+                            key={pTab.id}
+                            type="button"
+                            onClick={() => setActivePitchType(pTab.id as any)}
+                            className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
+                              activePitchType === pTab.id
+                                ? 'bg-indigo-600 text-white border-indigo-600'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {pTab.label}
+                          </button>
+                        ))}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+
+                      <div className="prose prose-slate max-w-none text-xs sm:text-sm">
+                        <ReactMarkdown>
+                          {activePitchType === 'elevator' ? aiPlan?.elevatorPitch || 'No elevator pitch generated.'
+                            : activePitchType === 'normal' ? aiPlan?.normalPitch || 'No customer pitch generated.'
+                            : activePitchType === 'layperson' ? aiPlan?.laypersonPitch || 'No layperson pitch generated.'
+                            : activePitchType === 'deck' ? aiPlan?.pitchDeckSlide || 'No slide script generated.'
+                            : aiPlan?.objectionsHandling || 'No objections generated.'}
+                        </ReactMarkdown>
+                      </div>
+                    </Card>
+                  )}
+                </>
               ) : (
                 <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center shadow-sm rounded-2xl">
                   <CardContent className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
@@ -884,7 +715,7 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
                       type="button"
                       onClick={() => handleGenerateBlueprint()}
                       disabled={readOnly || !activeProduct}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 gap-2 mt-2 shadow-sm text-xs"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 gap-2 mt-2 shadow-sm text-xs cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4 text-indigo-200" />
                       Generate Strategic Blueprint
@@ -895,21 +726,6 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
             </div>
           )}
         </div>
-      )}
-
-      {/* TAB 3: PRODUCT SUITE RECOMMENDATIONS */}
-      {mainTab === 'recommendations' && (
-        <ProductSuiteRecommendations
-          products={products}
-          companyProfile={profile}
-          recommendations={profile?.productSuiteRecommendations || null}
-          onSaveRecommendations={handleSaveRecommendations}
-          onGoToProduct={(productId) => {
-            setSelectedProductId(productId);
-            setMainTab('blueprint');
-          }}
-          readOnly={readOnly}
-        />
       )}
 
       {/* Add / Edit Product Modal */}
