@@ -134,7 +134,7 @@ export function ProductPortfolioTracker({
   return (
     <div className="space-y-6">
       {/* Portfolio KPI Summary Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border border-slate-200/80 bg-white shadow-sm hover:shadow transition-shadow">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
@@ -180,26 +180,6 @@ export function ProductPortfolioTracker({
             </div>
             <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
               <Users className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200/80 bg-gradient-to-br from-indigo-500/10 via-white to-purple-500/10 shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-indigo-900">Portfolio Strategist</p>
-              <h3 className="text-sm font-black text-slate-900 mt-1">Multi-Product Synergy</h3>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={onGoToRecommendations}
-                className="p-0 h-auto text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 mt-0.5"
-              >
-                View Recommendations <ArrowUpRight className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-            <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-200">
-              <Sparkles className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>

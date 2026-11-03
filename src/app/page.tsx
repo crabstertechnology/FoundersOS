@@ -15,6 +15,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { ValuationCalculator } from '@/components/calculator/ValuationCalculator';
+import { CapTableAndExitHub } from '@/components/cap-table/CapTableAndExitHub';
 import { CapTableTracker } from '@/components/cap-table/CapTableTracker';
 import { GlossarySection } from '@/components/glossary/GlossarySection';
 import { AuthDialog } from '@/components/auth/AuthDialog';
@@ -199,7 +200,7 @@ export default function FounderOSPage() {
   const handleNavigate = (tab: string) => {
     if (['calc', 'tracker', 'exit', 'negotiate', 'qa', 'glossary'].includes(tab)) {
       setActiveTab('finance');
-      setFinanceTab(tab);
+      setFinanceTab(tab === 'exit' ? 'tracker' : tab);
     } else if (['ezcirkit'].includes(tab)) {
       setActiveTab('sales');
       setSalesTab(tab);
@@ -244,8 +245,8 @@ export default function FounderOSPage() {
       case 'finance':
         switch (financeTab) {
           case 'calc': return 'Valuation Calculator';
-          case 'tracker': return 'Cap Table Tracker';
-          case 'exit': return 'Exit Simulator';
+          case 'tracker': return 'Cap Table & Exit Simulator';
+          case 'exit': return 'Cap Table & Exit Simulator';
           case 'negotiate': return 'Term Sheet AI Assistant';
           case 'qa': return 'Term Sheet Q&A Assistant';
           case 'glossary': return 'Founder\'s Glossary';
@@ -580,8 +581,7 @@ export default function FounderOSPage() {
               <div className="pl-11 pr-2 py-1 space-y-0.5 border-l border-slate-700/60 ml-5 my-1 animate-in slide-in-from-top-1 duration-200">
                 {[
                   { sub: 'calc', label: 'Valuation Calculator' },
-                  { sub: 'tracker', label: 'Cap Table Tracker' },
-                  { sub: 'exit', label: 'Exit Simulator' },
+                  { sub: 'tracker', label: 'Cap Table & Exit Simulator' },
                   { sub: 'negotiate', label: 'Term Sheet Assistant' },
                   { sub: 'qa', label: 'Term Sheet Q&A' },
                   { sub: 'glossary', label: "Founder's Glossary" },
@@ -844,8 +844,7 @@ export default function FounderOSPage() {
                   <div className="pl-9 pr-2 py-1 space-y-1 border-l border-slate-700/60 ml-5 my-1">
                     {[
                       { sub: 'calc', label: 'Valuation Calculator' },
-                      { sub: 'tracker', label: 'Cap Table Tracker' },
-                      { sub: 'exit', label: 'Exit Simulator' },
+                      { sub: 'tracker', label: 'Cap Table & Exit Simulator' },
                       { sub: 'negotiate', label: 'Term Sheet Assistant' },
                       { sub: 'qa', label: 'Term Sheet Q&A' },
                       { sub: 'glossary', label: "Founder's Glossary" },
@@ -1139,8 +1138,7 @@ export default function FounderOSPage() {
                   onChange={setFinanceTab}
                   options={[
                     { id: 'calc', label: 'Valuation Calculator', icon: Calculator },
-                    { id: 'tracker', label: 'Cap Table Tracker', icon: PieChart },
-                    { id: 'exit', label: 'Exit Simulator', icon: TrendingUp },
+                    { id: 'tracker', label: 'Cap Table & Exit Simulator', icon: PieChart },
                     { id: 'negotiate', label: 'Term Sheet Assistant', icon: Gavel },
                     { id: 'qa', label: 'Term Sheet Q&A', icon: MessageSquare },
                     { id: 'glossary', label: 'Glossary', icon: BookOpen },
@@ -1154,11 +1152,11 @@ export default function FounderOSPage() {
                 </TabsContent>
 
                 <TabsContent value="tracker" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <CapTableTracker userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
+                  <CapTableAndExitHub userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="exit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <ExitSimulator userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
+                  <CapTableAndExitHub userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} defaultSection="exit" />
                 </TabsContent>
 
                 <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
