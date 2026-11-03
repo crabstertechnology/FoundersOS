@@ -471,16 +471,7 @@ export function SettingsPage({ userId, userRole = 'admin' }: SettingsPageProps) 
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 w-full">
-      <div>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1] mb-2">
-          Founder <span className="text-primary">Settings</span>
-        </h1>
-        <p className="text-muted-foreground font-medium text-lg">
-          Configure credentials, generate onboarding links, and authorize team access.
-        </p>
-      </div>
-
-      <div className="mt-6">
+      <div className="mt-2">
         <Tabs defaultValue="profile" className="flex flex-col md:flex-row w-full gap-8">
           {/* Left Nav */}
           <div className="w-full md:w-64 border bg-slate-50/50 p-5 rounded-2xl shrink-0 flex flex-col justify-between h-[500px]">

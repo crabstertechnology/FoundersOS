@@ -6,7 +6,7 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { GliderNav } from '@/components/ui/tabs';
 import { 
   CalendarDays, Clock, TrendingUp, Calculator, Activity, 
-  Home, ChevronRight, Layers, Target, ShieldCheck
+  Target, ShieldCheck
 } from 'lucide-react';
 import { EZCirkitWeeklyDashboard } from '@/components/sales/EZCirkitWeeklyDashboard';
 import { EZCirkitDailyActivity } from '@/components/sales/EZCirkitDailyActivity';
@@ -47,80 +47,13 @@ export function WeeklyDailyHub({
 
   const { data: profile } = useDoc(profileRef);
 
-  const sectorMeta = {
-    sales: {
-      name: 'Sales & Growth',
-      description: 'Track outreach calls, school & college leads, workshops, kit sales, and weekly pipeline targets.',
-      color: 'text-indigo-600',
-      badge: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    },
-    finance: {
-      name: 'Finance & Capital',
-      description: 'Monitor funding targets, cash in bank, burn rate limits, capital runway, and daily audit transactions.',
-      color: 'text-emerald-600',
-      badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    },
-    operations: {
-      name: 'Operations & Infra',
-      description: 'Manage headcount targets, SaaS subscriptions burn, vendor audits, and team operational logs.',
-      color: 'text-blue-600',
-      badge: 'bg-blue-50 text-blue-700 border-blue-200',
-    },
-  }[sector];
+  
 
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-300">
-      {/* Top Header & Breadcrumb */}
-      <div className="pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <div>
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-            <button
-              type="button"
-              onClick={onNavigateHome}
-              className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-            >
-              <Home className="w-3.5 h-3.5 text-slate-400" />
-              <span>Console</span>
-            </button>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-            <span className="text-slate-600 font-medium">Cadence Hub</span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-            <span className="text-indigo-600 font-bold flex items-center gap-1">
-              {sectorMeta.name} ({cadence === 'weekly' ? 'Weekly' : 'Daily'})
-            </span>
-          </nav>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-              Weekly &amp; Daily Hub
-            </h1>
-            <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${sectorMeta.badge}`}>
-              {sectorMeta.name}
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-            {sectorMeta.description}
-          </p>
-        </div>
-
-        {/* Cadence Switcher (Weekly vs Daily) */}
-        <div className="w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none shrink-0">
-          <GliderNav
-            value={cadence}
-            onChange={(val) => setCadence(val as CadenceType)}
-            options={[
-              { id: 'weekly', label: 'Weekly Dashboard', icon: CalendarDays },
-              { id: 'daily', label: 'Daily Activity', icon: Clock },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Sector Switcher Bar (Sales, Finance, Operations) */}
+      {/* Switcher Navigation Bar (Clean Unified) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div className="flex items-center gap-2 px-2 text-xs font-bold text-slate-600 uppercase tracking-wider">
-          <Layers className="w-4 h-4 text-indigo-600" />
-          <span>Sector:</span>
-        </div>
+        {/* Sector Switcher (Sales, Finance, Operations) */}
         <div className="overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
           <GliderNav
             value={sector}
@@ -129,6 +62,18 @@ export function WeeklyDailyHub({
               { id: 'sales', label: 'Sales Sector', icon: TrendingUp },
               { id: 'finance', label: 'Finance Sector', icon: Calculator },
               { id: 'operations', label: 'Operations Sector', icon: Activity },
+            ]}
+          />
+        </div>
+
+        {/* Cadence Switcher (Weekly vs Daily) */}
+        <div className="overflow-x-auto pb-1 sm:pb-0 scrollbar-none shrink-0 flex items-center justify-end">
+          <GliderNav
+            value={cadence}
+            onChange={(val) => setCadence(val as CadenceType)}
+            options={[
+              { id: 'weekly', label: 'Weekly Dashboard', icon: CalendarDays },
+              { id: 'daily', label: 'Daily Activity', icon: Clock },
             ]}
           />
         </div>

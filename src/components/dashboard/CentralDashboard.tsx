@@ -1464,48 +1464,6 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-500 pb-12">
       
-      {/* Top Header matching AI Strategic Planner visual UI/UX */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 pt-2">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs shrink-0 mt-0.5">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">
-              AI Strategic Planner
-            </h1>
-            <p className="text-xs text-slate-500 font-semibold mt-1">
-              Aligning your yearly goals with automated roadmaps, milestones, and actionable tasks.
-            </p>
-          </div>
-        </div>
-
-        {/* History & Export actions */}
-        <div className="flex items-center flex-wrap gap-2.5">
-
-          {/* Plan History Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsHistoryListModalOpen(true)}
-            className="h-8 rounded-full border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold gap-1.5 px-3.5 shadow-xs"
-          >
-            <Clock className="w-3.5 h-3.5 text-slate-500" />
-            Plan History
-          </Button>
-
-          {/* Export Button */}
-          <Button
-            size="sm"
-            onClick={handleExportPlan}
-            className="h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold gap-1.5 px-4 shadow-xs"
-          >
-            <UploadCloud className="w-3.5 h-3.5 text-white" />
-            Export
-          </Button>
-        </div>
-      </div>
-
       {/* Connected Feature Suites Command Row - Direct 1-Click Sync to Respective Backends */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {/* Finance Suite */}
@@ -1714,7 +1672,7 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
             </span>
           </div>
 
-          {/* Action Buttons: Edit Strategy & View Full Analysis */}
+          {/* Action Buttons: Edit Strategy, View Full Analysis, Plan History, Export */}
           <div className="pt-2 flex flex-wrap items-center gap-2.5">
             {!readOnly && (
               <Button
@@ -1735,6 +1693,26 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
             >
               <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
               <span>View Full Analysis</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsHistoryListModalOpen(true)}
+              className="h-9 px-3.5 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 font-bold text-xs gap-1.5 shadow-xs transition-all cursor-pointer"
+            >
+              <Clock className="w-3.5 h-3.5 text-slate-500" />
+              <span>Plan History</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExportPlan}
+              className="h-9 px-3.5 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 font-bold text-xs gap-1.5 shadow-xs transition-all cursor-pointer"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-slate-500" />
+              <span>Export</span>
             </Button>
           </div>
         </div>

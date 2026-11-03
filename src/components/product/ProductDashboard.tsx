@@ -385,24 +385,6 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
 
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-500">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-2 mt-2">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              Product Suite & Portfolio Studio
-            </span>
-          </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.1] flex items-center gap-3">
-            <Box className="w-10 h-10 text-indigo-600" />
-            Product Suite
-          </h1>
-          <p className="text-muted-foreground font-medium text-sm md:text-base mt-1">
-            Track multiple products in your portfolio, formulate execution blueprints, and receive AI-driven portfolio recommendations tied to your cash runway.
-          </p>
-        </div>
-      </div>
-
       {/* Primary Navigation Tabs */}
       <div className="flex border-b border-slate-200 overflow-x-auto bg-white rounded-t-xl px-2 gap-2">
         <button

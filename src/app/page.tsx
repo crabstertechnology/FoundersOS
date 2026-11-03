@@ -1150,218 +1150,26 @@ export default function FounderOSPage() {
 
               <Tabs value={financeTab} className="w-full animate-in fade-in duration-300">
                 <TabsContent value="calc" className="mt-0 focus-visible:outline-none">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <Calculator className="w-3.5 h-3.5" /> Valuation Engine
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Startup Valuation Calculator
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        Model your funding rounds, track unit economics, and get AI-powered strategic advice instantly.
-                      </p>
-                    </div>
-                  </div>
                   <ValuationCalculator userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="tracker" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <PieChart className="w-3.5 h-3.5" /> Equity Governance
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Cap Table Tracker
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        Track ownership percentages, share types, and board control health checks.
-                      </p>
-                    </div>
-                  </div>
                   <CapTableTracker userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="exit" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <TrendingUp className="w-3.5 h-3.5" /> M&amp;A Simulation
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Exit Waterfall Simulator
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        See exactly who gets what when your startup is acquired or goes public. Model complex liquidation preferences in real-time.
-                      </p>
-                    </div>
-                  </div>
                   <ExitSimulator userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="negotiate" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <Gavel className="w-3.5 h-3.5" /> Deal Legal AI
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Term Sheet AI Assistant
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        Paste your deal clauses and let AI identify red flags and founder-friendly counter-arguments.
-                      </p>
-                    </div>
-                  </div>
                   <TermSheetAssistant userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="qa" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <MessageSquare className="w-3.5 h-3.5" /> Advisory Q&amp;A
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Term Sheet Q&amp;A Assistant
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        Ask any questions about term sheets, clauses, or negotiation strategies and get founder-friendly AI advice.
-                      </p>
-                    </div>
-                  </div>
                   <TermSheetAnalyzer userId={userId!} companyProfileId={companyProfileId} readOnly={isReadOnly} />
                 </TabsContent>
 
                 <TabsContent value="glossary" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-                  <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('dashboard')}
-                          className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Home className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Console</span>
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <button
-                          type="button"
-                          onClick={() => { setActiveTab('finance'); setFinanceTab('calc'); }}
-                          className="hover:text-indigo-600 transition-colors cursor-pointer"
-                        >
-                          Finance Suite
-                        </button>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-indigo-600 font-bold flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" /> VC Knowledge
-                        </span>
-                      </nav>
-                      <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                        Founder&apos;s Glossary
-                      </h1>
-                      <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                        Master the jargon of VC funding with plain-English explanations and real-world examples.
-                      </p>
-                    </div>
-                  </div>
                   <GlossarySection />
                 </TabsContent>
               </Tabs>
@@ -1382,30 +1190,6 @@ export default function FounderOSPage() {
 
             {/* Dedicated Task Workspace (Full Page) */}
             <TabsContent value="tasks" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-              <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('dashboard')}
-                      className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <Home className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Console</span>
-                    </button>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                    <span className="text-indigo-600 font-bold flex items-center gap-1">
-                      <ListChecks className="w-3.5 h-3.5" /> Task Workspace
-                    </span>
-                  </nav>
-                  <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                    Task Workspace
-                  </h1>
-                  <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                    Assign, track, and manage team deliverables, operational sprints, and priority founder tasks.
-                  </p>
-                </div>
-              </div>
               <TaskManager
                 userId={userId!}
                 companyProfileId={companyProfileId}
@@ -1436,30 +1220,6 @@ export default function FounderOSPage() {
 
             {/* Dedicated Team Workspace Chat (Full Page) */}
             <TabsContent value="chat" className="mt-0 focus-visible:outline-none animate-in fade-in duration-300">
-              <div className="mb-6 pb-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('dashboard')}
-                      className="hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <Home className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Console</span>
-                    </button>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                    <span className="text-indigo-600 font-bold flex items-center gap-1">
-                      <MessageSquare className="w-3.5 h-3.5" /> Team Workspace Chat
-                    </span>
-                  </nav>
-                  <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight font-heading">
-                    Team Workspace Chat
-                  </h1>
-                  <p className="text-sm text-slate-500 font-medium max-w-2xl mt-1">
-                    Real-time encrypted internal founder &amp; team communications and direct messaging.
-                  </p>
-                </div>
-              </div>
               <TeamChat
                 userId={userId!}
                 companyProfileId={companyProfileId}

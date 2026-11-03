@@ -168,16 +168,8 @@ export function RunwayOperationsView({
       {/* Top Decorative Soft Wave / Gradient */}
       <div className="absolute -top-4 -right-4 -left-4 h-48 bg-gradient-to-r from-purple-100/50 via-indigo-50/40 to-violet-100/50 pointer-events-none -z-10 rounded-3xl blur-2xl" />
 
-      {/* ── Header Area ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Runway Operations</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Track burn, cash, expenses and simulate your runway with AI-powered insights.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+      {/* ── Actions & Filters ── */}
+      <div className="flex justify-end items-center gap-2 pt-1 self-start sm:self-auto">
           {/* Time Range Selector */}
           <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
             <SelectTrigger className="h-9 px-3.5 rounded-full bg-white border-slate-200 shadow-xs text-xs font-semibold text-slate-700 hover:bg-slate-50 gap-1.5">
@@ -212,7 +204,6 @@ export function RunwayOperationsView({
             <Download className="w-3.5 h-3.5 text-slate-500" />
             Export
           </Button>
-        </div>
       </div>
 
       {/* ── Row 1: 5 Top KPI Cards ── */}
