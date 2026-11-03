@@ -20,7 +20,7 @@ import {
   Brain, Target, Sparkles, Map, ListTodo, CheckCircle2, Loader2, Edit, RefreshCw, Send, HelpCircle, ChevronRight, X,
   FileText, UploadCloud, Trash, Paperclip, MessageSquare, History, Copy, Check, Mail, Save,
   Search, Clock, ArrowRight, ChevronLeft, Download, ShoppingCart, Box, Lightbulb, Cpu, Zap, Briefcase, GraduationCap, Settings, CheckSquare, Flag,
-  Star
+  Star, ThumbsUp, Heart
 } from 'lucide-react';
 import { weeklyProgressReportAssistant } from '@/ai/flows/weekly-progress-report-flow';
 
@@ -1388,21 +1388,62 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
     };
   }, [selectedMonthIdx, strategicPlan, completedMonthlyMilestones, currentMonthIndex, quartersList]);
 
+    const roadmapMonths = useMemo(() => {
+    const baseDate = new Date();
+    return Array.from({ length: 12 }).map((_, idx) => {
+      const d = new Date(baseDate.getFullYear(), baseDate.getMonth() + idx, 1);
+      const shortMonth = d.toLocaleString('en-US', { month: 'short' });
+      const yearShort = `'${String(d.getFullYear()).slice(-2)}`;
+      const calLabel = `${shortMonth} ${yearShort}`;
+      
+      const rawMilestone = strategicPlan?.monthlyMilestones?.[idx];
+      const defMilestone = defaultMilestones[idx] || defaultMilestones[0];
+      const milestoneTitle = rawMilestone?.milestone || rawMilestone?.objective || defMilestone?.milestone || `Milestone ${idx + 1}`;
+      
+      return {
+        monthNum: idx + 1,
+        mLabel: `M${idx + 1}`,
+        calLabel,
+        shortMonth,
+        yearShort,
+        milestoneTitle,
+        quarterNum: Math.floor(idx / 3) + 1,
+      };
+    });
+  }, [strategicPlan?.monthlyMilestones, defaultMilestones]);
+
   const activeProducts = useMemo(() => {
-    if (productKPIs.products && productKPIs.products.length > 0) {
-      const totalMrr = productKPIs.products.reduce((acc: number, p: any) => acc + (Number(p.mrr) || 0), 0);
-      return productKPIs.products.slice(0, 2).map((p: any, idx: number) => {
+    let prods = productKPIs.products && productKPIs.products.length > 0 ? [...productKPIs.products] : [];
+    const analysisText = (strategicPlan?.analysis || '').toLowerCase();
+
+    // If AI analysis specifically recommends prioritizing EZCirkit as the lead revenue driver
+    if (analysisText.includes('ezcirkit') && (analysisText.includes('focus') || analysisText.includes('pivot') || analysisText.includes('traction') || analysisText.includes('cash-flow'))) {
+      prods.sort((a: any, b: any) => {
+        const aIsEz = (a.name || '').toLowerCase().includes('ezcirkit');
+        const bIsEz = (b.name || '').toLowerCase().includes('ezcirkit');
+        if (aIsEz && !bIsEz) return -1;
+        if (!aIsEz && bIsEz) return 1;
+        return 0;
+      });
+    }
+
+    if (prods.length > 0) {
+      const totalMrr = prods.reduce((acc: number, p: any) => acc + (Number(p.mrr) || 0), 0);
+      const match = analysisText.match(/focus\s+(\d+)%\s+effort/i);
+      const targetLeadPct = match ? parseInt(match[1], 10) : 80;
+
+      return prods.slice(0, 2).map((p: any, idx: number) => {
         let pct = 50;
         if (totalMrr > 0) {
           pct = Math.max(10, Math.min(90, Math.round(((Number(p.mrr) || 0) / totalMrr) * 100)));
         } else if (idx === 0) {
-          pct = productKPIs.products.length > 1 ? 75 : 100;
+          pct = prods.length > 1 ? targetLeadPct : 100;
         } else {
-          pct = 25;
+          pct = 100 - targetLeadPct;
         }
         return {
           id: p.id,
-          name: p.name || (idx === 0 ? "Core Product" : "Secondary Product"),
+          name: p.name || (idx === 0 ? "EZCirkit — Beginner Electronics Learning Kit" : "Detach — Smart Desktop Companion"),
           focus: p.tagline || p.description || p.targetAudience || (idx === 0 ? "Early revenue & market traction" : "Validation & waitlist growth"),
           progress: pct,
           stage: p.stage || 'mvp',
@@ -1411,10 +1452,10 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
       });
     }
     return [
-      { id: '1', name: "Core Product", focus: "Early revenue & market traction", progress: 75, stage: 'launched', mrr: salesKPIs.mrr },
-      { id: '2', name: "New Feature / Pilot", focus: "Validation & waitlist growth", progress: 25, stage: 'beta', mrr: 0 }
+      { id: '1', name: "EZCirkit — Beginner Electronics Learning Kit", focus: "Early revenue & market traction", progress: 80, stage: 'launched', mrr: salesKPIs.mrr },
+      { id: '2', name: "Detach — Smart Desktop Companion", focus: "Validation & waitlist growth", progress: 20, stage: 'beta', mrr: 0 }
     ];
-  }, [productKPIs.products, salesKPIs.mrr]);
+  }, [productKPIs.products, salesKPIs.mrr, strategicPlan?.analysis]);
 
   const currentMonthName = selectedMonthIdx !== null ? `Month ${selectedMonthIdx + 1}` : '';
   const isSelectedMonthCompleted = selectedMonthIdx !== null && (completedMonthlyMilestones.includes(currentMonthName) || completedMonthlyMilestones.includes(`M${selectedMonthIdx + 1}`));
@@ -1613,8 +1654,11 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
         </Card>
       )}
 
-      {/* Active Strategic Initiative Card with Mountain Horizon Graphic */}
-      <div className="rounded-3xl bg-white border border-slate-200/80 shadow-xs p-6 md:p-7 relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 min-h-[160px]">
+      {/* Unified Master Strategy & 12-Month Roadmap Card */}
+      <div className="w-full relative rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden ring-4 ring-indigo-50/60">
+        
+        {/* Top Section: Strategic Initiative & Goal with Mountain Horizon Graphic */}
+        <div className="relative p-6 md:p-7 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 min-h-[160px] border-b border-slate-100 overflow-hidden">
         {/* Mountain illustration in background on right */}
         <div className="absolute right-0 top-0 bottom-0 w-full lg:w-1/2 pointer-events-none overflow-hidden opacity-90">
           <svg className="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1654,38 +1698,50 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
               <Target className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 block">
-                Active Strategic Initiative
-              </span>
               <h2 className="text-lg md:text-xl font-black text-slate-900 leading-snug tracking-tight">
                 {yearlyGoal || profile?.strategicGoal || "Launch MVP product, secure first 10 pilot customers, and close ₹3,000,000 seed investment."}
               </h2>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
             <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-extrabold border border-indigo-200/60 shadow-2xs">
               Stage: {(stage || profile?.companyStage || 'mvp').toUpperCase()}
             </span>
-            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-extrabold border border-emerald-200/60 flex items-center gap-1.5 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Roadmap active and synced
+            <span className="px-3 py-1 rounded-full bg-indigo-50/70 text-indigo-700 text-xs font-extrabold border border-indigo-200/60 shadow-2xs flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0" />
+              {activeProducts[0]?.progress || 80}% Focus: {activeProducts[0]?.name?.split('—')[0]?.trim() || "EZCirkit"}
             </span>
+          </div>
+
+          {/* Action Buttons: Edit Strategy & View Full Analysis */}
+          <div className="pt-2 flex flex-wrap items-center gap-2.5">
             {!readOnly && (
-              <button
+              <Button
                 type="button"
                 onClick={() => setIsGoalsModalOpen(true)}
-                className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/60 text-indigo-700 hover:bg-indigo-100/70 ml-1 transition-colors shadow-2xs"
+                className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-2 shadow-sm transition-all cursor-pointer"
               >
-                Edit Strategy
-              </button>
+                <Edit className="w-3.5 h-3.5" />
+                <span>Edit Strategy</span>
+              </Button>
             )}
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAnalysisModalOpen(true)}
+              className="h-9 px-4 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 font-bold text-xs gap-2 shadow-xs transition-all cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span>View Full Analysis</span>
+            </Button>
           </div>
         </div>
 
         {/* Right: Glassmorphic Goal Box */}
         <div className="relative z-10 w-full sm:w-auto self-stretch sm:self-auto shrink-0">
-          <div className="bg-white/85 backdrop-blur-md border border-white/80 rounded-3xl p-4 shadow-sm min-w-[210px] space-y-1.5">
+          <div className="bg-white/85 backdrop-blur-md border border-white/80 rounded-3xl p-4 shadow-sm min-w-[210px] space-y-2">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
               12-Month Goal
             </span>
@@ -1697,12 +1753,43 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
               {postMoney > 0 ? fmtINR(postMoney) : '₹3,000,000 Seed Round'}
             </div>
+
+            {/* Circular Gauge / Percentage Indicator */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="relative w-8 h-8 shrink-0 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="14" stroke="#e2e8f0" strokeWidth="3.5" fill="transparent" />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      stroke="#4f46e5"
+                      strokeWidth="3.5"
+                      strokeDasharray={87.96}
+                      strokeDashoffset={87.96 * (1 - (activeProducts[0]?.progress || 80) / 100)}
+                      strokeLinecap="round"
+                      fill="transparent"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-indigo-700">
+                    {activeProducts[0]?.progress || 80}%
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block leading-tight">Lead Focus</span>
+                  <span className="text-xs font-bold text-slate-800 truncate block max-w-[120px]">
+                    {activeProducts[0]?.name?.split('—')[0]?.trim() || "EZCirkit"}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 12-Month Strategic Roadmap & Milestones (Full Width) */}
-      <div className="w-full relative rounded-3xl bg-white border-2 border-indigo-500/35 shadow-[0_20px_50px_-10px_rgba(79,70,229,0.18),0_8px_24px_-4px_rgba(15,23,42,0.06)] hover:shadow-[0_24px_64px_-10px_rgba(79,70,229,0.24)] transition-all duration-300 p-6 md:p-7 space-y-6 overflow-hidden ring-4 ring-indigo-50/80">
+      {/* Bottom Section: 12-Month Strategic Roadmap & Milestones */}
+      <div className="p-6 md:p-7 space-y-6 relative">
           
           {/* Ambient Diffused Glows (Color Theory: Subconscious Elevation & Depth) */}
           <div className="absolute -top-24 -right-24 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -1719,14 +1806,8 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
                   <h3 className="text-base sm:text-lg font-black text-slate-950 tracking-tight font-heading">
                     12-Month Roadmap &amp; Milestones
                   </h3>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700 border border-indigo-200/90 shadow-2xs">
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" /> Core Strategic Compass
-                  </span>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Master timeline tracking quarterly execution targets, unit deliverables &amp; founder checkpoints
-                </p>
-              </div>
             </div>
 
             {/* Legend with Color Psychology Tokens */}
@@ -1783,45 +1864,151 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
             })}
           </div>
 
-          {/* Straight Flow of 12 Milestone Circles (Illuminated Continuous Timeline) */}
-          <div className="relative z-10 pt-4 pb-2 px-1">
-            <div className="absolute top-[1.375rem] left-5 right-5 h-1 bg-gradient-to-r from-emerald-400 via-indigo-500 to-slate-200 rounded-full z-0 opacity-80" />
-            <div className="relative z-10 flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none px-1">
-              {Array.from({ length: 12 }).map((_, idx) => {
-                const mLabel = `M${idx + 1}`;
-                const mFullName = `Month ${idx + 1}`;
-                const isSelected = selectedMonthIdx === idx;
-                const isCompleted = completedMonthlyMilestones.includes(mFullName) || completedMonthlyMilestones.includes(mLabel);
-                const isCurrent = idx === currentMonthIndex;
+          {/* Professional 12-Month Execution Roadmap Timeline */}
+          <div className="relative z-10 p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-4">
+            
+            {/* Top Status & Quarter Indicators */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
+                <span className="text-xs font-black text-slate-900 tracking-tight font-heading">
+                  12-Month Execution Horizon
+                </span>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                  Month {currentMonthIndex + 1} of 12 Active
+                </span>
+              </div>
 
+              {/* Progress Count */}
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-500">
+                  <span className="text-slate-900 font-black">{completedMonthlyMilestones.length}</span> of 12 Achieved
+                </span>
+                <div className="w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{ width: `${(completedMonthlyMilestones.length / 12) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Quarterly Grouping Bar */}
+            <div className="grid grid-cols-4 gap-2 pt-0.5 text-center select-none">
+              {[
+                { q: 'Q1', months: 'M1–M3', label: 'Foundation & Cashflow' },
+                { q: 'Q2', months: 'M4–M6', label: 'Traction & Pilot Scale' },
+                { q: 'Q3', months: 'M7–M9', label: 'Institutional Contracts' },
+                { q: 'Q4', months: 'M10–M12', label: 'Seed Round & Scale' },
+              ].map((qGroup, gIdx) => {
+                const isCurrentQuarter = Math.floor(currentMonthIndex / 3) === gIdx;
+                const isSelectedQuarter = selectedMonthIdx !== null && Math.floor(selectedMonthIdx / 3) === gIdx;
                 return (
-                  <div key={idx} className="flex flex-col items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMonthIdx(prev => prev === idx ? null : idx)}
-                      className={`group relative w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-[11px] md:text-xs transition-all duration-200 focus:outline-hidden cursor-pointer ${
-                        isSelected
-                          ? 'bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-[0_4px_16px_rgba(79,70,229,0.55)] ring-4 ring-indigo-200 scale-110 z-20'
-                          : isCompleted
-                          ? 'bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-xs hover:scale-105 z-10 ring-2 ring-emerald-200'
-                          : isCurrent
-                          ? 'bg-white text-indigo-700 border-2 border-indigo-600 ring-4 ring-indigo-100 hover:scale-105 z-10 shadow-sm'
-                          : 'bg-white text-slate-600 border border-slate-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 z-10 shadow-2xs'
-                      }`}
-                      title={`${mFullName}: ${isSelected ? 'Selected (Click to toggle)' : isCompleted ? 'Completed' : 'Upcoming'} — Touch for roadmap & milestone details`}
-                    >
-                      {isCompleted ? <Check className="w-4 h-4 md:w-4.5 md:h-4.5 stroke-[3] text-white" /> : mLabel}
-                    </button>
-                    <span className="text-[10px] font-bold">
-                      {isCurrent ? (
-                        <span className="text-indigo-600 font-extrabold uppercase tracking-tight bg-indigo-50 border border-indigo-200 px-1 rounded-sm">Now</span>
-                      ) : (
-                        <span className="text-slate-500">{mLabel}</span>
-                      )}
+                  <div
+                    key={qGroup.q}
+                    onClick={() => setSelectedMonthIdx(gIdx * 3)}
+                    className={`px-2 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                      isSelectedQuarter
+                        ? 'bg-indigo-50/80 border-indigo-200 text-indigo-900'
+                        : isCurrentQuarter
+                        ? 'bg-slate-50 border-slate-200 text-slate-800'
+                        : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="text-[11px] font-black text-slate-900">{qGroup.q}</span>
+                      <span className="text-[10px] font-semibold text-slate-400">({qGroup.months})</span>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-500 truncate block mt-0.5">
+                      {qGroup.label}
                     </span>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Continuous Timeline Flow with Connected Progress Line */}
+            <div className="relative pt-3 pb-2 overflow-x-auto scrollbar-none px-2">
+              <div className="relative min-w-[700px] flex items-center justify-between">
+                
+                {/* Connecting Track (Positioned through the exact center of nodes) */}
+                <div className="absolute top-5 left-5 right-5 h-[3px] bg-slate-200 rounded-full z-0 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 via-indigo-600 to-indigo-500 transition-all duration-500 rounded-full"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, ((currentMonthIndex) / 11) * 100))}%`
+                    }}
+                  />
+                </div>
+
+                {/* 12 Interactive Milestone Nodes */}
+                {roadmapMonths.map((m, idx) => {
+                  const isSelected = selectedMonthIdx === idx;
+                  const isCompleted = completedMonthlyMilestones.includes(`Month ${idx + 1}`) || completedMonthlyMilestones.includes(m.mLabel);
+                  const isCurrent = idx === currentMonthIndex;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="group relative flex flex-col items-center shrink-0 z-10"
+                      style={{ width: '52px' }}
+                    >
+                      {/* Interactive Milestone Button */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonthIdx(prev => prev === idx ? null : idx)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs transition-all duration-200 cursor-pointer focus:outline-hidden ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/35 ring-4 ring-indigo-200 scale-110 z-20'
+                            : isCompleted
+                            ? 'bg-emerald-600 text-white shadow-xs hover:scale-105 z-10 ring-2 ring-emerald-200'
+                            : isCurrent
+                            ? 'bg-white text-indigo-600 border-2 border-indigo-600 ring-4 ring-indigo-100 hover:scale-105 z-10 shadow-sm'
+                            : 'bg-white text-slate-600 border border-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 z-10 shadow-2xs'
+                        }`}
+                        title={`${m.mLabel} (${m.calLabel}): ${m.milestoneTitle}`}
+                      >
+                        {isCompleted ? (
+                          <Check className="w-4 h-4 stroke-[3] text-white" />
+                        ) : (
+                          <span>{m.mLabel}</span>
+                        )}
+                      </button>
+
+                      {/* Sub-label 1: Calendar Date (Month + Year) */}
+                      <span className="text-[10px] font-black text-slate-800 mt-2 tracking-tight select-none leading-none">
+                        {m.calLabel}
+                      </span>
+
+                      {/* Sub-label 2: Status Indicator (Clean, non-repetitive) */}
+                      <div className="mt-1 flex items-center justify-center min-h-[16px]">
+                        {isCurrent ? (
+                          <span className="text-[8.5px] font-black uppercase tracking-wider bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shadow-2xs leading-none">
+                            Now
+                          </span>
+                        ) : isCompleted ? (
+                          <span className="text-[9px] font-bold text-emerald-600 leading-none">
+                            Done
+                          </span>
+                        ) : isSelected ? (
+                          <span className="text-[9px] font-bold text-indigo-600 leading-none">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-medium text-slate-400 leading-none">
+                            Q{m.quarterNum}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Tooltip on Hover */}
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-30 whitespace-nowrap bg-slate-950 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-xl border border-slate-800">
+                        {m.milestoneTitle}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -2055,117 +2242,7 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
               </div>
 
             </div>
-          ) : (
-            <div className="p-5 rounded-3xl bg-slate-50/50 border border-dashed border-slate-200 text-center">
-              <p className="text-xs font-semibold text-slate-500 flex items-center justify-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                Touch any circle (M1–M12) in the flow above to reveal its complete roadmap focus, milestone objectives, deliverables &amp; weekly execution plans.
-              </p>
-            </div>
-          )}
-        </div>
-
-      {/* AI Strategic Insight (Positioned directly below 12-Month Roadmap & Milestones) */}
-      <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.09),0_4px_16px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_46px_-6px_rgba(0,0,0,0.12)] transition-shadow duration-300 p-6 md:p-7 space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-            <h3 className="text-sm font-black text-slate-900 tracking-tight">AI Strategic Insight</h3>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsAnalysisModalOpen(true)}
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            View Full Analysis <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Content Row: Donut Chart (Left), Signals & Recommendation (Center), Co-Pilot Action (Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pt-1">
-          {/* Visual Donut Chart & Legend */}
-          <div className="lg:col-span-4 flex items-center justify-center lg:justify-start gap-6">
-            <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="38" stroke="#e2e8f0" strokeWidth="9" fill="transparent" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  stroke="#4f46e5"
-                  strokeWidth="9"
-                  strokeDasharray={238.76}
-                  strokeDashoffset={238.76 * (1 - (activeProducts[0]?.progress || 75) / 100)}
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-base font-black text-slate-900">{activeProducts[0]?.progress || 75}%</span>
-              </div>
-            </div>
-
-            {/* Chart Legend */}
-            <div className="space-y-2 text-xs font-bold">
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-2 text-slate-700">
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 shrink-0" />
-                  <span className="max-w-[130px] truncate">{activeProducts[0]?.name || "Core Product"}</span>
-                </span>
-                <span className="text-slate-900 font-black">{activeProducts[0]?.progress || 75}%</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-2 text-slate-500">
-                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
-                  <span className="max-w-[130px] truncate">{activeProducts[1]?.name || "Secondary Product"}</span>
-                </span>
-                <span className="text-slate-500 font-bold">{100 - (activeProducts[0]?.progress || 75)}%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Visual Strategic Tags & Key Signals */}
-          <div className="lg:col-span-5 space-y-2.5">
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Stance</span>
-                <span className="text-xs font-black text-indigo-600 block truncate">Traction &amp; Cashflow</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Lead Driver</span>
-                <span className="text-xs font-black text-slate-800 block truncate">{activeProducts[0]?.name || "Core Product"}</span>
-              </div>
-            </div>
-
-            {/* Concise Visual Highlight Callout */}
-            <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
-                <span className="text-xs font-bold text-slate-800 truncate">
-                  Prioritize core traction over secondary pipeline
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAnalysisModalOpen(true)}
-                className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-100/90 text-amber-800 hover:bg-amber-200/90 shrink-0 transition-colors shadow-2xs cursor-pointer"
-              >
-                Details
-              </button>
-            </div>
-          </div>
-
-          {/* Action Button */}
-          <div className="lg:col-span-3 flex flex-col justify-center items-stretch lg:items-end">
-            <Button
-              type="button"
-              onClick={() => hasPlan ? setIsChatOpen(true) : setIsGoalsModalOpen(true)}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 rounded-full gap-1.5 shadow-sm cursor-pointer"
-            >
-              {hasPlan ? "Consult Roadmap Co-Pilot" : "Generate 12-Month Plan"} <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </div>
+          ) : null}
         </div>
       </div>
 

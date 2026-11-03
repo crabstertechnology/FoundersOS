@@ -101,8 +101,7 @@ const TabsList = React.forwardRef<
       ref={containerRef}
       className={cn(
         "glider-tabs relative inline-flex items-center gap-1 p-1.5 rounded-full bg-white select-none max-w-full overflow-x-auto scrollbar-none",
-        "shadow-[0_0_1px_0_rgba(24,94,224,0.15),0_6px_12px_0_rgba(24,94,224,0.15)]",
-        "border border-blue-50/50",
+        "border border-slate-200/90 shadow-none",
         className
       )}
       {...props}
