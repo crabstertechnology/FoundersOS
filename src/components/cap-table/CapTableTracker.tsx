@@ -16,7 +16,8 @@ import {
   Trash2, UserPlus, ShieldCheck, AlertCircle, Loader2, 
   User, TrendingUp, History, PieChart as PieIcon,
   ShieldAlert, ArrowRightLeft, Target, Percent, Plus,
-  CheckCircle2, AlertTriangle
+  CheckCircle2, AlertTriangle, Coins, Sparkles, DollarSign,
+  ArrowUpRight
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { 
@@ -29,12 +30,23 @@ interface CapTableTrackerProps {
   userId: string;
   companyProfileId: string;
   readOnly?: boolean;
+  defaultView?: 'registry' | 'rounds' | 'simulator' | 'exit';
 }
 
-const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444'];
+const COLORS = ['#1f4fad', '#0fe4e8', '#16a34a', '#d946ef', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTableTrackerProps) {
-  const [activeView, setActiveView] = useState('registry');
+const EXIT_PRESETS = [
+  { label: '₹1 Cr', value: 10000000 },
+  { label: '₹5 Cr', value: 50000000 },
+  { label: '₹10 Cr', value: 100000000 },
+  { label: '₹25 Cr', value: 250000000 },
+  { label: '₹50 Cr', value: 500000000 },
+  { label: '₹100 Cr', value: 1000000000 },
+];
+
+export function CapTableTracker({ userId, companyProfileId, readOnly, defaultView = 'registry' }: CapTableTrackerProps) {
+  const [activeView, setActiveView] = useState(defaultView);
+  const [chartMode, setChartMode] = useState<'equity' | 'cash'>('equity');
   const [isAddingRound, setIsAddingRound] = useState(false);
   const [newRoundData, setNewRoundData] = useState({
     roundName: '',
@@ -71,6 +83,24 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
   const { data: stakeholders, isLoading: isStakeholdersLoading } = useCollection(shareholdersRef);
   const { data: rounds, isLoading: isRoundsLoading } = useCollection(roundsQueryRef);
 
+  // Exit Valuation State (defaults to 50 Cr or company profile valuation)
+  const [exitValuation, setExitValuation] = useState<number>(500000000);
+
+  React.useEffect(() => {
+    if (profile?.postMoneyValuation) {
+      setExitValuation(profile.postMoneyValuation);
+    } else if (profile?.latestValuation) {
+      setExitValuation(profile.latestValuation);
+    }
+  }, [profile?.postMoneyValuation, profile?.latestValuation]);
+
+  // Sync chart mode with active view
+  React.useEffect(() => {
+    if (activeView === 'exit') {
+      setChartMode('cash');
+    }
+  }, [activeView]);
+
   // Logic: Sasitharan (Founder) starts with 100%. Everyone else is deducted from him.
   const stats = useMemo(() => {
     const others = (stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan');
@@ -89,7 +119,119 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
     };
   }, [stakeholders, profile]);
 
-  const chartData = useMemo(() => {
+  // --- WATERFALL CALCULATION LOGIC ---
+  const waterfallResults = useMemo(() => {
+    const list = [
+      {
+        id: 'sasitharan-founder',
+        name: 'Sasitharan (Founder)',
+        role: 'Founder',
+        ownership: stats.founderPct,
+        invested: 0,
+        preferenceType: 'common' as const
+      },
+      ...(stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan').map(s => ({
+        id: s.id,
+        name: s.name || 'Unnamed',
+        role: s.role || 'Partner',
+        ownership: Number(s.ownershipPercentage) || 0,
+        invested: Number(s.investmentAmount) || 0,
+        preferenceType: (s.preferenceType || (s.role === 'Investor' ? '1x_non_part' : 'common')) as string
+      }))
+    ];
+
+    let remainingPool = exitValuation;
+
+    // Step 1: Calculate preferences
+    const preferences = list.map(sh => {
+      let prefAmount = 0;
+      if (sh.preferenceType === '1x_non_part' || sh.preferenceType === '1x_part') {
+        prefAmount = sh.invested;
+      } else if (sh.preferenceType === '2x_part') {
+        prefAmount = sh.invested * 2;
+      }
+      return { ...sh, prefAmount };
+    });
+
+    const totalPreferenceDemand = preferences.reduce((sum, sh) => sum + sh.prefAmount, 0);
+
+    // If pool <= preferences, preferences are capped pro-rata
+    if (remainingPool <= totalPreferenceDemand && totalPreferenceDemand > 0) {
+      return preferences.map(sh => {
+        const payout = (sh.prefAmount / totalPreferenceDemand) * remainingPool;
+        return {
+          ...sh,
+          payout,
+          payoutType: 'Preference Capped',
+          effectiveOwnership: exitValuation > 0 ? (payout / exitValuation) * 100 : 0
+        };
+      });
+    }
+
+    remainingPool -= totalPreferenceDemand;
+
+    // Step 2: Determine conversions for non-participating preferred
+    let commonOwnershipBase = 0;
+    const intermediate = preferences.map(sh => {
+      const proRataGross = (sh.ownership / 100) * exitValuation;
+      let convertsToCommon = false;
+      if (sh.preferenceType === '1x_non_part') {
+        if (proRataGross > sh.prefAmount) {
+          convertsToCommon = true;
+          remainingPool += sh.prefAmount; // Put preference back into pool
+          sh.prefAmount = 0;
+        }
+      }
+
+      if (sh.preferenceType === 'common' || sh.preferenceType === '1x_part' || sh.preferenceType === '2x_part' || convertsToCommon) {
+        commonOwnershipBase += sh.ownership;
+      }
+
+      return { ...sh, convertsToCommon, proRataGross };
+    });
+
+    // Step 3: Distribute remaining common pool
+    return intermediate.map(sh => {
+      let commonShare = 0;
+      if (sh.preferenceType === 'common' || sh.preferenceType === '1x_part' || sh.preferenceType === '2x_part' || sh.convertsToCommon) {
+        const adjustedOwnership = commonOwnershipBase > 0 ? (sh.ownership / commonOwnershipBase) : 0;
+        commonShare = remainingPool * adjustedOwnership;
+      }
+
+      const totalPayout = sh.prefAmount + commonShare;
+      const effectiveOwnership = exitValuation > 0 ? (totalPayout / exitValuation) * 100 : 0;
+      let payoutType = 'Common Pro-Rata';
+      if (sh.convertsToCommon) payoutType = 'Converted to Common';
+      else if (sh.preferenceType.includes('part') && commonShare > 0) payoutType = 'Preference + Participating';
+      else if (sh.prefAmount > 0 && commonShare === 0) payoutType = 'Preference Capped';
+
+      return {
+        ...sh,
+        payout: totalPayout,
+        effectiveOwnership,
+        payoutType
+      };
+    });
+  }, [exitValuation, stats.founderPct, stakeholders]);
+
+  const founderResult = useMemo(() => {
+    return waterfallResults.find(r => r.role === 'Founder') || { payout: exitValuation, effectiveOwnership: 100, ownership: 100 };
+  }, [waterfallResults, exitValuation]);
+
+  const totalPreferencePaid = useMemo(() => {
+    return waterfallResults
+      .filter(r => r.role === 'Investor')
+      .reduce((sum, r) => sum + (r.preferenceType !== 'common' ? (r.prefAmount || 0) : 0), 0);
+  }, [waterfallResults]);
+
+  const esopResult = useMemo(() => {
+    return waterfallResults
+      .filter(r => r.role === 'ESOP')
+      .reduce((sum, r) => sum + r.payout, 0);
+  }, [waterfallResults]);
+
+  // Equity Chart Data
+  const equityChartData = useMemo(() => {
     const data = (stakeholders || [])
       .filter(s => s.name.toLowerCase() !== 'sasitharan' && (s.ownershipPercentage || 0) > 0)
       .map((s, i) => ({
@@ -108,6 +250,17 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
     return data;
   }, [stakeholders, stats.founderPct]);
 
+  // Exit Cash Chart Data
+  const cashChartData = useMemo(() => {
+    return waterfallResults
+      .filter(r => r.payout > 0)
+      .map((res, i) => ({
+        name: res.name,
+        value: Math.max(0, Math.round(res.payout)),
+        color: COLORS[i % COLORS.length]
+      }));
+  }, [waterfallResults]);
+
   // Actions
   const addStakeholder = () => {
     if (readOnly || !shareholdersRef) return;
@@ -115,6 +268,8 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
       name: 'New Partner',
       role: 'Partner',
       ownershipPercentage: 0,
+      investmentAmount: 0,
+      preferenceType: 'common',
       companyId: companyProfileId,
     });
   };
@@ -153,7 +308,7 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Snapshot Layer */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-primary text-primary-foreground border-none shadow-xl flex flex-col justify-between">
@@ -175,14 +330,14 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
         <Card className="bg-white border-2 border-primary/10 shadow-lg flex flex-col justify-between">
           <CardContent className="pt-6 flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
-              <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Market Valuation</div>
-              <TrendingUp className="w-4 h-4 text-green-500" />
+              <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Founder Exit Value</div>
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-3xl font-black text-primary">{fmtINR(stats.latestVal)}</div>
-            <div className="mt-4 text-[9px] font-code text-muted-foreground bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col gap-1.5 mt-auto">
-              <span className="font-bold uppercase tracking-widest text-[8px] text-slate-400">Post-Money Anchor</span>
-              <span className="flex justify-center items-center text-[10px] font-black text-primary">
-                Determines Equity Prices
+            <div className="text-3xl font-black text-emerald-600">{fmtINR(founderResult.payout)}</div>
+            <div className="mt-4 text-[9px] font-code text-muted-foreground bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-100 flex flex-col gap-1 mt-auto">
+              <span className="font-bold uppercase tracking-widest text-[8px] text-emerald-700">Cash at ₹{fmtINR(exitValuation)} Exit</span>
+              <span className="text-[10px] font-black text-emerald-800">
+                {founderResult.effectiveOwnership.toFixed(1)}% Realized Take-Home
               </span>
             </div>
           </CardContent>
@@ -208,10 +363,10 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
           <CardContent className="pt-6 flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
               <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Investor Share</div>
-              <Target className="w-4 h-4 text-red-500" />
+              <Target className="w-4 h-4 text-rose-500" />
             </div>
             <div className="text-3xl font-black text-primary">{fmtPct(stats.investorPct)}</div>
-            <div className="mt-4 text-[9px] font-code text-muted-foreground bg-red-50 p-2.5 rounded-lg border border-red-100 flex flex-col gap-1.5 mt-auto text-red-800">
+            <div className="mt-4 text-[9px] font-code text-muted-foreground bg-rose-50 p-2.5 rounded-lg border border-rose-100 flex flex-col gap-1.5 mt-auto text-rose-800">
               <span className="font-bold uppercase tracking-widest text-[8px]">External Capital Stake</span>
               <span className="flex justify-between items-center text-[10px] font-black">
                 <span>Total External</span><span className="opacity-50">=</span><span>{fmtPct(stats.investorPct)}</span>
@@ -221,34 +376,40 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
         </Card>
       </div>
 
-      {/* ── 4-Column Grid: Registry (2 cols, up to Market Valuation) | Mix (1 col) | Decision Logic (1 col) ── */}
+      {/* ── 4-Column Grid: Left (2 cols for Tabs) | Mix Chart (1 col) | Decision Logic (1 col) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
 
-        {/* ── LEFT: Ownership Registry (spans 2 columns, aligning up to the Market Valuation card above) ── */}
+        {/* ── LEFT: Unified Tabs (spans 2 columns) ── */}
         <div className="lg:col-span-2">
-          <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
-            <div className="flex items-center justify-between mb-4">
-              <TabsList>
-                <TabsTrigger value="registry" className="gap-1.5">
+          <Tabs value={activeView} onValueChange={(v: any) => setActiveView(v)} className="w-full">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <TabsList className="bg-slate-100/90 p-1 rounded-xl">
+                <TabsTrigger value="registry" className="gap-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs">
                   <User className="w-3.5 h-3.5" /> Ownership Registry
                 </TabsTrigger>
-                <TabsTrigger value="rounds" className="gap-1.5">
+                <TabsTrigger value="rounds" className="gap-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs">
                   <History className="w-3.5 h-3.5" /> History
                 </TabsTrigger>
-                <TabsTrigger value="simulator" className="gap-1.5">
+                <TabsTrigger value="simulator" className="gap-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs">
                   <ArrowRightLeft className="w-3.5 h-3.5" /> Dilution Engine
                 </TabsTrigger>
+                <TabsTrigger value="exit" className="gap-1.5 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-xs">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> Exit Simulator
+                </TabsTrigger>
               </TabsList>
+
+              {/* Action Buttons */}
               {!readOnly && activeView === 'registry' && (
-                <Button onClick={addStakeholder} variant="outline" size="sm" className="gap-2 font-bold rounded-full text-xs">
-                  <UserPlus className="w-3.5 h-3.5" /> Add Partner
+                <Button onClick={addStakeholder} variant="outline" size="sm" className="gap-1.5 font-bold rounded-xl text-xs h-8 border-slate-200">
+                  <UserPlus className="w-3.5 h-3.5 text-indigo-600" /> Add Partner
                 </Button>
               )}
+
               {!readOnly && activeView === 'rounds' && (
                 <Dialog open={isAddingRound} onOpenChange={setIsAddingRound}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2 font-bold rounded-full text-xs">
-                      <Plus className="w-3.5 h-3.5" /> Record Round
+                    <Button variant="outline" size="sm" className="gap-1.5 font-bold rounded-xl text-xs h-8 border-slate-200">
+                      <Plus className="w-3.5 h-3.5 text-indigo-600" /> Record Round
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -275,65 +436,87 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleRecordRound} className="bg-primary text-white font-bold rounded-full px-6">Save Round</Button>
+                      <Button onClick={handleRecordRound} className="bg-primary text-white font-bold rounded-xl px-6">Save Round</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               )}
+
+              {activeView === 'exit' && (
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60">
+                  <Coins className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Gross Exit: {fmtINR(exitValuation)}</span>
+                </div>
+              )}
             </div>
 
-            <TabsContent value="registry">
+            {/* TAB 1: OWNERSHIP REGISTRY */}
+            <TabsContent value="registry" className="mt-0">
               <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs">
                 <CardContent className="pt-4 p-4">
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow className="uppercase text-[10px] font-bold tracking-widest">
-                        <TableHead className="w-[200px]">Name</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="text-right">Ownership %</TableHead>
-                        {!readOnly && <TableHead className="w-10"></TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow className="bg-primary/5 font-bold">
-                        <TableCell>Sasitharan (Founder)</TableCell>
-                        <TableCell><Badge className="bg-primary text-white text-[9px] uppercase">Primary Owner</Badge></TableCell>
-                        <TableCell className="text-right font-mono text-primary">{fmtPct(stats.founderPct)}</TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                      {(stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan').map((s) => (
-                        <TableRow key={s.id} className="group hover:bg-muted/20">
-                          <TableCell>
-                            <Input value={s.name || ''} className="h-8 border-none bg-transparent font-medium focus-visible:ring-1" onChange={e => updateStakeholder(s.id, 'name', e.target.value)} disabled={readOnly} />
-                          </TableCell>
-                          <TableCell>
-                            <Select value={s.role} onValueChange={v => updateStakeholder(s.id, 'role', v)} disabled={readOnly}>
-                              <SelectTrigger className="h-8 w-24 border-none bg-muted/50 text-[10px] font-bold uppercase"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Partner">Partner</SelectItem>
-                                <SelectItem value="Investor">Investor</SelectItem>
-                                <SelectItem value="ESOP">ESOP</SelectItem>
-                                <SelectItem value="Advisor">Advisor</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center justify-end gap-2">
-                              <Input type="number" value={s.ownershipPercentage || ''} className="h-8 w-20 border-none bg-muted/30 text-right font-mono font-bold text-primary" onChange={e => updateStakeholder(s.id, 'ownershipPercentage', Number(e.target.value))} disabled={readOnly} />
-                              <span className="text-xs font-bold">%</span>
-                            </div>
-                          </TableCell>
-                          {!readOnly && (
-                            <TableCell>
-                              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(shareholdersRef!, s.id))}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          )}
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-slate-50/70">
+                        <TableRow className="uppercase text-[10px] font-bold tracking-widest">
+                          <TableHead className="min-w-[140px]">Name</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead className="text-right">Ownership %</TableHead>
+                          <TableHead className="text-right min-w-[120px]">Est. Exit Payout</TableHead>
+                          {!readOnly && <TableHead className="w-10"></TableHead>}
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow className="bg-primary/5 font-bold">
+                          <TableCell className="font-black text-slate-900">Sasitharan (Founder)</TableCell>
+                          <TableCell><Badge className="bg-primary text-white text-[9px] uppercase font-bold">Primary Owner</Badge></TableCell>
+                          <TableCell className="text-right font-mono text-primary font-black">{fmtPct(stats.founderPct)}</TableCell>
+                          <TableCell className="text-right font-mono text-emerald-600 font-black text-xs">
+                            {fmtINR(founderResult.payout)}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        {(stakeholders || []).filter(s => s.name.toLowerCase() !== 'sasitharan').map((s) => {
+                          const exitRes = waterfallResults.find(r => r.id === s.id);
+                          return (
+                            <TableRow key={s.id} className="group hover:bg-muted/20">
+                              <TableCell>
+                                <Input value={s.name || ''} className="h-8 border-none bg-transparent font-medium focus-visible:ring-1" onChange={e => updateStakeholder(s.id, 'name', e.target.value)} disabled={readOnly} />
+                              </TableCell>
+                              <TableCell>
+                                <Select value={s.role} onValueChange={v => updateStakeholder(s.id, 'role', v)} disabled={readOnly}>
+                                  <SelectTrigger className="h-8 w-24 border-none bg-muted/50 text-[10px] font-bold uppercase"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Partner">Partner</SelectItem>
+                                    <SelectItem value="Investor">Investor</SelectItem>
+                                    <SelectItem value="ESOP">ESOP</SelectItem>
+                                    <SelectItem value="Advisor">Advisor</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <Input type="number" value={s.ownershipPercentage || ''} className="h-8 w-20 border-none bg-muted/30 text-right font-mono font-bold text-primary" onChange={e => updateStakeholder(s.id, 'ownershipPercentage', Number(e.target.value))} disabled={readOnly} />
+                                  <span className="text-xs font-bold">%</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-emerald-700 font-bold text-xs">
+                                {exitRes ? fmtINR(exitRes.payout) : '₹0'}
+                              </TableCell>
+                              {!readOnly && (
+                                <TableCell>
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteDocumentNonBlocking(doc(shareholdersRef!, s.id))}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Over-allocation Alert */}
                   {stats.totalAllocatedToOthers > 100 && (
                     <Alert variant="destructive" className="mt-4">
                       <AlertCircle className="h-4 w-4" />
@@ -341,11 +524,27 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
                       <AlertDescription>You have allocated {fmtPct(stats.totalAllocatedToOthers)} to others. This exceeds Sasitharan's 100% capacity.</AlertDescription>
                     </Alert>
                   )}
+
+                  {/* Quick Exit Modeling Banner */}
+                  <div className="mt-4 p-3 bg-emerald-50/70 border border-emerald-200/70 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-emerald-800 font-medium">
+                      <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Payouts modeled at <strong>{fmtINR(exitValuation)}</strong> exit valuation.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveView('exit')}
+                      className="text-xs font-black text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
+                    >
+                      Configure Exit Waterfall <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="rounds">
+            {/* TAB 2: FUNDING ROUNDS HISTORY */}
+            <TabsContent value="rounds" className="mt-0">
               <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs">
                 <CardContent className="pt-4 p-4">
                   {(!rounds || rounds.length === 0) ? (
@@ -389,30 +588,222 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
               </Card>
             </TabsContent>
 
-            <TabsContent value="simulator">
+            {/* TAB 3: DILUTION SIMULATOR */}
+            <TabsContent value="simulator" className="mt-0">
               <DilutionSimulator stats={stats} stakeholders={stakeholders} />
+            </TabsContent>
+
+            {/* TAB 4: MERGED EXIT SIMULATOR */}
+            <TabsContent value="exit" className="mt-0 space-y-4">
+              {/* Exit Valuation Input & Presets */}
+              <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs p-4">
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-emerald-600" /> Gross Exit Valuation (₹)
+                      </label>
+                      <p className="text-[11px] text-slate-500 font-medium">Model acquisition or IPO cash liquidation.</p>
+                    </div>
+                    <div className="relative max-w-xs w-full">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono font-bold">₹</span>
+                      <Input
+                        type="number"
+                        value={exitValuation}
+                        onChange={(e) => setExitValuation(Math.max(0, Number(e.target.value)))}
+                        className="pl-8 font-mono font-bold text-base border-emerald-200 focus-visible:ring-emerald-500 h-9"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick Preset Buttons */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Presets:</span>
+                    {EXIT_PRESETS.map((p) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        onClick={() => setExitValuation(p.value)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          exitValuation === p.value
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+
+              {/* Waterfall Summary Pills */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3 bg-emerald-50/80 rounded-xl border border-emerald-200/80">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Founder Net Cash</div>
+                  <div className="text-lg font-black text-emerald-950 mt-0.5">{fmtINR(founderResult.payout)}</div>
+                  <div className="text-[10px] text-emerald-700 font-semibold">{founderResult.effectiveOwnership.toFixed(1)}% of total exit</div>
+                </div>
+
+                <div className="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200/80">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">Investor Preferences</div>
+                  <div className="text-lg font-black text-indigo-950 mt-0.5">{fmtINR(totalPreferencePaid)}</div>
+                  <div className="text-[10px] text-indigo-700 font-semibold">Priority liquidation stack</div>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Common Realized</div>
+                  <div className="text-lg font-black text-slate-900 mt-0.5">
+                    {fmtINR(Math.max(0, exitValuation - totalPreferencePaid))}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-semibold">Pro-rata distributed</div>
+                </div>
+              </div>
+
+              {/* Waterfall Payout Table */}
+              <Card className="border border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden">
+                <CardHeader className="p-4 pb-2 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700">
+                      Shareholder Payout Breakdown
+                    </CardTitle>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      Total Exit: {fmtINR(exitValuation)}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-slate-50/70">
+                        <TableRow className="uppercase text-[10px] font-bold tracking-widest">
+                          <TableHead>Stakeholder</TableHead>
+                          <TableHead>Paper %</TableHead>
+                          <TableHead className="min-w-[130px]">Preference</TableHead>
+                          <TableHead className="min-w-[110px]">Invested (₹)</TableHead>
+                          <TableHead className="text-right">Cash Payout</TableHead>
+                          <TableHead className="text-right">Realized %</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {waterfallResults.map((res) => {
+                          const isFounder = res.role === 'Founder';
+                          return (
+                            <TableRow key={res.id} className={isFounder ? 'bg-primary/5 font-bold' : 'hover:bg-slate-50/60'}>
+                              <TableCell className="font-bold text-slate-900">
+                                <div>{res.name}</div>
+                                <div className="text-[9px] uppercase font-bold text-slate-400">{res.payoutType}</div>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">{fmtPct(res.ownership)}</TableCell>
+                              <TableCell>
+                                {isFounder ? (
+                                  <span className="text-[10px] font-bold text-slate-500">Common Stock</span>
+                                ) : (
+                                  <Select
+                                    value={res.preferenceType}
+                                    onValueChange={(val) => updateStakeholder(res.id, 'preferenceType', val)}
+                                    disabled={readOnly}
+                                  >
+                                    <SelectTrigger className="h-7 text-[10px] font-bold bg-white border-slate-200 w-[120px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="common">Common</SelectItem>
+                                      <SelectItem value="1x_non_part">1x Non-Part.</SelectItem>
+                                      <SelectItem value="1x_part">1x Part.</SelectItem>
+                                      <SelectItem value="2x_part">2x Part.</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {isFounder ? (
+                                  <span className="text-[10px] font-mono text-slate-400">Sweat Equity</span>
+                                ) : (
+                                  <Input
+                                    type="number"
+                                    value={res.invested || ''}
+                                    placeholder="0"
+                                    disabled={readOnly}
+                                    onChange={(e) => updateStakeholder(res.id, 'investmentAmount', Number(e.target.value))}
+                                    className="h-7 text-xs font-mono w-[100px]"
+                                  />
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right font-mono font-black text-emerald-700 text-xs">
+                                {fmtINR(res.payout)}
+                              </TableCell>
+                              <TableCell className="text-right font-mono font-bold text-xs text-slate-900">
+                                {res.effectiveOwnership.toFixed(1)}%
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
 
-        {/* ── CENTER: Ownership Mix (1 column) ── */}
+        {/* ── CENTER: Ownership / Cash Mix (1 column) ── */}
         <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs overflow-hidden">
-          <CardHeader className="pb-2 border-b border-slate-100">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
-              <PieIcon className="w-4 h-4 text-indigo-600" /> Ownership Mix
-            </CardTitle>
-            <CardDescription className="text-xs text-slate-500">Equity distribution</CardDescription>
+          <CardHeader className="pb-2 border-b border-slate-100 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
+                <PieIcon className="w-4 h-4 text-indigo-600" />
+                {chartMode === 'cash' ? 'Exit Cash Mix' : 'Ownership Mix'}
+              </CardTitle>
+              <CardDescription className="text-xs text-slate-500">
+                {chartMode === 'cash' ? 'Cash distribution at exit' : 'Equity distribution'}
+              </CardDescription>
+            </div>
+            <div className="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
+              <button
+                type="button"
+                onClick={() => setChartMode('equity')}
+                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                  chartMode === 'equity' ? 'bg-white shadow-2xs text-indigo-700' : 'text-slate-500'
+                }`}
+              >
+                %
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartMode('cash')}
+                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                  chartMode === 'cash' ? 'bg-white shadow-2xs text-emerald-700' : 'text-slate-500'
+                }`}
+              >
+                ₹
+              </button>
+            </div>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={5} dataKey="value">
-                    {chartData.map((entry, index) => (
+                  <Pie
+                    data={chartMode === 'cash' ? cashChartData : equityChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={75}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {(chartMode === 'cash' ? cashChartData : equityChartData).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip formatter={(val: number) => [fmtPct(val), 'Ownership']} />
+                  <RechartsTooltip
+                    formatter={(val: number) => [
+                      chartMode === 'cash' ? fmtINR(val) : fmtPct(val),
+                      chartMode === 'cash' ? 'Payout' : 'Ownership'
+                    ]}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -424,29 +815,57 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
         <Card className="lg:col-span-1 border border-slate-200/80 bg-white rounded-2xl shadow-xs">
           <CardHeader className="pb-2 border-b border-slate-100">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
-              <ShieldAlert className="w-4 h-4 text-indigo-600" /> Decision Logic
+              <ShieldAlert className="w-4 h-4 text-indigo-600" />
+              {activeView === 'exit' ? 'Exit Waterfall Logic' : 'Decision Logic'}
             </CardTitle>
-            <CardDescription className="text-xs text-slate-500">Governance authority checks</CardDescription>
+            <CardDescription className="text-xs text-slate-500">
+              {activeView === 'exit' ? 'Liquidation checks' : 'Governance authority checks'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
-            <AuthorityCheck 
-              label="Founder Control" 
-              pass={stats.founderPct > 50} 
-              val={fmtPct(stats.founderPct)}
-              warning="Proprietor control is at risk if stake drops below 50%."
-            />
-            <AuthorityCheck 
-              label="ESOP Pool" 
-              pass={stats.esopPct >= 5 && stats.esopPct <= 15} 
-              val={fmtPct(stats.esopPct)}
-              warning="A 10% pool is standard for hiring key partners later."
-            />
-            <AuthorityCheck 
-              label="Over-Allocation" 
-              pass={stats.totalAllocatedToOthers <= 100} 
-              val={fmtPct(stats.totalAllocatedToOthers)}
-              warning="You have allocated more than the total 100% available."
-            />
+            {activeView === 'exit' ? (
+              <>
+                <AuthorityCheck
+                  label="Founder Cash Yield"
+                  pass={founderResult.effectiveOwnership >= stats.founderPct - 2}
+                  val={`${founderResult.effectiveOwnership.toFixed(1)}%`}
+                  warning="Liquidation preferences are reducing your cash yield below paper ownership."
+                />
+                <AuthorityCheck
+                  label="Preference Hurdle"
+                  pass={exitValuation > totalPreferencePaid}
+                  val={fmtINR(totalPreferencePaid)}
+                  warning="Exit does not cover investor preferences. Common stock compromised."
+                />
+                <AuthorityCheck
+                  label="ESOP Realization"
+                  pass={esopResult > 0 || stats.esopPct === 0}
+                  val={fmtINR(esopResult)}
+                  warning="Employee option pool receives ₹0 at this exit valuation."
+                />
+              </>
+            ) : (
+              <>
+                <AuthorityCheck 
+                  label="Founder Control" 
+                  pass={stats.founderPct > 50} 
+                  val={fmtPct(stats.founderPct)}
+                  warning="Proprietor control is at risk if stake drops below 50%."
+                />
+                <AuthorityCheck 
+                  label="ESOP Pool" 
+                  pass={stats.esopPct >= 5 && stats.esopPct <= 15} 
+                  val={fmtPct(stats.esopPct)}
+                  warning="A 10% pool is standard for hiring key partners later."
+                />
+                <AuthorityCheck 
+                  label="Over-Allocation" 
+                  pass={stats.totalAllocatedToOthers <= 100} 
+                  val={fmtPct(stats.totalAllocatedToOthers)}
+                  warning="You have allocated more than the total 100% available."
+                />
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -454,6 +873,7 @@ export function CapTableTracker({ userId, companyProfileId, readOnly }: CapTable
     </div>
   );
 }
+
 function AuthorityCheck({ label, pass, val, warning }: { label: string; pass: boolean; val: string; warning: string }) {
   return (
     <div className={`p-3.5 rounded-xl border transition-all ${pass ? 'bg-emerald-50/60 border-emerald-200/80' : 'bg-rose-50/60 border-rose-200/80'}`}>
