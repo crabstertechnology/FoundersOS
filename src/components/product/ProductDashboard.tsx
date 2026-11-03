@@ -67,34 +67,79 @@ export function ProductDashboard({ userId, companyProfileId, readOnly }: Product
 
   const { data: profile } = useDoc(profileRef);
 
-  // Derive products list with backwards compatibility
+  // Default fallback products for Crabster Technology portfolio
+  const defaultFallbackProducts: TrackedProduct[] = useMemo(() => [
+    {
+      id: 'prod_ezcirkit',
+      name: 'EZCirkit — Beginner Electronics Learning Kit',
+      description: 'Hands-on electronic kit and mini-project suite designed for ECE engineering students with video tutorials and QR project cards.',
+      targetAudience: 'ECE & Engineering College Students',
+      pricingModel: 'one_time_kit',
+      stage: 'launched',
+      status: 'on_track',
+      priority: 'high',
+      mrr: Number(profile?.mRevenue) || 0,
+      usersCount: 20,
+      techStack: 'Embedded Hardware, Arduino, Custom PCB',
+      launchDate: '2026-08-01',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'prod_detach',
+      name: 'Detach — Smart Desktop Companion for Digital Wellbeing',
+      description: 'Physical desktop companion IoT device with animated character states, pomodoro focus timers, sub-50ms latency, and BLE connectivity.',
+      targetAudience: 'Knowledge Workers, Software Engineers & Students',
+      pricingModel: 'hardware_plus_subscription',
+      stage: 'beta',
+      status: 'on_track',
+      priority: 'medium',
+      mrr: 0,
+      usersCount: 150,
+      techStack: 'ESP32-S3, LVGL, BLE 5.3, React Native',
+      launchDate: '2026-12-01',
+      createdAt: new Date().toISOString()
+    }
+  ], [profile?.mRevenue]);
+
+  // Derive products list with backwards compatibility and guarantee both products exist
   const products: TrackedProduct[] = useMemo(() => {
     if (profile?.products && Array.isArray(profile.products) && profile.products.length > 0) {
+      const hasDetach = profile.products.some((p: any) => (p.name || '').toLowerCase().includes('detach'));
+      const hasEz = profile.products.some((p: any) => (p.name || '').toLowerCase().includes('ezcirkit'));
+      if (!hasDetach || !hasEz) {
+        const missing: TrackedProduct[] = [];
+        if (!hasEz) missing.push(defaultFallbackProducts[0]);
+        if (!hasDetach) missing.push(defaultFallbackProducts[1]);
+        return [...profile.products, ...missing];
+      }
       return profile.products;
     }
-    // Backward compatibility: If no products array exists, but old single-product fields exist
     if (profile?.prodName || profile?.prodDesc) {
-      return [{
-        id: 'prod_default',
-        name: profile.prodName || 'Core Product',
-        description: profile.prodDesc || '',
-        targetAudience: profile.prodTarget || '',
-        pricingModel: profile.prodPricing || 'saas_subscription',
-        stage: 'mvp',
-        status: 'on_track',
-        priority: 'high',
-        mrr: Number(profile.mRevenue) || 0,
-        usersCount: 0,
-        techStack: '',
-        launchDate: '',
-        customQuestion: profile.prodQuestion || '',
-        aiPlan: profile.prodAIPlan || null,
-        aiPlanHistory: profile.prodAIPlanHistory || [],
-        createdAt: new Date().toISOString()
-      }];
+      const isDetach = (profile.prodName || '').toLowerCase().includes('detach');
+      return [
+        {
+          id: 'prod_default',
+          name: profile.prodName || 'Core Product',
+          description: profile.prodDesc || '',
+          targetAudience: profile.prodTarget || '',
+          pricingModel: profile.prodPricing || 'saas_subscription',
+          stage: 'mvp',
+          status: 'on_track',
+          priority: 'high',
+          mrr: Number(profile.mRevenue) || 0,
+          usersCount: 0,
+          techStack: '',
+          launchDate: '',
+          customQuestion: profile.prodQuestion || '',
+          aiPlan: profile.prodAIPlan || null,
+          aiPlanHistory: profile.prodAIPlanHistory || [],
+          createdAt: new Date().toISOString()
+        },
+        isDetach ? defaultFallbackProducts[0] : defaultFallbackProducts[1]
+      ];
     }
-    return [];
-  }, [profile]);
+    return defaultFallbackProducts;
+  }, [profile, defaultFallbackProducts]);
 
   // Set default selected product once loaded
   useEffect(() => {

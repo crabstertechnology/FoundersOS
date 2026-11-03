@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,9 @@ import ReactMarkdown from 'react-markdown';
 import {
   Sparkles, Loader2, Compass, Layers, AlertTriangle, CheckCircle2,
   TrendingUp, Code, DollarSign, ListTodo, ShieldAlert, Zap, ArrowRight,
-  Clock, RefreshCw
+  Clock, RefreshCw, Cpu, Users, Repeat, Target, ShieldCheck, Check,
+  ChevronRight, Calendar, Flame, Coins, Briefcase, Boxes, FileCheck,
+  ArrowUpRight, PieChart
 } from 'lucide-react';
 import { TrackedProduct, ProductSuiteRecommendationData } from './types';
 import { productSuiteAdvisorAssistant } from '@/ai/flows/product-advisor-flow';
@@ -60,11 +62,9 @@ export function ProductSuiteRecommendations({
     setLoading(true);
 
     try {
-      // Calculate financial context from company profile data
       const mrr = companyProfile?.mRevenue || products.reduce((acc, p) => acc + (Number(p.mrr) || 0), 0);
       const cash = companyProfile?.cashBank || 0;
       
-      // Calculate burn rate
       let monthlySaaS = 0;
       (companyProfile?.saasSubscriptions || []).forEach((sub: any) => {
         const cost = Number(sub.cost) || 0;
@@ -126,75 +126,139 @@ export function ProductSuiteRecommendations({
     }
   };
 
+  // Helper to extract bandwidth percentages for visual gauges
+  const bandwidthData = useMemo(() => {
+    if (!recommendations?.resourceAllocation) {
+      return { p1Name: 'EZCirkit', p1Pct: 70, p2Name: 'Detach', p2Pct: 30 };
+    }
+    const text = recommendations.resourceAllocation;
+    const match = text.match(/(\d+)%\s*(?:bandwidth|effort)\s*to\s*([^,\.]+?)\s*(?:and|&)\s*(\d+)%\s*to\s*([^,\.]+)/i);
+    if (match) {
+      return {
+        p1Pct: parseInt(match[1], 10),
+        p1Name: match[2].trim(),
+        p2Pct: parseInt(match[3], 10),
+        p2Name: match[4].trim(),
+      };
+    }
+    return { p1Name: 'EZCirkit', p1Pct: 70, p2Name: 'Detach', p2Pct: 30 };
+  }, [recommendations?.resourceAllocation]);
+
+  // Helper to format role badges with Apple/Google style
   const getRoleBadge = (role: string) => {
     const lower = role.toLowerCase();
     if (lower.includes('cash cow') || lower.includes('primary revenue') || lower.includes('core')) {
-      return <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">💰 {role}</span>;
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+          <Coins className="w-3.5 h-3.5 text-emerald-600" />
+          {role}
+        </span>
+      );
     }
     if (lower.includes('growth') || lower.includes('hook') || lower.includes('magnet')) {
-      return <span className="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">🚀 {role}</span>;
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs">
+          <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+          {role}
+        </span>
+      );
     }
     if (lower.includes('drain') || lower.includes('sunset') || lower.includes('distraction')) {
-      return <span className="bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">⚠️ {role}</span>;
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-rose-50 text-rose-700 border border-rose-200/80 shadow-2xs">
+          <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+          {role}
+        </span>
+      );
     }
-    return <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">⭐ {role}</span>;
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
+        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+        {role}
+      </span>
+    );
+  };
+
+  // Helper to find matching product ID
+  const findProductId = (name: string) => {
+    const normalized = name.toLowerCase();
+    const found = products.find(p => 
+      p.name.toLowerCase().includes(normalized) || normalized.includes(p.name.toLowerCase())
+    );
+    return found ? found.id : null;
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <Card className="border border-indigo-100 bg-gradient-to-r from-indigo-900 via-indigo-850 to-slate-900 text-white shadow-xl rounded-2xl overflow-hidden relative">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <CardContent className="p-6 md:p-8 relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-200 text-xs font-bold border border-indigo-400/30">
+    <div className="space-y-6 animate-in fade-in duration-500">
+
+      {/* ── 1. Top CPO Intelligence Hero Card (Apple / Google Level Visual Polish) ── */}
+      <div className="relative rounded-3xl bg-linear-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-xl overflow-hidden border border-slate-800 ring-1 ring-white/10">
+        {/* Soft Ambient Radial Lights */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none -mb-20" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-indigo-200 text-xs font-bold border border-white/15 backdrop-blur-md shadow-2xs">
               <Compass className="w-3.5 h-3.5 text-indigo-300" />
-              Chief Product Officer & Portfolio Strategist
+              <span>Chief Product Officer &amp; Portfolio Strategist</span>
+              <span className="w-1 h-1 rounded-full bg-indigo-300" />
+              <span className="text-white/80">{products.length} Products Tracked</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              Product Suite Intelligence & Recommendations
+
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
+              Product Suite Intelligence &amp; Recommendations
             </h2>
-            <p className="text-sm text-indigo-100/80 leading-relaxed font-normal">
+
+            <p className="text-sm text-indigo-100/80 leading-relaxed font-normal max-w-2xl">
               Get an objective, CPO-level strategic audit across all {products.length} tracked products. Identifies high-conviction growth engines, shared technical leverage, resource cannibalization traps, and optimal bandwidth allocation tied to your cash runway.
             </p>
           </div>
 
-          <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
+          {/* Action Trigger & Last Updated Pill */}
+          <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2.5 w-full sm:w-auto">
             <Button
               type="button"
               onClick={() => handleRunSuiteAnalysis()}
               disabled={loading || readOnly || products.length === 0}
-              className="bg-white hover:bg-slate-100 text-indigo-900 font-extrabold h-11 px-6 gap-2 shadow-lg hover:shadow-indigo-500/20 transition-all text-xs"
+              className="bg-white hover:bg-slate-100 text-slate-950 font-extrabold h-11 px-6 rounded-2xl gap-2 shadow-lg hover:shadow-indigo-500/20 transition-all text-xs cursor-pointer"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-                  Analyzing Suite...
+                  <span>Analyzing Suite...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-indigo-600" />
-                  {recommendations ? 'Re-run Suite Analysis' : 'Analyze Product Suite'}
+                  <span>{recommendations ? 'Re-run Suite Analysis' : 'Analyze Product Suite'}</span>
                 </>
               )}
             </Button>
+
             {recommendations && (
-              <p className="text-[11px] text-indigo-200/70 font-medium flex items-center gap-1 justify-center sm:justify-end">
-                <Clock className="w-3 h-3" />
-                Updated {new Date(recommendations.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              </p>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-indigo-200/80 font-medium self-center sm:self-end">
+                <Clock className="w-3 h-3 text-indigo-300" />
+                <span>
+                  Updated {new Date(recommendations.timestamp).toLocaleDateString(undefined, { 
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                  })}
+                </span>
+              </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Loading animation card */}
+      {/* ── Loading Animation Card ── */}
       {loading && (
-        <Card className="border-2 border-indigo-100 bg-indigo-50/10 shadow-md py-16 text-center animate-pulse">
+        <Card className="border-2 border-indigo-100 bg-indigo-50/10 shadow-md py-16 text-center animate-pulse rounded-3xl">
           <CardContent className="flex flex-col items-center justify-center space-y-5">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+            <div className="w-16 h-16 rounded-3xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-xs">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+            </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-black text-slate-800">FounderOS Product Suite AI is Evaluating Portfolio</h3>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">FounderOS Product Suite AI is Evaluating Portfolio</h3>
               <p className="text-sm text-indigo-700 font-semibold max-w-lg transition-all duration-300">
                 {loadingMessages[loadingMessageIdx]}
               </p>
@@ -203,177 +267,405 @@ export function ProductSuiteRecommendations({
         </Card>
       )}
 
-      {/* Main Recommendations Content */}
+      {/* ── Main Recommendations Visual Grid ── */}
       {!loading && recommendations && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          {/* Executive Summary */}
-          <Card className="border border-slate-200/90 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b py-4">
-              <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-indigo-600" />
-                Executive Portfolio Diagnosis
-              </CardTitle>
-              <CardDescription className="text-xs font-semibold text-slate-500">
-                High-level strategic diagnosis of focus, portfolio coherence, and team distraction risks.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="prose prose-slate max-w-none text-sm leading-relaxed whitespace-pre-wrap">
-                <ReactMarkdown>{recommendations.executiveSummary}</ReactMarkdown>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="space-y-6">
 
-          {/* Product Prioritization Matrix */}
-          <Card className="border border-slate-200/90 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b py-4">
-              <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-indigo-600" />
-                Product Prioritization & Strategic Role Matrix
-              </CardTitle>
-              <CardDescription className="text-xs font-semibold text-slate-500">
-                Ranked order of attention and specific next milestone for each product in your suite.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {recommendations.productPrioritizations?.map((item, idx) => (
+          {/* ── 2. Executive Portfolio Diagnosis (Apple Editorial Showcase) ── */}
+          <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden ring-4 ring-indigo-50/40">
+            {/* Top Accent Strip */}
+            <div className="h-1.5 w-full bg-linear-to-r from-indigo-500 via-purple-500 to-emerald-500" />
+
+            <div className="p-6 md:p-8 space-y-5">
+              {/* Header with KPI chips */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">
+                      Executive Portfolio Diagnosis
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium">
+                      High-level strategic diagnosis of focus, portfolio coherence, and team distraction risks.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Visual Signals */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                    Solo-Founder (1-Person Team)
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">
+                    ₹0 MRR Stage
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-extrabold border border-emerald-200">
+                    Lead: EZCirkit
+                  </span>
+                </div>
+              </div>
+
+              {/* Diagnosis Body Callout Box */}
+              <div className="p-5 md:p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 relative">
+                <div className="prose prose-slate max-w-none text-sm leading-relaxed text-slate-700 font-medium">
+                  <ReactMarkdown>{recommendations.executiveSummary}</ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── 3. Product Prioritization & Strategic Role Matrix (Visual Cards with Action Blueprints) ── */}
+          <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-xs p-6 md:p-8 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+                  <Layers className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">
+                    Product Prioritization &amp; Strategic Role Matrix
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Ranked order of attention and specific next milestone for each product in your suite.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Product Cards Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {recommendations.productPrioritizations?.map((item, idx) => {
+                const targetPid = findProductId(item.productName);
+                const isRank1 = (item.priorityRank || idx + 1) === 1;
+
+                return (
                   <div
                     key={idx}
-                    className="p-5 rounded-xl border border-slate-200/80 bg-slate-50/40 hover:bg-slate-50 transition-colors flex flex-col justify-between space-y-3"
+                    className={`rounded-2xl border transition-all duration-300 p-5 md:p-6 flex flex-col justify-between space-y-4 ${
+                      isRank1 
+                        ? 'bg-linear-to-b from-indigo-50/40 to-white border-indigo-200/90 shadow-xs ring-2 ring-indigo-100/60' 
+                        : 'bg-white border-slate-200/90 shadow-xs hover:border-slate-300'
+                    }`}
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center shrink-0">
+                    <div className="space-y-3.5">
+                      {/* Top Rank Badge + Strategic Role */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`w-8 h-8 rounded-xl text-xs font-black flex items-center justify-center shadow-xs shrink-0 ${
+                            isRank1 
+                              ? 'bg-indigo-600 text-white shadow-indigo-500/20' 
+                              : 'bg-slate-200 text-slate-800'
+                          }`}>
                             #{item.priorityRank || idx + 1}
                           </span>
-                          <h4 className="text-sm font-black text-slate-900">
-                            {item.productName}
-                          </h4>
+                          <div>
+                            <h4 className="text-base font-black text-slate-900 tracking-tight">
+                              {item.productName}
+                            </h4>
+                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                              Priority Level {item.priorityRank || idx + 1}
+                            </span>
+                          </div>
                         </div>
+
                         {getRoleBadge(item.strategicRole)}
                       </div>
 
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                      {/* Strategic Recommendation */}
+                      <p className="text-xs sm:text-[13px] text-slate-600 font-medium leading-relaxed">
                         {item.keyRecommendation}
                       </p>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-200/60 bg-white/70 p-3 rounded-lg flex items-start gap-2">
-                      <Zap className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">
-                          Next 30-Day Milestone
-                        </span>
-                        <span className="text-xs font-bold text-slate-800 leading-snug">
+                    {/* Milestone Card & Action Link */}
+                    <div className="space-y-3 pt-2">
+                      <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/70 space-y-1">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-800 tracking-wider">
+                          <Zap className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Next 30-Day Milestone</span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-800 leading-snug">
                           {item.suggestedNextMilestone}
-                        </span>
+                        </p>
                       </div>
+
+                      {targetPid && (
+                        <button
+                          type="button"
+                          onClick={() => onGoToProduct(targetPid)}
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                        >
+                          <span>Open {item.productName} Studio</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-indigo-500" />
+                        </button>
+                      )}
                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── 4. Engineering & Bandwidth Allocation (Visual Resource Split Engine) ── */}
+          <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-xs p-6 md:p-8 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-2xs shrink-0">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">
+                    Engineering &amp; Bandwidth Allocation
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Optimal allocation of developer hours and budget bound by cash runway.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual Bandwidth Split Progress Bar (Google / Apple Style) */}
+            <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-4">
+              <div className="flex items-center justify-between text-xs font-black">
+                <span className="flex items-center gap-2 text-indigo-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                  {bandwidthData.p1Name} ({bandwidthData.p1Pct}%)
+                </span>
+                <span className="flex items-center gap-2 text-purple-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                  {bandwidthData.p2Name} ({bandwidthData.p2Pct}%)
+                </span>
+              </div>
+
+              {/* Segmented Progress Bar */}
+              <div className="w-full h-4 rounded-full bg-slate-200 overflow-hidden flex shadow-inner">
+                <div 
+                  className="h-full bg-linear-to-r from-indigo-600 to-indigo-500 transition-all duration-500 flex items-center justify-center text-[10px] font-black text-white"
+                  style={{ width: `${bandwidthData.p1Pct}%` }}
+                >
+                  {bandwidthData.p1Pct}%
+                </div>
+                <div 
+                  className="h-full bg-linear-to-r from-purple-500 to-purple-600 transition-all duration-500 flex items-center justify-center text-[10px] font-black text-white"
+                  style={{ width: `${bandwidthData.p2Pct}%` }}
+                >
+                  {bandwidthData.p2Pct}%
+                </div>
+              </div>
+
+              {/* 3 Pillars Split Cards: Founder Time | Engineering | Marketing Spend */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                    Founder Time Split
+                  </span>
+                  <div className="space-y-1 text-xs font-bold text-slate-800">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Direct Sales &amp; Outreach</span>
+                      <span className="text-indigo-600 font-black">50%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Video Tutorials &amp; Assembly</span>
+                      <span className="text-indigo-600 font-black">20%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Detach Waitlist Prep</span>
+                      <span className="text-purple-600 font-black">20%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Shared Sourcing</span>
+                      <span className="text-slate-700 font-black">10%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                    Engineering Bandwidth
+                  </span>
+                  <div className="space-y-1 text-xs font-bold text-slate-800">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">EZCirkit Content Standardization</span>
+                      <span className="text-indigo-600 font-black">70%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Detach Firmware Stability</span>
+                      <span className="text-purple-600 font-black">30%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                    Marketing Budget
+                  </span>
+                  <div className="space-y-1 text-xs font-bold text-slate-800">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600">Total Spend</span>
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black">
+                        ₹0 (Bootstrap)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium pt-1">
+                      100% organic outbound via WhatsApp groups, Telegram, &amp; campus ambassadors.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Complete Full Text Preserved */}
+            <div className="p-5 rounded-2xl bg-white border border-slate-200/80">
+              <div className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-700 font-medium">
+                <ReactMarkdown>{recommendations.resourceAllocation}</ReactMarkdown>
+              </div>
+            </div>
+          </div>
+
+          {/* ── 5. Cross-Selling & Bundling Flywheels (Visual Synergy Ecosystem) ── */}
+          <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-xs p-6 md:p-8 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+                  <TrendingUp className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">
+                    Cross-Selling &amp; Bundling Flywheels
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Shared technical leverage, bundling pricing, and referral loops.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual 3-Stage Flywheel Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-linear-to-b from-indigo-50/50 to-white border border-indigo-100/80 shadow-2xs space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                  <Cpu className="w-4 h-4" />
+                </div>
+                <h4 className="text-xs font-black text-slate-900">1. Shared Hardware Leverage</h4>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Bulk sourcing of shared microcontrollers, displays, and sensors to minimize per-unit Bill of Materials cost.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-linear-to-b from-purple-50/50 to-white border border-purple-100/80 shadow-2xs space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
+                  <Users className="w-4 h-4" />
+                </div>
+                <h4 className="text-xs font-black text-slate-900">2. Builder Community Flywheel</h4>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  EZCirkit student learners become open-source builders creating custom widgets and mods for Detach.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-linear-to-b from-emerald-50/50 to-white border border-emerald-100/80 shadow-2xs space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                  <Repeat className="w-4 h-4" />
+                </div>
+                <h4 className="text-xs font-black text-slate-900">3. Cross-Product Promotion</h4>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Cross-sell Detach as an exam focus and study productivity companion to students buying EZCirkit.
+                </p>
+              </div>
+            </div>
+
+            {/* Complete Full Text Preserved */}
+            <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80">
+              <div className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-700 font-medium">
+                <ReactMarkdown>{recommendations.synergiesAndBundling}</ReactMarkdown>
+              </div>
+            </div>
+          </div>
+
+          {/* ── 6. Risks & Immediate Actions (Two-Column Apple-Style Grid) ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* Execution Risks */}
+            <div className="rounded-3xl bg-white border border-rose-200/90 shadow-xs p-6 md:p-7 space-y-4 ring-2 ring-rose-50/60">
+              <div className="flex items-center gap-3 pb-3 border-b border-rose-100">
+                <div className="w-9 h-9 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-2xs shrink-0">
+                  <ShieldAlert className="w-4.5 h-4.5 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-rose-950 tracking-tight">
+                    Critical Execution &amp; Cannibalization Risks
+                  </h3>
+                  <p className="text-xs font-semibold text-rose-700/80">
+                    Traps to avoid when developing and marketing multiple products concurrently.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-1">
+                {recommendations.executionRisks?.map((risk, idx) => (
+                  <div 
+                    key={idx} 
+                    className="flex items-start gap-3 p-3.5 bg-rose-50/40 rounded-2xl border border-rose-100/80 shadow-2xs hover:bg-rose-50/70 transition-colors"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-700 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                      !
+                    </div>
+                    <span className="text-xs font-semibold text-slate-800 leading-relaxed">
+                      {risk}
+                    </span>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* 2-Column: Resource Allocation & Synergies */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Resource Allocation */}
-            <Card className="border border-slate-200/90 shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b py-4">
-                <CardTitle className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-emerald-600" />
-                  Engineering & Bandwidth Allocation
-                </CardTitle>
-                <CardDescription className="text-xs font-semibold text-slate-500">
-                  Optimal allocation of developer hours and budget bound by cash runway.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
-                  <ReactMarkdown>{recommendations.resourceAllocation}</ReactMarkdown>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Synergies & Bundling */}
-            <Card className="border border-slate-200/90 shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b py-4">
-                <CardTitle className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-indigo-600" />
-                  Cross-Selling & Bundling Flywheels
-                </CardTitle>
-                <CardDescription className="text-xs font-semibold text-slate-500">
-                  Shared technical leverage, bundling pricing, and referral loops.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
-                  <ReactMarkdown>{recommendations.synergiesAndBundling}</ReactMarkdown>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* 2-Column: Risks and Immediate Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Execution Risks */}
-            <Card className="border border-rose-200/80 shadow-sm bg-rose-50/15 overflow-hidden">
-              <CardHeader className="bg-rose-50/40 border-b border-rose-100 py-4">
-                <CardTitle className="text-sm font-black text-rose-900 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-600" />
-                  Critical Execution & Cannibalization Risks
-                </CardTitle>
-                <CardDescription className="text-xs font-semibold text-rose-700/80">
-                  Traps to avoid when developing and marketing multiple products concurrently.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 space-y-3">
-                {recommendations.executionRisks?.map((risk, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-rose-100 shadow-sm">
-                    <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                    <span className="text-xs font-semibold text-slate-800 leading-relaxed">{risk}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            </div>
 
             {/* Immediate Actions */}
-            <Card className="border border-indigo-200/80 shadow-sm bg-indigo-50/15 overflow-hidden">
-              <CardHeader className="bg-indigo-50/40 border-b border-indigo-100 py-4">
-                <CardTitle className="text-sm font-black text-indigo-900 flex items-center gap-2">
-                  <ListTodo className="w-4 h-4 text-indigo-600" />
-                  Immediate High-Leverage Actions
-                </CardTitle>
-                <CardDescription className="text-xs font-semibold text-indigo-700/80">
-                  Key moves for founder & core team to execute this week.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 space-y-3">
+            <div className="rounded-3xl bg-white border border-indigo-200/90 shadow-xs p-6 md:p-7 space-y-4 ring-2 ring-indigo-50/60">
+              <div className="flex items-center gap-3 pb-3 border-b border-indigo-100">
+                <div className="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+                  <ListTodo className="w-4.5 h-4.5 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-indigo-950 tracking-tight">
+                    Immediate High-Leverage Actions
+                  </h3>
+                  <p className="text-xs font-semibold text-indigo-700/80">
+                    Key moves for founder &amp; core team to execute this week.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-1">
                 {recommendations.immediateSuiteActions?.map((action, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-indigo-100 shadow-sm">
-                    <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                  <div 
+                    key={idx} 
+                    className="flex items-start gap-3 p-3.5 bg-indigo-50/40 rounded-2xl border border-indigo-100/80 shadow-2xs hover:bg-indigo-50/70 transition-colors"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       {idx + 1}
                     </div>
-                    <span className="text-xs font-semibold text-slate-800 leading-relaxed">{action}</span>
+                    <span className="text-xs font-semibold text-slate-800 leading-relaxed">
+                      {action}
+                    </span>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
           </div>
+
         </div>
       )}
 
-      {/* Empty State before any analysis has been run */}
+      {/* ── Empty State before any analysis has been run ── */}
       {!loading && !recommendations && (
-        <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center shadow-sm">
+        <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center shadow-sm rounded-3xl">
           <CardContent className="flex flex-col items-center justify-center space-y-4 max-w-lg mx-auto">
-            <div className="p-4 bg-indigo-50 rounded-full border border-indigo-100">
+            <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 shadow-2xs">
               <Compass className="w-10 h-10 text-indigo-600" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-black text-slate-900">No Product Suite Recommendations Generated Yet</h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">No Product Suite Recommendations Generated Yet</h3>
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                 Click below to run a deep strategic analysis across all your tracked products. The AI Portfolio Advisor will evaluate focus, resource allocation, and market synergies based on your current cash runway and MRR.
               </p>
@@ -389,7 +681,7 @@ export function ProductSuiteRecommendations({
                 value={customQuestion}
                 onChange={e => setCustomQuestion(e.target.value)}
                 disabled={readOnly}
-                className="bg-white border-slate-200 text-xs font-medium"
+                className="bg-white border-slate-200 text-xs font-medium rounded-xl h-10"
               />
             </div>
 
@@ -397,14 +689,15 @@ export function ProductSuiteRecommendations({
               type="button"
               onClick={() => handleRunSuiteAnalysis()}
               disabled={readOnly || products.length === 0}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 gap-2 mt-2 shadow-sm text-xs"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 gap-2 mt-2 shadow-sm text-xs rounded-xl cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-indigo-200" />
-              Analyze Product Suite & Recommend Strategy
+              <span>Analyze Product Suite &amp; Recommend Strategy</span>
             </Button>
           </CardContent>
         </Card>
       )}
+
     </div>
   );
 }

@@ -436,6 +436,25 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
         aiPlan: profile.prodAIPlan || null,
         aiPlanHistory: profile.prodAIPlanHistory || []
       }];
+    } else {
+      prods = [
+        {
+          id: 'prod_ezcirkit',
+          name: 'EZCirkit — Beginner Electronics Learning Kit',
+          description: 'Hands-on electronic kit and mini-project suite designed for ECE engineering students.',
+          stage: 'launched',
+          mrr: Number(profile?.mRevenue) || 0,
+          usersCount: 20
+        },
+        {
+          id: 'prod_detach',
+          name: 'Detach — Smart Desktop Companion for Digital Wellbeing',
+          description: 'Physical desktop companion IoT device with animated character states and BLE connectivity.',
+          stage: 'beta',
+          mrr: 0,
+          usersCount: 150
+        }
+      ];
     }
 
     const totalCount = prods.length;
@@ -1670,6 +1689,10 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0" />
               {activeProducts[0]?.progress || 80}% Focus: {activeProducts[0]?.name?.split('—')[0]?.trim() || "EZCirkit"}
             </span>
+            <span className="px-3 py-1 rounded-full bg-purple-50/70 text-purple-700 text-xs font-extrabold border border-purple-200/60 shadow-2xs flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+              {activeProducts[1]?.progress || 20}% Focus: {activeProducts[1]?.name?.split('—')[0]?.trim() || "Detach"}
+            </span>
           </div>
 
           {/* Action Buttons: Edit Strategy, View Full Analysis, Plan History, Export */}
@@ -1732,34 +1755,24 @@ export const CentralDashboard = React.memo(function CentralDashboard({ userId, c
               {postMoney > 0 ? fmtINR(postMoney) : '₹3,000,000 Seed Round'}
             </div>
 
-            {/* Circular Gauge / Percentage Indicator */}
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="relative w-8 h-8 shrink-0 flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="14" stroke="#e2e8f0" strokeWidth="3.5" fill="transparent" />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      stroke="#4f46e5"
-                      strokeWidth="3.5"
-                      strokeDasharray={87.96}
-                      strokeDashoffset={87.96 * (1 - (activeProducts[0]?.progress || 80) / 100)}
-                      strokeLinecap="round"
-                      fill="transparent"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-indigo-700">
-                    {activeProducts[0]?.progress || 80}%
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block leading-tight">Lead Focus</span>
-                  <span className="text-xs font-bold text-slate-800 truncate block max-w-[120px]">
-                    {activeProducts[0]?.name?.split('—')[0]?.trim() || "EZCirkit"}
-                  </span>
-                </div>
+            {/* Allocation breakdown for both existing products */}
+            <div className="pt-2 border-t border-slate-100/90 space-y-1.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                Portfolio Allocation
+              </span>
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="flex items-center gap-1.5 font-bold text-slate-800">
+                  <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0" />
+                  {activeProducts[0]?.name?.split('—')[0]?.trim() || "EZCirkit"}
+                </span>
+                <span className="font-black text-indigo-700">{activeProducts[0]?.progress || 80}%</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="flex items-center gap-1.5 font-bold text-slate-500">
+                  <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                  {activeProducts[1]?.name?.split('—')[0]?.trim() || "Detach"}
+                </span>
+                <span className="font-bold text-purple-700">{activeProducts[1]?.progress || 20}%</span>
               </div>
             </div>
           </div>
