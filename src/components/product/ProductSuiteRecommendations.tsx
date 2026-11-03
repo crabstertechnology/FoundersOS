@@ -191,26 +191,22 @@ export function ProductSuiteRecommendations({
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
 
-      {/* ── 1. Top CPO Intelligence Hero Card (Apple / Google Level Visual Polish) ── */}
-      <div className="relative rounded-3xl bg-linear-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-xl overflow-hidden border border-slate-800 ring-1 ring-white/10">
-        {/* Soft Ambient Radial Lights */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none -mb-20" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+      {/* ── 1. Top CPO Intelligence Hero Card (Clean High-Contrast Apple/Google Style) ── */}
+      <div className="relative rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden ring-4 ring-indigo-50/60">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-indigo-200 text-xs font-bold border border-white/15 backdrop-blur-md shadow-2xs">
-              <Compass className="w-3.5 h-3.5 text-indigo-300" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-200/80 shadow-2xs">
+              <Compass className="w-3.5 h-3.5 text-indigo-600" />
               <span>Chief Product Officer &amp; Portfolio Strategist</span>
-              <span className="w-1 h-1 rounded-full bg-indigo-300" />
-              <span className="text-white/80">{products.length} Products Tracked</span>
+              <span className="w-1 h-1 rounded-full bg-indigo-400" />
+              <span className="text-slate-600 font-semibold">{products.length} Products Tracked</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-tight">
               Product Suite Intelligence &amp; Recommendations
             </h2>
 
-            <p className="text-sm text-indigo-100/80 leading-relaxed font-normal max-w-2xl">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-2xl">
               Get an objective, CPO-level strategic audit across all {products.length} tracked products. Identifies high-conviction growth engines, shared technical leverage, resource cannibalization traps, and optimal bandwidth allocation tied to your cash runway.
             </p>
           </div>
@@ -221,24 +217,24 @@ export function ProductSuiteRecommendations({
               type="button"
               onClick={() => handleRunSuiteAnalysis()}
               disabled={loading || readOnly || products.length === 0}
-              className="bg-white hover:bg-slate-100 text-slate-950 font-extrabold h-11 px-6 rounded-2xl gap-2 shadow-lg hover:shadow-indigo-500/20 transition-all text-xs cursor-pointer"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 px-5 rounded-xl gap-2 shadow-sm transition-all text-xs cursor-pointer"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                   <span>Analyzing Suite...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-indigo-600" />
+                  <Sparkles className="w-4 h-4 text-white" />
                   <span>{recommendations ? 'Re-run Suite Analysis' : 'Analyze Product Suite'}</span>
                 </>
               )}
             </Button>
 
             {recommendations && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-indigo-200/80 font-medium self-center sm:self-end">
-                <Clock className="w-3 h-3 text-indigo-300" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] text-slate-500 font-medium self-center sm:self-end">
+                <Clock className="w-3 h-3 text-slate-400" />
                 <span>
                   Updated {new Date(recommendations.timestamp).toLocaleDateString(undefined, { 
                     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
@@ -274,7 +270,7 @@ export function ProductSuiteRecommendations({
           {/* ── 2. Executive Portfolio Diagnosis (Apple Editorial Showcase) ── */}
           <div className="w-full rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden ring-4 ring-indigo-50/40">
             {/* Top Accent Strip */}
-            <div className="h-1.5 w-full bg-linear-to-r from-indigo-500 via-purple-500 to-emerald-500" />
+            <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500" />
 
             <div className="p-6 md:p-8 space-y-5">
               {/* Header with KPI chips */}
@@ -345,7 +341,7 @@ export function ProductSuiteRecommendations({
                     key={idx}
                     className={`rounded-2xl border transition-all duration-300 p-5 md:p-6 flex flex-col justify-between space-y-4 ${
                       isRank1 
-                        ? 'bg-linear-to-b from-indigo-50/40 to-white border-indigo-200/90 shadow-xs ring-2 ring-indigo-100/60' 
+                        ? 'bg-gradient-to-b from-indigo-50/40 to-white border-indigo-200/90 shadow-xs ring-2 ring-indigo-100/60' 
                         : 'bg-white border-slate-200/90 shadow-xs hover:border-slate-300'
                     }`}
                   >
@@ -442,13 +438,13 @@ export function ProductSuiteRecommendations({
               {/* Segmented Progress Bar */}
               <div className="w-full h-4 rounded-full bg-slate-200 overflow-hidden flex shadow-inner">
                 <div 
-                  className="h-full bg-linear-to-r from-indigo-600 to-indigo-500 transition-all duration-500 flex items-center justify-center text-[10px] font-black text-white"
+                  className="h-full bg-gradient-to-r from-indigo-600 to-indigo-500 transition-all duration-500 flex items-center justify-center text-[10px] font-black text-white"
                   style={{ width: `${bandwidthData.p1Pct}%` }}
                 >
                   {bandwidthData.p1Pct}%
                 </div>
                 <div 
-                  className="h-full bg-linear-to-r from-purple-500 to-purple-600 transition-all duration-500 flex items-center justify-center text-[10px] font-black text-white"
+                  className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500 flex items-center justify-center text-[10px] font-black text-white"
                   style={{ width: `${bandwidthData.p2Pct}%` }}
                 >
                   {bandwidthData.p2Pct}%
@@ -544,7 +540,7 @@ export function ProductSuiteRecommendations({
 
             {/* Visual 3-Stage Flywheel Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-linear-to-b from-indigo-50/50 to-white border border-indigo-100/80 shadow-2xs space-y-2">
+              <div className="p-4 rounded-2xl bg-gradient-to-b from-indigo-50/50 to-white border border-indigo-100/80 shadow-2xs space-y-2">
                 <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
                   <Cpu className="w-4 h-4" />
                 </div>
@@ -554,7 +550,7 @@ export function ProductSuiteRecommendations({
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-linear-to-b from-purple-50/50 to-white border border-purple-100/80 shadow-2xs space-y-2">
+              <div className="p-4 rounded-2xl bg-gradient-to-b from-purple-50/50 to-white border border-purple-100/80 shadow-2xs space-y-2">
                 <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
                   <Users className="w-4 h-4" />
                 </div>
@@ -564,7 +560,7 @@ export function ProductSuiteRecommendations({
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-linear-to-b from-emerald-50/50 to-white border border-emerald-100/80 shadow-2xs space-y-2">
+              <div className="p-4 rounded-2xl bg-gradient-to-b from-emerald-50/50 to-white border border-emerald-100/80 shadow-2xs space-y-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
                   <Repeat className="w-4 h-4" />
                 </div>
